@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Works out which halves of the repo this pull request actually touches, and
+  # whether they are scaffolded yet. Until Team B lands the Spring Boot and Vite
+  # skeletons there is nothing to build, so both jobs below skip and the workflow
+  # still reports green.
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          changed="$(git diff --name-only "$base...HEAD")"
+          echo "Changed files:"
+          echo "$changed"
+
+          backend=false
+          frontend=false
+          if echo "$changed" | grep -q '^backend/' && [ -f backend/pom.xml ]; then
+            backend=true
+          fi
+          if echo "$changed" | grep -q '^frontend/' && [ -f frontend/package.json ]; then
+            frontend=true
+          fi
+
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "Run backend: $backend, run frontend: $frontend"
+
+  backend:
+    name: Backend tests
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      # A green tick from `mvn test` means nothing if nobody has written a test,
+      # so refuse to pass a backend with none. The cheapest way to satisfy this
+      # is also the most valuable test in the project: a context-load test.
+      - name: Check tests exist
+        run: |
+          if [ -z "$(find src/test -name '*.java' 2>/dev/null)" ]; then
+            echo "::error::No test classes found under backend/src/test."
+            echo ""
+            echo "At minimum, add a Spring context-load test:"
+            echo ""
+            echo "    @SpringBootTest"
+            echo "    class ApplicationTests {"
+            echo "        @Test void contextLoads() {}"
+            echo "    }"
+            echo ""
+            echo "It fails whenever a bean cannot be wired, a config property is"
+            echo "missing or an entity mapping is malformed, which is most of what"
+            echo "actually breaks a Spring Boot app. Without it, 'mvn test' passes"
+            echo "even when the application cannot start."
+            exit 1
+          fi
+
+      - name: Run tests
+        run: mvn -B test
+
+  frontend:
+    name: Frontend build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # --if-present so this is a no-op until a lint script exists.
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build
+        run: npm run build
