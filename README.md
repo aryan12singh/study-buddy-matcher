@@ -48,7 +48,6 @@ until a match request is accepted — enforced by the backend, not the client.
 | Auth | Spring Security + JWT | login/session handling |
 | Database | Supabase (Postgres) | shared by the whole team |
 | ORM | Spring Data JPA / Hibernate | connects our Java code to the database |
-| Migrations | Flyway | keeps track of database changes over time |
 
 ## User Roles & Features
 
@@ -85,33 +84,36 @@ Frontend follows a feature-folder structure (`features/auth`, `features/matching
 ```
 study-buddy-matcher/
 ├── backend/
-│   ├── src/main/java/com/studybuddy/
-│   │   ├── config/          # security, CORS config
-│   │   ├── security/        # JWT filter/util
-│   │   ├── user/            # base user entity/repo
-│   │   ├── student/         # profile + preferences
-│   │   ├── matching/         # matching engine + scoring
-│   │   ├── connection/        # requests, connections, follow/unfollow
-│   │   ├── studygroup/        # groups + membership
-│   │   ├── admin/             # account mgmt + matching config
-│   │   └── course/
-│   ├── src/main/resources/
-│   │   ├── application.yml            # committed, placeholders only
-│   │   └── db/migration/               # Flyway scripts
-│   └── src/test/java/...
+│   ├── mvnw, mvnw.cmd, .mvn/            # Maven wrapper
+│   ├── pom.xml
+│   ├── .env.example                     # committed template, no secrets
+│   └── src/
+│       ├── main/java/com/studybuddy/
+│       │   └── StudyBuddyApplication.java
+│       ├── main/resources/
+│       │   └── application.yml          # committed, reads env vars, no secrets
+│       └── test/java/com/studybuddy/
+│           └── StudyBuddyApplicationTests.java
 ├── frontend/
-│   ├── src/
-│   │   ├── features/        # auth, profile, matching, connections,
-│   │   │                     # notifications, studygroup, studyroom
-│   │   └── shared/          # api client, components, hooks, types
-│   └── .env.example
+│   ├── package.json, vite.config.ts, tsconfig*.json
+│   ├── .env.example                     # committed template, no secrets
+│   └── src/
+│       ├── App.tsx                       # routes
+│       ├── main.tsx, index.css
+│       └── features/
+│           ├── landing/LandingPage.tsx
+│           └── auth/LoginPage.tsx, RegisterPage.tsx
 └── README.md
 ```
+
+This grows as each team builds their part — packages like `student/`, `matching/`,
+`studygroup/`, etc. get created when the code for them actually exists, not scaffolded
+ahead of time as empty folders.
 
 ## Prerequisites
 
 - JDK 21
-- Node.js 20 LTS + npm (or pnpm — confirm with team which one; keep the matching lockfile committed)
+- Node.js 20 LTS + npm
 - Git
 - A Supabase project (ask a team member for an invite to the shared project — see [Environment Variables](#environment-variables))
 
@@ -123,47 +125,58 @@ cd study-buddy-matcher
 
 # Backend
 cd backend
-cp src/main/resources/application.yml src/main/resources/application-local.yml
-# fill in real Supabase values in application-local.yml (gitignored, never commit it)
+cp .env.example .env
+# fill in real Supabase + JWT values in .env (gitignored, never commit it)
 ./mvnw clean install
 
 # Frontend
 cd ../frontend
-cp .env.example .env.local
-# fill in real values in .env.local (gitignored, never commit it)
+cp .env.example .env
+# fill in real values in .env (gitignored, never commit it)
 npm install
 ```
 
 ## Environment Variables
 
-These are **never committed** — only placeholder examples are. Get real values
-from the shared Supabase project (Project Settings → Database / API).
+These are **never committed** — only placeholder examples (`.env.example`) are.
+Get real values from the shared Supabase project (Project Settings → Database).
 
-**`backend/src/main/resources/application-local.yml`**
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://<host>:5432/postgres
-    username: postgres
-    password: <supabase-db-password>
-jwt:
-  secret: <shared-or-generated-secret>
-supabase:
-  url: https://<project>.supabase.co
-  service-role-key: <only-if-backend-calls-supabase-api-directly>
+**`backend/.env`**
+```
+SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/postgres
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=<supabase-db-password>
+JWT_SECRET=<generate with: openssl rand -base64 48>
 ```
 
-**`frontend/.env.local`**
+Spring Boot reads the **process environment**, not `.env` files directly, so these need to be
+exported before running:
+
+```bash
+# macOS/Linux
+set -a && source .env && set +a && ./mvnw spring-boot:run
+```
+```powershell
+# Windows PowerShell
+Get-Content .env | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
+    $name, $value = $_ -split '=', 2
+    Set-Item -Path "env:$($name.Trim())" -Value $value.Trim()
+}
+./mvnw spring-boot:run
+```
+The exported variables persist for the rest of that terminal session — you only need to redo
+this once per new terminal, not once per run.
+
+**`frontend/.env`**
 ```
 VITE_API_BASE_URL=http://localhost:8080/api
-VITE_SUPABASE_URL=https://<project>.supabase.co
-VITE_SUPABASE_ANON_KEY=<anon-key>
 ```
+Vite reads this file automatically — no export step needed for the frontend.
 
 ## Running the App
 
 ```bash
-# Terminal 1 — backend, http://localhost:8080
+# Terminal 1 — backend, http://localhost:8080 (after exporting .env, see above)
 cd backend && ./mvnw spring-boot:run
 
 # Terminal 2 — frontend, http://localhost:5173
@@ -173,9 +186,9 @@ cd frontend && npm run dev
 ## Seed Data
 
 Per project requirements, the database must contain at least **10 courses** and
-**50 student profiles**. Migrations run automatically on backend startup against
-the shared Supabase DB — seed scripts only need to be run **once by one team
-member**, not per developer, to avoid duplicate data.
+**50 student profiles**. This runs against the one shared Supabase DB — the seed
+script only needs to be run **once by one team member**, not per developer, to
+avoid duplicate data.
 
 ## Matching Engine
 
@@ -195,6 +208,5 @@ Match quality is shown to users in plain language (e.g. "Strong match"), not a r
 
 ## Team Workflow
 
-- Migrations are added via PR only, never edited after merge (shared DB — edits after merge cause drift).
 - One shared Supabase project for the whole team; don't spin up individual projects.
 - Own feature branch → open a Pull Request (PR) to `main` → get teammate review/approval → merge.
