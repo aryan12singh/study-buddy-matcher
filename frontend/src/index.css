@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --color-retro-green: #1f2e22;
+  --color-retro-green-dark: #16211a;
+  --color-retro-cream: #f4ecda;
+  --color-retro-lime: #b6e33d;
+  --color-retro-lime-dark: #9dcb28;
+}
+
+body {
+  font-family: var(--font-sans);
+}
