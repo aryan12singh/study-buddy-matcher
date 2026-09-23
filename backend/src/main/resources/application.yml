@@ -1,6 +1,8 @@
 spring:
   application:
     name: study-buddy-matcher
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}

@@ -94,15 +94,19 @@ value is still in the payload and visible in the network tab.
 ## Configuration and secrets
 
 - Anything tunable lives in `application.yml`, bound to a typed config object.
-- Secrets come from the environment. Templates are per app:
-  [`backend/.env.example`](backend/.env.example) and
-  [`frontend/.env.example`](frontend/.env.example). Spring Boot reads the process environment,
-  not `.env`; Vite reads `frontend/.env` directly. Anything `VITE_`-prefixed ends up in the
-  built bundle and is public, so never put a secret there.
+- Secrets come from the environment. Frontend: [`frontend/.env.example`](frontend/.env.example)
+  — Vite reads `frontend/.env` directly. Anything `VITE_`-prefixed ends up in the built bundle
+  and is public, so never put a secret there.
+- **Backend secrets go in `backend/src/main/resources/application-local.yml`** (gitignored, not
+  a `.env` file). `application.yml` defaults `spring.profiles.active` to `local`, so this file
+  loads automatically — create it yourself, no template is committed since it's plain YAML with
+  the same keys as `application.yml`. This replaced an earlier `backend/.env` approach: Spring
+  Boot only reads the process environment, not `.env` files directly, which meant re-exporting
+  values every new terminal; `application-local.yml` avoids that entirely with no extra tooling.
 - **Never write a real credential into a file in this repository**: not into `application.yml`,
-  not into a test, not into a comment, not as a "temporary" default. `.env` is git-ignored;
-  keep it that way. If you think you have committed a secret, say so immediately. Rotating it
-  is easy, but only if we know.
+  not into a test, not into a comment, not as a "temporary" default. `application-local.yml` and
+  `.env` are both git-ignored; keep them that way. If you think you have committed a secret, say
+  so immediately. Rotating it is easy, but only if we know.
 - Add a configuration key -> add a row to the configuration table in `README.md`, same change.
 
 ---

@@ -86,12 +86,12 @@ study-buddy-matcher/
 ├── backend/
 │   ├── mvnw, mvnw.cmd, .mvn/            # Maven wrapper
 │   ├── pom.xml
-│   ├── .env.example                     # committed template, no secrets
 │   └── src/
 │       ├── main/java/com/studybuddy/
 │       │   └── StudyBuddyApplication.java
 │       ├── main/resources/
-│       │   └── application.yml          # committed, reads env vars, no secrets
+│       │   ├── application.yml          # committed, reads env vars, no secrets
+│       │   └── application-local.yml    # gitignored — your real values, see below
 │       └── test/java/com/studybuddy/
 │           └── StudyBuddyApplicationTests.java
 ├── frontend/
@@ -125,8 +125,7 @@ cd study-buddy-matcher
 
 # Backend
 cd backend
-cp .env.example .env
-# fill in real Supabase + JWT values in .env (gitignored, never commit it)
+# create src/main/resources/application-local.yml — see Environment Variables below
 ./mvnw clean install
 
 # Frontend
@@ -138,45 +137,32 @@ npm install
 
 ## Environment Variables
 
-These are **never committed** — only placeholder examples (`.env.example`) are.
-Get real values from the shared Supabase project (Project Settings → Database).
+These are **never committed**. Get real values from the shared Supabase project
+(Project Settings → Database).
 
-**`backend/.env`**
+**Backend — `backend/src/main/resources/application-local.yml`** (gitignored, create it yourself):
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://<host>:5432/postgres
+    username: postgres
+    password: <supabase-db-password>
+jwt:
+  secret: <generate with: openssl rand -base64 48>
 ```
-SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/postgres
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=<supabase-db-password>
-JWT_SECRET=<generate with: openssl rand -base64 48>
-```
+`application.yml` defaults `spring.profiles.active` to `local`, so this file loads automatically
+— no export step, no `.env`, just `./mvnw spring-boot:run` and it works.
 
-Spring Boot reads the **process environment**, not `.env` files directly, so these need to be
-exported before running:
-
-```bash
-# macOS/Linux
-set -a && source .env && set +a && ./mvnw spring-boot:run
-```
-```powershell
-# Windows PowerShell
-Get-Content .env | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
-    $name, $value = $_ -split '=', 2
-    Set-Item -Path "env:$($name.Trim())" -Value $value.Trim()
-}
-./mvnw spring-boot:run
-```
-The exported variables persist for the rest of that terminal session — you only need to redo
-this once per new terminal, not once per run.
-
-**`frontend/.env`**
+**Frontend — `frontend/.env`** (copy from `.env.example`):
 ```
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
-Vite reads this file automatically — no export step needed for the frontend.
+Vite reads this file automatically.
 
 ## Running the App
 
 ```bash
-# Terminal 1 — backend, http://localhost:8080 (after exporting .env, see above)
+# Terminal 1 — backend, http://localhost:8080
 cd backend && ./mvnw spring-boot:run
 
 # Terminal 2 — frontend, http://localhost:5173
