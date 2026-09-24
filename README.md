@@ -1,202 +1,198 @@
 # Study Buddy Matcher System
 
-Study Buddy Matcher pairs university students who should be revising together. A student
-registers, lists the courses they are taking, marks their weekly availability, and states how
-they like to study: study mode, study goal and preferred group size. The matching engine scores
-every other student against them across those five criteria, ranks the results and shows the
-score breakdown so a student can see *why* someone was suggested. A student sends a match
-request, optionally with a message; the other student's contact number stays hidden until that
-request is accepted, and becomes hidden again if either side later ends the connection.
-Students can also form study groups for a course, asking to join one, with the group's leader
-accepting or rejecting requests and managing members. Administrators manage user accounts and
-tune the matching engine's weights and strategy without a redeploy.
+> Finding a study partner shouldn't be harder than the subject itself.
 
-Built for IS442 Object Oriented Programming (G2), Singapore Management University.
+**Study Buddy Matcher** is a web application that helps university students find
+compatible study partners and form study groups — matched by shared courses,
+timetable availability, study mode, and study goals, instead of relying on word
+of mouth or scattered group chats.
 
----
+Students maintain a profile and set of study preferences, get ranked matches
+from a configurable matching engine, connect with matched peers, and join or
+lead study groups. An admin role manages accounts and tunes the matching
+engine's criteria and weights, so the matching strategy can evolve without a
+code change.
 
-## Tech stack
+## Table of Contents
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [User Roles & Features](#user-roles--features)
+- [Architecture](#architecture)
+- [Folder Structure](#folder-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Running the App](#running-the-app)
+- [Seed Data](#seed-data)
+- [Matching Engine](#matching-engine)
+- [Testing](#testing)
+- [Team Workflow](#team-workflow)
 
-| Layer      | Technology                        |
-| ---------- | --------------------------------- |
-| Backend    | Java 21, Spring Boot              |
-| Persistence| Spring Data JPA                   |
-| Database   | Supabase (hosted Postgres)        |
-| Auth       | Spring Security + JWT             |
-| Frontend   | React + Vite                      |
-| Build      | Maven (backend), npm (frontend)   |
+## Overview
 
-Full list with licences and rationale: [Libraries](#libraries) below.
+Three roles use the system:
+- **Students** manage a profile + preferences and get matched with compatible peers.
+- **Study Group Leaders** (students who create a group) manage group membership.
+- **System Administrators** manage accounts and configure the matching engine.
 
----
+Private information (contact number) stays hidden on a student's public profile
+until a match request is accepted — enforced by the backend, not the client.
 
-## Prerequisites
+## Tech Stack
 
-| Tool  | Version | Check with       |
-| ----- | ------- | ---------------- |
-| Java  | 21      | `java -version`  |
-| Maven | 3.9+    | `mvn -v`         |
-| Node  | 20+     | `node -v`        |
+| Layer | Technology | Notes |
+|---|---|---|
+| Frontend | React (Vite) | talks only to our backend, not the database directly |
+| Backend | Java + Spring Boot | handles all the business logic and data access |
+| Build Tool | Maven (`mvnw` wrapper) | no separate Maven install needed |
+| Auth | Spring Security + JWT | login/session handling |
+| Database | Supabase (Postgres) | shared by the whole team |
+| ORM | Spring Data JPA / Hibernate | connects our Java code to the database |
 
----
+## User Roles & Features
 
-## How to run
+**Student**
+- Create/update profile (name, school, programme, year of study, contact number, courses taken) and study preferences (target course, study mode, weekly availability, group size preference, study goals).
+- Get a ranked list of compatible students; filter by course, availability, study mode, study goal, minimum match quality.
+- View another student's public profile (contact number hidden until a match is accepted).
+- Send/accept/decline study-buddy requests; view and end active connections.
 
-One-time setup. Copy each environment template and fill in the values:
+**Study Group Leader** *(a Student who creates a group — not a separate account type)*
+- Create a study group (name, description, study goals, preferred mode, availability, max size).
+- View and accept/reject join requests; remove members.
 
-```bash
-cp backend/.env.example backend/.env      # Supabase connection, JWT secret
-cp frontend/.env.example frontend/.env    # API base URL
-```
-
-**Backend** starts on `http://localhost:8080`:
-
-```bash
-cd backend
-set -a && source .env && set +a     # Spring Boot reads the environment, not .env
-./mvnw spring-boot:run
-```
-
-**Frontend** starts on `http://localhost:5173`:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Vite reads `frontend/.env` on its own, so the frontend needs no export step. The backend does,
-because Spring Boot reads the process environment rather than `.env` files. Set the variables
-in your IDE's run configuration if you prefer. TODO: Team B to confirm the approach and the
-Windows equivalent of the `source` line.
-
----
-
-## Default logins
-
-Seeded by the data seeder on first run.
-
-| Role          | Email  | Password |
-| ------------- | ------ | -------- |
-| Student       | TODO   | TODO     |
-| Group leader  | TODO   | TODO     |
-| Administrator | TODO   | TODO     |
-
----
-
-## Resetting and reseeding the database
-
-TODO: owned by Team B alongside the data seeder. Document the exact command here once the
-seeder exists, including how to drop and recreate the schema against both the local profile and
-the shared Supabase instance.
-
----
-
-## Configuration reference
-
-All configuration lives in `backend/src/main/resources/application.yml`. Secrets are read from
-the environment and never committed. See [`backend/.env.example`](backend/.env.example) and
-[`frontend/.env.example`](frontend/.env.example).
-
-> This table must be kept in step with `application.yml`. If you add a key, add a row.
-
-| Key                               | What it does                                                        | Default |
-| --------------------------------- | ------------------------------------------------------------------- | ------- |
-| `spring.datasource.url`           | JDBC URL of the Postgres database                                    | TODO    |
-| `spring.datasource.username`      | Database user                                                        | TODO    |
-| `spring.datasource.password`      | Database password                                                    | TODO    |
-| `spring.jpa.hibernate.ddl-auto`   | Schema generation strategy per profile                               | TODO    |
-| `jwt.secret`                      | Signing key for issued JWTs                                          | TODO    |
-| `jwt.expiry-minutes`              | How long an issued token stays valid                                 | TODO    |
-| `matching.strategy`               | Which `MatchingStrategy` is active                                   | TODO    |
-| `matching.minimum-score`          | Matches scoring below this threshold are not returned                | TODO    |
-| `matching.weights.course`         | Weight of the shared-course criterion                                | TODO    |
-| `matching.weights.availability`   | Weight of the timetable-overlap criterion                            | TODO    |
-| `matching.weights.study-mode`     | Weight of the study-mode criterion                                   | TODO    |
-| `matching.weights.study-goal`     | Weight of the study-goal criterion                                   | TODO    |
-| `matching.weights.group-size`     | Weight of the preferred-group-size criterion                         | TODO    |
-
-Administrators can override the matching weights and threshold at runtime from the admin
-matching-config screen; the values above are the startup defaults.
-
----
+**System Administrator**
+- Create/update/delete user accounts; view account status and usage info.
+- Configure the matching engine's criteria, weights, and strategy.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A[Controller] --> B[DTO / Assembler]
-    B --> C[Service]
-    C --> D[Domain model]
-    D --> E[Repository]
-    E --> F[(Database)]
-    A -.->|never| E
+Backend follows a layered, package-by-feature structure:
+`Controller → Service → Repository → Entity`, with DTOs (Data Transfer Objects)
+at the controller boundary so persistence entities are never returned directly
+from the API. `Student` and
+`StudyGroupLeader` follow the class relationship in the design doc (a student
+becomes a group leader by creating a group, rather than a separate hierarchy).
+Matching criteria/weights are externalized (DB-configurable via the admin role),
+not hardcoded, so the matching strategy can change without a code deploy.
+
+Frontend follows a feature-folder structure (`features/auth`, `features/matching`,
+`features/studygroup`, etc.), with shared API client/hooks/components under `shared/`.
+
+## Folder Structure
+
+```
+study-buddy-matcher/
+├── backend/
+│   ├── mvnw, mvnw.cmd, .mvn/            # Maven wrapper
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/studybuddy/
+│       │   └── StudyBuddyApplication.java
+│       ├── main/resources/
+│       │   ├── application.yml          # committed, reads env vars, no secrets
+│       │   └── application-local.yml    # gitignored — your real values, see below
+│       └── test/java/com/studybuddy/
+│           └── StudyBuddyApplicationTests.java
+├── frontend/
+│   ├── package.json, vite.config.ts, tsconfig*.json
+│   ├── .env.example                     # committed template, no secrets
+│   └── src/
+│       ├── App.tsx                       # routes
+│       ├── main.tsx, index.css
+│       └── features/
+│           ├── landing/LandingPage.tsx
+│           └── auth/LoginPage.tsx, RegisterPage.tsx
+└── README.md
 ```
 
-Two rules hold this together, and both are checked at review time:
+This grows as each team builds their part — packages like `student/`, `matching/`,
+`studygroup/`, etc. get created when the code for them actually exists, not scaffolded
+ahead of time as empty folders.
 
-1. **Controllers never touch repositories.** A controller validates input, calls one service
-   method and returns a DTO. Nothing else.
-2. **Services never return entities to the API.** An entity crossing the API boundary leaks the
-   database shape and, in our case, leaks private fields. Services return DTOs assembled by an
-   assembler.
+## Prerequisites
 
-The second rule is how contact-number privacy is enforced: `ProfileViewAssembler` decides
-between `PublicProfileDto` (no contact number) and `ConnectedProfileDto` (contact number
-included) based on whether an accepted connection exists. If an entity were ever returned
-directly, the contact number would go with it.
+- JDK 21
+- Node.js 20 LTS + npm
+- Git
+- A Supabase project (ask a team member for an invite to the shared project — see [Environment Variables](#environment-variables))
 
-Coding conventions and the reasoning behind this structure: [`AGENTS.md`](AGENTS.md).
+## Getting Started
 
----
+```bash
+git clone <repo-url>
+cd study-buddy-matcher
 
-## Team
+# Backend
+cd backend
+# create src/main/resources/application-local.yml — see Environment Variables below
+./mvnw clean install
 
-Eight students across three teams.
+# Frontend
+cd ../frontend
+cp .env.example .env
+# fill in real values in .env (gitignored, never commit it)
+npm install
+```
 
-| Team   | Members             | Owns                                                                 |
-| ------ | ------------------- | -------------------------------------------------------------------- |
-| Team A | nat, cy, jo         | Matching engine: scorers, strategies, scoring config, matching UI     |
-| Team B | angel, averyl, gh   | Platform: Spring Boot skeleton, entities, repositories, auth, profile, React skeleton and shell |
-| Team C | aryan, charlize     | Connections, study groups, notifications and administration           |
+## Environment Variables
 
-GitHub handles: TODO.
+These are **never committed**. Get real values from the shared Supabase project
+(Project Settings → Database).
 
----
+**Backend — `backend/src/main/resources/application-local.yml`** (gitignored, create it yourself):
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://<host>:5432/postgres
+    username: postgres
+    password: <supabase-db-password>
+jwt:
+  secret: <generate with: openssl rand -base64 48>
+```
+`application.yml` defaults `spring.profiles.active` to `local`, so this file loads automatically
+— no export step, no `.env`, just `./mvnw spring-boot:run` and it works.
 
-## Libraries
+**Frontend — `frontend/.env`** (copy from `.env.example`):
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+Vite reads this file automatically.
 
-Every third-party dependency, what it does for us, what else we looked at, and why we settled
-on it. If you add a dependency to `pom.xml` or `package.json`, add a row here in the same pull
-request.
+## Running the App
 
-| Library | Used for | Alternatives considered | Why this one | Licence |
-| ------- | -------- | ----------------------- | ------------ | ------- |
-| Spring Boot | Application framework, dependency injection, embedded server, externalised configuration | Plain Java with a servlet container, Jakarta EE, Micronaut | TODO | Apache 2.0 |
-| Spring Web (MVC) | REST controllers, JSON request and response handling | Spring WebFlux, JAX-RS | TODO | Apache 2.0 |
-| Spring Data JPA | Repository abstraction over Hibernate, entity mapping | Plain JDBC, MyBatis, Hibernate used directly | TODO | Apache 2.0 |
-| Hibernate | JPA implementation and object-relational mapping | EclipseLink | TODO | LGPL 2.1 / Apache 2.0, TODO: confirm for the version we pin |
-| Spring Security | Authentication, authorisation, the filter chain | Hand-rolled filters, Apache Shiro | TODO | Apache 2.0 |
-| JWT library (TODO: pin exact library) | Issuing and verifying signed access tokens | Server-side sessions, opaque tokens with a store | TODO | TODO |
-| PostgreSQL JDBC driver | Connecting to Supabase Postgres | (determined by the database) | TODO | BSD 2-Clause |
-| Supabase (hosted Postgres) | Shared database for team development and the demo | Local Postgres per developer, H2 in-memory, MySQL | TODO | Apache 2.0 (platform) |
-| Maven | Backend build, dependency resolution, test execution | Gradle | TODO | Apache 2.0 |
-| JUnit 5 | Unit tests for scorers, interval maths and strategies | TestNG | TODO | EPL 2.0 |
-| React | Frontend component model and rendering | Vue, Svelte, server-rendered Thymeleaf | TODO | MIT |
-| Vite | Frontend dev server and production build | Create React App, webpack, Parcel | TODO | MIT |
-| npm | Frontend dependency management | pnpm, Yarn | TODO | Artistic License 2.0 |
+```bash
+# Terminal 1 — backend, http://localhost:8080
+cd backend && ./mvnw spring-boot:run
 
-All of the above are permissive or weak-copyleft licences compatible with coursework
-distribution. TODO: confirm once exact versions are pinned in `pom.xml` and `package.json`.
+# Terminal 2 — frontend, http://localhost:5173
+cd frontend && npm run dev
+```
 
----
+## Seed Data
 
-## Contributing
+Per project requirements, the database must contain at least **10 courses** and
+**50 student profiles**. This runs against the one shared Supabase DB — the seed
+script only needs to be run **once by one team member**, not per developer, to
+avoid duplicate data.
 
-Architecture rules, coding and design conventions, branch and commit style, and the review
-process all live in [`AGENTS.md`](AGENTS.md). Point your AI assistant at it too: Claude Code,
-Copilot and Cursor read it automatically.
+## Matching Engine
 
-The agreed API surface between frontend and backend is in
-[`docs/API_CONTRACT.md`](docs/API_CONTRACT.md); agree a row there before either side builds
-against it.
+Students are matched on course, availability overlap, and study mode, with
+study goal and group size as secondary criteria. The matching strategy and
+criteria weights are admin-configurable (not hardcoded), supporting at least:
+- **Balanced Matching** — weighted combination of all criteria.
+- **Availability-First Matching** — prioritizes timetable overlap.
+- **Course-First Matching** — prioritizes exact course match, then ranks by remaining preferences.
+
+Match quality is shown to users in plain language (e.g. "Strong match"), not a raw score.
+
+## Testing
+
+- Backend: JUnit + Mockito (`./mvnw test`).
+- Frontend: Vitest + React Testing Library (`npm test`).
+
+## Team Workflow
+
+- One shared Supabase project for the whole team; don't spin up individual projects.
+- Own feature branch → open a Pull Request (PR) to `main` → get teammate review/approval → merge.
