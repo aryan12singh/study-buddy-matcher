@@ -15,8 +15,9 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 /**
- * A study-buddy request from one student to another. State transitions
- * (accept/decline) are Team C's, not implemented here.
+ * A study-buddy request from one student to another. Starts PENDING and moves
+ * once, to ACCEPTED or DECLINED, through {@link #accept()} or {@link #decline()};
+ * the status has no public setter so no other transition is possible.
  */
 @Entity
 @Table(name = "match_requests")
@@ -76,10 +77,6 @@ public class MatchRequest {
         return status;
     }
 
-    public void setStatus(MatchRequestStatus status) {
-        this.status = status;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -88,7 +85,38 @@ public class MatchRequest {
         return respondedAt;
     }
 
-    public void setRespondedAt(LocalDateTime respondedAt) {
-        this.respondedAt = respondedAt;
+    public boolean isPending() {
+        return status == MatchRequestStatus.PENDING;
+    }
+
+    public boolean involves(Long studentId) {
+        return sender.getId().equals(studentId) || receiver.getId().equals(studentId);
+    }
+
+    public boolean isReceiver(Long studentId) {
+        return receiver.getId().equals(studentId);
+    }
+
+    /**
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void accept() {
+        respond(MatchRequestStatus.ACCEPTED);
+    }
+
+    /**
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void decline() {
+        respond(MatchRequestStatus.DECLINED);
+    }
+
+    private void respond(MatchRequestStatus newStatus) {
+        if (!isPending()) {
+            throw new IllegalStateException(
+                    "Match request " + id + " is already " + status + " and cannot be changed");
+        }
+        this.status = newStatus;
+        this.respondedAt = LocalDateTime.now();
     }
 }
