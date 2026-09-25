@@ -2,6 +2,8 @@ package com.studybuddy.matchrequest;
 
 import com.studybuddy.connection.Connection;
 import com.studybuddy.connection.ConnectionRepository;
+import com.studybuddy.notification.NotificationService;
+import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +26,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +51,9 @@ class MatchRequestServiceTest {
     @Mock
     private StudentRepository studentRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private MatchRequestService service;
     private Student alice;
     private Student bob;
@@ -53,7 +61,7 @@ class MatchRequestServiceTest {
     @BeforeEach
     void setUp() {
         service = new MatchRequestService(matchRequestRepository, connectionRepository,
-                studentRepository, new MatchRequestAssembler());
+                studentRepository, new MatchRequestAssembler(), notificationService);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
     }
@@ -257,6 +265,55 @@ class MatchRequestServiceTest {
                 .anyMatch(component -> component.getName().toLowerCase().contains("contact"));
 
         assertFalse(hasContactField);
+    }
+
+    // --- notifications ---
+
+    @Test
+    void sendNotifiesTheReceiver() {
+        givenStudentsExist();
+        when(matchRequestRepository.save(any(MatchRequest.class))).thenAnswer(call -> call.getArgument(0));
+
+        service.send(ALICE_ID, BOB_ID, null);
+
+        verify(notificationService).notify(eq(bob), eq(NotificationType.MATCH_REQUEST_RECEIVED), contains("Alice"));
+    }
+
+    @Test
+    void rejectedSendNotifiesNobody() {
+        givenStudentsExist();
+        when(connectionRepository.existsActiveBetween(ALICE_ID, BOB_ID)).thenReturn(true);
+
+        assertThrows(MatchRequestNotAllowedException.class, () -> service.send(ALICE_ID, BOB_ID, null));
+
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void acceptNotifiesTheSender() {
+        givenPendingRequestFromAliceToBob();
+
+        service.accept(REQUEST_ID, BOB_ID);
+
+        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_ACCEPTED), contains("Bob"));
+    }
+
+    @Test
+    void declineNotifiesTheSender() {
+        givenPendingRequestFromAliceToBob();
+
+        service.decline(REQUEST_ID, BOB_ID);
+
+        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED), contains("Bob"));
+    }
+
+    @Test
+    void rejectedAcceptNotifiesNobody() {
+        givenPendingRequestFromAliceToBob();
+
+        assertThrows(MatchRequestNotAllowedException.class, () -> service.accept(REQUEST_ID, CAROL_ID));
+
+        verifyNoInteractions(notificationService);
     }
 
     private void givenStudentsExist() {

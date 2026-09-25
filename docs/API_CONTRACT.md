@@ -45,14 +45,32 @@ exception handler in place.
 
 | Method | Path | Request | Response | Auth | Status |
 | ------ | ---- | ------- | -------- | ---- | ------ |
-| POST | `/api/match-requests` | TODO: target student id plus an **optional message** | TODO | Student | TODO |
-| GET | `/api/match-requests` | TODO: incoming and outgoing | TODO | Student | TODO |
-| POST | `/api/match-requests/{id}/accept` | none | TODO | Student | TODO |
-| POST | `/api/match-requests/{id}/decline` | none | TODO | Student | TODO |
+| POST | `/api/match-requests` | `{ "receiverId": 12, "message": "optional" }` | 201, `MatchRequestDto`. 409 if sending to yourself, to a connected student, or while a request is pending either way. 404 if the receiver does not exist | Student | Proposed |
+| GET | `/api/match-requests?direction=incoming` | `direction` is `incoming` or `outgoing` | 200, list of `MatchRequestDto`, newest first, every status | Student | Proposed |
+| POST | `/api/match-requests/{id}/accept` | none | 200, `MatchRequestDto` with status `ACCEPTED`. Creates the connection. 403 if you are not the receiver, 409 if no longer pending | Student | Proposed |
+| POST | `/api/match-requests/{id}/decline` | none | 200, `MatchRequestDto` with status `DECLINED`. 403 if you are not the receiver, 409 if no longer pending | Student | Proposed |
 | GET | `/api/connections` | none | TODO: active connections | Student | TODO |
 | DELETE | `/api/connections/{id}` | none | TODO: ends an active connection; the contact number must stop being visible to both sides afterwards | Student | TODO |
 | GET | `/api/students/{id}/profile` | none | TODO: `PublicProfileDto` or `ConnectedProfileDto` depending on connection state | Student | TODO |
 | GET | `/api/notifications` | none | TODO | Student | TODO |
+
+`MatchRequestDto`:
+
+```json
+{
+  "id": 10,
+  "senderId": 1,
+  "senderName": "Priya N.",
+  "receiverId": 12,
+  "receiverName": "Jamie Lee",
+  "message": "Want to revise for the midterm?",
+  "status": "PENDING",
+  "createdAt": "2026-09-26T14:02:11"
+}
+```
+
+No contact numbers. A request exists before any connection does. Each send, accept and
+decline also creates a notification for the other student.
 
 ## Study groups (Team C)
 

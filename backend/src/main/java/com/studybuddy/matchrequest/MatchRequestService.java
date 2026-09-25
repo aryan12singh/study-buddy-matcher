@@ -2,6 +2,8 @@ package com.studybuddy.matchrequest;
 
 import com.studybuddy.connection.Connection;
 import com.studybuddy.connection.ConnectionRepository;
+import com.studybuddy.notification.NotificationService;
+import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import org.springframework.stereotype.Service;
@@ -23,15 +25,18 @@ public class MatchRequestService {
     private final ConnectionRepository connectionRepository;
     private final StudentRepository studentRepository;
     private final MatchRequestAssembler matchRequestAssembler;
+    private final NotificationService notificationService;
 
     public MatchRequestService(MatchRequestRepository matchRequestRepository,
                                ConnectionRepository connectionRepository,
                                StudentRepository studentRepository,
-                               MatchRequestAssembler matchRequestAssembler) {
+                               MatchRequestAssembler matchRequestAssembler,
+                               NotificationService notificationService) {
         this.matchRequestRepository = matchRequestRepository;
         this.connectionRepository = connectionRepository;
         this.studentRepository = studentRepository;
         this.matchRequestAssembler = matchRequestAssembler;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -55,8 +60,11 @@ public class MatchRequestService {
                     "A match request between you and this student is already pending");
         }
 
-        MatchRequest request = new MatchRequest(sender, receiver, normaliseMessage(message));
-        return matchRequestAssembler.toDto(matchRequestRepository.save(request));
+        MatchRequest saved = matchRequestRepository.save(
+                new MatchRequest(sender, receiver, normaliseMessage(message)));
+        notificationService.notify(receiver, NotificationType.MATCH_REQUEST_RECEIVED,
+                sender.getName() + " sent you a study-buddy request");
+        return matchRequestAssembler.toDto(saved);
     }
 
     /**
@@ -70,6 +78,9 @@ public class MatchRequestService {
         MatchRequest request = findRequestForReceiver(requestId, currentStudentId);
         request.accept();
         connectionRepository.save(new Connection(request.getSender(), request.getReceiver()));
+        notificationService.notify(request.getSender(), NotificationType.MATCH_REQUEST_ACCEPTED,
+                request.getReceiver().getName()
+                        + " accepted your request. You can now see each other's contact number.");
         return matchRequestAssembler.toDto(request);
     }
 
@@ -81,6 +92,8 @@ public class MatchRequestService {
     public MatchRequestDto decline(Long requestId, Long currentStudentId) {
         MatchRequest request = findRequestForReceiver(requestId, currentStudentId);
         request.decline();
+        notificationService.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED,
+                request.getReceiver().getName() + " declined your study-buddy request");
         return matchRequestAssembler.toDto(request);
     }
 
