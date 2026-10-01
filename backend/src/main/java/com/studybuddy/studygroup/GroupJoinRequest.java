@@ -108,11 +108,21 @@ public class GroupJoinRequest {
         respond(GroupJoinRequestStatus.REJECTED);
     }
 
-    private void respond(GroupJoinRequestStatus newStatus) {
+    /**
+     * Lets a caller check the state first, so a stale request is reported as
+     * such rather than as whatever other rule happens to fail next.
+     *
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void requirePending() {
         if (!isPending()) {
             throw new IllegalStateException(
                     "Group join request " + id + " is already " + status + " and cannot be changed");
         }
+    }
+
+    private void respond(GroupJoinRequestStatus newStatus) {
+        requirePending();
         this.status = newStatus;
         this.respondedAt = LocalDateTime.now();
     }

@@ -73,6 +73,14 @@ class GroupJoinRequestTest {
     }
 
     @Test
+    void requirePendingPassesOnlyWhilePending() {
+        request.requirePending();
+        request.accept();
+
+        assertThrows(IllegalStateException.class, request::requirePending);
+    }
+
+    @Test
     void belongsToIsTrueOnlyForItsOwnGroup() {
         assertTrue(request.belongsTo(5L));
         assertFalse(request.belongsTo(6L));
