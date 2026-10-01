@@ -21,6 +21,12 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A study group led by one student. The leader is also stored as a
+ * {@link GroupMembership}, so the member count already includes them when it
+ * is compared against {@code maxGroupSize}. Closing is one-way: there is no
+ * setter that reopens a group.
+ */
 @Entity
 @Table(name = "study_groups")
 public class StudyGroup {
@@ -121,12 +127,38 @@ public class StudyGroup {
         return studyGoals;
     }
 
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
+    public void replaceStudyGoals(Set<StudyGoal> newStudyGoals) {
+        studyGoals.clear();
+        studyGoals.addAll(newStudyGoals);
+    }
+
     public boolean isActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public boolean isLeader(Long studentId) {
+        return leader.getId().equals(studentId);
+    }
+
+    /**
+     * @param currentMemberCount members already in the group, leader included
+     */
+    public boolean hasRoomFor(long currentMemberCount) {
+        return currentMemberCount < maxGroupSize;
+    }
+
+    /**
+     * @throws IllegalStateException if the group is already closed
+     */
+    public void close() {
+        if (!active) {
+            throw new IllegalStateException("Study group " + id + " is already closed");
+        }
+        this.active = false;
     }
 
     public LocalDateTime getCreatedAt() {
