@@ -74,14 +74,65 @@ decline also creates a notification for the other student.
 
 ## Study groups (Team C)
 
+Agreed by Team C: the leader counts toward `maxGroupSize` (they are stored as a member); members
+cannot leave on their own yet, as the brief only asks for the leader removing members; a leader
+cannot leave or be removed, they close the group instead.
+
 | Method | Path | Request | Response | Auth | Status |
 | ------ | ---- | ------- | -------- | ---- | ------ |
-| GET | `/api/groups` | TODO: browse and filter | TODO | Student | TODO |
-| POST | `/api/groups` | TODO: name, description, course, study goals, preferred study mode, weekly availability, maximum group size | TODO | Student | TODO |
-| GET | `/api/groups/{id}` | none | TODO | Student | TODO |
-| PUT | `/api/groups/{id}` | TODO: update group information | TODO | Leader | TODO |
-| POST | `/api/groups/{id}/close` | none | TODO: closes a group that is no longer active; a closed group accepts no new join requests | Leader | TODO |
-| DELETE | `/api/groups/{id}/members/{studentId}` | none | TODO: leader removes a member | Leader | TODO |
+| GET | `/api/groups?courseId=3&studyGoal=EXAM_PREPARATION&studyMode=ONLINE` | Every filter is optional. `studyMode` `EITHER`, on the filter or on the group, matches any mode | 200, list of `StudyGroupSummaryDto`, open groups only, newest first | Student | Proposed |
+| POST | `/api/groups` | `StudyGroupDetails` | 201, `StudyGroupDetailDto`. The creator becomes leader and first member. 400 if the details are invalid, 404 if the course does not exist | Student | Proposed |
+| GET | `/api/groups/{id}` | none | 200, `StudyGroupDetailDto`, open or closed. 404 if the group does not exist | Student | Proposed |
+| PUT | `/api/groups/{id}` | `StudyGroupDetails`; replaces every field, availability included | 200, `StudyGroupDetailDto`. 400 if invalid or `maxGroupSize` is below the current member count, 403 if you are not the leader, 404 if the group or course does not exist, 409 if the group is closed | Leader | Proposed |
+| POST | `/api/groups/{id}/close` | none | 200, `StudyGroupDetailDto` with `active: false`. One-way. Every pending join request is rejected and its sender notified. 403 if you are not the leader, 409 if already closed | Leader | Proposed |
+| DELETE | `/api/groups/{id}/members/{studentId}` | none | 204. The removed student is notified. 403 if you are not the leader, 409 if `studentId` is the leader or not a member | Leader | Proposed |
+
+`StudyGroupDetails` (request body for create and update):
+
+```json
+{
+  "name": "Midterm crammers",
+  "description": "Weekly problem sets, optional",
+  "courseId": 3,
+  "studyGoals": ["EXAM_PREPARATION", "PROBLEM_SOLVING"],
+  "preferredStudyMode": "IN_PERSON",
+  "maxGroupSize": 4,
+  "availability": [
+    { "dayOfWeek": "MONDAY", "startTime": "18:00", "endTime": "20:00" }
+  ]
+}
+```
+
+`name`, `courseId` and `maxGroupSize` (at least 2: the leader plus one) are required. Missing
+`studyGoals` or `availability` mean none. Each slot must start before it ends.
+
+`StudyGroupSummaryDto` (browse list):
+
+```json
+{
+  "id": 5,
+  "name": "Midterm crammers",
+  "courseId": 3,
+  "courseCode": "IS442",
+  "courseName": "Object Oriented Programming",
+  "leaderId": 1,
+  "leaderName": "Priya N.",
+  "preferredStudyMode": "IN_PERSON",
+  "studyGoals": ["EXAM_PREPARATION", "PROBLEM_SOLVING"],
+  "maxGroupSize": 4,
+  "memberCount": 2,
+  "active": true
+}
+```
+
+`StudyGroupDetailDto` has every summary field plus `description`, `createdAt`, `availability`
+(same slot shape as above, Monday first) and `members`, in joining order:
+
+```json
+{ "studentId": 1, "name": "Priya N.", "leader": true, "joinedAt": "2026-10-01T09:30:00" }
+```
+
+No contact numbers anywhere in group responses. Being in the same group is not a connection.
 
 ### Group join requests (Team C)
 
@@ -90,10 +141,30 @@ separate from `MatchRequest`. Do not try to reuse the same entity for both.
 
 | Method | Path | Request | Response | Auth | Status |
 | ------ | ---- | ------- | -------- | ---- | ------ |
-| POST | `/api/groups/{id}/join-requests` | TODO: optional message | TODO | Student | TODO |
-| GET | `/api/groups/{id}/join-requests` | TODO: pending requests for this group | TODO | Leader | TODO |
-| POST | `/api/groups/{id}/join-requests/{requestId}/accept` | none | TODO: must respect the group's maximum size | Leader | TODO |
-| POST | `/api/groups/{id}/join-requests/{requestId}/reject` | none | TODO | Leader | TODO |
+| POST | `/api/groups/{id}/join-requests` | `{ "message": "optional" }` | 201, `GroupJoinRequestDto` with status `PENDING`. The leader is notified. 404 if the group does not exist, 409 if the group is closed or full, you are already a member, or you already have a pending request for it | Student | Proposed |
+| GET | `/api/groups/{id}/join-requests` | none | 200, list of pending `GroupJoinRequestDto`, newest first. 403 if you are not the leader | Leader | Proposed |
+| POST | `/api/groups/{id}/join-requests/{requestId}/accept` | none | 200, `GroupJoinRequestDto` with status `ACCEPTED`. Adds the student as a member and notifies them. 403 if you are not the leader, 404 if the request is not in this group, 409 if no longer pending, or the group is closed or full | Leader | Proposed |
+| POST | `/api/groups/{id}/join-requests/{requestId}/reject` | none | 200, `GroupJoinRequestDto` with status `REJECTED`. The student is notified. 403 if you are not the leader, 404 if the request is not in this group, 409 if no longer pending | Leader | Proposed |
+
+`GroupJoinRequestDto`:
+
+```json
+{
+  "id": 20,
+  "groupId": 5,
+  "groupName": "Midterm crammers",
+  "studentId": 12,
+  "studentName": "Jamie Lee",
+  "message": "Can I join for the finals?",
+  "status": "PENDING",
+  "createdAt": "2026-10-01T10:15:00"
+}
+```
+
+Status codes assume Team B's exception handler maps `StudyGroupNotFoundException`,
+`GroupJoinRequestNotFoundException` and `CourseNotFoundException` to 404,
+`NotGroupLeaderException` to 403, `StudyGroupActionNotAllowedException` and
+`IllegalStateException` to 409, and `InvalidStudyGroupException` to 400.
 
 ## Administration (Team C)
 
