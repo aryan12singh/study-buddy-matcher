@@ -14,6 +14,12 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
+/**
+ * A student's request to join a study group. Starts PENDING and moves once,
+ * to ACCEPTED or REJECTED, through {@link #accept()} or {@link #reject()}; the
+ * status has no public setter so no other transition is possible. A separate
+ * state machine from {@code MatchRequest}, per the API contract.
+ */
 @Entity
 @Table(name = "group_join_requests")
 public class GroupJoinRequest {
@@ -72,10 +78,6 @@ public class GroupJoinRequest {
         return status;
     }
 
-    public void setStatus(GroupJoinRequestStatus status) {
-        this.status = status;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -84,7 +86,34 @@ public class GroupJoinRequest {
         return respondedAt;
     }
 
-    public void setRespondedAt(LocalDateTime respondedAt) {
-        this.respondedAt = respondedAt;
+    public boolean isPending() {
+        return status == GroupJoinRequestStatus.PENDING;
+    }
+
+    public boolean belongsTo(Long studyGroupId) {
+        return studyGroup.getId().equals(studyGroupId);
+    }
+
+    /**
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void accept() {
+        respond(GroupJoinRequestStatus.ACCEPTED);
+    }
+
+    /**
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void reject() {
+        respond(GroupJoinRequestStatus.REJECTED);
+    }
+
+    private void respond(GroupJoinRequestStatus newStatus) {
+        if (!isPending()) {
+            throw new IllegalStateException(
+                    "Group join request " + id + " is already " + status + " and cannot be changed");
+        }
+        this.status = newStatus;
+        this.respondedAt = LocalDateTime.now();
     }
 }
