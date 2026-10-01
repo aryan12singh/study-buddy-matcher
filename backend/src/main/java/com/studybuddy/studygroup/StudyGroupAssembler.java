@@ -2,6 +2,7 @@ package com.studybuddy.studygroup;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -11,6 +12,15 @@ import java.util.Set;
  */
 @Component
 public class StudyGroupAssembler {
+
+    /**
+     * Monday first, then by start time. Sorted here rather than in the query:
+     * day_of_week is stored as text, so the database would sort it
+     * alphabetically and put FRIDAY before MONDAY.
+     */
+    private static final Comparator<GroupAvailabilitySlot> WEEK_ORDER =
+            Comparator.comparing(GroupAvailabilitySlot::getDayOfWeek)
+                    .thenComparing(GroupAvailabilitySlot::getStartTime);
 
     public StudyGroupSummaryDto toSummary(StudyGroup group, long memberCount) {
         return new StudyGroupSummaryDto(
@@ -46,7 +56,7 @@ public class StudyGroupAssembler {
                 memberships.size(),
                 group.isActive(),
                 group.getCreatedAt(),
-                slots.stream().map(this::toSlotDto).toList(),
+                slots.stream().sorted(WEEK_ORDER).map(this::toSlotDto).toList(),
                 memberships.stream().map(membership -> toMemberDto(group, membership)).toList());
     }
 

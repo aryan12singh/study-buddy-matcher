@@ -8,7 +8,5 @@ public interface GroupAvailabilitySlotRepository extends JpaRepository<GroupAvai
 
     List<GroupAvailabilitySlot> findByStudyGroupId(Long studyGroupId);
 
-    List<GroupAvailabilitySlot> findByStudyGroupIdOrderByDayOfWeekAscStartTimeAsc(Long studyGroupId);
-
     void deleteByStudyGroupId(Long studyGroupId);
 }
