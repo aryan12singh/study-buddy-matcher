@@ -14,6 +14,11 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
+/**
+ * Something that happened which a student should know about. Starts unread;
+ * {@link #markRead()} is the only way to change that, and there is no way
+ * back to unread.
+ */
 @Entity
 @Table(name = "notifications")
 public class Notification {
@@ -68,8 +73,13 @@ public class Notification {
         return read;
     }
 
-    public void setRead(boolean read) {
-        this.read = read;
+    public boolean isFor(Long studentId) {
+        return recipient.getId().equals(studentId);
+    }
+
+    /** Marking an already-read notification again changes nothing. */
+    public void markRead() {
+        this.read = true;
     }
 
     public LocalDateTime getCreatedAt() {
