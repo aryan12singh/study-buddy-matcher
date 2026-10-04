@@ -1,6 +1,8 @@
 package com.studybuddy.studygroup;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,4 +21,16 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
 
     /** Members of the group, leader included. */
     long countByStudyGroupId(Long studyGroupId);
+
+    /**
+     * Groups the student is a member of but does not lead. The leader is
+     * stored as a member too, so without this filter every group they lead
+     * would also count as one they joined.
+     */
+    @Query("""
+            select count(m) from GroupMembership m
+            where m.student.id = :studentId
+              and m.studyGroup.leader.id <> :studentId
+            """)
+    long countJoinedByStudentId(@Param("studentId") Long studentId);
 }

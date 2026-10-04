@@ -16,6 +16,9 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
 
     List<MatchRequest> findByReceiverIdOrderByCreatedAtDesc(Long receiverId);
 
+    /** Every request the student has sent, in any status. */
+    long countBySenderId(Long senderId);
+
     /**
      * Whether a PENDING request exists between the two students, sent in
      * either direction.
