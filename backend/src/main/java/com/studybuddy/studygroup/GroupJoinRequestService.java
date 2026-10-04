@@ -133,6 +133,20 @@ public class GroupJoinRequestService {
         return groupJoinRequestAssembler.toDto(request);
     }
 
+    /**
+     * Rejects every join request the student still has pending, so leaders
+     * are not left with requests from an account that can no longer join.
+     * Used when the student's account is deactivated. Nobody is notified: the
+     * student can no longer sign in, and for the leader the request simply
+     * leaves their pending list. REJECTED is reused rather than adding a
+     * status, because a new enum value would not pass the check constraint on
+     * the existing status column.
+     */
+    public void rejectAllPendingFrom(Long studentId) {
+        groupJoinRequestRepository.findByStudentIdAndStatus(studentId, GroupJoinRequestStatus.PENDING)
+                .forEach(GroupJoinRequest::reject);
+    }
+
     private void requireRoom(StudyGroup group) {
         if (!group.hasRoomFor(groupMembershipRepository.countByStudyGroupId(group.getId()))) {
             throw new StudyGroupActionNotAllowedException("This group is full");

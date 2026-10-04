@@ -6,9 +6,11 @@ import com.studybuddy.connection.ConnectionRepository;
 import com.studybuddy.connection.ConnectionService;
 import com.studybuddy.course.Course;
 import com.studybuddy.matchrequest.MatchRequestRepository;
+import com.studybuddy.matchrequest.MatchRequestService;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
+import com.studybuddy.studygroup.GroupJoinRequestService;
 import com.studybuddy.studygroup.GroupMembership;
 import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroup;
@@ -43,8 +45,9 @@ import static org.mockito.Mockito.when;
 /**
  * Uses the real {@link UserUsageCounter}, {@link StudentDeactivation} and
  * {@link ConnectionService} over mocked repositories, so deactivation is
- * checked against the entities it changes. Closing groups is delegated to a
- * mocked {@link StudyGroupService}, which has its own tests.
+ * checked against the entities it changes. Closing groups and clearing
+ * pending requests are delegated to mocked services, which have their own
+ * tests; here we only check deactivation asks for them.
  */
 @ExtendWith(MockitoExtension.class)
 class AdminUserServiceTest {
@@ -61,6 +64,8 @@ class AdminUserServiceTest {
     @Mock private StudyGroupRepository studyGroupRepository;
     @Mock private GroupMembershipRepository groupMembershipRepository;
     @Mock private StudyGroupService studyGroupService;
+    @Mock private MatchRequestService matchRequestService;
+    @Mock private GroupJoinRequestService groupJoinRequestService;
     @Mock private NotificationService notificationService;
 
     private AdminUserService service;
@@ -75,8 +80,8 @@ class AdminUserServiceTest {
                 new ConnectionService(connectionRepository, new ConnectionAssembler(), notificationService);
         UserUsageCounter usageCounter = new UserUsageCounter(connectionRepository, matchRequestRepository,
                 studyGroupRepository, groupMembershipRepository);
-        StudentDeactivation deactivation = new StudentDeactivation(connectionService, studyGroupService,
-                studyGroupRepository, groupMembershipRepository);
+        StudentDeactivation deactivation = new StudentDeactivation(connectionService, matchRequestService,
+                groupJoinRequestService, studyGroupService, studyGroupRepository, groupMembershipRepository);
         service = new AdminUserService(userRepository, studentRepository, new AdminUserAssembler(),
                 usageCounter, deactivation);
 
@@ -205,7 +210,7 @@ class AdminUserServiceTest {
     // --- deactivate ---
 
     @Test
-    void deactivateEndsConnectionsClosesLedGroupsAndRemovesMemberships() {
+    void deactivateEndsConnectionsClearsPendingRequestsClosesLedGroupsAndRemovesMemberships() {
         givenUserExists(bobUser, bob);
         Connection withCarol = new Connection(bob, carol);
         ReflectionTestUtils.setField(withCarol, "id", 7L);
@@ -221,6 +226,8 @@ class AdminUserServiceTest {
         assertFalse(detail.account().active());
         assertFalse(bobUser.isActive());
         assertFalse(withCarol.isActive());
+        verify(matchRequestService).declineAllPendingFor(BOB_ID);
+        verify(groupJoinRequestService).rejectAllPendingFrom(BOB_ID);
         verify(studyGroupService).close(GROUP_ID, BOB_ID);
         verify(groupMembershipRepository).deleteAll(memberships);
     }
@@ -240,7 +247,7 @@ class AdminUserServiceTest {
 
         assertThrows(IllegalStateException.class, () -> service.deactivate(BOB_ID, ADMIN_ID));
 
-        verifyNoInteractions(studyGroupService);
+        verifyNoInteractions(studyGroupService, matchRequestService, groupJoinRequestService);
     }
 
     @Test
@@ -252,7 +259,7 @@ class AdminUserServiceTest {
 
         assertFalse(otherAdmin.isActive());
         verify(connectionRepository, never()).findActiveByStudentId(anyLong());
-        verifyNoInteractions(studyGroupService);
+        verifyNoInteractions(studyGroupService, matchRequestService, groupJoinRequestService);
     }
 
     // --- reactivate ---

@@ -328,6 +328,20 @@ class GroupJoinRequestServiceTest {
         verifyNoInteractions(notificationService);
     }
 
+    // --- rejectAllPendingFrom (account deactivation) ---
+
+    @Test
+    void rejectAllPendingFromRejectsTheStudentsRequestsWithoutNotifying() {
+        GroupJoinRequest request = pendingJoinRequest(REQUEST_ID, group, bob);
+        when(groupJoinRequestRepository.findByStudentIdAndStatus(BOB_ID, GroupJoinRequestStatus.PENDING))
+                .thenReturn(List.of(request));
+
+        service.rejectAllPendingFrom(BOB_ID);
+
+        assertEquals(GroupJoinRequestStatus.REJECTED, request.getStatus());
+        verifyNoInteractions(notificationService);
+    }
+
     // --- helpers ---
 
     private void givenGroupExists() {

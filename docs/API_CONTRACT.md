@@ -245,10 +245,14 @@ Status codes assume Team B's exception handler maps `StudyGroupNotFoundException
 | Method | Path | Request | Response | Auth | Status |
 | ------ | ---- | ------- | -------- | ---- | ------ |
 Agreed by Team C: **deleting an account deactivates it**, never a hard delete. Deactivating a
-student ends their active connections (the other student is notified), closes every group they
-lead (pending join requests are rejected and notified, as on a normal close) and removes all of
-their group memberships. Match requests are kept as history. Reactivating only lets the account
-sign in again; nothing ended by deactivation is restored. **Usage information** means counts:
+student ends their active connections (the other student is notified), declines every match
+request still pending to or from them (the other student is notified), closes every group they
+lead (pending join requests are rejected and notified, as on a normal close), rejects their own
+pending join requests to other groups (nobody is notified; the request leaves the leader's
+pending list) and removes all of their group memberships. Already answered requests are kept as
+history. Pending requests reuse `DECLINED` and `REJECTED` rather than a new status, so the
+frontend sees no new values. Reactivating only lets the account sign in again; nothing ended by
+deactivation is restored. **Usage information** means counts:
 active connections, match requests sent (any status), groups led (open or closed) and groups
 joined but not led, plus the account's `createdAt` and `active`. There is no last-login time.
 

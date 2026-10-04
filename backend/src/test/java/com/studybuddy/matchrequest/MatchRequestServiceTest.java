@@ -316,6 +316,50 @@ class MatchRequestServiceTest {
         verifyNoInteractions(notificationService);
     }
 
+    // --- declineAllPendingFor (account deactivation) ---
+
+    @Test
+    void declineAllPendingForDeclinesReceivedRequestsAndTellsTheSender() {
+        MatchRequest fromAlice = pendingRequest(REQUEST_ID, alice, bob);
+        when(matchRequestRepository.findByReceiverIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
+                .thenReturn(List.of(fromAlice));
+        when(matchRequestRepository.findBySenderIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
+                .thenReturn(List.of());
+
+        service.declineAllPendingFor(BOB_ID);
+
+        assertEquals(MatchRequestStatus.DECLINED, fromAlice.getStatus());
+        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED),
+                contains("Bob's account is no longer active"));
+    }
+
+    @Test
+    void declineAllPendingForWithdrawsSentRequestsAndTellsTheReceiver() {
+        MatchRequest toAlice = pendingRequest(REQUEST_ID, bob, alice);
+        when(matchRequestRepository.findByReceiverIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
+                .thenReturn(List.of());
+        when(matchRequestRepository.findBySenderIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
+                .thenReturn(List.of(toAlice));
+
+        service.declineAllPendingFor(BOB_ID);
+
+        assertEquals(MatchRequestStatus.DECLINED, toAlice.getStatus());
+        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED),
+                contains("withdrawn"));
+    }
+
+    @Test
+    void declineAllPendingForDoesNothingWhenNoneArePending() {
+        when(matchRequestRepository.findByReceiverIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
+                .thenReturn(List.of());
+        when(matchRequestRepository.findBySenderIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
+                .thenReturn(List.of());
+
+        service.declineAllPendingFor(BOB_ID);
+
+        verifyNoInteractions(notificationService);
+    }
+
     private void givenStudentsExist() {
         when(studentRepository.findById(ALICE_ID)).thenReturn(Optional.of(alice));
         when(studentRepository.findById(BOB_ID)).thenReturn(Optional.of(bob));

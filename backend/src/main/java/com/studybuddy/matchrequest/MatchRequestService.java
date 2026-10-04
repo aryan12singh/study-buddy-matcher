@@ -97,6 +97,30 @@ public class MatchRequestService {
         return matchRequestAssembler.toDto(request);
     }
 
+    /**
+     * Declines every request still pending to or from the student and tells
+     * the other student, so nobody is left waiting on an account that can no
+     * longer answer. Used when the student's account is deactivated. DECLINED
+     * is reused rather than adding a status, because a new enum value would
+     * not pass the check constraint on the existing status column.
+     */
+    public void declineAllPendingFor(Long studentId) {
+        for (MatchRequest request : matchRequestRepository.findByReceiverIdAndStatus(
+                studentId, MatchRequestStatus.PENDING)) {
+            request.decline();
+            notificationService.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED,
+                    request.getReceiver().getName()
+                            + "'s account is no longer active, so your study-buddy request was closed");
+        }
+        for (MatchRequest request : matchRequestRepository.findBySenderIdAndStatus(
+                studentId, MatchRequestStatus.PENDING)) {
+            request.decline();
+            notificationService.notify(request.getReceiver(), NotificationType.MATCH_REQUEST_DECLINED,
+                    request.getSender().getName()
+                            + "'s account is no longer active, so their study-buddy request was withdrawn");
+        }
+    }
+
     /** Requests sent to the student, newest first, in every status. */
     @Transactional(readOnly = true)
     public List<MatchRequestDto> listIncoming(Long studentId) {
