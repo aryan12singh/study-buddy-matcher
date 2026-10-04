@@ -22,4 +22,20 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
             """)
     boolean existsActiveBetween(@Param("studentId") Long studentId,
                                 @Param("otherStudentId") Long otherStudentId);
+
+    /** The student's active connections, on either side, newest first. */
+    @Query("""
+            select c from Connection c
+            where c.endedAt is null
+              and (c.studentA.id = :studentId or c.studentB.id = :studentId)
+            order by c.createdAt desc
+            """)
+    List<Connection> findActiveByStudentId(@Param("studentId") Long studentId);
+
+    @Query("""
+            select count(c) from Connection c
+            where c.endedAt is null
+              and (c.studentA.id = :studentId or c.studentB.id = :studentId)
+            """)
+    long countActiveByStudentId(@Param("studentId") Long studentId);
 }
