@@ -49,10 +49,13 @@ exception handler in place.
 | GET | `/api/match-requests?direction=incoming` | `direction` is `incoming` or `outgoing` | 200, list of `MatchRequestDto`, newest first, every status | Student | Proposed |
 | POST | `/api/match-requests/{id}/accept` | none | 200, `MatchRequestDto` with status `ACCEPTED`. Creates the connection. 403 if you are not the receiver, 409 if no longer pending | Student | Proposed |
 | POST | `/api/match-requests/{id}/decline` | none | 200, `MatchRequestDto` with status `DECLINED`. 403 if you are not the receiver, 409 if no longer pending | Student | Proposed |
-| GET | `/api/connections` | none | TODO: active connections | Student | TODO |
-| DELETE | `/api/connections/{id}` | none | TODO: ends an active connection; the contact number must stop being visible to both sides afterwards | Student | TODO |
-| GET | `/api/students/{id}/profile` | none | TODO: `PublicProfileDto` or `ConnectedProfileDto` depending on connection state | Student | TODO |
-| GET | `/api/notifications` | none | TODO | Student | TODO |
+| GET | `/api/connections` | none | 200, list of `ConnectionDto`, active connections only, newest first. Empty list if none | Student | Proposed |
+| DELETE | `/api/connections/{id}` | none | 204. Ends the connection; from then on neither side sees the other's contact number. The other student is notified (`CONNECTION_ENDED`). 403 if you are not one of the two students, 404 if the connection does not exist, 409 if it has already ended | Student | Proposed |
+| GET | `/api/students/{id}/profile` | none | 200, `ConnectedProfileDto` if you are that student or actively connected to them, otherwise `PublicProfileDto`. Decided on every request, so it flips back to public as soon as a connection ends. 404 if the student does not exist | Student | Proposed |
+| GET | `/api/notifications` | none | 200, list of `NotificationDto`, newest first, read and unread. Empty list if none | Student | Proposed |
+| GET | `/api/notifications/unread-count` | none | 200, `{ "count": 3 }` | Student | Proposed |
+| POST | `/api/notifications/{id}/read` | none | 200, `NotificationDto` with `read: true`. Marking an already read notification again is not an error. 403 if it was sent to another student, 404 if it does not exist | Student | Proposed |
+| POST | `/api/notifications/read-all` | none | 204. Marks every unread notification of yours as read | Student | Proposed |
 
 `MatchRequestDto`:
 
@@ -71,6 +74,77 @@ exception handler in place.
 
 No contact numbers. A request exists before any connection does. Each send, accept and
 decline also creates a notification for the other student.
+
+`ConnectionDto`, written from the caller's side:
+
+```json
+{
+  "id": 7,
+  "otherStudentId": 12,
+  "otherStudentName": "Jamie Lee",
+  "createdAt": "2026-09-27T09:12:40"
+}
+```
+
+No contact number here. The contact number is only ever returned by the profile endpoint.
+
+`PublicProfileDto`:
+
+```json
+{
+  "id": 12,
+  "name": "Jamie Lee",
+  "school": "SCIS",
+  "programme": "Information Systems",
+  "yearOfStudy": 2,
+  "coursesTaken": [
+    { "id": 3, "code": "IS442", "name": "Object Oriented Programming" }
+  ],
+  "targetCourse": { "id": 3, "code": "IS442", "name": "Object Oriented Programming" },
+  "preferredStudyMode": "IN_PERSON",
+  "studyGoals": ["EXAM_PREPARATION"],
+  "preferredGroupSizeMin": 2,
+  "preferredGroupSizeMax": 3
+}
+```
+
+`PublicProfileDto` has **no** `contactNumber` field, not even as `null`. `ConnectedProfileDto` is
+the same shape plus one field:
+
+```json
+{
+  "id": 12,
+  "name": "Jamie Lee",
+  "...": "every PublicProfileDto field",
+  "contactNumber": "+65 9123 4567"
+}
+```
+
+The frontend tells them apart by whether `contactNumber` is present. `coursesTaken` is sorted by
+course code; `targetCourse`, `preferredStudyMode` and the group size fields may be `null`. The
+group size is a min and max because that is how `Student` stores it today; it follows the open
+group size question in `AGENTS.md`.
+
+`NotificationDto`:
+
+```json
+{
+  "id": 30,
+  "type": "MATCH_REQUEST_ACCEPTED",
+  "message": "Jamie Lee accepted your request. You can now see each other's contact number.",
+  "read": false,
+  "createdAt": "2026-09-26T15:40:02"
+}
+```
+
+`type` is one of `MATCH_REQUEST_RECEIVED`, `MATCH_REQUEST_ACCEPTED`, `MATCH_REQUEST_DECLINED`,
+`CONNECTION_ENDED`, `GROUP_JOIN_REQUEST_RECEIVED`, `GROUP_JOIN_REQUEST_ACCEPTED`,
+`GROUP_JOIN_REQUEST_REJECTED`, `GROUP_MEMBER_REMOVED`.
+
+Status codes assume Team B's exception handler maps `ConnectionNotFoundException`,
+`StudentNotFoundException` and `NotificationNotFoundException` to 404,
+`NotConnectionParticipantException` and `NotificationNotAllowedException` to 403, and
+`IllegalStateException` to 409.
 
 ## Study groups (Team C)
 
@@ -170,11 +244,79 @@ Status codes assume Team B's exception handler maps `StudyGroupNotFoundException
 
 | Method | Path | Request | Response | Auth | Status |
 | ------ | ---- | ------- | -------- | ---- | ------ |
-| GET | `/api/admin/users` | TODO: list and filter | TODO: must include **account status** and basic **usage information**; TODO: agree what "usage" means (last login? counts of matches, connections, groups?) | Admin | TODO |
-| POST | `/api/admin/users` | TODO: create an account, including its role | TODO | Admin | TODO |
-| GET | `/api/admin/users/{id}` | none | TODO: account status and usage detail | Admin | TODO |
-| PUT | `/api/admin/users/{id}` | TODO: update account | TODO | Admin | TODO |
-| DELETE | `/api/admin/users/{id}` | none | TODO: agree whether this is a hard delete or deactivation, and what happens to that student's connections and group memberships | Admin | TODO |
+Agreed by Team C: **deleting an account deactivates it**, never a hard delete. Deactivating a
+student ends their active connections (the other student is notified), closes every group they
+lead (pending join requests are rejected and notified, as on a normal close) and removes all of
+their group memberships. Match requests are kept as history. Reactivating only lets the account
+sign in again; nothing ended by deactivation is restored. **Usage information** means counts:
+active connections, match requests sent (any status), groups led (open or closed) and groups
+joined but not led, plus the account's `createdAt` and `active`. There is no last-login time.
+
+| Method | Path | Request | Response | Auth | Status |
+| ------ | ---- | ------- | -------- | ---- | ------ |
+| GET | `/api/admin/users?role=STUDENT&active=true&search=jamie` | Every filter is optional. `role` is `STUDENT` or `ADMIN`; `search` matches part of the email or the student's name, ignoring case | 200, list of `AdminUserSummaryDto`, newest first, active and inactive. Empty list if nothing matches | Admin | Proposed |
+| POST | `/api/admin/users` | TODO: `{ email, password, role }` plus `name`, `school`, `programme`, `yearOfStudy`, `contactNumber` when `role` is `STUDENT` | TODO: 201, `AdminUserDetailDto`; also creates the student profile; 409 if the email is taken. **Blocked: needs Team B's `PasswordEncoder` bean** | Admin | TODO |
+| GET | `/api/admin/users/{id}` | none | 200, `AdminUserDetailDto`. 404 if the account does not exist | Admin | Proposed |
+| PUT | `/api/admin/users/{id}` | `AdminUserUpdateRequest` | 200, `AdminUserDetailDto`. 400 if the email is missing or, for a student, a profile field is missing or `yearOfStudy` is below 1. 404 if the account does not exist, 409 if another account already uses the email | Admin | Proposed |
+| DELETE | `/api/admin/users/{id}` | none | 200, `AdminUserDetailDto` with `active: false`. **Deactivates, does not delete**; see above for what happens to a student's connections and groups. 404 if the account does not exist, 409 if it is your own account or already deactivated | Admin | Proposed |
+| POST | `/api/admin/users/{id}/reactivate` | none | 200, `AdminUserDetailDto` with `active: true`. 404 if the account does not exist, 409 if it is already active | Admin | Proposed |
+
+`AdminUserUpdateRequest` (request body for update; active status is not changed here):
+
+```json
+{
+  "email": "jamie.lee@smu.edu.sg",
+  "name": "Jamie Lee",
+  "school": "SCIS",
+  "programme": "Information Systems",
+  "yearOfStudy": 2,
+  "contactNumber": "+65 9123 4567"
+}
+```
+
+`email` is always required. The other fields are required for student accounts and ignored for
+admin accounts.
+
+`AdminUserSummaryDto` (list), with `name` `null` for admin accounts:
+
+```json
+{
+  "id": 12,
+  "email": "jamie.lee@smu.edu.sg",
+  "role": "STUDENT",
+  "name": "Jamie Lee",
+  "active": true,
+  "createdAt": "2026-09-01T10:00:00"
+}
+```
+
+`AdminUserDetailDto` wraps the summary as `account` and adds `usage`, which is `null` for admin
+accounts:
+
+```json
+{
+  "account": {
+    "id": 12,
+    "email": "jamie.lee@smu.edu.sg",
+    "role": "STUDENT",
+    "name": "Jamie Lee",
+    "active": true,
+    "createdAt": "2026-09-01T10:00:00"
+  },
+  "usage": {
+    "activeConnections": 2,
+    "matchRequestsSent": 5,
+    "groupsLed": 1,
+    "groupsJoined": 3
+  }
+}
+```
+
+No password hash and no contact number in any admin response.
+
+Status codes assume Team B's exception handler maps `UserNotFoundException` to 404,
+`DuplicateEmailException`, `AdminActionNotAllowedException` and `IllegalStateException` to 409,
+and `InvalidAdminUserException` to 400.
 
 ---
 
