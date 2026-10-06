@@ -1,92 +1,170 @@
 # API contract
 
-The agreed surface between the React frontend and the Spring Boot backend.
+The Team C surface below is implemented on the approved feature branch. These are the actual
+controller and DTO shapes used by the React frontend. Verification results are recorded in
+[TEAM_C_TESTING.md](TEAM_C_TESTING.md); implementation does not imply a merged PR or a
+cross-team human review. Team A's matching and Team B's full own-profile editor remain
+separate integration work.
 
-**Agree the row before either side builds against it.** The most expensive failure available to
-a three-team project is Team A's matching page calling an endpoint Team B never agreed to
-build, discovered the week of the demo. Filling in a row here costs two minutes; finding out
-on 10 October costs an evening.
+Base path `/api`; JSON requests/responses. Protected requests use
+`Authorization: Bearer <token>`. Actor, student and administrator identity always comes from
+the verified principal. Client-supplied acting-user fields do not confer authority.
+Controllers validate input and call services; entities never become response bodies.
 
-How to use this file:
+All event timestamps are UTC instants, serialized with `Z`. Weekly schedules are recurring
+campus-local times in `Asia/Singapore`, with weekdays `MONDAY` through `SUNDAY` and whole-minute
+`HH:mm`/`HH:mm:ss` times. Slots require `startTime < endTime`; empty schedules and overlapping
+slots are allowed. The schema upgrade explicitly interprets legacy event timestamps using
+the documented source timezone `Asia/Singapore`; it does not relabel them without conversion.
 
-1. Whoever needs the endpoint opens a pull request adding the row, with the request and
-   response shapes filled in.
-2. The owning team reviews and merges it.
-3. Both sides build against the merged row. A change after that is another pull request, and
-   the other side gets told.
+## Identity, permissions and errors
 
-Conventions: base path `/api`, JSON in and out, `Authorization: Bearer <token>` on everything
-except registration and login. Responses are DTOs, never entities. Errors use the standard
-Spring problem shape. TODO: confirm and document the exact error body once Team B has the
-exception handler in place.
+Login, registration and admin edits share trimmed, lowercase email identity. Its normalized
+value is unique in PostgreSQL, including inactive accounts. Passwords require at least eight
+characters and at most 72 UTF-8 bytes. Passwords are encoded with the existing Spring Security
+BCrypt encoder. Secrets, hashes, token versions and stored contact data are absent from admin,
+request, connection, group and notification responses.
 
----
+JWTs include account ID, role, expiry and account token version. Every protected request checks
+that the account still exists, is active, and matches the token role/version. Mutation services
+recheck account state and the current principal's token version after locking. Deactivation
+increments the version. Reactivation permits fresh login; old tokens stay invalid. Permanent
+deletion invalidates all tokens by removing the account.
 
-## Auth and profile (Team B)
+Errors use `application/problem+json` with RFC 9457 fields and stable form/application fields:
 
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-| POST | `/api/auth/register` | TODO | TODO | Public | TODO |
-| POST | `/api/auth/login` | TODO | TODO | Public | TODO |
-| GET | `/api/profile/me` | none | TODO | Student | TODO |
-| PUT | `/api/profile/me` | TODO | TODO | Student | TODO |
-| PUT | `/api/profile/me/availability` | TODO | TODO | Student | TODO |
-| GET | `/api/courses` | none | TODO | Student | TODO |
+```json
+{
+  "type": "about:blank",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "Check the highlighted fields",
+  "instance": "/api/groups",
+  "code": "VALIDATION_FAILED",
+  "message": "Check the highlighted fields",
+  "fieldErrors": { "name": "must not be blank" },
+  "timestamp": "2026-10-07T02:00:00Z"
+}
+```
 
-## Matching (Team A)
+| HTTP | Code | Meaning |
+| --- | --- | --- |
+| 400 | `VALIDATION_FAILED` | Annotated body validation; errors keyed by the field path |
+| 400 | `INVALID_INPUT` | Invalid enum/JSON/query value or service field/size/time validation |
+| 401 | `UNAUTHENTICATED` | Missing, invalid, expired, revoked token; missing/inactive current account |
+| 401 | `INVALID_CREDENTIALS` | Login email/password does not identify an active account |
+| 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
+| 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
+| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self/last-admin removal |
+| 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
+| 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
+| 500 | `INTERNAL_ERROR` | Safe generic failure; no SQL, internal exception, credential or private data is returned |
 
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-| GET | `/api/matches` | TODO: **a course or a study goal is the entry point and one of the two is required**; filters (course, availability, study mode), sort, strategy and threshold are additional query parameters | TODO: ranked matches, each carrying a `MatchScore` with its per-criterion breakdown | Student | TODO |
-| GET | `/api/admin/matching-config` | none | TODO: current weights, threshold, active strategy | Admin | TODO |
-| PUT | `/api/admin/matching-config` | TODO | TODO | Admin | TODO |
+Body and service field validation errors have `fieldErrors`; other errors use an empty object. Authentication
+and permission errors share the same shape. All security responses include `Cache-Control:
+no-store`; the profile controller sets no-store explicitly as well.
 
-## Requests and connections (Team C)
+## Bounded auth and course foundation
 
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-| POST | `/api/match-requests` | `{ "receiverId": 12, "message": "optional" }` | 201, `MatchRequestDto`. 409 if sending to yourself, to a connected student, or while a request is pending either way. 404 if the receiver does not exist | Student | Proposed |
-| GET | `/api/match-requests?direction=incoming` | `direction` is `incoming` or `outgoing` | 200, list of `MatchRequestDto`, newest first, every status | Student | Proposed |
-| POST | `/api/match-requests/{id}/accept` | none | 200, `MatchRequestDto` with status `ACCEPTED`. Creates the connection. 403 if you are not the receiver, 409 if no longer pending | Student | Proposed |
-| POST | `/api/match-requests/{id}/decline` | none | 200, `MatchRequestDto` with status `DECLINED`. 403 if you are not the receiver, 409 if no longer pending | Student | Proposed |
-| GET | `/api/connections` | none | 200, list of `ConnectionDto`, active connections only, newest first. Empty list if none | Student | Proposed |
-| DELETE | `/api/connections/{id}` | none | 204. Ends the connection; from then on neither side sees the other's contact number. The other student is notified (`CONNECTION_ENDED`). 403 if you are not one of the two students, 404 if the connection does not exist, 409 if it has already ended | Student | Proposed |
-| GET | `/api/students/{id}/profile` | none | 200, `ConnectedProfileDto` if you are that student or actively connected to them, otherwise `PublicProfileDto`. Decided on every request, so it flips back to public as soon as a connection ends. 404 if the student does not exist | Student | Proposed |
-| GET | `/api/notifications` | none | 200, list of `NotificationDto`, newest first, read and unread. Empty list if none | Student | Proposed |
-| GET | `/api/notifications/unread-count` | none | 200, `{ "count": 3 }` | Student | Proposed |
-| POST | `/api/notifications/{id}/read` | none | 200, `NotificationDto` with `read: true`. Marking an already read notification again is not an error. 403 if it was sent to another student, 404 if it does not exist | Student | Proposed |
-| POST | `/api/notifications/read-all` | none | 204. Marks every unread notification of yours as read | Student | Proposed |
+This reuses the fixed Spring Security/JJWT/JPA dependencies. Public registration creates a
+student only. Account role selection belongs to the administrator creation endpoint.
 
-`MatchRequestDto`:
+| Method | Path | Request | Response | Auth |
+| --- | --- | --- | --- | --- |
+| POST | `/api/auth/login` | `{email,password}` | 200 `AuthResultDto` | Public |
+| POST | `/api/auth/register` | `RegisterRequest` | 201 `AuthResultDto` | Public |
+| GET | `/api/auth/me` | none | 200 `CurrentAccountDto` | Active account |
+| GET | `/api/courses` | none | 200 `CourseDto[]`, course-code order | Student |
+| GET | `/api/students/me/summary` | none | 200 `StudentActivityDto` | Student |
+
+`RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
+(integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
+Contact numbers are required nonblank text at creation, without a newly invented format rule.
+Registration saves the identity and `@MapsId` student profile atomically and signs in the account.
+
+```json
+{
+  "token": "<application JWT>",
+  "expiresAt": "2026-10-08T02:00:00Z",
+  "account": { "id": 12, "email": "jamie@demo.example.test", "role": "STUDENT", "name": "Jamie Lee" }
+}
+```
+
+`CurrentAccountDto` is the nested `account` shape above, with `name: null` for administrators.
+`CourseDto` is `{id,code,name}`. `StudentActivityDto` is
+`{activeConnections,pendingIncoming,pendingOutgoing,acceptedGroups}`; acceptedGroups counts
+current membership in open groups, including leadership. These real counts and the C request/
+profile actions are reusable by Team A matching cards and Team B's dashboard.
+
+Team A eligibility consumers can reuse `AccountAccess.eligibleStudent`, `requireStudent` and
+`eligibleStudentIds` / `StudentRepository.findActiveIds`; existing and active STUDENT identities
+are required. This contract does not provide scoring or ranking.
+
+The full own-profile/preferences APIs (`GET/PUT /api/profile/me`,
+`PUT /api/profile/me/availability`) remain Team B work and are not implemented by this exception.
+
+## Buddy requests, connections and study profiles
+
+| Method | Path | Request | Response | Auth |
+| --- | --- | --- | --- | --- |
+| POST | `/api/match-requests` | `SendMatchRequest` | 201 `MatchRequestDto` | Student |
+| GET | `/api/match-requests/incoming` | none | 200 `MatchRequestDto[]`, all statuses newest first | Student |
+| GET | `/api/match-requests/outgoing` | none | 200 `MatchRequestDto[]`, all statuses newest first | Student |
+| POST | `/api/match-requests/{id}/accept` | none | 200 `MatchRequestDto`, `ACCEPTED` | Receiver |
+| POST | `/api/match-requests/{id}/decline` | none | 200 `MatchRequestDto`, `DECLINED` | Receiver |
+| GET | `/api/connections` | none | 200 `ConnectionDto[]`, active only newest first | Student |
+| DELETE | `/api/connections/{id}` | none | 204 | Participant |
+| GET | `/api/students/{id}/profile` | none | 200 `PublicProfileDto` or `ConnectedProfileDto` | Student |
+
+The earlier `?direction=` request-list proposal is replaced by the explicit incoming/outgoing
+paths above; there was no implemented consumer of the older proposal.
+
+`SendMatchRequest`:
+
+```json
+{
+  "receiverId": 12,
+  "message": "Want to revise for the midterm?",
+  "context": { "origin": "MATCHING", "courseId": 3, "studyGoal": "EXAM_PREPARATION" }
+}
+```
+
+`receiverId` must be positive and identify an active student. Message is optional, at most 255
+characters; blank becomes null. Context is optional and defaults to `{origin:"PROFILE"}`.
+If supplied, origin is required (`PROFILE` or `MATCHING`). Optional course ID must identify an
+existing course; optional study goal uses the enum below. Matching consumers supply known
+search context; profile sends may omit it. Self-send, any reverse/forward pending request and
+any active connection between the pair are 409. Inactive/missing recipients are 404.
 
 ```json
 {
   "id": 10,
   "senderId": 1,
-  "senderName": "Priya N.",
+  "senderName": "Priya Nair",
   "receiverId": 12,
   "receiverName": "Jamie Lee",
   "message": "Want to revise for the midterm?",
   "status": "PENDING",
-  "createdAt": "2026-09-26T14:02:11"
+  "createdAt": "2026-10-07T02:00:00Z",
+  "respondedAt": null,
+  "context": {
+    "origin": "MATCHING",
+    "courseId": 3,
+    "courseCode": "IS442",
+    "courseName": "Object Oriented Programming",
+    "studyGoal": "EXAM_PREPARATION"
+  }
 }
 ```
 
-No contact numbers. A request exists before any connection does. Each send, accept and
-decline also creates a notification for the other student.
+Nullable course/context values remain explicit nulls. Request status is `PENDING`, `ACCEPTED`
+or `DECLINED`. Decisions are one-way. Acceptance creates exactly one symmetric active
+connection. Repeated decisions produce a conflict and no duplicate event. Answered history
+and ended connections remain available to admin counts and request history; ended connections
+are not returned by the connection list.
 
-`ConnectionDto`, written from the caller's side:
-
-```json
-{
-  "id": 7,
-  "otherStudentId": 12,
-  "otherStudentName": "Jamie Lee",
-  "createdAt": "2026-09-27T09:12:40"
-}
-```
-
-No contact number here. The contact number is only ever returned by the profile endpoint.
+`ConnectionDto` is `{id,otherStudentId,otherStudentName,createdAt}`, written from the caller's
+side. It has no contact number. Disconnect is one-way and notifies the other participant.
 
 `PublicProfileDto`:
 
@@ -97,233 +175,231 @@ No contact number here. The contact number is only ever returned by the profile 
   "school": "SCIS",
   "programme": "Information Systems",
   "yearOfStudy": 2,
-  "coursesTaken": [
-    { "id": 3, "code": "IS442", "name": "Object Oriented Programming" }
-  ],
-  "targetCourse": { "id": 3, "code": "IS442", "name": "Object Oriented Programming" },
+  "coursesTaken": [{ "id": 3, "code": "IS442", "name": "Object Oriented Programming" }],
+  "targetCourse": null,
   "preferredStudyMode": "IN_PERSON",
   "studyGoals": ["EXAM_PREPARATION"],
   "preferredGroupSizeMin": 2,
-  "preferredGroupSizeMax": 3
+  "preferredGroupSizeMax": 3,
+  "availability": [{ "dayOfWeek": "MONDAY", "startTime": "18:00:00", "endTime": "20:00:00" }],
+  "relationship": { "state": "INCOMING_PENDING", "requestId": 10, "connectionId": null }
 }
 ```
 
-`PublicProfileDto` has **no** `contactNumber` field, not even as `null`. `ConnectedProfileDto` is
-the same shape plus one field:
+The connected DTO has every public field plus `contactNumber`. Public DTOs have no contact
+field, including no null placeholder. Only self or an active accepted buddy gets the connected
+shape. Group membership and leadership grant no contact access. Pending, declined, stranger
+and disconnected viewers get the public shape; every new view checks the current relationship.
+Inactive/missing subjects return 404. Public course order is by code; schedules are ordered
+Monday first then by start time. Optional preference/target-course fields may be null.
 
-```json
-{
-  "id": 12,
-  "name": "Jamie Lee",
-  "...": "every PublicProfileDto field",
-  "contactNumber": "+65 9123 4567"
-}
-```
+Relationship state is `SELF`, `STRANGER`, `INCOMING_PENDING`, `OUTGOING_PENDING` or `CONNECTED`.
+A pending state includes its request ID; connected includes its connection ID; irrelevant IDs
+are null. The existing numeric preferred-group-size storage remains a Team A decision, not
+an additional C scoring interpretation.
 
-The frontend tells them apart by whether `contactNumber` is present. `coursesTaken` is sorted by
-course code; `targetCourse`, `preferredStudyMode` and the group size fields may be `null`. The
-group size is a min and max because that is how `Student` stores it today; it follows the open
-group size question in `AGENTS.md`.
+## Groups and membership applications
 
-`NotificationDto`:
+`StudyMode`: `IN_PERSON`, `ONLINE`, `EITHER`. `StudyGoal`: `CONCEPT_REVIEW`, `PROBLEM_SOLVING`,
+`EXAM_PREPARATION`, `PROJECT_DISCUSSION`.
 
-```json
-{
-  "id": 30,
-  "type": "MATCH_REQUEST_ACCEPTED",
-  "message": "Jamie Lee accepted your request. You can now see each other's contact number.",
-  "read": false,
-  "createdAt": "2026-09-26T15:40:02"
-}
-```
+| Method | Path | Request | Response | Auth |
+| --- | --- | --- | --- | --- |
+| GET | `/api/groups?courseId=&studyGoal=&studyMode=` | Optional typed filters | 200 `StudyGroupSummaryDto[]`, open only newest first | Student |
+| GET | `/api/groups/mine` | none | 200 summaries of current memberships or led groups, including closed history | Student |
+| POST | `/api/groups` | `StudyGroupDetails` | 201 `StudyGroupDetailDto` | Student |
+| GET | `/api/groups/{id}` | none | 200 `StudyGroupDetailDto`, open or closed | Student |
+| PUT | `/api/groups/{id}` | `StudyGroupDetails`, all editable fields replaced | 200 detail | Leader |
+| POST | `/api/groups/{id}/close` | none | 200 detail, `active:false` | Leader |
+| DELETE | `/api/groups/{id}/members/{studentId}` | none | 204 | Leader |
+| POST | `/api/groups/{id}/join-requests` | `{message?:string}` | 201 `GroupJoinRequestDto` | Student |
+| GET | `/api/groups/{id}/join-requests` | none | 200 pending application DTOs, newest first | Leader |
+| POST | `/api/groups/{id}/join-requests/{requestId}/accept` | none | 200 application DTO, `ACCEPTED` | Leader |
+| POST | `/api/groups/{id}/join-requests/{requestId}/reject` | none | 200 application DTO, `REJECTED` | Leader |
+| GET | `/api/group-join-requests/mine` | none | 200 own application DTOs, every status newest first | Student |
 
-`type` is one of `MATCH_REQUEST_RECEIVED`, `MATCH_REQUEST_ACCEPTED`, `MATCH_REQUEST_DECLINED`,
-`CONNECTION_ENDED`, `GROUP_JOIN_REQUEST_RECEIVED`, `GROUP_JOIN_REQUEST_ACCEPTED`,
-`GROUP_JOIN_REQUEST_REJECTED`, `GROUP_MEMBER_REMOVED`.
-
-Status codes assume Team B's exception handler maps `ConnectionNotFoundException`,
-`StudentNotFoundException` and `NotificationNotFoundException` to 404,
-`NotConnectionParticipantException` and `NotificationNotAllowedException` to 403, and
-`IllegalStateException` to 409.
-
-## Study groups (Team C)
-
-Agreed by Team C: the leader counts toward `maxGroupSize` (they are stored as a member); members
-cannot leave on their own yet, as the brief only asks for the leader removing members; a leader
-cannot leave or be removed, they close the group instead.
-
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-| GET | `/api/groups?courseId=3&studyGoal=EXAM_PREPARATION&studyMode=ONLINE` | Every filter is optional. `studyMode` `EITHER`, on the filter or on the group, matches any mode | 200, list of `StudyGroupSummaryDto`, open groups only, newest first | Student | Proposed |
-| POST | `/api/groups` | `StudyGroupDetails` | 201, `StudyGroupDetailDto`. The creator becomes leader and first member. 400 if the details are invalid, 404 if the course does not exist | Student | Proposed |
-| GET | `/api/groups/{id}` | none | 200, `StudyGroupDetailDto`, open or closed. 404 if the group does not exist | Student | Proposed |
-| PUT | `/api/groups/{id}` | `StudyGroupDetails`; replaces every field, availability included | 200, `StudyGroupDetailDto`. 400 if invalid or `maxGroupSize` is below the current member count, 403 if you are not the leader, 404 if the group or course does not exist, 409 if the group is closed | Leader | Proposed |
-| POST | `/api/groups/{id}/close` | none | 200, `StudyGroupDetailDto` with `active: false`. One-way. Every pending join request is rejected and its sender notified. 403 if you are not the leader, 409 if already closed | Leader | Proposed |
-| DELETE | `/api/groups/{id}/members/{studentId}` | none | 204. The removed student is notified. 403 if you are not the leader, 409 if `studentId` is the leader or not a member | Leader | Proposed |
-
-`StudyGroupDetails` (request body for create and update):
+A leader is a relationship to one group, not an account role. The creator becomes the first
+accepted member and counts toward capacity. Pending applications do not count. No self-leave,
+leader transfer or group reopening is added.
 
 ```json
 {
   "name": "Midterm crammers",
-  "description": "Weekly problem sets, optional",
+  "description": "Weekly problem sets",
   "courseId": 3,
   "studyGoals": ["EXAM_PREPARATION", "PROBLEM_SOLVING"],
   "preferredStudyMode": "IN_PERSON",
   "maxGroupSize": 4,
-  "availability": [
-    { "dayOfWeek": "MONDAY", "startTime": "18:00", "endTime": "20:00" }
-  ]
+  "availability": [{ "dayOfWeek": "MONDAY", "startTime": "18:00", "endTime": "20:00" }]
 }
 ```
 
-`name`, `courseId` and `maxGroupSize` (at least 2: the leader plus one) are required. Missing
-`studyGoals` or `availability` mean none. Each slot must start before it ends.
+Name is required and <=255 characters. Course ID must be positive/existing. Maximum size is
+required and >=2; reduction below current accepted membership is 400. Description is optional
+and <=4000 characters; blank becomes null. Mode is optional. Missing/null goals and availability
+mean empty collections. Null collection entries, missing slot values and reversed/equal times
+are invalid. Slots retain their campus-local meaning; no dated sessions are introduced.
 
-`StudyGroupSummaryDto` (browse list):
+Browse filters are combined with AND. `EITHER` on a mode filter or group is compatible with
+any mode. Your groups is unaffected by browse filters and includes closed groups led by the
+caller even when deactivation removed their membership.
 
-```json
-{
-  "id": 5,
-  "name": "Midterm crammers",
-  "courseId": 3,
-  "courseCode": "IS442",
-  "courseName": "Object Oriented Programming",
-  "leaderId": 1,
-  "leaderName": "Priya N.",
-  "preferredStudyMode": "IN_PERSON",
-  "studyGoals": ["EXAM_PREPARATION", "PROBLEM_SOLVING"],
-  "maxGroupSize": 4,
-  "memberCount": 2,
-  "active": true
-}
-```
+Summary fields: `id,name,courseId,courseCode,courseName,leaderId,leaderName,preferredStudyMode,
+studyGoals,maxGroupSize,memberCount,active,viewer`. `viewer` is
+`{leader:boolean,member:boolean,requestId:number|null,requestStatus:status|null}` and reports
+the caller's latest application. Detail adds `description,createdAt,availability,members`.
+Member shape is `{studentId,name,leader,joinedAt}` in joining order. No group response carries
+contact data. The agenda UI uses saved goals and availability from detail.
 
-`StudyGroupDetailDto` has every summary field plus `description`, `createdAt`, `availability`
-(same slot shape as above, Monday first) and `members`, in joining order:
+`GroupJoinRequestDto`: `{id,groupId,groupName,studentId,studentName,message,status,createdAt,
+respondedAt,groupActive}`. Status is `PENDING`, `ACCEPTED`, `REJECTED`. Message rules match
+buddy requests. Creation rejects closed/full groups, membership already present or a pending
+application with 409. Approval rechecks pending state, active applicant/group, membership and
+capacity under locks. A request ID outside the URL's group is 404; a different group's leader
+has no authority. Repeated decisions are 409. Editing, approving, removing and rejecting are
+blocked on closed groups. Closure rejects every pending application once and notifies current
+members other than the leader. The leader cannot be removed.
 
-```json
-{ "studentId": 1, "name": "Priya N.", "leader": true, "joinedAt": "2026-10-01T09:30:00" }
-```
+## Notifications
 
-No contact numbers anywhere in group responses. Being in the same group is not a connection.
+| Method | Path | Request | Response | Auth |
+| --- | --- | --- | --- | --- |
+| GET | `/api/notifications?filter=ALL` | `ALL`, `REQUESTS`, `GROUPS`; defaults ALL | 200 `NotificationDto[]`, newest first | Student |
+| GET | `/api/notifications/unread-count` | none | 200 `{count:number}` | Student |
+| POST | `/api/notifications/{id}/read` | none | 200 notification with `read:true` | Recipient |
+| POST | `/api/notifications/read-all` | none | 204 | Student |
 
-### Group join requests (Team C)
+Notification DTO: `{id,type,message,read,createdAt,resourceType,resourceId,eventKey,requestDirection}`.
+`resourceType` is `MATCH_REQUEST`, `GROUP`, `STUDENT` or null. Resource ID and type are both null
+for safe generic deletion notices and older notices without metadata. `eventKey` is a nullable
+stable event identity, never an authentication token. MATCH_REQUEST links to requests/
+connections; GROUP links to the group; STUDENT links to its public/connected profile. Opening
+a target still uses its authorized endpoint. A now unavailable target returns a safe 404;
+notification metadata does not confer permissions.
 
-Students ask to join a group; the leader accepts or rejects. This is a **second state machine**,
-separate from `MatchRequest`. Do not try to reuse the same entity for both.
+`requestDirection` is `INCOMING`, `OUTGOING` or null. For a `MATCH_REQUEST` resource it follows
+the stored participants and notification recipient: the receiver's event links to Incoming,
+the sender's event links to Outgoing. A declined withdrawal after sender deactivation therefore
+remains `INCOMING` for the receiver. Ordinary acceptance/decline events to the sender are
+`OUTGOING`. Event type and message text do not determine direction. Other resource types,
+generic notices and missing or unrelated request targets have null direction.
 
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-| POST | `/api/groups/{id}/join-requests` | `{ "message": "optional" }` | 201, `GroupJoinRequestDto` with status `PENDING`. The leader is notified. 404 if the group does not exist, 409 if the group is closed or full, you are already a member, or you already have a pending request for it | Student | Proposed |
-| GET | `/api/groups/{id}/join-requests` | none | 200, list of pending `GroupJoinRequestDto`, newest first. 403 if you are not the leader | Leader | Proposed |
-| POST | `/api/groups/{id}/join-requests/{requestId}/accept` | none | 200, `GroupJoinRequestDto` with status `ACCEPTED`. Adds the student as a member and notifies them. 403 if you are not the leader, 404 if the request is not in this group, 409 if no longer pending, or the group is closed or full | Leader | Proposed |
-| POST | `/api/groups/{id}/join-requests/{requestId}/reject` | none | 200, `GroupJoinRequestDto` with status `REJECTED`. The student is notified. 403 if you are not the leader, 404 if the request is not in this group, 409 if no longer pending | Leader | Proposed |
+REQUESTS includes buddy-request and disconnect events. GROUPS includes all `GROUP_*` events.
+Unread count always covers all categories, regardless of list filtering. Read-one/read-all
+are idempotent and scoped to the current recipient. Storage uses text for summaries so names
+and descriptions at their valid limits cannot cause a notification-column overflow.
 
-`GroupJoinRequestDto`:
+| Successful event | Recipients and count | Notification type |
+| --- | --- | --- |
+| Buddy send | Receiver, one | `MATCH_REQUEST_RECEIVED` |
+| Accept / decline | Sender, one | `MATCH_REQUEST_ACCEPTED` / `MATCH_REQUEST_DECLINED` |
+| Disconnect | Other participant, one | `CONNECTION_ENDED` |
+| Group application | Leader, one | `GROUP_JOIN_REQUEST_RECEIVED` |
+| Group accept / reject | Applicant, one | `GROUP_JOIN_REQUEST_ACCEPTED` / `GROUP_JOIN_REQUEST_REJECTED` |
+| Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
+| Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
+| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/declined/rejected/removed events |
+| Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |
 
-```json
-{
-  "id": 20,
-  "groupId": 5,
-  "groupName": "Midterm crammers",
-  "studentId": 12,
-  "studentName": "Jamie Lee",
-  "message": "Can I join for the finals?",
-  "status": "PENDING",
-  "createdAt": "2026-10-01T10:15:00"
-}
-```
+Failed/conflicting domain actions create no notification. Locked transitions and the partial
+unique `(recipient_id,event_key)` index protect event identity. Notifications and domain changes
+commit or roll back together. Required closure notifications are not replaced by ordinary
+student actions that would reject the now inactive account.
 
-Status codes assume Team B's exception handler maps `StudyGroupNotFoundException`,
-`GroupJoinRequestNotFoundException` and `CourseNotFoundException` to 404,
-`NotGroupLeaderException` to 403, `StudyGroupActionNotAllowedException` and
-`IllegalStateException` to 409, and `InvalidStudyGroupException` to 400.
+## Administrator accounts
 
-## Administration (Team C)
+The approved policy replaces the earlier Delete-as-deactivate proposal. Deactivate and Delete
+permanently are distinct API and UI actions. Role is selected at creation and read-only during
+ordinary editing. Password reset and Student/Admin conversions are separate requirements.
 
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-Agreed by Team C: **deleting an account deactivates it**, never a hard delete. Deactivating a
-student ends their active connections (the other student is notified), declines every match
-request still pending to or from them (the other student is notified), closes every group they
-lead (pending join requests are rejected and notified, as on a normal close), rejects their own
-pending join requests to other groups (nobody is notified; the request leaves the leader's
-pending list) and removes all of their group memberships. Already answered requests are kept as
-history. Pending requests reuse `DECLINED` and `REJECTED` rather than a new status, so the
-frontend sees no new values. Reactivating only lets the account sign in again; nothing ended by
-deactivation is restored. **Usage information** means counts:
-active connections, match requests sent (any status), groups led (open or closed) and groups
-joined but not led, plus the account's `createdAt` and `active`. There is no last-login time.
+| Method | Path | Request | Response | Auth |
+| --- | --- | --- | --- | --- |
+| GET | `/api/admin/users?role=&active=&search=` | Optional role/status/search | 200 `AdminUserSummaryDto[]`, newest first | Admin |
+| GET | `/api/admin/users/summary` | none | 200 `AdminAccountsSummaryDto` | Admin |
+| POST | `/api/admin/users` | `AdminUserCreateRequest` | 201 `AdminUserDetailDto` | Admin |
+| GET | `/api/admin/users/{id}` | none | 200 detail | Admin |
+| PUT | `/api/admin/users/{id}` | `AdminUserUpdateRequest` | 200 detail | Admin |
+| POST | `/api/admin/users/{id}/deactivate` | none | 200 detail, `active:false` | Admin |
+| POST | `/api/admin/users/{id}/reactivate` | none | 200 detail, `active:true` | Admin |
+| DELETE | `/api/admin/users/{id}` | none | 204, permanent deletion | Admin |
 
-| Method | Path | Request | Response | Auth | Status |
-| ------ | ---- | ------- | -------- | ---- | ------ |
-| GET | `/api/admin/users?role=STUDENT&active=true&search=jamie` | Every filter is optional. `role` is `STUDENT` or `ADMIN`; `search` matches part of the email or the student's name, ignoring case | 200, list of `AdminUserSummaryDto`, newest first, active and inactive. Empty list if nothing matches | Admin | Proposed |
-| POST | `/api/admin/users` | TODO: `{ email, password, role }` plus `name`, `school`, `programme`, `yearOfStudy`, `contactNumber` when `role` is `STUDENT` | TODO: 201, `AdminUserDetailDto`; also creates the student profile; 409 if the email is taken. **Blocked: needs Team B's `PasswordEncoder` bean** | Admin | TODO |
-| GET | `/api/admin/users/{id}` | none | 200, `AdminUserDetailDto`. 404 if the account does not exist | Admin | Proposed |
-| PUT | `/api/admin/users/{id}` | `AdminUserUpdateRequest` | 200, `AdminUserDetailDto`. 400 if the email is missing or, for a student, a profile field is missing or `yearOfStudy` is below 1. 404 if the account does not exist, 409 if another account already uses the email | Admin | Proposed |
-| DELETE | `/api/admin/users/{id}` | none | 200, `AdminUserDetailDto` with `active: false`. **Deactivates, does not delete**; see above for what happens to a student's connections and groups. 404 if the account does not exist, 409 if it is your own account or already deactivated | Admin | Proposed |
-| POST | `/api/admin/users/{id}/reactivate` | none | 200, `AdminUserDetailDto` with `active: true`. 404 if the account does not exist, 409 if it is already active | Admin | Proposed |
+Search is a case-insensitive substring of email or student name. Role is STUDENT/ADMIN;
+active is a Boolean. Summary `{total,active,inactive,students,admins}` counts all saved accounts
+and does not depend on the filtered list.
 
-`AdminUserUpdateRequest` (request body for update; active status is not changed here):
+Creation body: `{email,password,role,name?,school?,programme?,yearOfStudy?,contactNumber?}`.
+Student creation requires all profile fields; administrator creation requires email/password/
+role only. User and student creation is atomic. Email/password/profile limits match registration.
 
-```json
-{
-  "email": "jamie.lee@smu.edu.sg",
-  "name": "Jamie Lee",
-  "school": "SCIS",
-  "programme": "Information Systems",
-  "yearOfStudy": 2,
-  "contactNumber": "+65 9123 4567"
-}
-```
+Update body: `{email,name?,school?,programme?,yearOfStudy?,contactNumber?}`. Email is always
+required; name/school/programme/year are required for students. Contact replacement is optional:
+omitted/null preserves the stored value; a supplied blank replacement is invalid. Admin editing
+requires email only. Status, role and password are not edited through this endpoint.
 
-`email` is always required. The other fields are required for student accounts and ignored for
-admin accounts.
-
-`AdminUserSummaryDto` (list), with `name` `null` for admin accounts:
-
-```json
-{
-  "id": 12,
-  "email": "jamie.lee@smu.edu.sg",
-  "role": "STUDENT",
-  "name": "Jamie Lee",
-  "active": true,
-  "createdAt": "2026-09-01T10:00:00"
-}
-```
-
-`AdminUserDetailDto` wraps the summary as `account` and adds `usage`, which is `null` for admin
-accounts:
+Summary fields: `{id,email,role,name,active,createdAt,lastLoginAt}`. Last login is null for
+"Never logged in". Registration's successful automatic sign-in counts as its first login;
+subsequent successful login updates it. Failed login and token use do not update it. Name is null for admins. Detail shape:
 
 ```json
 {
   "account": {
-    "id": 12,
-    "email": "jamie.lee@smu.edu.sg",
-    "role": "STUDENT",
-    "name": "Jamie Lee",
-    "active": true,
-    "createdAt": "2026-09-01T10:00:00"
+    "id": 12, "email": "jamie@demo.example.test", "role": "STUDENT", "name": "Jamie Lee",
+    "active": true, "createdAt": "2026-10-07T02:00:00Z", "lastLoginAt": null
   },
-  "usage": {
-    "activeConnections": 2,
-    "matchRequestsSent": 5,
-    "groupsLed": 1,
-    "groupsJoined": 3
-  }
+  "profile": { "name": "Jamie Lee", "school": "SCIS", "programme": "Information Systems", "yearOfStudy": 2 },
+  "usage": { "activeConnections": 2, "matchRequestsSent": 5, "groupsLed": 1, "groupsJoined": 3, "acceptedGroups": 4 }
 }
 ```
 
-No password hash and no contact number in any admin response.
+Admin accounts have `profile:null,usage:null`. Contact is not returned to administrators.
+Usage definitions: activeConnections = current unended buddies; matchRequestsSent = all sent
+history; groupsLed = all led groups including closed; groupsJoined = current memberships in
+groups the student does not lead, including closed; acceptedGroups = current membership in
+open groups including leadership. Counts are real; absent relations produce zero.
 
-Status codes assume Team B's exception handler maps `UserNotFoundException` to 404,
-`DuplicateEmailException`, `AdminActionNotAllowedException` and `IllegalStateException` to 409,
-and `InvalidAdminUserException` to 400.
+Deactivation retains account/profile/history, revokes access, ends active connections,
+declines pending buddy requests both ways, closes led groups and rejects their pending
+applicants, rejects the student's pending applications and removes their memberships. Closed
+groups/history remain. Reactivation restores access through fresh login only; it restores no
+ended relation or membership. Repeated status operations are 409.
 
----
+Permanent deletion removes the account/student, their buddy requests/connections, memberships,
+availability, enrollment/goals and recipient notifications. Groups they lead are removed with
+all dependent rows; groups led by others remain. Affected remaining users receive safe events.
+Notifications linked to deleted student/request/group records are removed; replacement generic
+notices contain no broken target. The email becomes available again after permanent deletion.
 
-**Paths above are a starting proposal, not agreed.** They are here so the table has a shape to
-argue with. Change them freely while the Status column still says TODO; once a row is agreed,
-treat it as fixed.
+Self-deactivation/deletion and removal of the last active administrator are blocked. Account
+removals/status changes serialize in PostgreSQL, lock administrators in fixed ID order and
+recount active admins after locking. An actor concurrently revoked cannot finish a privileged
+mutation. All cleanup, notifications and identity changes form one transaction.
+
+## Database transaction protocol
+
+Every application write takes the shared PostgreSQL transaction advisory lock `4422026` before
+reading mutable account/resource state. Account lifecycle and opt-in seed take its exclusive
+variant. This prevents lifecycle cleanup racing with a new relationship in another process.
+Ordinary writes then lock affected user rows in ascending ID order, followed by group and
+request/connection rows, and revalidate state after waiting. Group capacity edits/removal/
+closure and approval share the group lock. No JVM-only locks stand in for this protocol.
+
+Login locks the normalized email lookup before loading the account. If an administrator's
+email edit commits while that lookup waits, the old email is rejected and cannot overwrite the
+edited identity when recording a successful login.
+
+Partial unique indexes protect unordered pending buddy pairs, unordered active connection
+pairs, pending `(study_group_id,student_id)` applications and `(recipient_id,event_key)` notices.
+Membership `(study_group_id,student_id)` stays unique. Answered/ended history remains legal.
+The backend validates the versioned schema on startup. RLS and browser-role privilege removal
+protect the alternate Supabase access path; operational evidence is recorded separately.
+
+## Team A integration surface still pending
+
+| Method | Path | Owning work remaining |
+| --- | --- | --- |
+| GET | `/api/matches` | Team A scoring/ranking: course or study-goal entry point, additional filters/strategy/threshold and per-criterion MatchScore |
+| GET | `/api/admin/matching-config` | Team A current weights/threshold/active strategy |
+| PUT | `/api/admin/matching-config` | Team A validation and persistence of matching settings |
+
+These are proposals, not implemented C endpoints. Reuse C profile privacy, active-student
+eligibility and structured match-request context when connecting the matching screen.
