@@ -1,6 +1,8 @@
 package com.studybuddy.matchrequest;
 
+import com.studybuddy.course.Course;
 import com.studybuddy.student.Student;
+import com.studybuddy.student.StudyGoal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,8 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * A study-buddy request from one student to another. Starts PENDING and moves
@@ -22,7 +23,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "match_requests")
 public class MatchRequest {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,10 +43,42 @@ public class MatchRequest {
     private MatchRequestStatus status = MatchRequestStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "responded_at")
-    private LocalDateTime respondedAt;
+    private Instant respondedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MatchRequestOrigin origin = MatchRequestOrigin.PROFILE;
+
+    @ManyToOne
+    @JoinColumn(name = "context_course_id")
+    private Course contextCourse;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "context_study_goal", length = 30)
+    private StudyGoal contextStudyGoal;
+
+    public MatchRequestOrigin getOrigin() {
+        return origin;
+    }
+
+    public Course getContextCourse() {
+        return contextCourse;
+    }
+
+    public StudyGoal getContextStudyGoal() {
+        return contextStudyGoal;
+    }
+
+    public MatchRequest(Student sender, Student receiver, String message, MatchRequestOrigin origin,
+        Course course, StudyGoal goal) {
+        this(sender, receiver, message);
+        this.origin = origin;
+        this.contextCourse = course;
+        this.contextStudyGoal = goal;
+    }
 
     protected MatchRequest() {
     }
@@ -77,11 +109,11 @@ public class MatchRequest {
         return status;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getRespondedAt() {
+    public Instant getRespondedAt() {
         return respondedAt;
     }
 
@@ -114,9 +146,9 @@ public class MatchRequest {
     private void respond(MatchRequestStatus newStatus) {
         if (!isPending()) {
             throw new IllegalStateException(
-                    "Match request " + id + " is already " + status + " and cannot be changed");
+                "Match request " + id + " is already " + status + " and cannot be changed");
         }
         this.status = newStatus;
-        this.respondedAt = LocalDateTime.now();
+        this.respondedAt = Instant.now();
     }
 }

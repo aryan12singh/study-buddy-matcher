@@ -2,8 +2,7 @@ package com.studybuddy.studygroup;
 
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -22,7 +21,8 @@ public record StudyGroupDetailDto(
         int maxGroupSize,
         long memberCount,
         boolean active,
-        LocalDateTime createdAt,
+        Instant createdAt,
         List<GroupAvailabilitySlotDto> availability,
-        List<GroupMemberDto> members) {
+        List<GroupMemberDto> members,
+        GroupViewerDto viewer) {
 }

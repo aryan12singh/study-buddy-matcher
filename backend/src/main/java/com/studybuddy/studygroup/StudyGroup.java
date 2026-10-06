@@ -16,8 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +29,6 @@ import java.util.Set;
 @Entity
 @Table(name = "study_groups")
 public class StudyGroup {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,7 +36,7 @@ public class StudyGroup {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(length = 4000)
     private String description;
 
     @ManyToOne
@@ -66,7 +64,7 @@ public class StudyGroup {
     private boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     protected StudyGroup() {
     }
@@ -161,7 +159,7 @@ public class StudyGroup {
         this.active = false;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

@@ -7,5 +7,6 @@ package com.studybuddy.admin;
  */
 public record AdminUserDetailDto(
         AdminUserSummaryDto account,
-        UserUsageDto usage) {
+        UserUsageDto usage,
+        AdminStudentProfileDto profile) {
 }

@@ -11,8 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * A student's request to join a study group. Starts PENDING and moves once,
@@ -23,7 +22,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "group_join_requests")
 public class GroupJoinRequest {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -44,10 +42,10 @@ public class GroupJoinRequest {
     private GroupJoinRequestStatus status = GroupJoinRequestStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "responded_at")
-    private LocalDateTime respondedAt;
+    private Instant respondedAt;
 
     protected GroupJoinRequest() {
     }
@@ -78,11 +76,11 @@ public class GroupJoinRequest {
         return status;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getRespondedAt() {
+    public Instant getRespondedAt() {
         return respondedAt;
     }
 
@@ -117,13 +115,13 @@ public class GroupJoinRequest {
     public void requirePending() {
         if (!isPending()) {
             throw new IllegalStateException(
-                    "Group join request " + id + " is already " + status + " and cannot be changed");
+                "Group join request " + id + " is already " + status + " and cannot be changed");
         }
     }
 
     private void respond(GroupJoinRequestStatus newStatus) {
         requirePending();
         this.status = newStatus;
-        this.respondedAt = LocalDateTime.now();
+        this.respondedAt = Instant.now();
     }
 }

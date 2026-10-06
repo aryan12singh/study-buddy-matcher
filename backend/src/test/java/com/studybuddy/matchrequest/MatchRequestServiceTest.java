@@ -54,6 +54,8 @@ class MatchRequestServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock private com.studybuddy.common.AccountAccess access;
+    @Mock private com.studybuddy.course.CourseRepository courseRepository;
     private MatchRequestService service;
     private Student alice;
     private Student bob;
@@ -61,9 +63,16 @@ class MatchRequestServiceTest {
     @BeforeEach
     void setUp() {
         service = new MatchRequestService(matchRequestRepository, connectionRepository,
-                studentRepository, new MatchRequestAssembler(), notificationService);
+                courseRepository, new MatchRequestAssembler(), notificationService, access);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
+        org.mockito.Mockito.lenient().when(studentRepository.findById(CAROL_ID)).thenReturn(Optional.of(student(CAROL_ID,"Carol")));
+        org.mockito.Mockito.lenient().when(studentRepository.findById(ALICE_ID)).thenReturn(Optional.of(alice));
+        org.mockito.Mockito.lenient().when(studentRepository.findById(BOB_ID)).thenReturn(Optional.of(bob));
+        org.mockito.Mockito.lenient().when(access.requireStudent(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call ->
+                studentRepository.findById(call.getArgument(0)).orElseThrow(() -> new StudentNotFoundException(call.getArgument(0))));
+        org.mockito.Mockito.lenient().when(access.eligibleStudent(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call ->
+                studentRepository.findById(call.getArgument(0)).orElseThrow(() -> new StudentNotFoundException(call.getArgument(0))));
     }
 
     // --- send ---
@@ -162,7 +171,7 @@ class MatchRequestServiceTest {
     void senderCannotAcceptTheirOwnRequest() {
         MatchRequest request = givenPendingRequestFromAliceToBob();
 
-        assertThrows(MatchRequestNotAllowedException.class,
+        assertThrows(com.studybuddy.common.error.ForbiddenActionException.class,
                 () -> service.accept(REQUEST_ID, ALICE_ID));
 
         assertTrue(request.isPending());
@@ -173,7 +182,7 @@ class MatchRequestServiceTest {
     void uninvolvedStudentCannotAccept() {
         MatchRequest request = givenPendingRequestFromAliceToBob();
 
-        assertThrows(MatchRequestNotAllowedException.class,
+        assertThrows(com.studybuddy.common.error.ForbiddenActionException.class,
                 () -> service.accept(REQUEST_ID, CAROL_ID));
 
         assertTrue(request.isPending());
@@ -192,7 +201,7 @@ class MatchRequestServiceTest {
 
     @Test
     void acceptingUnknownRequestThrowsNotFound() {
-        when(matchRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.empty());
+        when(matchRequestRepository.findParticipants(REQUEST_ID)).thenReturn(Optional.empty());
 
         assertThrows(MatchRequestNotFoundException.class, () -> service.accept(REQUEST_ID, BOB_ID));
     }
@@ -214,7 +223,7 @@ class MatchRequestServiceTest {
     void senderCannotDeclineTheirOwnRequest() {
         MatchRequest request = givenPendingRequestFromAliceToBob();
 
-        assertThrows(MatchRequestNotAllowedException.class,
+        assertThrows(com.studybuddy.common.error.ForbiddenActionException.class,
                 () -> service.decline(REQUEST_ID, ALICE_ID));
 
         assertTrue(request.isPending());
@@ -224,7 +233,7 @@ class MatchRequestServiceTest {
     void uninvolvedStudentCannotDecline() {
         MatchRequest request = givenPendingRequestFromAliceToBob();
 
-        assertThrows(MatchRequestNotAllowedException.class,
+        assertThrows(com.studybuddy.common.error.ForbiddenActionException.class,
                 () -> service.decline(REQUEST_ID, CAROL_ID));
 
         assertTrue(request.isPending());
@@ -276,7 +285,7 @@ class MatchRequestServiceTest {
 
         service.send(ALICE_ID, BOB_ID, null);
 
-        verify(notificationService).notify(eq(bob), eq(NotificationType.MATCH_REQUEST_RECEIVED), contains("Alice"));
+        verify(notificationService).notify(eq(bob), eq(NotificationType.MATCH_REQUEST_RECEIVED), contains("Alice"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -295,7 +304,7 @@ class MatchRequestServiceTest {
 
         service.accept(REQUEST_ID, BOB_ID);
 
-        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_ACCEPTED), contains("Bob"));
+        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_ACCEPTED), contains("Bob"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -304,60 +313,45 @@ class MatchRequestServiceTest {
 
         service.decline(REQUEST_ID, BOB_ID);
 
-        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED), contains("Bob"));
+        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED), contains("Bob"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void rejectedAcceptNotifiesNobody() {
         givenPendingRequestFromAliceToBob();
 
-        assertThrows(MatchRequestNotAllowedException.class, () -> service.accept(REQUEST_ID, CAROL_ID));
+        assertThrows(com.studybuddy.common.error.ForbiddenActionException.class, () -> service.accept(REQUEST_ID, CAROL_ID));
 
         verifyNoInteractions(notificationService);
     }
 
-    // --- declineAllPendingFor (account deactivation) ---
-
     @Test
-    void declineAllPendingForDeclinesReceivedRequestsAndTellsTheSender() {
-        MatchRequest fromAlice = pendingRequest(REQUEST_ID, alice, bob);
-        when(matchRequestRepository.findByReceiverIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
-                .thenReturn(List.of(fromAlice));
-        when(matchRequestRepository.findBySenderIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
-                .thenReturn(List.of());
-
-        service.declineAllPendingFor(BOB_ID);
-
-        assertEquals(MatchRequestStatus.DECLINED, fromAlice.getStatus());
-        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED),
-                contains("Bob's account is no longer active"));
+    void structuredContextIsPersistedAndReturned() {
+        givenStudentsExist();
+        var course = new com.studybuddy.course.Course("IS442","OOP");
+        org.springframework.test.util.ReflectionTestUtils.setField(course,"id",100L);
+        when(courseRepository.findById(100L)).thenReturn(Optional.of(course));
+        when(matchRequestRepository.save(any(MatchRequest.class))).thenAnswer(call -> call.getArgument(0));
+        var dto = service.send(ALICE_ID,BOB_ID,null,new MatchRequestContext(MatchRequestOrigin.MATCHING,100L,com.studybuddy.student.StudyGoal.EXAM_PREPARATION));
+        assertEquals(MatchRequestOrigin.MATCHING,dto.context().origin());
+        assertEquals("IS442",dto.context().courseCode());
+        assertEquals(com.studybuddy.student.StudyGoal.EXAM_PREPARATION,dto.context().studyGoal());
     }
 
     @Test
-    void declineAllPendingForWithdrawsSentRequestsAndTellsTheReceiver() {
-        MatchRequest toAlice = pendingRequest(REQUEST_ID, bob, alice);
-        when(matchRequestRepository.findByReceiverIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
-                .thenReturn(List.of());
-        when(matchRequestRepository.findBySenderIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
-                .thenReturn(List.of(toAlice));
-
-        service.declineAllPendingFor(BOB_ID);
-
-        assertEquals(MatchRequestStatus.DECLINED, toAlice.getStatus());
-        verify(notificationService).notify(eq(alice), eq(NotificationType.MATCH_REQUEST_DECLINED),
-                contains("withdrawn"));
-    }
-
-    @Test
-    void declineAllPendingForDoesNothingWhenNoneArePending() {
-        when(matchRequestRepository.findByReceiverIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
-                .thenReturn(List.of());
-        when(matchRequestRepository.findBySenderIdAndStatus(BOB_ID, MatchRequestStatus.PENDING))
-                .thenReturn(List.of());
-
-        service.declineAllPendingFor(BOB_ID);
-
+    void overlongMessageAndUnknownContextCourseDoNotSaveOrNotify() {
+        givenStudentsExist();
+        assertThrows(com.studybuddy.common.error.InvalidInputException.class,() -> service.send(ALICE_ID,BOB_ID,"x".repeat(256)));
+        assertThrows(com.studybuddy.studygroup.CourseNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null,new MatchRequestContext(MatchRequestOrigin.MATCHING,999L,null)));
+        verify(matchRequestRepository,never()).save(any());
         verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void inactiveRecipientFromEligibilityPolicyIsRejected() {
+        when(access.eligibleStudent(BOB_ID)).thenThrow(new StudentNotFoundException(BOB_ID));
+        assertThrows(StudentNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null));
+        verify(matchRequestRepository,never()).save(any());
     }
 
     private void givenStudentsExist() {
@@ -367,7 +361,11 @@ class MatchRequestServiceTest {
 
     private MatchRequest givenPendingRequestFromAliceToBob() {
         MatchRequest request = pendingRequest(REQUEST_ID, alice, bob);
-        when(matchRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(request));
+        org.mockito.Mockito.lenient().when(matchRequestRepository.findByIdForUpdate(REQUEST_ID)).thenReturn(Optional.of(request));
+        when(matchRequestRepository.findParticipants(REQUEST_ID)).thenReturn(Optional.of(new MatchRequestRepository.Participants() {
+            public Long getSenderId() { return ALICE_ID; }
+            public Long getReceiverId() { return BOB_ID; }
+        }));
         return request;
     }
 }

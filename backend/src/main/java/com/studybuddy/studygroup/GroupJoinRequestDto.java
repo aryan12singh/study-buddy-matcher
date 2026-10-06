@@ -1,6 +1,6 @@
 package com.studybuddy.studygroup;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /** A join request as the API sees it. Names and ids only, no contact numbers. */
 public record GroupJoinRequestDto(
@@ -11,5 +11,7 @@ public record GroupJoinRequestDto(
         String studentName,
         String message,
         GroupJoinRequestStatus status,
-        LocalDateTime createdAt) {
+        Instant createdAt,
+        Instant respondedAt,
+        boolean groupActive) {
 }

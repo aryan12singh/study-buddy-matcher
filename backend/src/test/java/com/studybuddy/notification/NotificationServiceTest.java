@@ -1,5 +1,6 @@
 package com.studybuddy.notification;
 
+import com.studybuddy.matchrequest.MatchRequestRepository;
 import com.studybuddy.student.Student;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,19 +31,25 @@ class NotificationServiceTest {
     @Mock
     private NotificationRepository notificationRepository;
 
+    @Mock
+    private MatchRequestRepository matchRequestRepository;
+
+    @Mock private com.studybuddy.common.AccountAccess access;
+
     private NotificationService notificationService;
     private Student bob;
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationService(notificationRepository, new NotificationAssembler());
+        notificationService = new NotificationService(notificationRepository,
+                new NotificationAssembler(matchRequestRepository), access);
         bob = new Student(null, "Bob", "SCIS", "Information Systems", 2, "+65 9000 0002");
         ReflectionTestUtils.setField(bob, "id", BOB_ID);
     }
 
     @Test
     void notifySavesAnUnreadNotificationForTheRecipient() {
-        notificationService.notify(bob, NotificationType.MATCH_REQUEST_RECEIVED, "Alice sent you a study-buddy request");
+        notificationService.notify(bob, NotificationType.MATCH_REQUEST_RECEIVED, "Alice sent you a study-buddy request", NotificationResourceType.MATCH_REQUEST, 10L, "match:10:received");
 
         ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(saved.capture());
@@ -133,6 +140,76 @@ class NotificationServiceTest {
 
         assertTrue(first.isRead());
         assertTrue(second.isRead());
+    }
+
+    @Test
+    void filtersDoNotChangeGlobalUnreadCount() {
+        var request = notification(30L,NotificationType.MATCH_REQUEST_RECEIVED);
+        var group = notification(31L,NotificationType.GROUP_CLOSED);
+        when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(group,request));
+        when(notificationRepository.countByRecipientIdAndReadFalse(BOB_ID)).thenReturn(2L);
+        assertEquals(List.of(31L),notificationService.list(BOB_ID,NotificationFilter.GROUPS).stream().map(NotificationDto::id).toList());
+        assertEquals(List.of(30L),notificationService.list(BOB_ID,NotificationFilter.REQUESTS).stream().map(NotificationDto::id).toList());
+        assertEquals(2,notificationService.unreadCount(BOB_ID));
+        assertFalse(group.isRead());
+        assertFalse(request.isRead());
+    }
+
+    @Test
+    void aDeclinedWithdrawalToTheReceiverHasIncomingDirection() {
+        Notification withdrawal = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
+                "A pending request is no longer available", NotificationResourceType.MATCH_REQUEST, 10L, "withdrawal:10");
+        when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(withdrawal));
+        when(matchRequestRepository.findParticipants(10L)).thenReturn(Optional.of(participants(ALICE_ID, BOB_ID)));
+
+        assertEquals(NotificationRequestDirection.INCOMING, notificationService.list(BOB_ID).get(0).requestDirection());
+    }
+
+    @Test
+    void acceptedAndDeclinedDecisionsToTheSenderHaveOutgoingDirection() {
+        Notification accepted = new Notification(bob, NotificationType.MATCH_REQUEST_ACCEPTED,
+                "Request accepted", NotificationResourceType.MATCH_REQUEST, 10L, "accepted:10");
+        Notification declined = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
+                "Request declined", NotificationResourceType.MATCH_REQUEST, 11L, "declined:11");
+        when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(accepted, declined));
+        when(matchRequestRepository.findParticipants(10L)).thenReturn(Optional.of(participants(BOB_ID, ALICE_ID)));
+        when(matchRequestRepository.findParticipants(11L)).thenReturn(Optional.of(participants(BOB_ID, ALICE_ID)));
+
+        assertEquals(List.of(NotificationRequestDirection.OUTGOING, NotificationRequestDirection.OUTGOING),
+                notificationService.list(BOB_ID).stream().map(NotificationDto::requestDirection).toList());
+    }
+
+    @Test
+    void unrelatedMissingAndOtherResourceEventsDoNotHaveARequestDirection() {
+        Notification group = new Notification(bob, NotificationType.GROUP_CLOSED,
+                "Group closed", NotificationResourceType.GROUP, 10L, "closed:10");
+        Notification student = new Notification(bob, NotificationType.CONNECTION_ENDED,
+                "Connection ended", NotificationResourceType.STUDENT, ALICE_ID, "ended:10");
+        Notification generic = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED, "Request unavailable");
+        Notification missing = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
+                "Request unavailable", NotificationResourceType.MATCH_REQUEST, 10L, "missing:10");
+        Notification unrelated = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
+                "Request unavailable", NotificationResourceType.MATCH_REQUEST, 11L, "unrelated:11");
+        when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID))
+                .thenReturn(List.of(group, student, generic, missing, unrelated));
+        when(matchRequestRepository.findParticipants(10L)).thenReturn(Optional.empty());
+        when(matchRequestRepository.findParticipants(11L)).thenReturn(Optional.of(participants(ALICE_ID, 99L)));
+
+        assertTrue(notificationService.list(BOB_ID).stream().allMatch(event -> event.requestDirection() == null));
+    }
+
+    private MatchRequestRepository.Participants participants(Long senderId, Long receiverId) {
+        return new MatchRequestRepository.Participants() {
+            @Override
+            public Long getSenderId() {
+                return senderId;
+            }
+
+            @Override
+            public Long getReceiverId() {
+                return receiverId;
+            }
+        };
     }
 
     private Notification givenNotificationForBob() {

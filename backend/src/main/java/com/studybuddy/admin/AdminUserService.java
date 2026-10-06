@@ -1,171 +1,151 @@
 package com.studybuddy.admin;
 
+import com.studybuddy.auth.AccountCreation;
+import com.studybuddy.common.AccountAccess;
+import com.studybuddy.common.InputRules;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
 import com.studybuddy.user.UserRepository;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-/**
- * Admin account management: listing, viewing, editing, deactivating and
- * reactivating accounts. The acting admin's id is passed in explicitly until
- * authentication supplies it. Changes to a loaded user need no explicit save:
- * the transaction flushes them on commit.
- *
- * <p>TODO: create(...) is blocked until Team B provides a PasswordEncoder bean.
- */
 @Service
 @Transactional
 public class AdminUserService {
+    private final UserRepository users;
+    private final StudentRepository students;
+    private final AdminUserAssembler assembler;
+    private final UserUsageCounter usage;
+    private final StudentDeactivation deactivation;
+    private final StudentDeletion deletion;
+    private final AccountCreation creation;
+    private final AccountAccess access;
 
-    private final UserRepository userRepository;
-    private final StudentRepository studentRepository;
-    private final AdminUserAssembler adminUserAssembler;
-    private final UserUsageCounter userUsageCounter;
-    private final StudentDeactivation studentDeactivation;
-
-    public AdminUserService(UserRepository userRepository,
-                            StudentRepository studentRepository,
-                            AdminUserAssembler adminUserAssembler,
-                            UserUsageCounter userUsageCounter,
-                            StudentDeactivation studentDeactivation) {
-        this.userRepository = userRepository;
-        this.studentRepository = studentRepository;
-        this.adminUserAssembler = adminUserAssembler;
-        this.userUsageCounter = userUsageCounter;
-        this.studentDeactivation = studentDeactivation;
+    public AdminUserService(UserRepository users, StudentRepository students, AdminUserAssembler assembler, UserUsageCounter usage,
+        StudentDeactivation deactivation, StudentDeletion deletion, AccountCreation creation, AccountAccess access) {
+        this.users = users;
+        this.students = students;
+        this.assembler = assembler;
+        this.usage = usage;
+        this.deactivation = deactivation;
+        this.deletion = deletion;
+        this.creation = creation;
+        this.access = access;
     }
 
-    /** Every account matching the filter, newest first, active or not. */
     @Transactional(readOnly = true)
-    public List<AdminUserSummaryDto> list(AdminUserFilter filter) {
-        Map<Long, Student> studentsById = studentRepository.findAll().stream()
-                .collect(Collectors.toMap(Student::getId, Function.identity()));
-        return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
-                .filter(user -> filter.matches(user, studentsById.get(user.getId())))
-                .map(user -> adminUserAssembler.toSummary(user, studentsById.get(user.getId())))
-                .toList();
+    public List<AdminUserSummaryDto> list(AdminUserFilter filter, Long actorId) {
+        access.requireAdmin(actorId);
+        var profiles = students.findAll().stream().collect(Collectors.toMap(Student::getId, Function.identity()));
+        return users.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
+            .filter(user -> filter.matches(user, profiles.get(user.getId()))).map(user -> assembler.toSummary(user, profiles.get(user.getId()))).toList();
     }
 
-    /**
-     * @throws UserNotFoundException if the account does not exist
-     */
     @Transactional(readOnly = true)
-    public AdminUserDetailDto get(Long userId) {
-        return toDetail(findUser(userId));
+    public AdminAccountsSummaryDto summary(Long actorId) {
+        access.requireAdmin(actorId);
+        var all = users.findAll();
+        long active = all.stream().filter(User::isActive).count();
+        long studentCount = all.stream().filter(user -> user.getRole() == Role.STUDENT).count();
+        return new AdminAccountsSummaryDto(all.size(), active, all.size() - active, studentCount, all.size() - studentCount);
     }
 
-    /**
-     * Changes the email and, for a student account, the profile fields.
-     *
-     * @throws UserNotFoundException if the account does not exist
-     * @throws InvalidAdminUserException if a required field is missing or invalid
-     * @throws DuplicateEmailException if another account already uses the email
-     */
-    public AdminUserDetailDto update(Long userId, AdminUserUpdateRequest request) {
-        User user = findUser(userId);
-        Student student = studentRepository.findById(userId).orElse(null);
-        validate(request, student != null);
+    @Transactional(readOnly = true)
+    public AdminUserDetailDto get(Long id, Long actorId) {
+        access.requireAdmin(actorId);
+        return detail(users.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
+    }
 
-        String email = request.email().strip();
-        if (!email.equals(user.getEmail()) && userRepository.existsByEmail(email)) {
+    public AdminUserDetailDto create(AdminUserCreateRequest request, Long actorId) {
+        access.lockAdmin(actorId);
+        if (request == null) {
+            throw new InvalidAdminUserException("Account details are required");
+        }
+        return detail(creation.create(request.email(), request.password(), request.role(), request.name(), request.school(),
+            request.programme(), request.yearOfStudy(), request.contactNumber()));
+    }
+
+    public AdminUserDetailDto update(Long id, AdminUserUpdateRequest request, Long actorId) {
+        User user = access.lockAdminTarget(actorId, id);
+        if (request == null) {
+            throw new InvalidAdminUserException("Account details are required");
+        }
+        String email = InputRules.email(request.email());
+        if (!email.equals(user.getEmail()) && users.existsByEmail(email)) {
             throw new DuplicateEmailException(email);
         }
-        user.setEmail(email);
+        var student = students.findById(id).orElse(null);
+        if (user.getRole() == Role.STUDENT && student == null) {
+            throw new UserNotFoundException(id);
+        }
         if (student != null) {
-            student.setName(request.name().strip());
-            student.setSchool(request.school().strip());
-            student.setProgramme(request.programme().strip());
+            String name = InputRules.required(request.name(), "Name", InputRules.TEXT_LIMIT);
+            String school = InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT);
+            String programme = InputRules.required(request.programme(), "Programme", InputRules.TEXT_LIMIT);
+            InputRules.year(request.yearOfStudy());
+            String contact = request.contactNumber() == null ? null : InputRules.required(request.contactNumber(), "Contact number", InputRules.TEXT_LIMIT);
+            student.setName(name);
+            student.setSchool(school);
+            student.setProgramme(programme);
             student.setYearOfStudy(request.yearOfStudy());
-            student.setContactNumber(request.contactNumber().strip());
+            if (contact != null) {
+                student.setContactNumber(contact);
+            }
         }
-        return adminUserAssembler.toDetail(user, student, usageOf(user));
+        user.setEmail(email);
+        return detail(user);
     }
 
-    /**
-     * Deactivates the account in place of deleting it. For a student this
-     * also applies {@link StudentDeactivation}.
-     *
-     * @throws AdminActionNotAllowedException if the admin targets their own account
-     * @throws UserNotFoundException if the account does not exist
-     * @throws IllegalStateException if the account is already deactivated
-     */
-    public AdminUserDetailDto deactivate(Long userId, Long adminId) {
-        if (Objects.equals(userId, adminId)) {
-            throw new AdminActionNotAllowedException("You cannot deactivate your own account");
-        }
-        User user = findUser(userId);
+    public AdminUserDetailDto deactivate(Long id, Long actorId) {
+        User user = access.lockLifecycle(actorId, id);
+        removalAllowed(user, actorId);
         if (!user.isActive()) {
-            throw new IllegalStateException("User " + userId + " is already deactivated");
+            throw new IllegalStateException("This account is already deactivated");
         }
-        user.setActive(false);
+        user.deactivate();
         if (user.getRole() == Role.STUDENT) {
-            studentDeactivation.apply(userId);
+            deactivation.apply(id);
         }
-        return toDetail(user);
+        return detail(user);
     }
 
-    /**
-     * Lets the account sign in again. Connections and group memberships ended
-     * by deactivation are not restored.
-     *
-     * @throws UserNotFoundException if the account does not exist
-     * @throws IllegalStateException if the account is already active
-     */
-    public AdminUserDetailDto reactivate(Long userId) {
-        User user = findUser(userId);
+    public AdminUserDetailDto reactivate(Long id, Long actorId) {
+        User user = access.lockLifecycle(actorId, id);
         if (user.isActive()) {
-            throw new IllegalStateException("User " + userId + " is already active");
+            throw new IllegalStateException("This account is already active");
         }
         user.setActive(true);
-        return toDetail(user);
+        return detail(user);
     }
 
-    private User findUser(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-    }
-
-    private AdminUserDetailDto toDetail(User user) {
-        Student student = studentRepository.findById(user.getId()).orElse(null);
-        return adminUserAssembler.toDetail(user, student, usageOf(user));
-    }
-
-    private UserUsageDto usageOf(User user) {
-        return user.getRole() == Role.STUDENT ? userUsageCounter.countFor(user.getId()) : null;
-    }
-
-    /**
-     * The same rule as the bean validation on {@link AdminUserUpdateRequest},
-     * plus the student fields, which are required only for student accounts.
-     */
-    private static void validate(AdminUserUpdateRequest request, boolean isStudent) {
-        if (isBlank(request.email()) || !request.email().contains("@")) {
-            throw new InvalidAdminUserException("A valid email is required");
+    public void deletePermanently(Long id, Long actorId) {
+        User user = access.lockLifecycle(actorId, id);
+        removalAllowed(user, actorId);
+        if (user.getRole() == Role.STUDENT) {
+            deletion.apply(id);
         }
-        if (!isStudent) {
-            return;
+        users.delete(user);
+        users.flush();
+    }
+
+    private void removalAllowed(User user, Long actorId) {
+        if (Objects.equals(user.getId(), actorId)) {
+            throw new AdminActionNotAllowedException("You cannot deactivate or delete your own account");
         }
-        if (isBlank(request.name()) || isBlank(request.school()) || isBlank(request.programme())
-                || isBlank(request.contactNumber())) {
-            throw new InvalidAdminUserException(
-                    "A student needs a name, school, programme and contact number");
-        }
-        if (request.yearOfStudy() == null || request.yearOfStudy() < AdminUserUpdateRequest.MIN_YEAR_OF_STUDY) {
-            throw new InvalidAdminUserException(
-                    "Year of study must be at least " + AdminUserUpdateRequest.MIN_YEAR_OF_STUDY);
+        if (user.getRole() == Role.ADMIN && user.isActive() && users.countByRoleAndActiveTrue(Role.ADMIN) <= 1) {
+            throw new AdminActionNotAllowedException("The last active administrator cannot be removed");
         }
     }
 
-    private static boolean isBlank(String text) {
-        return text == null || text.isBlank();
+    private AdminUserDetailDto detail(User user) {
+        var student = students.findById(user.getId()).orElse(null);
+        return assembler.toDetail(user, student, user.getRole() == Role.STUDENT ? usage.countFor(user.getId()) : null);
     }
 }

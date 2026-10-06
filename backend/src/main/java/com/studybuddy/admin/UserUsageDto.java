@@ -8,5 +8,6 @@ public record UserUsageDto(
         long activeConnections,
         long matchRequestsSent,
         long groupsLed,
-        long groupsJoined) {
+        long groupsJoined,
+        long acceptedGroups) {
 }

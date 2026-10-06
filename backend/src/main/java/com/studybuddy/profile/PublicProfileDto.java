@@ -2,7 +2,6 @@ package com.studybuddy.profile;
 
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
-
 import java.util.List;
 import java.util.Set;
 
@@ -25,5 +24,7 @@ public record PublicProfileDto(
         StudyMode preferredStudyMode,
         Set<StudyGoal> studyGoals,
         Integer preferredGroupSizeMin,
-        Integer preferredGroupSizeMax) implements ProfileDto {
+        Integer preferredGroupSizeMax,
+        List<ProfileAvailabilitySlotDto> availability,
+        ProfileRelationshipDto relationship) implements ProfileDto {
 }

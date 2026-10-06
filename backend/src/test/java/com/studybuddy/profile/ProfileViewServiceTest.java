@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 class ProfileViewServiceTest {
 
     @Mock
-    private StudentRepository studentRepository;
+    private com.studybuddy.common.AccountAccess access;
 
     @Mock
     private ProfileViewAssembler profileViewAssembler;
@@ -35,7 +35,7 @@ class ProfileViewServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ProfileViewService(studentRepository, profileViewAssembler);
+        service = new ProfileViewService(access, profileViewAssembler);
     }
 
     @Test
@@ -43,8 +43,8 @@ class ProfileViewServiceTest {
         Student alice = new Student(null, "Alice", "SCIS", "Information Systems", 3, "+65 9000 0001");
         ReflectionTestUtils.setField(alice, "id", 1L);
         ProfileDto assembled = new PublicProfileDto(1L, "Alice", "SCIS", "Information Systems", 3,
-                List.of(), null, null, Set.of(), null, null);
-        when(studentRepository.findById(1L)).thenReturn(Optional.of(alice));
+                List.of(), null, null, Set.of(), null, null, List.of(), new ProfileRelationshipDto(RelationshipState.STRANGER,null,null));
+        when(access.eligibleStudent(1L)).thenReturn(alice);
         when(profileViewAssembler.assemble(alice, 2L)).thenReturn(assembled);
 
         assertSame(assembled, service.view(1L, 2L));
@@ -52,7 +52,7 @@ class ProfileViewServiceTest {
 
     @Test
     void viewingUnknownStudentThrowsNotFound() {
-        when(studentRepository.findById(9L)).thenReturn(Optional.empty());
+        when(access.eligibleStudent(9L)).thenThrow(new StudentNotFoundException(9L));
 
         assertThrows(StudentNotFoundException.class, () -> service.view(9L, 2L));
 

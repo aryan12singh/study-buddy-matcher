@@ -1,12 +1,8 @@
 package com.studybuddy.matchrequest;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-/**
- * A match request as the API sees it. Carries names and ids only; contact
- * numbers are deliberately absent because a request exists before any
- * connection does.
- */
+/** A privacy-safe request history item, with its structured search context. */
 public record MatchRequestDto(
         Long id,
         Long senderId,
@@ -15,5 +11,7 @@ public record MatchRequestDto(
         String receiverName,
         String message,
         MatchRequestStatus status,
-        LocalDateTime createdAt) {
+        Instant createdAt,
+        Instant respondedAt,
+        MatchRequestContextDto context) {
 }

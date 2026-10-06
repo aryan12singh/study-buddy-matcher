@@ -57,6 +57,8 @@ class GroupJoinRequestServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock private com.studybuddy.common.AccountAccess access;
+
     private GroupJoinRequestService service;
     private Student alice;
     private Student bob;
@@ -65,11 +67,14 @@ class GroupJoinRequestServiceTest {
     @BeforeEach
     void setUp() {
         service = new GroupJoinRequestService(groupJoinRequestRepository, groupMembershipRepository,
-                studentRepository, new StudyGroupLookup(studyGroupRepository), new GroupJoinRequestAssembler(),
-                notificationService);
+                new StudyGroupLookup(studyGroupRepository), new GroupJoinRequestAssembler(), notificationService, access);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
         group = group(GROUP_ID, course(100L, "IS442"), alice, MAX_GROUP_SIZE);
+        org.mockito.Mockito.lenient().when(studentRepository.findById(ALICE_ID)).thenReturn(Optional.of(alice));
+        org.mockito.Mockito.lenient().when(studentRepository.findById(BOB_ID)).thenReturn(Optional.of(bob));
+        org.mockito.Mockito.lenient().when(access.requireStudent(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call ->
+                studentRepository.findById(call.getArgument(0)).orElseThrow(() -> new StudentNotFoundException(call.getArgument(0))));
     }
 
     // --- request ---
@@ -89,7 +94,7 @@ class GroupJoinRequestServiceTest {
         assertEquals("Can I join for the finals?", dto.message());
         assertEquals(GroupJoinRequestStatus.PENDING, dto.status());
         verify(notificationService).notify(eq(alice), eq(NotificationType.GROUP_JOIN_REQUEST_RECEIVED),
-                contains("Bob"));
+                contains("Bob"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -149,7 +154,7 @@ class GroupJoinRequestServiceTest {
 
     @Test
     void requestToUnknownGroupIsRejected() {
-        when(studyGroupRepository.findById(GROUP_ID)).thenReturn(Optional.empty());
+        when(studyGroupRepository.findLeaderId(GROUP_ID)).thenReturn(Optional.empty());
 
         assertThrows(StudyGroupNotFoundException.class,
                 () -> service.request(GROUP_ID, BOB_ID, null));
@@ -209,7 +214,7 @@ class GroupJoinRequestServiceTest {
         assertEquals(bob, membership.getValue().getStudent());
         assertEquals(group, membership.getValue().getStudyGroup());
         verify(notificationService).notify(eq(bob), eq(NotificationType.GROUP_JOIN_REQUEST_ACCEPTED),
-                contains("Midterm crammers"));
+                contains("Midterm crammers"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -273,9 +278,8 @@ class GroupJoinRequestServiceTest {
     @Test
     void requestFromAnotherGroupIsTreatedAsNotFound() {
         StudyGroup otherGroup = group(OTHER_GROUP_ID, course(101L, "IS216"), alice, MAX_GROUP_SIZE);
-        when(studyGroupRepository.findById(OTHER_GROUP_ID)).thenReturn(Optional.of(otherGroup));
-        when(groupJoinRequestRepository.findById(REQUEST_ID))
-                .thenReturn(Optional.of(pendingJoinRequest(REQUEST_ID, group, bob)));
+        when(studyGroupRepository.findLeaderId(OTHER_GROUP_ID)).thenReturn(Optional.of(ALICE_ID));
+        when(groupJoinRequestRepository.findApplicantId(REQUEST_ID, OTHER_GROUP_ID)).thenReturn(Optional.empty());
 
         assertThrows(GroupJoinRequestNotFoundException.class,
                 () -> service.accept(OTHER_GROUP_ID, REQUEST_ID, ALICE_ID));
@@ -286,7 +290,7 @@ class GroupJoinRequestServiceTest {
     @Test
     void acceptingUnknownRequestIsRejected() {
         givenGroupExists();
-        when(groupJoinRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.empty());
+        when(groupJoinRequestRepository.findApplicantId(REQUEST_ID, GROUP_ID)).thenReturn(Optional.empty());
 
         assertThrows(GroupJoinRequestNotFoundException.class,
                 () -> service.accept(GROUP_ID, REQUEST_ID, ALICE_ID));
@@ -304,7 +308,7 @@ class GroupJoinRequestServiceTest {
         assertEquals(GroupJoinRequestStatus.REJECTED, request.getStatus());
         verify(groupMembershipRepository, never()).save(any());
         verify(notificationService).notify(eq(bob), eq(NotificationType.GROUP_JOIN_REQUEST_REJECTED),
-                contains("Midterm crammers"));
+                contains("Midterm crammers"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -328,24 +332,12 @@ class GroupJoinRequestServiceTest {
         verifyNoInteractions(notificationService);
     }
 
-    // --- rejectAllPendingFrom (account deactivation) ---
-
-    @Test
-    void rejectAllPendingFromRejectsTheStudentsRequestsWithoutNotifying() {
-        GroupJoinRequest request = pendingJoinRequest(REQUEST_ID, group, bob);
-        when(groupJoinRequestRepository.findByStudentIdAndStatus(BOB_ID, GroupJoinRequestStatus.PENDING))
-                .thenReturn(List.of(request));
-
-        service.rejectAllPendingFrom(BOB_ID);
-
-        assertEquals(GroupJoinRequestStatus.REJECTED, request.getStatus());
-        verifyNoInteractions(notificationService);
-    }
-
     // --- helpers ---
 
     private void givenGroupExists() {
-        when(studyGroupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
+        org.mockito.Mockito.lenient().when(studyGroupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
+        org.mockito.Mockito.lenient().when(studyGroupRepository.findByIdForUpdate(GROUP_ID)).thenReturn(Optional.of(group));
+        org.mockito.Mockito.lenient().when(studyGroupRepository.findLeaderId(GROUP_ID)).thenReturn(Optional.of(ALICE_ID));
     }
 
     private void givenGroupAndBobExist() {
@@ -356,7 +348,8 @@ class GroupJoinRequestServiceTest {
     private GroupJoinRequest givenPendingRequestFromBob() {
         givenGroupExists();
         GroupJoinRequest request = pendingJoinRequest(REQUEST_ID, group, bob);
-        when(groupJoinRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(request));
+        when(groupJoinRequestRepository.findApplicantId(REQUEST_ID, GROUP_ID)).thenReturn(Optional.of(BOB_ID));
+        when(groupJoinRequestRepository.findByIdForUpdate(REQUEST_ID)).thenReturn(Optional.of(request));
         return request;
     }
 }

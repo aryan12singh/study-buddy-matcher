@@ -8,8 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Authentication identity. Profile data lives on {@code Student}, not here,
@@ -18,7 +17,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,7 +35,30 @@ public class User {
     private boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
+
+    @Column(name = "token_version", nullable = false)
+    private long tokenVersion;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
+    public long getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public Instant getLastLoginAt() {
+        return lastLoginAt;
+    }
+
+    public void recordLogin() {
+        lastLoginAt = Instant.now();
+    }
+
+    public void deactivate() {
+        active = false;
+        tokenVersion++;
+    }
 
     protected User() {
     }
@@ -77,10 +98,14 @@ public class User {
     }
 
     public void setActive(boolean active) {
+        if (!active && this.active) {
+            deactivate();
+            return;
+        }
         this.active = active;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

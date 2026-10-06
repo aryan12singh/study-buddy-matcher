@@ -1,59 +1,73 @@
 package com.studybuddy.admin;
 
-import com.studybuddy.connection.ConnectionService;
-import com.studybuddy.matchrequest.MatchRequestService;
-import com.studybuddy.studygroup.GroupJoinRequestService;
+import com.studybuddy.connection.ConnectionRepository;
+import com.studybuddy.matchrequest.MatchRequestRepository;
+import com.studybuddy.matchrequest.MatchRequestStatus;
+import com.studybuddy.notification.NotificationResourceType;
+import com.studybuddy.notification.NotificationService;
+import com.studybuddy.notification.NotificationType;
+import com.studybuddy.studygroup.GroupClosure;
+import com.studybuddy.studygroup.GroupJoinRequestRepository;
+import com.studybuddy.studygroup.GroupJoinRequestStatus;
 import com.studybuddy.studygroup.GroupMembershipRepository;
-import com.studybuddy.studygroup.StudyGroup;
+import com.studybuddy.studygroup.StudyGroupNotFoundException;
 import com.studybuddy.studygroup.StudyGroupRepository;
-import com.studybuddy.studygroup.StudyGroupService;
 import org.springframework.stereotype.Component;
 
-/**
- * What deactivating a student's account does to the rest of their data. Team
- * decision: an admin "delete" is a deactivation, never a hard delete. The
- * student's active connections end, their pending match requests (sent and
- * received) are declined, the groups they lead are closed, their own pending
- * join requests are rejected, and they are removed from every group they are
- * in. Answered requests are kept as history. Change the policy here and
- * nowhere else.
- */
+/** Package-private operation reached only after authorized exclusive lifecycle locking. */
 @Component
 public class StudentDeactivation {
+    private final ConnectionRepository connections;
+    private final MatchRequestRepository requests;
+    private final GroupJoinRequestRepository applications;
+    private final StudyGroupRepository groups;
+    private final GroupMembershipRepository memberships;
+    private final GroupClosure closure;
+    private final NotificationService notifications;
 
-    private final ConnectionService connectionService;
-    private final MatchRequestService matchRequestService;
-    private final GroupJoinRequestService groupJoinRequestService;
-    private final StudyGroupService studyGroupService;
-    private final StudyGroupRepository studyGroupRepository;
-    private final GroupMembershipRepository groupMembershipRepository;
-
-    public StudentDeactivation(ConnectionService connectionService,
-                               MatchRequestService matchRequestService,
-                               GroupJoinRequestService groupJoinRequestService,
-                               StudyGroupService studyGroupService,
-                               StudyGroupRepository studyGroupRepository,
-                               GroupMembershipRepository groupMembershipRepository) {
-        this.connectionService = connectionService;
-        this.matchRequestService = matchRequestService;
-        this.groupJoinRequestService = groupJoinRequestService;
-        this.studyGroupService = studyGroupService;
-        this.studyGroupRepository = studyGroupRepository;
-        this.groupMembershipRepository = groupMembershipRepository;
+    public StudentDeactivation(ConnectionRepository connections, MatchRequestRepository requests, GroupJoinRequestRepository applications,
+        StudyGroupRepository groups, GroupMembershipRepository memberships, GroupClosure closure, NotificationService notifications) {
+        this.connections = connections;
+        this.requests = requests;
+        this.applications = applications;
+        this.groups = groups;
+        this.memberships = memberships;
+        this.closure = closure;
+        this.notifications = notifications;
     }
-
-    /**
-     * Groups are closed through {@link StudyGroupService#close} so pending
-     * join requests are turned down and their senders told, exactly as when
-     * a leader closes a group themselves.
-     */
-    public void apply(Long studentId) {
-        connectionService.endAll(studentId);
-        matchRequestService.declineAllPendingFor(studentId);
-        for (StudyGroup group : studyGroupRepository.findByLeaderIdAndActiveTrue(studentId)) {
-            studyGroupService.close(group.getId(), studentId);
+    void apply(Long studentId) {
+        for (var connection : connections.findActiveByStudentId(studentId)) {
+            connection.end();
+            var other = connection.otherStudent(studentId);
+            notifications.notify(other, NotificationType.CONNECTION_ENDED, "Your study-buddy connection has ended because the other account is no longer active",
+                NotificationResourceType.STUDENT, studentId, "connection:" + connection.getId() + ":ended:" + other.getId());
         }
-        groupJoinRequestService.rejectAllPendingFrom(studentId);
-        groupMembershipRepository.deleteAll(groupMembershipRepository.findByStudentId(studentId));
+        for (var request : requests.findByReceiverIdAndStatus(studentId, MatchRequestStatus.PENDING)) {
+            request.decline();
+            notifications.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED, "The other account is no longer active, so your study-buddy request was closed",
+                NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":declined");
+        }
+        for (var request : requests.findBySenderIdAndStatus(studentId, MatchRequestStatus.PENDING)) {
+            request.decline();
+            notifications.notify(request.getReceiver(), NotificationType.MATCH_REQUEST_DECLINED, "The other account is no longer active, so their study-buddy request was withdrawn",
+                NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":declined");
+        }
+        for (var group : groups.findByLeaderIdAndActiveTrue(studentId)) {
+            var locked = groups.findByIdForUpdate(group.getId()).orElseThrow(() -> new StudyGroupNotFoundException(group.getId()));
+            closure.close(locked);
+        }
+        for (var request : applications.findByStudentIdAndStatus(studentId, GroupJoinRequestStatus.PENDING)) {
+            request.reject();
+            notifications.notify(request.getStudyGroup().getLeader(), NotificationType.GROUP_JOIN_REQUEST_REJECTED,
+                "An applicant's account is no longer active; their application was withdrawn", NotificationResourceType.GROUP,
+                request.getStudyGroup().getId(), "group-request:" + request.getId() + ":withdrawn");
+        }
+        var current = memberships.findByStudentId(studentId);
+        for (var member : current) if (!member.getStudyGroup().isLeader(studentId)) {
+            notifications.notify(member.getStudyGroup().getLeader(), NotificationType.GROUP_MEMBER_REMOVED,
+                "A member's account is no longer active; their membership was removed", NotificationResourceType.GROUP,
+                member.getStudyGroup().getId(), "membership:" + member.getId() + ":account-removed");
+        }
+        memberships.deleteAll(current);
     }
 }

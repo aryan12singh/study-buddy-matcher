@@ -1,14 +1,12 @@
 package com.studybuddy.notification;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-
+    List<Notification> findByResourceTypeAndResourceId(NotificationResourceType type, Long resourceId);
+    List<Notification> findByRecipientId(Long recipientId);
     List<Notification> findByRecipientIdOrderByCreatedAtDesc(Long recipientId);
-
     List<Notification> findByRecipientIdAndReadFalse(Long recipientId);
-
     long countByRecipientIdAndReadFalse(Long recipientId);
 }

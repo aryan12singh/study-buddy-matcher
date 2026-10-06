@@ -2,6 +2,7 @@ package com.studybuddy.admin;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * What an admin supplies when editing an account. The student profile fields
@@ -11,12 +12,11 @@ import jakarta.validation.constraints.NotBlank;
  * service checks the rules again so it is safe to call without one.
  */
 public record AdminUserUpdateRequest(
-        @NotBlank @Email String email,
-        String name,
-        String school,
-        String programme,
+        @NotBlank @Size(max = 255) String email,
+        @Size(max = 255) String name,
+        @Size(max = 255) String school,
+        @Size(max = 255) String programme,
         Integer yearOfStudy,
-        String contactNumber) {
-
+        @Size(max = 255) String contactNumber) {
     public static final int MIN_YEAR_OF_STUDY = 1;
 }

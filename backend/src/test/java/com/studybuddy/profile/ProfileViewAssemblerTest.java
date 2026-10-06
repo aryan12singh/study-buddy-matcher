@@ -28,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.when;
 
 /**
- * Uses a real {@link ConnectionService} over a mocked repository, so the
- * "connected" answer comes from the same code the application runs.
+ * Uses the real relationship assembler over mocked repositories.
  */
 @ExtendWith(MockitoExtension.class)
 class ProfileViewAssemblerTest {
@@ -45,22 +44,22 @@ class ProfileViewAssemblerTest {
     @Mock
     private NotificationService notificationService;
 
-    private ConnectionService connectionService;
+    @Mock private com.studybuddy.matchrequest.MatchRequestRepository matchRequestRepository;
+    @Mock private com.studybuddy.student.AvailabilitySlotRepository availabilitySlotRepository;
     private ProfileViewAssembler assembler;
     private Student alice;
     private Student bob;
 
     @BeforeEach
     void setUp() {
-        connectionService = new ConnectionService(connectionRepository, new ConnectionAssembler(), notificationService);
-        assembler = new ProfileViewAssembler(connectionService);
+        assembler = new ProfileViewAssembler(new ProfileRelationshipAssembler(connectionRepository, matchRequestRepository), availabilitySlotRepository);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
     }
 
     @Test
     void strangerGetsPublicProfile() {
-        when(connectionRepository.existsActiveBetween(ALICE_ID, CAROL_ID)).thenReturn(false);
+        when(connectionRepository.findActiveBetween(ALICE_ID, CAROL_ID)).thenReturn(Optional.empty());
 
         ProfileDto profile = assembler.assemble(alice, CAROL_ID);
 
@@ -69,7 +68,7 @@ class ProfileViewAssemblerTest {
 
     @Test
     void activeConnectionGetsContactNumber() {
-        when(connectionRepository.existsActiveBetween(ALICE_ID, BOB_ID)).thenReturn(true);
+        when(connectionRepository.findActiveBetween(ALICE_ID, BOB_ID)).thenReturn(Optional.of(new Connection(alice,bob)));
 
         ProfileDto profile = assembler.assemble(alice, BOB_ID);
 
@@ -90,11 +89,10 @@ class ProfileViewAssemblerTest {
         Connection connection = new Connection(alice, bob);
         ReflectionTestUtils.setField(connection, "id", CONNECTION_ID);
         // The query filters on endedAt; answer from the entity's own state.
-        when(connectionRepository.existsActiveBetween(ALICE_ID, BOB_ID)).thenAnswer(call -> connection.isActive());
-        when(connectionRepository.findById(CONNECTION_ID)).thenReturn(Optional.of(connection));
+        when(connectionRepository.findActiveBetween(ALICE_ID, BOB_ID)).thenAnswer(call -> connection.isActive()?Optional.of(connection):Optional.empty());
         assertInstanceOf(ConnectedProfileDto.class, assembler.assemble(alice, BOB_ID));
 
-        connectionService.end(CONNECTION_ID, BOB_ID);
+        connection.end();
 
         assertInstanceOf(PublicProfileDto.class, assembler.assemble(alice, BOB_ID));
     }
@@ -109,7 +107,7 @@ class ProfileViewAssemblerTest {
         alice.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
         alice.setPreferredGroupSizeMin(2);
         alice.setPreferredGroupSizeMax(3);
-        when(connectionRepository.existsActiveBetween(ALICE_ID, CAROL_ID)).thenReturn(false);
+        when(connectionRepository.findActiveBetween(ALICE_ID, CAROL_ID)).thenReturn(Optional.empty());
 
         PublicProfileDto profile = (PublicProfileDto) assembler.assemble(alice, CAROL_ID);
 

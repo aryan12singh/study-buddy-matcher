@@ -10,8 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * A student's confirmed membership in a study group. Created once a
@@ -19,9 +18,10 @@ import java.time.LocalDateTime;
  * per the API contract note that join requests are their own state machine.
  */
 @Entity
-@Table(name = "group_memberships", uniqueConstraints = @UniqueConstraint(columnNames = {"study_group_id", "student_id"}))
+@Table(name = "group_memberships", uniqueConstraints = @UniqueConstraint(columnNames = {
+        "study_group_id", "student_id"
+}))
 public class GroupMembership {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,7 +35,7 @@ public class GroupMembership {
     private Student student;
 
     @Column(name = "joined_at", nullable = false, updatable = false)
-    private LocalDateTime joinedAt = LocalDateTime.now();
+    private Instant joinedAt = Instant.now();
 
     protected GroupMembership() {
     }
@@ -57,7 +57,7 @@ public class GroupMembership {
         return student;
     }
 
-    public LocalDateTime getJoinedAt() {
+    public Instant getJoinedAt() {
         return joinedAt;
     }
 }

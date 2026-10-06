@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class StudyGroupLookup {
-
     private final StudyGroupRepository studyGroupRepository;
 
     public StudyGroupLookup(StudyGroupRepository studyGroupRepository) {
@@ -19,9 +18,25 @@ public class StudyGroupLookup {
     /**
      * @throws StudyGroupNotFoundException if the group does not exist
      */
+    public Long leaderId(Long groupId) {
+        return studyGroupRepository.findLeaderId(groupId).orElseThrow(() -> new StudyGroupNotFoundException(groupId));
+    }
+
+    public StudyGroup findGroupForUpdate(Long groupId) {
+        return studyGroupRepository.findByIdForUpdate(groupId).orElseThrow(() -> new StudyGroupNotFoundException(groupId));
+    }
+
+    public StudyGroup findGroupLedByForUpdate(Long groupId, Long actorId) {
+        StudyGroup group = findGroupForUpdate(groupId);
+        if (!group.isLeader(actorId)) {
+            throw new NotGroupLeaderException(groupId);
+        }
+        return group;
+    }
+
     public StudyGroup findGroup(Long groupId) {
         return studyGroupRepository.findById(groupId)
-                .orElseThrow(() -> new StudyGroupNotFoundException(groupId));
+            .orElseThrow(() -> new StudyGroupNotFoundException(groupId));
     }
 
     /**

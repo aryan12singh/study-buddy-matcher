@@ -1,12 +1,14 @@
 package com.studybuddy.studygroup;
 
-/**
- * Thrown when the details supplied for a group are invalid, such as an
- * availability slot that ends before it starts.
- */
-public class InvalidStudyGroupException extends RuntimeException {
+import com.studybuddy.common.error.InvalidInputException;
+
+public class InvalidStudyGroupException extends InvalidInputException {
 
     public InvalidStudyGroupException(String message) {
         super(message);
+    }
+
+    public InvalidStudyGroupException(String field, String message) {
+        super(field, message);
     }
 }

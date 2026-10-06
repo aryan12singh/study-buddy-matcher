@@ -2,7 +2,6 @@ package com.studybuddy.studygroup;
 
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
-
 import java.util.Set;
 
 /** A study group as it appears in the browse list. */
@@ -18,5 +17,6 @@ public record StudyGroupSummaryDto(
         Set<StudyGoal> studyGoals,
         int maxGroupSize,
         long memberCount,
-        boolean active) {
+        boolean active,
+        GroupViewerDto viewer) {
 }

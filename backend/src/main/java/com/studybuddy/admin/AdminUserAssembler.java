@@ -10,18 +10,17 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AdminUserAssembler {
-
     /**
      * @param student the user's student profile, or null for an admin account
      */
     public AdminUserSummaryDto toSummary(User user, Student student) {
         return new AdminUserSummaryDto(
-                user.getId(),
-                user.getEmail(),
-                user.getRole(),
-                student == null ? null : student.getName(),
-                user.isActive(),
-                user.getCreatedAt());
+            user.getId(),
+            user.getEmail(),
+            user.getRole(),
+            student == null ? null : student.getName(),
+            user.isActive(),
+            user.getCreatedAt(), user.getLastLoginAt());
     }
 
     /**
@@ -29,6 +28,7 @@ public class AdminUserAssembler {
      * @param usage the student's usage, or null for an admin account
      */
     public AdminUserDetailDto toDetail(User user, Student student, UserUsageDto usage) {
-        return new AdminUserDetailDto(toSummary(user, student), usage);
+        return new AdminUserDetailDto(toSummary(user, student), usage,
+            student == null ? null : new AdminStudentProfileDto(student.getName(), student.getSchool(), student.getProgramme(), student.getYearOfStudy()));
     }
 }

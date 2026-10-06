@@ -39,6 +39,8 @@ class ConnectionServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock private com.studybuddy.common.AccountAccess access;
+
     private ConnectionService service;
     private Student alice;
     private Student bob;
@@ -46,10 +48,11 @@ class ConnectionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ConnectionService(connectionRepository, new ConnectionAssembler(), notificationService);
+        service = new ConnectionService(connectionRepository, new ConnectionAssembler(), notificationService, access);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
         carol = student(CAROL_ID, "Carol");
+        org.mockito.Mockito.lenient().when(access.requireStudent(ALICE_ID)).thenReturn(alice);
     }
 
     // --- listActive ---
@@ -106,7 +109,7 @@ class ConnectionServiceTest {
 
         service.end(CONNECTION_ID, ALICE_ID);
 
-        verify(notificationService).notify(eq(bob), eq(NotificationType.CONNECTION_ENDED), contains("Alice"));
+        verify(notificationService).notify(eq(bob), eq(NotificationType.CONNECTION_ENDED), contains("Alice"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -131,25 +134,9 @@ class ConnectionServiceTest {
 
     @Test
     void endingUnknownConnectionThrowsNotFound() {
-        when(connectionRepository.findById(CONNECTION_ID)).thenReturn(Optional.empty());
+        when(connectionRepository.findParticipants(CONNECTION_ID)).thenReturn(Optional.empty());
 
         assertThrows(ConnectionNotFoundException.class, () -> service.end(CONNECTION_ID, ALICE_ID));
-    }
-
-    // --- endAll ---
-
-    @Test
-    void endAllEndsEveryActiveConnectionAndNotifiesEachOtherStudent() {
-        Connection withBob = connection(CONNECTION_ID, alice, bob);
-        Connection withCarol = connection(8L, carol, alice);
-        when(connectionRepository.findActiveByStudentId(ALICE_ID)).thenReturn(List.of(withBob, withCarol));
-
-        service.endAll(ALICE_ID);
-
-        assertFalse(withBob.isActive());
-        assertFalse(withCarol.isActive());
-        verify(notificationService).notify(eq(bob), eq(NotificationType.CONNECTION_ENDED), contains("Alice"));
-        verify(notificationService).notify(eq(carol), eq(NotificationType.CONNECTION_ENDED), contains("Alice"));
     }
 
     // --- areConnected ---
@@ -171,7 +158,11 @@ class ConnectionServiceTest {
 
     private Connection givenConnectionBetweenAliceAndBob() {
         Connection connection = connection(CONNECTION_ID, alice, bob);
-        when(connectionRepository.findById(CONNECTION_ID)).thenReturn(Optional.of(connection));
+        org.mockito.Mockito.lenient().when(connectionRepository.findByIdForUpdate(CONNECTION_ID)).thenReturn(Optional.of(connection));
+        when(connectionRepository.findParticipants(CONNECTION_ID)).thenReturn(Optional.of(new ConnectionRepository.Participants() {
+            public Long getStudentAId() { return ALICE_ID; }
+            public Long getStudentBId() { return BOB_ID; }
+        }));
         return connection;
     }
 }

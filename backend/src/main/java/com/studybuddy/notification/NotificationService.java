@@ -1,62 +1,59 @@
 package com.studybuddy.notification;
 
+import com.studybuddy.common.AccountAccess;
 import com.studybuddy.student.Student;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-/**
- * The single entry point other services use to tell a student something
- * happened, and the student's own view of those notifications. Callers
- * decide the wording; this class only records it. The acting student's id is
- * passed in explicitly until authentication supplies it.
- */
 @Service
 @Transactional
 public class NotificationService {
+    private final NotificationRepository notifications;
+    private final NotificationAssembler assembler;
+    private final AccountAccess access;
 
-    private final NotificationRepository notificationRepository;
-    private final NotificationAssembler notificationAssembler;
-
-    public NotificationService(NotificationRepository notificationRepository,
-                               NotificationAssembler notificationAssembler) {
-        this.notificationRepository = notificationRepository;
-        this.notificationAssembler = notificationAssembler;
+    public NotificationService(NotificationRepository notifications, NotificationAssembler assembler, AccountAccess access) {
+        this.notifications = notifications;
+        this.assembler = assembler;
+        this.access = access;
     }
 
-    public void notify(Student recipient, NotificationType type, String message) {
-        notificationRepository.save(new Notification(recipient, type, message));
-    }
-
-    /** The student's notifications, newest first, read and unread. */
-    @Transactional(readOnly = true)
-    public List<NotificationDto> list(Long studentId) {
-        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(studentId).stream()
-                .map(notificationAssembler::toDto)
-                .toList();
+    /** Internal event write: called within the successful domain/account transaction. */
+    public void notify(Student recipient, NotificationType type, String message, NotificationResourceType resourceType, Long resourceId, String eventKey) {
+        notifications.save(new Notification(recipient, type, message, resourceType, resourceId, eventKey));
     }
 
     @Transactional(readOnly = true)
-    public long unreadCount(Long studentId) {
-        return notificationRepository.countByRecipientIdAndReadFalse(studentId);
+    public List<NotificationDto> list(Long actorId) {
+        return list(actorId, NotificationFilter.ALL);
     }
 
-    /**
-     * @throws NotificationNotFoundException if the notification does not exist
-     * @throws NotificationNotAllowedException if it was sent to another student
-     */
-    public NotificationDto markRead(Long notificationId, Long studentId) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new NotificationNotFoundException(notificationId));
-        if (!notification.isFor(studentId)) {
-            throw new NotificationNotAllowedException(notificationId);
+    @Transactional(readOnly = true)
+    public List<NotificationDto> list(Long actorId, NotificationFilter filter) {
+        access.requireStudent(actorId);
+        return notifications.findByRecipientIdOrderByCreatedAtDesc(actorId).stream()
+            .filter(filter::matches).map(assembler::toDto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long unreadCount(Long actorId) {
+        access.requireStudent(actorId);
+        return notifications.countByRecipientIdAndReadFalse(actorId);
+    }
+
+    public NotificationDto markRead(Long id, Long actorId) {
+        access.lockStudents(actorId, actorId);
+        Notification notification = notifications.findById(id).orElseThrow(() -> new NotificationNotFoundException(id));
+        if (!notification.isFor(actorId)) {
+            throw new NotificationNotAllowedException(id);
         }
         notification.markRead();
-        return notificationAssembler.toDto(notification);
+        return assembler.toDto(notification);
     }
 
-    public void markAllRead(Long studentId) {
-        notificationRepository.findByRecipientIdAndReadFalse(studentId).forEach(Notification::markRead);
+    public void markAllRead(Long actorId) {
+        access.lockStudents(actorId, actorId);
+        notifications.findByRecipientIdAndReadFalse(actorId).forEach(Notification::markRead);
     }
 }

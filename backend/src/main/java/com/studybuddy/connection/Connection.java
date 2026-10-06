@@ -9,8 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * An accepted study-buddy connection between two students. {@code endedAt}
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "connections")
 public class Connection {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,10 +33,10 @@ public class Connection {
     private Student studentB;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "ended_at")
-    private LocalDateTime endedAt;
+    private Instant endedAt;
 
     protected Connection() {
     }
@@ -60,11 +58,11 @@ public class Connection {
         return studentB;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getEndedAt() {
+    public Instant getEndedAt() {
         return endedAt;
     }
 
@@ -98,6 +96,6 @@ public class Connection {
         if (!isActive()) {
             throw new IllegalStateException("Connection " + id + " has already ended");
         }
-        this.endedAt = LocalDateTime.now();
+        this.endedAt = Instant.now();
     }
 }

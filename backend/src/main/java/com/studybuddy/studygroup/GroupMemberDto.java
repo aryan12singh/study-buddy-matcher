@@ -1,6 +1,6 @@
 package com.studybuddy.studygroup;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * A member as other group members see them. No contact number: belonging to
@@ -10,5 +10,5 @@ public record GroupMemberDto(
         Long studentId,
         String name,
         boolean leader,
-        LocalDateTime joinedAt) {
+        Instant joinedAt) {
 }

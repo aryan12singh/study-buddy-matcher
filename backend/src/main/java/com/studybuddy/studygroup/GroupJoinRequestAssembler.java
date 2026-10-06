@@ -11,13 +11,13 @@ public class GroupJoinRequestAssembler {
 
     public GroupJoinRequestDto toDto(GroupJoinRequest request) {
         return new GroupJoinRequestDto(
-                request.getId(),
-                request.getStudyGroup().getId(),
-                request.getStudyGroup().getName(),
-                request.getStudent().getId(),
-                request.getStudent().getName(),
-                request.getMessage(),
-                request.getStatus(),
-                request.getCreatedAt());
+            request.getId(),
+            request.getStudyGroup().getId(),
+            request.getStudyGroup().getName(),
+            request.getStudent().getId(),
+            request.getStudent().getName(),
+            request.getMessage(),
+            request.getStatus(),
+            request.getCreatedAt(), request.getRespondedAt(), request.getStudyGroup().isActive());
     }
 }

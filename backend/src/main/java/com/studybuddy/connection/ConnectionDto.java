@@ -1,6 +1,6 @@
 package com.studybuddy.connection;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * A connection as one of its two students sees it: who is on the other side
@@ -11,5 +11,5 @@ public record ConnectionDto(
         Long id,
         Long otherStudentId,
         String otherStudentName,
-        LocalDateTime createdAt) {
+        Instant createdAt) {
 }

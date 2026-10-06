@@ -1,8 +1,7 @@
 package com.studybuddy.admin;
 
 import com.studybuddy.user.Role;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * One account in the admin user list. {@code name} is null for admin
@@ -15,5 +14,6 @@ public record AdminUserSummaryDto(
         Role role,
         String name,
         boolean active,
-        LocalDateTime createdAt) {
+        Instant createdAt,
+        Instant lastLoginAt) {
 }

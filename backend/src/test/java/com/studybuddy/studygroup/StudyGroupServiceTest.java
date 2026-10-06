@@ -75,6 +75,8 @@ class StudyGroupServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock private com.studybuddy.common.AccountAccess access;
+
     private StudyGroupService service;
     private Student alice;
     private Student bob;
@@ -84,13 +86,17 @@ class StudyGroupServiceTest {
     @BeforeEach
     void setUp() {
         service = new StudyGroupService(studyGroupRepository, groupMembershipRepository,
-                groupAvailabilitySlotRepository, groupJoinRequestRepository, studentRepository,
-                courseRepository, new StudyGroupLookup(studyGroupRepository), new StudyGroupAssembler(),
-                notificationService);
+                groupAvailabilitySlotRepository, courseRepository, new StudyGroupLookup(studyGroupRepository), new StudyGroupAssembler(),
+                new GroupViewerAssembler(groupMembershipRepository, groupJoinRequestRepository),
+                new GroupClosure(groupJoinRequestRepository, groupMembershipRepository, notificationService), notificationService, access);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
         is442 = course(IS442_ID, "IS442");
         group = group(GROUP_ID, is442, alice, 4);
+        org.mockito.Mockito.lenient().when(studentRepository.findById(ALICE_ID)).thenReturn(Optional.of(alice));
+        org.mockito.Mockito.lenient().when(access.requireStudent(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call ->
+                studentRepository.findById(call.getArgument(0)).orElseThrow(() -> new StudentNotFoundException(call.getArgument(0))));
+        org.mockito.Mockito.lenient().when(studentRepository.findById(BOB_ID)).thenReturn(Optional.of(bob));
     }
 
     // --- create ---
@@ -151,7 +157,7 @@ class StudyGroupServiceTest {
 
     @Test
     void createRejectsBlankName() {
-        assertThrows(InvalidStudyGroupException.class,
+        assertThrows(com.studybuddy.common.error.InvalidInputException.class,
                 () -> service.create(ALICE_ID, details("   ", 4, List.of())));
 
         verify(studyGroupRepository, never()).save(any());
@@ -213,7 +219,7 @@ class StudyGroupServiceTest {
         when(studyGroupRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(group, otherCourseGroup));
         when(groupMembershipRepository.countByStudyGroupId(GROUP_ID)).thenReturn(2L);
 
-        List<StudyGroupSummaryDto> results = service.browse(new StudyGroupFilter(IS442_ID, null, null));
+        List<StudyGroupSummaryDto> results = service.browse(new StudyGroupFilter(IS442_ID, null, null), ALICE_ID);
 
         assertEquals(1, results.size());
         assertEquals(GROUP_ID, results.get(0).id());
@@ -225,7 +231,7 @@ class StudyGroupServiceTest {
     void browseWithNoOpenGroupsReturnsEmptyList() {
         when(studyGroupRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of());
 
-        assertTrue(service.browse(StudyGroupFilter.none()).isEmpty());
+        assertTrue(service.browse(StudyGroupFilter.none(), ALICE_ID).isEmpty());
     }
 
     // --- get ---
@@ -239,7 +245,7 @@ class StudyGroupServiceTest {
                 .thenReturn(List.of(new GroupAvailabilitySlot(group, DayOfWeek.MONDAY,
                         LocalTime.of(18, 0), LocalTime.of(20, 0))));
 
-        StudyGroupDetailDto dto = service.get(GROUP_ID);
+        StudyGroupDetailDto dto = service.get(GROUP_ID, ALICE_ID);
 
         assertEquals(2, dto.memberCount());
         assertTrue(dto.members().get(0).leader());
@@ -251,7 +257,7 @@ class StudyGroupServiceTest {
     void getUnknownGroupIsRejected() {
         when(studyGroupRepository.findById(GROUP_ID)).thenReturn(Optional.empty());
 
-        assertThrows(StudyGroupNotFoundException.class, () -> service.get(GROUP_ID));
+        assertThrows(StudyGroupNotFoundException.class, () -> service.get(GROUP_ID, ALICE_ID));
     }
 
     // --- update ---
@@ -330,7 +336,7 @@ class StudyGroupServiceTest {
         assertFalse(group.isActive());
         assertEquals(GroupJoinRequestStatus.REJECTED, bobsRequest.getStatus());
         verify(notificationService).notify(eq(bob), eq(NotificationType.GROUP_JOIN_REQUEST_REJECTED),
-                contains("closed"));
+                contains("closed"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -365,7 +371,7 @@ class StudyGroupServiceTest {
 
         verify(groupMembershipRepository).delete(bobsMembership);
         verify(notificationService).notify(eq(bob), eq(NotificationType.GROUP_MEMBER_REMOVED),
-                contains("Midterm crammers"));
+                contains("Midterm crammers"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -400,10 +406,36 @@ class StudyGroupServiceTest {
         verify(groupMembershipRepository, never()).delete(any());
     }
 
+    @Test
+    void invalidSlotReportsAvailabilityFieldForForm() {
+        var bad = new GroupAvailabilitySlotDto(DayOfWeek.MONDAY,LocalTime.of(18,0),LocalTime.of(18,0));
+        var error = assertThrows(InvalidStudyGroupException.class,() -> service.create(ALICE_ID,details("Group",4,List.of(bad))));
+        assertTrue(error.getFieldErrors().containsKey("availability"));
+    }
+
+    @Test
+    void nullGoalsOrSlotsReturnValidationErrorsInsteadOfServerFailure() {
+        var goals = new java.util.HashSet<StudyGoal>();
+        goals.add(null);
+        var details = new StudyGroupDetails("Group",null,IS442_ID,goals,null,4,List.of());
+        assertThrows(InvalidStudyGroupException.class,() -> service.create(ALICE_ID,details));
+        var nullSlot = new StudyGroupDetails("Group",null,IS442_ID,Set.of(),null,4,java.util.Arrays.asList((GroupAvailabilitySlotDto)null));
+        assertThrows(InvalidStudyGroupException.class,() -> service.create(ALICE_ID,nullSlot));
+    }
+
+    @Test
+    void overlongFieldsAreRejectedBeforeGroupIsSaved() {
+        assertThrows(com.studybuddy.common.error.InvalidInputException.class,() -> service.create(ALICE_ID,details("x".repeat(256),4,List.of())));
+        var longDescription = new StudyGroupDetails("Group","x".repeat(4001),IS442_ID,Set.of(),null,4,List.of());
+        assertThrows(com.studybuddy.common.error.InvalidInputException.class,() -> service.create(ALICE_ID,longDescription));
+        verify(studyGroupRepository,never()).save(any());
+    }
+
     // --- helpers ---
 
     private void givenGroupExists() {
-        when(studyGroupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
+        org.mockito.Mockito.lenient().when(studyGroupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
+        org.mockito.Mockito.lenient().when(studyGroupRepository.findByIdForUpdate(GROUP_ID)).thenReturn(Optional.of(group));
     }
 
     private void givenCreateDependenciesExist() {

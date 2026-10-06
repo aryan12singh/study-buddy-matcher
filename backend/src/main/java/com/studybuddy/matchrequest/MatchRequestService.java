@@ -1,158 +1,119 @@
 package com.studybuddy.matchrequest;
 
+import com.studybuddy.common.AccountAccess;
+import com.studybuddy.common.InputRules;
+import com.studybuddy.common.error.ForbiddenActionException;
+import com.studybuddy.common.error.InvalidInputException;
 import com.studybuddy.connection.Connection;
 import com.studybuddy.connection.ConnectionRepository;
+import com.studybuddy.course.Course;
+import com.studybuddy.course.CourseRepository;
+import com.studybuddy.notification.NotificationResourceType;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
-import com.studybuddy.student.Student;
-import com.studybuddy.student.StudentRepository;
+import com.studybuddy.studygroup.CourseNotFoundException;
+import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-
-/**
- * Sending and responding to match requests. The acting student's id is passed
- * in explicitly until authentication supplies it. Status changes on a loaded
- * request need no explicit save: the transaction flushes them on commit.
- */
 @Service
 @Transactional
 public class MatchRequestService {
+    private final MatchRequestRepository requests;
+    private final ConnectionRepository connections;
+    private final CourseRepository courses;
+    private final MatchRequestAssembler assembler;
+    private final NotificationService notifications;
+    private final AccountAccess access;
 
-    private final MatchRequestRepository matchRequestRepository;
-    private final ConnectionRepository connectionRepository;
-    private final StudentRepository studentRepository;
-    private final MatchRequestAssembler matchRequestAssembler;
-    private final NotificationService notificationService;
-
-    public MatchRequestService(MatchRequestRepository matchRequestRepository,
-                               ConnectionRepository connectionRepository,
-                               StudentRepository studentRepository,
-                               MatchRequestAssembler matchRequestAssembler,
-                               NotificationService notificationService) {
-        this.matchRequestRepository = matchRequestRepository;
-        this.connectionRepository = connectionRepository;
-        this.studentRepository = studentRepository;
-        this.matchRequestAssembler = matchRequestAssembler;
-        this.notificationService = notificationService;
+    public MatchRequestService(MatchRequestRepository requests, ConnectionRepository connections, CourseRepository courses,
+        MatchRequestAssembler assembler, NotificationService notifications, AccountAccess access) {
+        this.requests = requests;
+        this.connections = connections;
+        this.courses = courses;
+        this.assembler = assembler;
+        this.notifications = notifications;
+        this.access = access;
     }
 
-    /**
-     * @param message optional; blank is stored as no message
-     * @throws MatchRequestNotAllowedException if sending to yourself, to a
-     *         connected student, or while a request between the two is pending
-     * @throws StudentNotFoundException if either student does not exist
-     */
     public MatchRequestDto send(Long senderId, Long receiverId, String message) {
+        return send(senderId, receiverId, message, MatchRequestContext.profile());
+    }
+
+    public MatchRequestDto send(Long senderId, Long receiverId, String message, MatchRequestContext context) {
+        InputRules.positiveId(receiverId, "Receiver");
         if (Objects.equals(senderId, receiverId)) {
             throw new MatchRequestNotAllowedException("You cannot send a match request to yourself");
         }
-        Student sender = findStudent(senderId);
-        Student receiver = findStudent(receiverId);
-
-        if (connectionRepository.existsActiveBetween(senderId, receiverId)) {
+        access.lockStudents(senderId, senderId, receiverId);
+        var sender = access.requireStudent(senderId);
+        var receiver = access.eligibleStudent(receiverId);
+        String normalMessage = InputRules.optional(message, "Message", InputRules.TEXT_LIMIT);
+        context = context == null ? MatchRequestContext.profile() : context;
+        if (context.origin() == null) {
+            throw new InvalidInputException("context.origin", "Request origin is required");
+        }
+        Course course = null;
+        if (context.courseId() != null) {
+            InputRules.positiveId(context.courseId(), "Context course");
+            Long courseId = context.courseId();
+            course = courses.findById(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
+        }
+        if (connections.existsActiveBetween(senderId, receiverId)) {
             throw new MatchRequestNotAllowedException("You are already connected with this student");
         }
-        if (matchRequestRepository.existsPendingBetween(senderId, receiverId)) {
-            throw new MatchRequestNotAllowedException(
-                    "A match request between you and this student is already pending");
+        if (requests.existsPendingBetween(senderId, receiverId)) {
+            throw new MatchRequestNotAllowedException("A match request between you and this student is already pending");
         }
-
-        MatchRequest saved = matchRequestRepository.save(
-                new MatchRequest(sender, receiver, normaliseMessage(message)));
-        notificationService.notify(receiver, NotificationType.MATCH_REQUEST_RECEIVED,
-                sender.getName() + " sent you a study-buddy request");
-        return matchRequestAssembler.toDto(saved);
+        MatchRequest saved = requests.save(new MatchRequest(sender, receiver, normalMessage, context.origin(), course, context.studyGoal()));
+        notifications.notify(receiver, NotificationType.MATCH_REQUEST_RECEIVED, sender.getName() + " sent you a study-buddy request",
+            NotificationResourceType.MATCH_REQUEST, saved.getId(), "match:" + saved.getId() + ":received");
+        return assembler.toDto(saved);
     }
 
-    /**
-     * Accepts the request and connects the two students.
-     *
-     * @throws MatchRequestNotFoundException if the request does not exist
-     * @throws MatchRequestNotAllowedException if the student is not the receiver
-     * @throws IllegalStateException if the request is no longer pending
-     */
-    public MatchRequestDto accept(Long requestId, Long currentStudentId) {
-        MatchRequest request = findRequestForReceiver(requestId, currentStudentId);
+    public MatchRequestDto accept(Long requestId, Long actorId) {
+        MatchRequest request = forDecision(requestId, actorId);
+        if (connections.existsActiveBetween(request.getSender().getId(), actorId)) {
+            throw new MatchRequestNotAllowedException("You are already connected with this student");
+        }
         request.accept();
-        connectionRepository.save(new Connection(request.getSender(), request.getReceiver()));
-        notificationService.notify(request.getSender(), NotificationType.MATCH_REQUEST_ACCEPTED,
-                request.getReceiver().getName()
-                        + " accepted your request. You can now see each other's contact number.");
-        return matchRequestAssembler.toDto(request);
+        connections.save(new Connection(request.getSender(), request.getReceiver()));
+        notifications.notify(request.getSender(), NotificationType.MATCH_REQUEST_ACCEPTED,
+            request.getReceiver().getName() + " accepted your request. You can now see each other's contact number.",
+            NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":accepted");
+        return assembler.toDto(request);
     }
 
-    /**
-     * @throws MatchRequestNotFoundException if the request does not exist
-     * @throws MatchRequestNotAllowedException if the student is not the receiver
-     * @throws IllegalStateException if the request is no longer pending
-     */
-    public MatchRequestDto decline(Long requestId, Long currentStudentId) {
-        MatchRequest request = findRequestForReceiver(requestId, currentStudentId);
+    public MatchRequestDto decline(Long requestId, Long actorId) {
+        MatchRequest request = forDecision(requestId, actorId);
         request.decline();
-        notificationService.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED,
-                request.getReceiver().getName() + " declined your study-buddy request");
-        return matchRequestAssembler.toDto(request);
+        notifications.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED,
+            request.getReceiver().getName() + " declined your study-buddy request", NotificationResourceType.MATCH_REQUEST,
+            request.getId(), "match:" + request.getId() + ":declined");
+        return assembler.toDto(request);
     }
 
-    /**
-     * Declines every request still pending to or from the student and tells
-     * the other student, so nobody is left waiting on an account that can no
-     * longer answer. Used when the student's account is deactivated. DECLINED
-     * is reused rather than adding a status, because a new enum value would
-     * not pass the check constraint on the existing status column.
-     */
-    public void declineAllPendingFor(Long studentId) {
-        for (MatchRequest request : matchRequestRepository.findByReceiverIdAndStatus(
-                studentId, MatchRequestStatus.PENDING)) {
-            request.decline();
-            notificationService.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED,
-                    request.getReceiver().getName()
-                            + "'s account is no longer active, so your study-buddy request was closed");
+    private MatchRequest forDecision(Long id, Long actorId) {
+        access.beginWrite();
+        access.requireStudent(actorId);
+        var participants = requests.findParticipants(id).orElseThrow(() -> new MatchRequestNotFoundException(id));
+        if (!Objects.equals(participants.getReceiverId(), actorId)) {
+            throw new ForbiddenActionException("Only the student who received this request can respond");
         }
-        for (MatchRequest request : matchRequestRepository.findBySenderIdAndStatus(
-                studentId, MatchRequestStatus.PENDING)) {
-            request.decline();
-            notificationService.notify(request.getReceiver(), NotificationType.MATCH_REQUEST_DECLINED,
-                    request.getSender().getName()
-                            + "'s account is no longer active, so their study-buddy request was withdrawn");
-        }
+        access.lockStudents(actorId, participants.getSenderId(), participants.getReceiverId());
+        return requests.findByIdForUpdate(id).orElseThrow(() -> new MatchRequestNotFoundException(id));
     }
 
-    /** Requests sent to the student, newest first, in every status. */
     @Transactional(readOnly = true)
-    public List<MatchRequestDto> listIncoming(Long studentId) {
-        return toDtos(matchRequestRepository.findByReceiverIdOrderByCreatedAtDesc(studentId));
+    public List<MatchRequestDto> listIncoming(Long actorId) {
+        access.requireStudent(actorId);
+        return requests.findByReceiverIdOrderByCreatedAtDesc(actorId).stream().map(assembler::toDto).toList();
     }
 
-    /** Requests sent by the student, newest first, in every status. */
     @Transactional(readOnly = true)
-    public List<MatchRequestDto> listOutgoing(Long studentId) {
-        return toDtos(matchRequestRepository.findBySenderIdOrderByCreatedAtDesc(studentId));
-    }
-
-    private Student findStudent(Long studentId) {
-        return studentRepository.findById(studentId)
-                .orElseThrow(() -> new StudentNotFoundException(studentId));
-    }
-
-    private MatchRequest findRequestForReceiver(Long requestId, Long currentStudentId) {
-        MatchRequest request = matchRequestRepository.findById(requestId)
-                .orElseThrow(() -> new MatchRequestNotFoundException(requestId));
-        if (!request.isReceiver(currentStudentId)) {
-            throw new MatchRequestNotAllowedException(
-                    "Only the student who received this match request can respond to it");
-        }
-        return request;
-    }
-
-    private List<MatchRequestDto> toDtos(List<MatchRequest> requests) {
-        return requests.stream().map(matchRequestAssembler::toDto).toList();
-    }
-
-    private static String normaliseMessage(String message) {
-        return message == null || message.isBlank() ? null : message.strip();
+    public List<MatchRequestDto> listOutgoing(Long actorId) {
+        access.requireStudent(actorId);
+        return requests.findBySenderIdOrderByCreatedAtDesc(actorId).stream().map(assembler::toDto).toList();
     }
 }

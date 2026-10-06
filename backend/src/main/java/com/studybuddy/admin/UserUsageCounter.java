@@ -9,21 +9,19 @@ import org.springframework.stereotype.Component;
 /**
  * Decides what "basic usage information" means on the admin screen. Team
  * decision: counts of active connections, match requests sent (any status),
- * groups led (open or closed) and groups joined but not led. There is no
- * last-login time. Change the definition here and nowhere else.
+ * groups led (open or closed) and groups joined but not led. Last login is provided by the account DTO. Change the definition here and nowhere else.
  */
 @Component
 public class UserUsageCounter {
-
     private final ConnectionRepository connectionRepository;
     private final MatchRequestRepository matchRequestRepository;
     private final StudyGroupRepository studyGroupRepository;
     private final GroupMembershipRepository groupMembershipRepository;
 
     public UserUsageCounter(ConnectionRepository connectionRepository,
-                            MatchRequestRepository matchRequestRepository,
-                            StudyGroupRepository studyGroupRepository,
-                            GroupMembershipRepository groupMembershipRepository) {
+        MatchRequestRepository matchRequestRepository,
+        StudyGroupRepository studyGroupRepository,
+        GroupMembershipRepository groupMembershipRepository) {
         this.connectionRepository = connectionRepository;
         this.matchRequestRepository = matchRequestRepository;
         this.studyGroupRepository = studyGroupRepository;
@@ -32,9 +30,10 @@ public class UserUsageCounter {
 
     public UserUsageDto countFor(Long studentId) {
         return new UserUsageDto(
-                connectionRepository.countActiveByStudentId(studentId),
-                matchRequestRepository.countBySenderId(studentId),
-                studyGroupRepository.countByLeaderId(studentId),
-                groupMembershipRepository.countJoinedByStudentId(studentId));
+            connectionRepository.countActiveByStudentId(studentId),
+            matchRequestRepository.countBySenderId(studentId),
+            studyGroupRepository.countByLeaderId(studentId),
+            groupMembershipRepository.countJoinedByStudentId(studentId),
+            groupMembershipRepository.countAcceptedOpenByStudentId(studentId));
     }
 }
