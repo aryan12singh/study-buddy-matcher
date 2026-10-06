@@ -6,6 +6,7 @@ const features = [
     title: 'Smart Matching',
     description: 'Matched by course, timetable overlap, and study mode.',
     cta: 'See how matching works →',
+    href: '#how-it-works',
     icon: (
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -28,6 +29,7 @@ const features = [
     title: 'Study Groups',
     description: 'Join a group for your course, or create and lead your own.',
     cta: 'Browse study groups →',
+    href: '/groups',
     icon: (
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.6" />
@@ -45,8 +47,9 @@ const features = [
   {
     tag: 'CONNECTIONS',
     title: 'Stay Connected',
-    description: "See who's online and manage your study-buddy requests.",
+    description: 'Manage your study-buddy requests and accepted connections.',
     cta: 'Manage your requests →',
+    href: '/connections',
     icon: (
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -202,9 +205,7 @@ function LandingPage() {
                 </span>
                 <div className="mb-1.5 font-display text-lg font-semibold text-retro-green">{feature.title}</div>
                 <div className="mb-3.5 text-sm leading-relaxed text-retro-green/65">{feature.description}</div>
-                <a href="#" className="text-[13px] font-bold text-retro-green">
-                  {feature.cta}
-                </a>
+                {feature.href.startsWith('#') ? <a href={feature.href} className="text-[13px] font-bold text-retro-green">{feature.cta}</a> : <Link to={feature.href} className="text-[13px] font-bold text-retro-green">{feature.cta}</Link>}
               </div>
             </div>
           ))}
