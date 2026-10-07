@@ -74,8 +74,13 @@ class GroupHttpTest extends PostgresHttpTest {
         long group = group(l, 3);
         expect(approve(group, apply(group, m), l), 200);
         long request = apply(group, n);
-        statuses(race(() -> call("PUT", "/groups/" + group, l, groupDetails("Capacity edit", 2)),
-                () -> approve(group, request, l)), 200, 409);
+        List<Reply> replies = race(() -> call("PUT", "/groups/" + group, l, groupDetails("Capacity edit", 2)),
+                () -> approve(group, request, l));
+        int edit = replies.get(0).status(), approval = replies.get(1).status();
+        // Edit first: the group is full, so approval conflicts. Approval first: the edit is
+        // rejected as a field error because capacity would fall below the member count.
+        assertTrue((edit == 200 && approval == 409) || (edit == 400 && approval == 200),
+                replies.stream().map(Reply::body).toList().toString());
         long members = count("select count(*) from group_memberships where study_group_id=?", group);
         long capacity = count("select max_group_size from study_groups where id=?", group);
         assertTrue(members <= capacity);
