@@ -88,21 +88,29 @@ study-buddy-matcher/
 │   ├── pom.xml
 │   └── src/
 │       ├── main/java/com/studybuddy/
-│       │   └── StudyBuddyApplication.java
+│       │   ├── StudyBuddyApplication.java
+│       │   ├── auth/ security/          # login, registration, JWT and role guards
+│       │   ├── common/                  # error responses, input rules, account checks
+│       │   ├── user/ student/ course/   # shared entities, repositories, course listing
+│       │   └── seed/                    # opt-in demo data
 │       ├── main/resources/
 │       │   ├── application.yml          # committed, reads env vars, no secrets
-│       │   └── application-local.yml    # gitignored — your real values, see below
-│       └── test/java/com/studybuddy/
-│           └── StudyBuddyApplicationTests.java
+│       │   ├── application-local.yml    # gitignored — your real values, see below
+│       │   └── db/migrations/           # ordered SQL migrations
+│       └── test/
+│           ├── java/com/studybuddy/     # unit tests and the context-load test
+│           └── resources/application-test.yml   # isolated test database profile
 ├── frontend/
 │   ├── package.json, vite.config.ts, tsconfig*.json
 │   ├── .env.example                     # committed template, no secrets
 │   └── src/
-│       ├── App.tsx                       # routes
+│       ├── App.tsx, routes.tsx           # route tree
 │       ├── main.tsx, index.css
+│       ├── shared/                       # API client, auth context, guards, UI components
 │       └── features/
 │           ├── landing/LandingPage.tsx
 │           └── auth/LoginPage.tsx, RegisterPage.tsx
+├── scripts/                              # migration runner and isolated backend tests
 └── README.md
 ```
 
@@ -113,8 +121,9 @@ ahead of time as empty folders.
 ## Prerequisites
 
 - JDK 21
-- Node.js 20 LTS + npm
+- Node.js 22 LTS + npm (matches CI)
 - Git
+- For the full backend test suite only: Docker, `psql` and OpenSSL
 - A Supabase project (ask a team member for an invite to the shared project — see [Environment Variables](#environment-variables))
 
 ## Getting Started
@@ -159,6 +168,41 @@ VITE_API_BASE_URL=http://localhost:8080/api
 ```
 Vite reads this file automatically.
 
+### Configuration reference
+
+Only `VITE_`-prefixed values reach the frontend, and they end up in the public bundle, so
+never put a secret there. Database credentials, the JWT secret and demo passwords belong
+in `application-local.yml` or the process environment.
+
+| Key | Default / requirement | Purpose |
+| --- | --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `local` | Loads `application-local.yml` in development |
+| `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | Required unless set in `application-local.yml` | Backend database connection |
+| `JWT_SECRET` / `jwt.secret` | Required, at least 32 characters | Signs login tokens; use a random value |
+| `JWT_EXPIRATION_MS` / `jwt.expiration-ms` | `86400000` (24 hours) | Token lifetime in milliseconds |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated frontend origins |
+| `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three settings above | Typed authentication config (`AuthProperties`) |
+| `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
+| `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
+| `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
+| `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
+| `VITE_REFRESH_INTERVAL_MS` | `30000` (min `15000`, max `300000`) | Background refresh interval for lists and details |
+
+The test profile reads `STUDYBUDDY_TEST_DATABASE_URL`, `STUDYBUDDY_TEST_DATABASE_USERNAME`,
+`STUDYBUDDY_TEST_DATABASE_PASSWORD` and `STUDYBUDDY_TEST_JWT_SECRET`; the migration runner
+reads the standard `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD`.
+`scripts/test-backend.sh` sets all of these itself.
+
+### Database schema
+
+The SQL files in `backend/src/main/resources/db/migrations/` define the full schema:
+tables, indexes, integrity constraints and database access rules. Apply them in filename
+order with `scripts/migrate-database.sh` (connection from the `PG*` variables above); it is
+safe to re-run. `spring.jpa.hibernate.ddl-auto` is `update`, so Hibernate also adds missing
+tables and columns on startup, but it never creates the constraints or access rules, so a
+fresh database still needs the migrations. The test profile uses `validate` against a
+freshly migrated database.
+
 ## Running the App
 
 ```bash
@@ -173,8 +217,15 @@ cd frontend && npm run dev
 
 Per project requirements, the database must contain at least **10 courses** and
 **50 student profiles**. This runs against the one shared Supabase DB — the seed
-script only needs to be run **once by one team member**, not per developer, to
-avoid duplicate data.
+only needs to be run **once by one team member**, not per developer.
+
+The seeder is off by default. To run it, set `DEMO_SEED_ENABLED=true` plus
+`DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` (private values, never committed) for
+one startup, then turn it off again. It only adds what is missing — 10 courses, 50
+synthetic students (`priya@demo.example.test`, `jamie@demo.example.test`,
+`alex@demo.example.test`, `student04@demo.example.test` … `student50@demo.example.test`)
+and one admin (`admin@demo.example.test`) — so repeat runs never duplicate data or reset
+passwords.
 
 ## Matching Engine
 
@@ -189,8 +240,38 @@ Match quality is shown to users in plain language (e.g. "Strong match"), not a r
 
 ## Testing
 
-- Backend: JUnit + Mockito (`./mvnw test`).
-- Frontend: Vitest + React Testing Library (`npm test`).
+- Backend: JUnit + Mockito.
+- Frontend: Vitest + React Testing Library.
+
+**Backend unit tests** (no database needed):
+
+```bash
+cd backend
+./mvnw test -Dtest='!StudyBuddyApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+**Full backend suite**, including the context-load test, from the repository root (needs
+Docker, `psql` and OpenSSL):
+
+```bash
+scripts/test-backend.sh
+```
+
+It starts a throwaway PostgreSQL 17 container with generated credentials, tests and
+applies the migrations, runs every Maven test, then removes the container. It never
+touches the shared Supabase project.
+
+**Frontend:**
+
+```bash
+cd frontend
+npm ci
+npm test
+npm run lint
+npm run build
+```
+
+CI runs all of the above on every pull request into `main`.
 
 ## Team Workflow
 
