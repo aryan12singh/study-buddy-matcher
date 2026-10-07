@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { createUser, getUser, updateUser } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
+import { useViewNavigation } from '../../shared/components/useViewNavigation'
 import type { Role } from '../../shared/api/types'
 import { label } from '../../shared/api/types'
 import { validateAccountFields } from '../../shared/auth/validation'
@@ -18,7 +19,7 @@ export default function AdminUserFormPage() {
     userId = Number(id),
     validId = !id || Number.isSafeInteger(userId) && userId > 0
   const resource = useResource(`admin-edit-${id}`, signal => getUser(userId, signal), Boolean(id) && validId, false)
-  const navigate = useNavigate(),
+  const navigate = useViewNavigation(),
     action = useAction(),
     initialised = useRef<string | null>(null)
   const [form, setForm] = useState({

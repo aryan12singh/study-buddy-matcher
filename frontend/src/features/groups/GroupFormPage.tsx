@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { getGroup, saveGroup } from './api'
 import { getCourses } from '../../shared/api/courses'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
+import { useViewNavigation } from '../../shared/components/useViewNavigation'
 import type { StudyMode } from '../../shared/api/types'
 import { STUDY_GOALS, STUDY_MODES, label } from '../../shared/api/types'
 import WindowPage from '../../shared/components/WindowPage'
@@ -19,7 +20,7 @@ export default function GroupFormPage() {
   const { id } = useParams(),
     groupId = id ? Number(id) : undefined
   const validId = !id || Number.isSafeInteger(groupId) && Number(groupId) > 0
-  const navigate = useNavigate(),
+  const navigate = useViewNavigation(),
     action = useAction()
   const group = useResource(`edit-group-${id}`, signal => getGroup(groupId!, signal), Boolean(id) && validId, false)
   const courses = useResource('form-courses', getCourses, true, false)

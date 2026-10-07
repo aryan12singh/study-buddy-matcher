@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { changeUserStatus, deleteUser, getUser } from './api'
+import type { AdminAccountTarget } from './api'
 import { useAuth } from '../../shared/auth/useAuth'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
+import { useViewNavigation } from '../../shared/components/useViewNavigation'
 import { formatTimestamp, label } from '../../shared/api/types'
 import WindowPage from '../../shared/components/WindowPage'
 import StatePanel from '../../shared/components/StatePanel'
@@ -19,19 +21,21 @@ export default function AdminUserDetailPage() {
     userId = Number(id),
     validId = Number.isSafeInteger(userId) && userId > 0
   const auth = useAuth(),
-    navigate = useNavigate(),
+    navigate = useViewNavigation(),
     action = useAction()
   const resource = useResource(`admin-user-${id}`, signal => getUser(userId, signal), validId)
   const user = resource.data?.account,
     profile = resource.data?.profile,
     usage = resource.data?.usage
-  const [deactivating, setDeactivating] = useState(false),
-    [deleting, setDeleting] = useState(false),
+  const [deactivating, setDeactivating] = useState<AdminAccountTarget | null>(null),
+    [deleting, setDeleting] = useState<AdminAccountTarget | null>(null),
     [confirmation, setConfirmation] = useState('')
+  const deleteReady = Boolean(deleting && deleting.id === userId && !resource.loading
+    && user?.id === deleting.id && user.email === deleting.email)
 
   async function permanentDelete() {
-    if (!user || confirmation !== user.email) return
-    const result = await action.run(() => deleteUser(user.id), 'Account permanently deleted.', true)
+    if (!deleting || !deleteReady || confirmation !== deleting.email) return
+    const result = await action.run(() => deleteUser(deleting.id), 'Account permanently deleted.', true)
     if (result.ok) navigate('/admin/users')
   }
   return (
@@ -82,7 +86,7 @@ export default function AdminUserDetailPage() {
                 <Button
                   variant="danger"
                   disabled={action.pending || user.id === auth.account?.id}
-                  onClick={() => setDeactivating(true)}
+                  onClick={() => setDeactivating({ id: user.id, email: user.email, role: user.role, name: user.name })}
                 >
                   Deactivate account
                 </Button>
@@ -128,7 +132,7 @@ export default function AdminUserDetailPage() {
               onClick={() => {
                 action.clear()
                 setConfirmation('')
-                setDeleting(true)
+                setDeleting({ id: user.id, email: user.email, role: user.role, name: user.name })
               }}
             >
               Delete account permanently
@@ -136,19 +140,26 @@ export default function AdminUserDetailPage() {
           </section>
         </>
       )}
-      {deactivating && user && <DeactivateUserDialog user={user} onClose={() => setDeactivating(false)} />}
-      {deleting && user && (
+      {deactivating && deactivating.id === userId && (
+        <DeactivateUserDialog
+          user={deactivating}
+          available={!resource.loading && user?.id === deactivating.id && user.active}
+          onClose={() => setDeactivating(null)}
+        />
+      )}
+      {deleting && deleting.id === userId && (
         <ConfirmDialog
           title="Delete this account permanently?"
           confirmLabel="Delete permanently"
           pending={action.pending}
           error={action.error}
-          confirmDisabled={confirmation !== user.email}
-          onClose={() => setDeleting(false)}
+          confirmDisabled={!deleteReady || confirmation !== deleting.email}
+          onClose={() => setDeleting(null)}
           onConfirm={permanentDelete}
         >
-          <p>This removes {user.email} and all of their account data. They will lose access immediately.</p>
-          {user.role === 'STUDENT' && (
+          <p>This removes {deleting.email} and all of their account data. They will lose access immediately.</p>
+          {!deleteReady && <p role="status">Wait for the latest account details. If they have changed, close this dialog and review them before deleting.</p>}
+          {deleting.role === 'STUDENT' && (
             <ul>
               <li>The student profile, availability, courses and study goals</li>
               <li>Buddy requests and connections</li>
@@ -157,7 +168,7 @@ export default function AdminUserDetailPage() {
             </ul>
           )}
           <p>Other groups remain. Affected users are notified; old resource links are removed safely.</p>
-          <Field id="delete-account-confirmation" label={`Type ${user.email} to confirm`}>
+          <Field id="delete-account-confirmation" label={`Type ${deleting.email} to confirm`}>
             <input
               id="delete-account-confirmation"
               type="text"

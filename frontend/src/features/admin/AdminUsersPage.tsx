@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getAccountSummary, getUsers, changeUserStatus } from './api'
-import type { AdminUser } from './api'
+import type { AdminAccountTarget } from './api'
 import { useAuth } from '../../shared/auth/useAuth'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -21,7 +21,7 @@ export default function AdminUsersPage() {
     [active, setActive] = useState(''),
     [searchInput, setSearchInput] = useState(''),
     [search, setSearch] = useState('')
-  const [deactivating, setDeactivating] = useState<AdminUser | null>(null)
+  const [deactivating, setDeactivating] = useState<AdminAccountTarget | null>(null)
   useEffect(
     () => {
       const timer = window.setTimeout(() => setSearch(searchInput.trim()), 300)
@@ -138,7 +138,7 @@ export default function AdminUsersPage() {
                         <Button
                           variant="danger"
                           disabled={action.pending || user.id === account?.id}
-                          onClick={() => setDeactivating(user)}
+                          onClick={() => setDeactivating({ id: user.id, email: user.email, role: user.role, name: user.name })}
                         >
                           Deactivate
                         </Button>
@@ -159,7 +159,13 @@ export default function AdminUsersPage() {
           </table>
         </div>
       )}
-      {deactivating && <DeactivateUserDialog user={deactivating} onClose={() => setDeactivating(null)} />}
+      {deactivating && (
+        <DeactivateUserDialog
+          user={deactivating}
+          available={!users.loading && Boolean(users.data?.some(user => user.id === deactivating.id && user.active))}
+          onClose={() => setDeactivating(null)}
+        />
+      )}
     </WindowPage>
   )
 }

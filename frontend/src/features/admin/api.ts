@@ -1,6 +1,7 @@
 import { api } from '../../shared/api/client'
 import type { Role } from '../../shared/api/types'
 export type AdminUser = { id: number; email: string; role: Role; name: string | null; active: boolean; createdAt: string; lastLoginAt: string | null }
+export type AdminAccountTarget = Pick<AdminUser, 'id' | 'email' | 'role' | 'name'>
 export type UserUsage = { activeConnections: number; acceptedGroups: number; matchRequestsSent: number; groupsLed: number; groupsJoined: number }
 export type AdminDetail = { account: AdminUser; usage: UserUsage | null; profile: { name: string; school: string; programme: string; yearOfStudy: number } | null }
 export type AccountSummary = { total: number; active: number; inactive: number; students: number; admins: number }

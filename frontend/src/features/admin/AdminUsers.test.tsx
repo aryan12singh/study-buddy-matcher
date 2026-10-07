@@ -1,14 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { api } from '../../shared/api/client'
-import { adminAccount, renderPage, response } from '../../test/renderApp'
+import { adminAccount, deferred, renderPage, response } from '../../test/renderApp'
+import { REFRESH_INTERVAL_MS } from '../../shared/api/useResource'
 import AdminUsersPage from './AdminUsersPage'
 import AdminUserDetailPage from './AdminUserDetailPage'
 import AdminUserFormPage from './AdminUserFormPage'
 
 const account = { id: 2, email: 'jamie@example.test', role: 'STUDENT', name: 'Jamie', active: true, createdAt: '2026-10-01T00:00:00Z', lastLoginAt: null }
 const detail = { account, profile: { name: 'Jamie', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2 }, usage: { activeConnections: 0, acceptedGroups: 0, matchRequestsSent: 3, groupsLed: 1, groupsJoined: 0 } }
-afterEach(() => vi.restoreAllMocks())
+afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks() })
 
 describe('administrator account forms and privacy', () => {
   it('prefills public fields, fixes role, and omits blank contact replacement from update', async () => {
@@ -56,6 +57,98 @@ describe('administrator account forms and privacy', () => {
 })
 
 describe('administrator lifecycle actions', () => {
+  it('keeps list deactivation pending through refresh and checks the refreshed target status', async () => {
+    const reload = deferred<never>(), save = deferred<never>()
+    let listReads = 0
+    vi.spyOn(api, 'get').mockImplementation(async path => {
+      if (path.endsWith('/summary')) return response({ total: 1, active: 1, inactive: 0, students: 1, admins: 0 })
+      return ++listReads === 1 ? response([account]) : reload.promise
+    })
+    const post = vi.spyOn(api, 'post').mockImplementation(() => save.promise)
+    renderPage(<AdminUsersPage />, '/admin/users', '/admin/users', adminAccount)
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate' }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Deactivate account' }))
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1))
+    await act(async () => { window.dispatchEvent(new Event('focus')) })
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    await act(async () => { reload.resolve(response([{ ...account, active: false }])) })
+    expect(within(dialog).getByRole('button', { name: 'Working…' })).toBeDisabled()
+    await act(async () => { save.reject(new Error('The account is already inactive.')) })
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('The account is already inactive.')
+    expect(within(dialog).getByRole('button', { name: 'Deactivate account' })).toBeDisabled()
+    expect(post).toHaveBeenCalledTimes(1)
+  })
+  it.each(['focus', 'timer'] as const)('keeps an in-flight deactivation and its error through a %s refresh', async refresh => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    const reload = deferred<never>(), save = deferred<never>()
+    vi.spyOn(api, 'get').mockResolvedValueOnce(response(detail)).mockImplementationOnce(() => reload.promise).mockResolvedValue(response(detail))
+    const post = vi.spyOn(api, 'post').mockImplementation(() => save.promise)
+    renderPage(<AdminUserDetailPage />, '/admin/users/2', '/admin/users/:id', adminAccount)
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate account' }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Deactivate account' }))
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1))
+    await act(async () => {
+      if (refresh === 'focus') window.dispatchEvent(new Event('focus'))
+      else vi.advanceTimersByTime(REFRESH_INTERVAL_MS)
+    })
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(within(dialog).getByRole('button', { name: 'Working…' })).toBeDisabled()
+    await act(async () => { reload.resolve(response(detail)) })
+    expect(within(dialog).getByRole('button', { name: 'Working…' })).toBeDisabled()
+    await act(async () => { save.reject(new Error('Account status changed; try again.')) })
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Account status changed; try again.')
+    expect(within(dialog).getByRole('button', { name: 'Deactivate account' })).toBeEnabled()
+    expect(post).toHaveBeenCalledTimes(1)
+  })
+  it('keeps permanent-delete confirmation during refresh and checks the latest account identity', async () => {
+    const reload = deferred<never>()
+    vi.spyOn(api, 'get').mockResolvedValueOnce(response(detail)).mockImplementationOnce(() => reload.promise)
+    const remove = vi.spyOn(api, 'delete')
+    renderPage(<AdminUserDetailPage />, '/admin/users/2', '/admin/users/:id', adminAccount)
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete account permanently' }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.change(within(dialog).getByLabelText('Type jamie@example.test to confirm'), { target: { value: 'jamie@example.test' } })
+    await act(async () => { window.dispatchEvent(new Event('focus')) })
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(within(dialog).getByLabelText('Type jamie@example.test to confirm')).toHaveValue('jamie@example.test')
+    expect(within(dialog).getByRole('button', { name: 'Delete permanently' })).toBeDisabled()
+    await act(async () => { reload.resolve(response({ ...detail, account: { ...account, email: 'renamed@example.test' } })) })
+    expect(within(dialog).getByRole('button', { name: 'Delete permanently' })).toBeDisabled()
+    expect(remove).not.toHaveBeenCalled()
+  })
+  it('retains a pending permanent deletion and its failure after refreshing the account', async () => {
+    const reload = deferred<never>(), save = deferred<never>()
+    vi.spyOn(api, 'get').mockResolvedValueOnce(response(detail)).mockImplementationOnce(() => reload.promise).mockResolvedValue(response(detail))
+    const remove = vi.spyOn(api, 'delete').mockImplementation(() => save.promise)
+    renderPage(<AdminUserDetailPage />, '/admin/users/2', '/admin/users/:id', adminAccount)
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete account permanently' }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.change(within(dialog).getByLabelText('Type jamie@example.test to confirm'), { target: { value: 'jamie@example.test' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete permanently' }))
+    await waitFor(() => expect(remove).toHaveBeenCalledTimes(1))
+    await act(async () => { window.dispatchEvent(new Event('focus')) })
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    await act(async () => { reload.resolve(response(detail)) })
+    expect(within(dialog).getByRole('button', { name: 'Working…' })).toBeDisabled()
+    await act(async () => { save.reject(new Error('This account cannot be removed.')) })
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('This account cannot be removed.')
+    expect(within(dialog).getByLabelText('Type jamie@example.test to confirm')).toHaveValue('jamie@example.test')
+  })
+  it('waits for a fresh active account before allowing deactivation confirmation', async () => {
+    const reload = deferred<never>()
+    vi.spyOn(api, 'get').mockResolvedValueOnce(response(detail)).mockImplementationOnce(() => reload.promise)
+    const post = vi.spyOn(api, 'post')
+    renderPage(<AdminUserDetailPage />, '/admin/users/2', '/admin/users/:id', adminAccount)
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate account' }))
+    const dialog = screen.getByRole('dialog')
+    await act(async () => { window.dispatchEvent(new Event('focus')) })
+    expect(within(dialog).getByRole('button', { name: 'Deactivate account' })).toBeDisabled()
+    await act(async () => { reload.resolve(response({ ...detail, account: { ...account, active: false } })) })
+    expect(within(dialog).getByRole('button', { name: 'Deactivate account' })).toBeDisabled()
+    expect(post).not.toHaveBeenCalled()
+  })
   it('confirms deactivation with its dependency consequences and uses POST', async () => {
     vi.spyOn(api, 'get').mockResolvedValueOnce(response(detail)).mockResolvedValue(response({ ...detail, account: { ...account, active: false } }))
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...detail, account: { ...account, active: false } }))
