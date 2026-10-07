@@ -37,6 +37,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -217,7 +218,10 @@ class StudyGroupServiceTest {
     void browseReturnsOnlyOpenGroupsMatchingTheFilterWithMemberCounts() {
         StudyGroup otherCourseGroup = group(6L, course(IS216_ID, "IS216"), bob, 3);
         when(studyGroupRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(group, otherCourseGroup));
-        when(groupMembershipRepository.countByStudyGroupId(GROUP_ID)).thenReturn(2L);
+        var count = mock(GroupMembershipRepository.GroupMemberCount.class);
+        when(count.getGroupId()).thenReturn(GROUP_ID);
+        when(count.getMemberCount()).thenReturn(2L);
+        when(groupMembershipRepository.countByStudyGroupIds(List.of(GROUP_ID))).thenReturn(List.of(count));
 
         List<StudyGroupSummaryDto> results = service.browse(new StudyGroupFilter(IS442_ID, null, null), ALICE_ID);
 
@@ -225,6 +229,7 @@ class StudyGroupServiceTest {
         assertEquals(GROUP_ID, results.get(0).id());
         assertEquals("IS442", results.get(0).courseCode());
         assertEquals(2, results.get(0).memberCount());
+        verify(groupMembershipRepository, never()).countByStudyGroupId(any());
     }
 
     @Test
@@ -232,6 +237,21 @@ class StudyGroupServiceTest {
         when(studyGroupRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of());
 
         assertTrue(service.browse(StudyGroupFilter.none(), ALICE_ID).isEmpty());
+        verifyNoInteractions(groupMembershipRepository, groupJoinRequestRepository);
+    }
+
+    @Test
+    void mineKeepsLedClosedGroupsWithoutMembershipsAndUsesZeroForTheirCount() {
+        group.close();
+        when(studyGroupRepository.findMine(ALICE_ID)).thenReturn(List.of(group));
+
+        var result = service.mine(ALICE_ID);
+
+        assertEquals(1, result.size());
+        assertFalse(result.get(0).active());
+        assertEquals(0, result.get(0).memberCount());
+        assertTrue(result.get(0).viewer().leader());
+        assertFalse(result.get(0).viewer().member());
     }
 
     // --- get ---

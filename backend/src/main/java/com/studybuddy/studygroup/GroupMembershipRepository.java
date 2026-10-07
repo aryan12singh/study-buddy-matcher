@@ -16,6 +16,17 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
     /** Members of the group, leader included. */
     long countByStudyGroupId(Long studyGroupId);
 
+    interface GroupMemberCount {
+        Long getGroupId();
+        long getMemberCount();
+    }
+
+    @Query("select m.studyGroup.id as groupId, count(m) as memberCount from GroupMembership m where m.studyGroup.id in :groupIds group by m.studyGroup.id")
+    List<GroupMemberCount> countByStudyGroupIds(@Param("groupIds") List<Long> groupIds);
+
+    @Query("select m.studyGroup.id from GroupMembership m where m.student.id=:studentId and m.studyGroup.id in :groupIds")
+    List<Long> findGroupIdsForStudent(@Param("studentId") Long studentId, @Param("groupIds") List<Long> groupIds);
+
     @Query("select count(m) from GroupMembership m where m.student.id=:studentId and m.studyGroup.active=true")
     long countAcceptedOpenByStudentId(@Param("studentId") Long studentId);
 

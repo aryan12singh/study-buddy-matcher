@@ -16,6 +16,25 @@ public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinReque
     @Query("select r.student.id from GroupJoinRequest r where r.id=:id and r.studyGroup.id=:groupId")
     Optional<Long> findApplicantId(@Param("id") Long id, @Param("groupId") Long groupId);
     Optional<GroupJoinRequest> findFirstByStudyGroupIdAndStudentIdOrderByCreatedAtDescIdDesc(Long groupId, Long studentId);
+
+    interface GroupRequestState {
+        Long getGroupId();
+        Long getRequestId();
+        GroupJoinRequestStatus getStatus();
+    }
+
+    /** Latest per group, including the ID tie-break used by the single-group lookup. */
+    @Query("""
+        select r.studyGroup.id as groupId, r.id as requestId, r.status as status
+        from GroupJoinRequest r
+        where r.student.id=:studentId and r.studyGroup.id in :groupIds
+          and not exists (
+            select newer.id from GroupJoinRequest newer
+            where newer.student.id=r.student.id and newer.studyGroup.id=r.studyGroup.id
+              and (newer.createdAt>r.createdAt or (newer.createdAt=r.createdAt and newer.id>r.id))
+          )
+        """)
+    List<GroupRequestState> findLatestForGroups(@Param("studentId") Long studentId, @Param("groupIds") List<Long> groupIds);
     List<GroupJoinRequest> findByStudentIdOrderByCreatedAtDescIdDesc(Long studentId);
     List<GroupJoinRequest> findByStudyGroupIdAndStatus(Long studyGroupId, GroupJoinRequestStatus status);
     List<GroupJoinRequest> findByStudentId(Long studentId);

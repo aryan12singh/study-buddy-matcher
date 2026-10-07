@@ -12,6 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +82,7 @@ class NotificationServiceTest {
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of());
 
         assertTrue(notificationService.list(BOB_ID).isEmpty());
+        verifyNoInteractions(matchRequestRepository);
     }
 
     // --- unreadCount ---
@@ -160,7 +164,7 @@ class NotificationServiceTest {
         Notification withdrawal = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
                 "A pending request is no longer available", NotificationResourceType.MATCH_REQUEST, 10L, "withdrawal:10");
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(withdrawal));
-        when(matchRequestRepository.findParticipants(10L)).thenReturn(Optional.of(participants(ALICE_ID, BOB_ID)));
+        when(matchRequestRepository.findParticipantsByIds(Set.of(10L))).thenReturn(List.of(participants(10L, ALICE_ID, BOB_ID)));
 
         assertEquals(NotificationRequestDirection.INCOMING, notificationService.list(BOB_ID).get(0).requestDirection());
     }
@@ -172,8 +176,8 @@ class NotificationServiceTest {
         Notification declined = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
                 "Request declined", NotificationResourceType.MATCH_REQUEST, 11L, "declined:11");
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(accepted, declined));
-        when(matchRequestRepository.findParticipants(10L)).thenReturn(Optional.of(participants(BOB_ID, ALICE_ID)));
-        when(matchRequestRepository.findParticipants(11L)).thenReturn(Optional.of(participants(BOB_ID, ALICE_ID)));
+        when(matchRequestRepository.findParticipantsByIds(Set.of(10L, 11L)))
+                .thenReturn(List.of(participants(10L, BOB_ID, ALICE_ID), participants(11L, BOB_ID, ALICE_ID)));
 
         assertEquals(List.of(NotificationRequestDirection.OUTGOING, NotificationRequestDirection.OUTGOING),
                 notificationService.list(BOB_ID).stream().map(NotificationDto::requestDirection).toList());
@@ -192,14 +196,39 @@ class NotificationServiceTest {
                 "Request unavailable", NotificationResourceType.MATCH_REQUEST, 11L, "unrelated:11");
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID))
                 .thenReturn(List.of(group, student, generic, missing, unrelated));
-        when(matchRequestRepository.findParticipants(10L)).thenReturn(Optional.empty());
-        when(matchRequestRepository.findParticipants(11L)).thenReturn(Optional.of(participants(ALICE_ID, 99L)));
+        when(matchRequestRepository.findParticipantsByIds(Set.of(10L, 11L)))
+                .thenReturn(List.of(participants(11L, ALICE_ID, 99L)));
 
         assertTrue(notificationService.list(BOB_ID).stream().allMatch(event -> event.requestDirection() == null));
     }
 
-    private MatchRequestRepository.Participants participants(Long senderId, Long receiverId) {
-        return new MatchRequestRepository.Participants() {
+    @Test
+    void repeatedRequestResourcesUseOneLookupWithoutGivingOtherResourcesARequestDirection() {
+        Notification accepted = new Notification(bob, NotificationType.MATCH_REQUEST_ACCEPTED,
+                "Request accepted", NotificationResourceType.MATCH_REQUEST, 10L, "accepted:10");
+        Notification declined = new Notification(bob, NotificationType.MATCH_REQUEST_DECLINED,
+                "Request unavailable", NotificationResourceType.MATCH_REQUEST, 10L, "withdrawal:10");
+        Notification group = new Notification(bob, NotificationType.GROUP_CLOSED,
+                "Group closed", NotificationResourceType.GROUP, 10L, "closed:10");
+        when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(accepted, declined, group));
+        when(matchRequestRepository.findParticipantsByIds(Set.of(10L))).thenReturn(List.of(participants(10L, BOB_ID, ALICE_ID)));
+
+        var result = notificationService.list(BOB_ID);
+
+        assertEquals(NotificationRequestDirection.OUTGOING, result.get(0).requestDirection());
+        assertEquals(NotificationRequestDirection.OUTGOING, result.get(1).requestDirection());
+        assertEquals(null, result.get(2).requestDirection());
+        verify(matchRequestRepository).findParticipantsByIds(Set.of(10L));
+        verifyNoMoreInteractions(matchRequestRepository);
+    }
+
+    private MatchRequestRepository.RequestParticipants participants(Long id, Long senderId, Long receiverId) {
+        return new MatchRequestRepository.RequestParticipants() {
+            @Override
+            public Long getId() {
+                return id;
+            }
+
             @Override
             public Long getSenderId() {
                 return senderId;

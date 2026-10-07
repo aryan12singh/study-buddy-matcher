@@ -9,6 +9,7 @@ import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,14 +61,13 @@ public class StudyGroupService {
     public List<StudyGroupSummaryDto> browse(StudyGroupFilter filter, Long viewerId) {
         access.requireStudent(viewerId);
         if (filter.courseId() != null) InputRules.positiveId(filter.courseId(), "Course");
-        return groups.findByActiveTrueOrderByCreatedAtDesc().stream().filter(filter::matches)
-            .map(group -> summary(group, viewerId)).toList();
+        return summaries(groups.findByActiveTrueOrderByCreatedAtDesc().stream().filter(filter::matches).toList(), viewerId);
     }
 
     @Transactional(readOnly = true)
     public List<StudyGroupSummaryDto> mine(Long actorId) {
         access.requireStudent(actorId);
-        return groups.findMine(actorId).stream().map(group -> summary(group, actorId)).toList();
+        return summaries(groups.findMine(actorId), actorId);
     }
 
     @Transactional(readOnly = true)
@@ -126,8 +126,14 @@ public class StudyGroupService {
         return lookup.findGroupLedByForUpdate(id, actorId);
     }
 
-    private StudyGroupSummaryDto summary(StudyGroup group, Long viewerId) {
-        return assembler.toSummary(group, memberships.countByStudyGroupId(group.getId()), viewers.assemble(group, viewerId));
+    private List<StudyGroupSummaryDto> summaries(List<StudyGroup> listedGroups, Long viewerId) {
+        if (listedGroups.isEmpty()) return List.of();
+        var groupIds = listedGroups.stream().map(StudyGroup::getId).toList();
+        var memberCounts = memberships.countByStudyGroupIds(groupIds).stream().collect(Collectors.toMap(
+            GroupMembershipRepository.GroupMemberCount::getGroupId, GroupMembershipRepository.GroupMemberCount::getMemberCount));
+        var viewerStates = viewers.assemble(listedGroups, viewerId);
+        return listedGroups.stream().map(group -> assembler.toSummary(group,
+            memberCounts.getOrDefault(group.getId(), 0L), viewerStates.get(group.getId()))).toList();
     }
 
     private StudyGroupDetailDto detail(StudyGroup group, Long viewerId) {
