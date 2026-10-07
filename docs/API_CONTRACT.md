@@ -1,10 +1,8 @@
 # API contract
 
-The Team C surface below is implemented on the approved feature branch. These are the actual
-controller and DTO shapes used by the React frontend. Verification results are recorded in
-[TEAM_C_TESTING.md](TEAM_C_TESTING.md); implementation does not imply a merged PR or a
-cross-team human review. Team A's matching and Team B's full own-profile editor remain
-separate integration work.
+The Team C endpoints below are implemented on the Team C feature branch, with the controller
+and DTO shapes the React frontend uses. Team A's matching and Team B's own-profile editor are
+separate.
 
 Base path `/api`; JSON requests/responses. Protected requests use
 `Authorization: Bearer <token>`. Actor, student and administrator identity always comes from
@@ -64,7 +62,7 @@ Body and service field validation errors have `fieldErrors`; other errors use an
 and permission errors share the same shape. All security responses include `Cache-Control:
 no-store`; the profile controller sets no-store explicitly as well.
 
-## Bounded auth and course foundation
+## Auth and course foundation
 
 This reuses the fixed Spring Security/JJWT/JPA dependencies. Public registration creates a
 student only. Account role selection belongs to the administrator creation endpoint.
@@ -101,7 +99,7 @@ Team A eligibility consumers can reuse `AccountAccess.eligibleStudent`, `require
 are required. This contract does not provide scoring or ranking.
 
 The full own-profile/preferences APIs (`GET/PUT /api/profile/me`,
-`PUT /api/profile/me/availability`) remain Team B work and are not implemented by this exception.
+`PUT /api/profile/me/availability`) remain Team B work.
 
 ## Buddy requests, connections and study profiles
 
@@ -308,7 +306,7 @@ student actions that would reject the now inactive account.
 
 ## Administrator accounts
 
-The approved policy replaces the earlier Delete-as-deactivate proposal. Deactivate and Delete
+This replaces the earlier Delete-as-deactivate proposal. Deactivate and Delete
 permanently are distinct API and UI actions. Role is selected at creation and read-only during
 ordinary editing. Password reset and Student/Admin conversions are separate requirements.
 
@@ -404,9 +402,9 @@ protect the alternate Supabase access path; operational evidence is recorded sep
 These are proposals, not implemented C endpoints. Reuse C profile privacy, active-student
 eligibility and structured match-request context when connecting the matching screen.
 
-## UI polish consumers of the existing contract
+## UI use of the existing contract
 
-The approved C polish adds no endpoint or DTO field. Group capacity/leader/member/application
+The UI polish adds no endpoint or DTO field. Group capacity/leader/member/application
 indicators use the existing `memberCount`, `maxGroupSize`, `active` and `viewer` fields;
 they never infer membership from a local click or reserve a place for a pending request.
 Schedule duplicate/copy produces the same weekly-slot array accepted by POST/PUT groups;
@@ -425,4 +423,4 @@ and administrator privileges do not grant it. The same privacy assembler and pro
 no-store/session-purge rules govern that read. Group-link copy uses the client origin plus
 `/groups/{id}` and drops query/hash. Clipboard denial has a manual fallback, not another API.
 Create/update/delete destination feedback contains generic outcome text and no DTO/private
-fields. See [UI behaviour and verification](TEAM_C_UI_POLISH.md).
+fields.

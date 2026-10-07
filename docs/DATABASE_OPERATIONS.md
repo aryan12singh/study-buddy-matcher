@@ -42,8 +42,8 @@ adoption. The shared hosted migrations are already applied as of 7 October 2026.
 The shared upgrade preflight found the mapped database empty. An ignored private schema
 snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,
 RLS, policies and counts before changes; there were no application rows to export. No shared
-table was reset, truncated or deleted for verification. Destructive tests used disposable local
-PostgreSQL only. See [testing evidence](TEAM_C_TESTING.md) for the actual run.
+table was reset, truncated or deleted. Destructive tests use disposable local PostgreSQL only;
+see [Testing](../README.md#testing).
 
 ## Local fresh database or reviewed existing upgrade
 

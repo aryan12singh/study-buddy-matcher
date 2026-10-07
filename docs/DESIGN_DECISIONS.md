@@ -1,10 +1,9 @@
 # Design decisions
 
-Team C decisions approved on 7 October 2026, implemented on the current feature branch.
-Sources: formal IS442 brief, latest `oop.pdf` discussion, feature issues #10-14 and the
-[approved plan](TEAM_C_IMPLEMENTATION_PLAN.md). The brief requires admin deletion but
-does not prescribe hard versus soft semantics; the current issue #14 requires distinct
-Delete and Deactivate actions. These are team design decisions, not invented professor rules.
+Team C decisions, agreed on 7 October 2026. Sources: the IS442 brief, the `oop.pdf`
+discussion and issues #10-14. The brief requires admin deletion without saying hard or soft;
+issue #14 asks for separate Delete and Deactivate actions. These are our design choices,
+not rules from the brief.
 
 | Decision | Choice and reason | Alternative / affected work |
 | --- | --- | --- |
@@ -27,10 +26,10 @@ Delete and Deactivate actions. These are team design decisions, not invented pro
 | Notifications | One service, safe summary/resource metadata, recipient scope, persistent read state and transaction/event-key deduplication | Email/SMS/push/reminders and session events deferred; #13 |
 | Database access | Backend JDBC owner writes; browser table/sequence grants revoked, RLS enabled with no browser policies | Supabase Auth/RLS browser access is a different architecture from application JWTs; #11 |
 | Cross-instance write order | Shared transaction advisory guard for domain writes; exclusive for account lifecycle/seed; sorted user rows before group/request rows; actor version rechecked | Process mutex alone fails multiple instances; exclusive all writes unnecessarily blocks independent work |
-| Windows | Decorative title bars and conventional routes; approved missing C layouts | Movable stacking manager adds no OO value; #9/#41 |
+| Windows | Decorative title bars and conventional routes; C group forms and admin layouts added where Figma has none | Movable stacking manager adds no OO value; #9/#41 |
 | Data freshness | Refetch on mutations/focus/visibility plus bounded poll; purge sensitive view state on disconnect/logout/401; forms preserve inputs | A saved/displayed number cannot be erased from someone else's memory; #11/#13 |
 | Seed | Explicit opt-in, runtime passwords, missing identities/courses only, no resets | Shared destructive reseeds and committed/default passwords unsafe; #5/#44 |
-| Foundation exception | Minimum auth/client/shell/course/seed/counts for C to run independently, documented interfaces for B/A reuse | Duplicate full B product implementation would create integration conflict |
+| Shared foundation | Minimum auth/client/shell/course/seed/counts for C to run independently, documented interfaces for B/A reuse | Duplicate full B product implementation would create integration conflict |
 
 ## Transaction and database guarantees
 
@@ -65,13 +64,8 @@ and goals. No fake presence, progress, room participants or scheduled session da
 The formal brief states Week 13, a 12-minute demo and 8-minute Q&A. Current project issues
 #41/#46 record 11 October core, 25 October extras/integration, 8 November materials/rehearsal,
 and 15 November 2026 11:59 pm SGT final handoff. README and AGENTS use these team dates.
-The presentation, human review, library/asset provenance, slides, full product integration
-and private peer evaluation remain team delivery work; they are not claimed completed here.
 
-## Approved UI polish
-
-The eight polish items and retro delighters were approved for this branch on 7 October.
-Their completion and live evidence are in [TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH.md).
+## UI polish
 
 | Choice | Behaviour and integration consequence |
 | --- | --- |
@@ -82,6 +76,6 @@ Their completion and live evidence are in [TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH
 | URL views | Groups use `view`, `courseId`, `studyGoal`, `studyMode`; notifications use `view`. Tabs push history; group filter edits replace the current entry. Invalid enum/numeric values default safely and unrelated query keys are preserved |
 | Weekly editing | Duplicate creates an independent block; copy adds it to selected other days without adding an identical existing block. The live preview sorts for display without reordering the input. Existing whole-minute, same-day validation remains authoritative |
 | Copy convenience | An explicit click copies the canonical group URL without query/hash, or an already-authorised contact. Denied/unavailable clipboard gives manual guidance. Contacts are never duplicated into the fallback or persisted by the component |
-| Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No fabricated percentage or online indicator |
+| Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No made-up percentage or online indicator |
 | Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
 | Nested dialogs | Scroll remains locked until the last modal closes, even when a route exit removes dialogs out of order; each dialog retains its keyboard focus/Escape handling |

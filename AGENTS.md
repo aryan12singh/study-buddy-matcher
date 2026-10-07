@@ -46,12 +46,13 @@ docs/       API contract, UML diagrams
   categorical reading is a small compatibility matrix; a numeric one is interval overlap like
   `TimeSlot`. `GroupSizeScorer`, the profile form, the seeder and the filter panel all depend
   on the answer. **Team A to decide.**
-- **Team C lifecycle is settled:** reversible deactivate/reactivate and separate permanent
-  deletion, with transactional dependency cleanup and token revocation. See
-  [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md); ordinary edits do not convert account roles.
-- **Usage is settled:** last successful sign-in, active connections and accepted membership
-  in open groups including leadership. Additional history counts are labelled.
-- **Window chrome is decorative:** conventional navigation, no movable stacking manager.
+- **Admin deletion vs deactivation: decided by Team C.** Two separate actions. Deactivate is
+  reversible: it revokes sign-in, ends active connections and group memberships, and keeps
+  history. Delete is permanent and removes the account and its dependent records. Details in
+  [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md).
+- **Basic usage information: decided by Team C.** Last successful sign-in, number of active
+  connections, and number of open groups the student belongs to (including ones they lead).
+- **Is the window chrome real or decorative?** See [Visual direction](#visual-direction) below.
 
 ---
 
@@ -104,13 +105,11 @@ value is still in the payload and visible in the network tab.
   the same keys as `application.yml`. This replaced an earlier `backend/.env` approach: Spring
   Boot only reads the process environment, not `.env` files directly, which meant re-exporting
   values every new terminal; `application-local.yml` avoids that entirely with no extra tooling.
-- **Never write a real credential into a tracked file in this repository**: not into `application.yml`,
+- **Never write a real credential into a file in this repository**: not into `application.yml`,
   not into a test, not into a comment, not as a "temporary" default. `application-local.yml` and
   `.env` are both git-ignored; keep them that way. If you think you have committed a secret, say
   so immediately. Rotating it is easy, but only if we know.
 - Add a configuration key -> add a row to the configuration table in `README.md`, same change.
-- Local credential YAML is excluded from distributable JARs. Development still loads it;
-  deployed secrets come from process environment.
 
 ---
 
@@ -121,16 +120,14 @@ value is still in the payload and visible in the network tab.
   `localhost:8080` in a component.
 - Components in `PascalCase`, one per file, file named after the component. Shared components
   live in the shared directory; screen-specific ones live beside their screen.
-- The working layout is `features/<feature>/` and `shared/{api,auth,components}/`.
-  C group screens use `features/groups/`; reuse the current client, guards and primitives.
+- TODO: Team B to confirm the frontend directory layout once the Vite skeleton lands.
 
 ### Design source of truth
 
 **Figma:** https://www.figma.com/design/OPbwyiH0iyinAnJl5zKalm/OOPs
 
-Figma wins over this file wherever the two disagree. The user approved C group forms,
-leader-management and admin layouts missing from the inspected reference; the approved plan
-records this exception. For other missing screens, ask before inventing one.
+Figma wins over this file wherever the two disagree. If a screen you need is not in Figma yet,
+ask before inventing one.
 
 ### Visual direction
 
@@ -144,18 +141,24 @@ range.
 Current wireframes take the metaphor literally: each page is a window with a title bar: Home,
 Student profile, Matching, Notifications, Study prep, study timer.
 
-**Settled Team C visual choices:**
+**Open decisions, settle these before building screens:**
 
-- Decorative title bars and normal routes; every C action has a working purpose.
-- Blue desktop, pale window surfaces, green status chips and visible keyboard focus. Dense
-  information uses readable Tahoma/Verdana/system fallbacks; no new font dependency.
-- C layouts adapt to narrow screens; tables scroll inside their container. Actual projector
-  rehearsal remains a team delivery check, not a claimed automated result.
-- Admin accounts keep a semantic desktop table and become labelled cards below 800px;
-  actions remain visible. Motion respects `prefers-reduced-motion`.
-- Original CSS pixel patterns and Unicode chrome/icons; no external C icon set. A may reuse the primitives
-  while retaining its own matching-view decisions. Existing landing assets and Google Fonts
-  are inventoried in README, including unresolved original provenance.
+- TODO: Do windows stack and move, or is the chrome decorative with conventional navigation?
+  **Biggest decision here.** A real stacking window manager is a lot of frontend work that
+  earns nothing on a mark scheme rewarding OO design. Decorative chrome gets the look for a
+  fraction of the cost. Agree before anyone starts.
+- TODO: Confirm the aesthetic with Team A and Team C too. The matching page carries dense
+  information (score breakdown bars, a shared-hours heatmap) and must stay readable inside
+  the chosen chrome.
+- TODO: Pick the pixel font and check it is legible at body size on a projector. A marker
+  reads this screen from across a room. If the font fights that, use pixel for headings and
+  window titles only.
+- TODO: Fix the palette and check contrast. Retro palettes are often low contrast.
+- TODO: Decide the responsive story, or state plainly that the app is desktop-only.
+- TODO: Confirm the icon set and its licence; add it to the libraries table if it ships.
+
+Team C has a working implementation of these (decorative chrome, shared primitives under
+`frontend/src/shared/components/`) that the team can adopt or change.
 
 ### Shared components
 
@@ -167,21 +170,16 @@ The set we expect to need:
 
 | Component | Status |
 | --------- | ------ |
-| App shell and navigation | `shared/components/AppShell.tsx` |
-| Window frame / page container | `WindowPage.tsx` |
-| Button (primary, secondary, destructive) | `Button.tsx` |
-| Form field, label, validation message | `Field.tsx`, `AccountFields.tsx` |
-| Modal / dialog | `Dialog.tsx`, `ConfirmDialog.tsx`, including focus handling |
-| Empty, loading and error states | `StatePanel.tsx` |
-| Weekly schedule and slot editor | `WeeklySchedule.tsx`, `WeeklySlotEditor.tsx`; B owns the own-profile screen |
-| Action and unread feedback | `ActionNotice.tsx`, notification APIs, shell badge |
-| Destination outcome feedback | `RouteNotice.tsx`; generic messages consumed once, no form values in history |
-| Pixel glyphs and initials | `PixelIcon.tsx`, `Avatar.tsx`; decorative, no presence claims |
-| Group capacity / filter summary | `CapacityMeter.tsx`, `FilterSummary.tsx`; use actual DTO counts |
-| Clipboard convenience | `CopyButton.tsx`; explicit user action and manual fallback |
-| Form save / discard controls | `FormActions.tsx`, `useFormExit.tsx`, `useDraftClose.tsx`; drafts stay in memory |
-| Score breakdown bar | Team A matching integration |
-| Shared-hours heatmap | Team A matching integration |
+| App shell and navigation | TODO |
+| Window frame / page container | TODO |
+| Button (primary, secondary, destructive) | TODO |
+| Form field, label, validation message | TODO |
+| Modal / dialog | TODO |
+| Empty, loading and error states | TODO |
+| Weekly availability grid | TODO |
+| Toast / notification | TODO |
+| Score breakdown bar | TODO |
+| Shared-hours heatmap | TODO |
 
 ### Rules for every screen
 
@@ -210,18 +208,6 @@ conflicts and "I cannot explain that line" happen. Shared files (`application.ym
 `package.json`, the routing table, the shared API client) are edited with care and flagged in
 the pull request description.
 
-The approved C implementation includes a bounded foundation exception: auth/JWT/current
-principal, course/activity reads, safe opt-in seed, shared client/guards/shell/primitives,
-schema/CI and setup. Reuse these during B integration; do not duplicate or broadly rewrite
-them. `pom.xml` only configures the inherited JAR plugin to exclude local credentials;
-`package-lock.json` only patches the existing transitive source-map-js dependency.
-Matching logic and full own-profile/preferences/dashboard features remain A/B scope.
-
-The approved UI polish uses one `createBrowserRouter` with the existing route tree in
-`frontend/src/routes.tsx`, one `AuthProvider` and `RouterProvider`. New screens join that
-tree; do not wrap form screens in a second `BrowserRouter`. `useFormExit` relies on the
-existing React Router data-router blocker, including Back/sidebar exits and reload warnings.
-
 ---
 
 ## Process
@@ -231,9 +217,8 @@ existing React Router data-router blocker, including Back/sidebar exits and relo
 | Milestone | Date | Means |
 | --------- | ---- | ----- |
 | Base code | 11 Oct | Every compulsory feature works end to end |
-| Extras/integration | 25 Oct 2026 | Selected extras and integrated product verified |
-| Rehearsal/materials | 8 Nov 2026 | Docs, slides, rehearsal and supporting materials ready |
-| Submission | 15 Nov 2026, 11:59 PM SGT | All deliverables in; Week 13 presentation in the assigned class slot |
+| Feature freeze | 24 Oct | Extras done, tests and polish landed, nothing new starts |
+| Submission | 15 Nov, 11:59 PM | All deliverables in |
 
 ### Picking up work
 

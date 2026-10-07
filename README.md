@@ -6,22 +6,14 @@ course-specific study groups. Administrators manage accounts and matching settin
 
 ## Current branch status
 
-Team C covers requests/connections, other-student profiles and contact privacy,
-notifications, study groups/membership, and admin accounts through authenticated APIs
-and React screens. See [requirement coverage](docs/TEAM_C_REQUIREMENT_COVERAGE.md) and
-[verified results](docs/TEAM_C_TESTING.md). Development on this branch does not mean
-the change has been reviewed by another team or merged into `main`.
+Team C features are implemented end to end: match requests and connections, profile
+privacy, study groups, notifications and admin accounts. See
+[requirement coverage](docs/REQUIREMENT_COVERAGE.md).
 
-The approved [UI polish](docs/TEAM_C_UI_POLISH.md) is also implemented: responsive account
-cards, URL-backed browsing, capacity meters, weekly schedule copy/preview, contact/group-link
-copy, destination feedback and draft protection. These flows use the existing authenticated
-APIs. Current verification passes 228 backend tests and 108 frontend tests, plus lint/build.
-
-The bounded shared foundation includes login/registration, JWT/role guards, course listing,
-synthetic seeding, a shared API client, navigation and reusable UI primitives. Team A's
-matching engine/search/configuration screens and Team B's full own-profile/preferences,
-availability editor and dashboard remain their integration scope. Bonus rooms, timers,
-music, dated sessions/calendar and AI explanations belong on later branches.
+The branch also includes a shared foundation: login/registration, JWT and role guards,
+course listing, demo seed, API client, navigation and UI primitives. Matching (Team A) and
+own-profile, availability editor and dashboard (Team B) are integrated separately. Bonus
+features go on later branches.
 
 ## Architecture and ownership
 
@@ -43,8 +35,22 @@ neither application-table grants nor RLS policies. See [API contract](docs/API_C
 | B | Angel, Averyl, Guang Hao | Platform, entities/repositories, authentication, own profile/preferences, seed, dashboard/shared shell |
 | C | Aryan, Charlize | Buddy lifecycle/privacy, groups/membership, notifications, admin accounts and their screens |
 
-Shared foundations added for C are an approved integration exception, documented in the
-[handoff](docs/TEAM_C_HANDOFF.md). Do not build a second auth/client/shell when integrating.
+Within Team C:
+
+- **Charlize**: `StudyGroup` and `GroupJoinRequest` domain rules (close, leader, capacity,
+  accept/reject), group lookup queries and browse filter, group DTOs/assemblers,
+  `StudyGroupService` and `GroupJoinRequestService`, and the group endpoint proposal.
+- **Aryan**: `MatchRequest` state machine and service, `Connection` and `ConnectionService`,
+  `ProfileViewAssembler`, notifications, admin user management and deactivation, and the
+  end-to-end integration: HTTP controllers, React screens, the shared auth/client/UI
+  foundation, database migrations and the integration tests.
+
+AI tool usage is recorded in [AI_USAGE.md](docs/AI_USAGE.md).
+
+Team C added a small shared foundation (login/registration, JWT, API client, app shell and
+UI primitives) so its screens could run before Team B's integration. Reuse it rather than
+building a second auth flow, client or shell; `frontend/src/routes.tsx` is the single route
+tree for new screens.
 
 ```text
 backend/src/main/java/com/studybuddy/
@@ -63,7 +69,7 @@ frontend/src/
   features/connections/ students/ notifications/ groups/ admin/
   shared/api/ auth/ components/ shared client, guards, hooks and UI
 scripts/                       migration and isolated backend test runners
-docs/                          contracts, decisions, coverage, evidence and diagrams
+docs/                          API contract, decisions, coverage, operations and diagrams
 ```
 
 ## Setup and run
@@ -134,7 +140,7 @@ them, put them in screenshots/logs, or pass them to frontend code.
 `STUDYBUDDY_TEST_DATABASE_PASSWORD` and `STUDYBUDDY_TEST_JWT_SECRET` configure the test
 profile. The isolated runner supplies them automatically and removes its container.
 
-## Demo seed and verification
+## Demo seed
 
 The seed is disabled by default. Supply both passwords privately and enable it for one
 startup. It adds missing entries only: 10 courses, 50 varied synthetic students and one
@@ -144,30 +150,48 @@ reset/truncate endpoint or default password.
 Demo identifiers: `priya@demo.example.test`, `jamie@demo.example.test`,
 `alex@demo.example.test`, `student04@demo.example.test` through
 `student50@demo.example.test`, and `admin@demo.example.test`. Initial passwords come
-from the operator's private seed config. This implementation run created ignored
-`.env.demo.local` for the shared seed; it is not a frontend env file. Disable seeding
+from the operator's private seed config. Keep them in an ignored file such as
+`.env.demo.local` (not a frontend env file). Disable seeding
 after use. [Operations](docs/DATABASE_OPERATIONS.md) explains safe repeats and recovery.
 
-```bash
-# From repository root: fresh migrated PostgreSQL, generated private config, all tests
-scripts/test-backend.sh
+## Testing
 
-# From frontend
+**Backend unit tests** (no database needed; skips the integration and context-load tests):
+
+```bash
+cd backend
+./mvnw test -Dtest='!com.studybuddy.integration.**,!StudyBuddyApplicationTests' \
+  -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+**Full backend suite with Docker.** From the repository root, with Java 21, Docker, `psql`
+and OpenSSL installed:
+
+```bash
+scripts/test-backend.sh
+```
+
+The script starts a throwaway PostgreSQL 17 container on a random local port, generates
+private test credentials, runs the migration tests, migrates a `studybuddy_test` database and
+runs every Maven test, including the HTTP/database integration tests. It removes the
+container and credentials when it exits and never connects to the shared Supabase project.
+Test fixtures refuse to clear any database not named `studybuddy_test`.
+
+**Frontend** (Node 22 LTS, 22.22.2 or newer):
+
+```bash
+cd frontend
+npm ci
 npm test
 npm run lint
 npm run build
-npm audit
 ```
 
-The test profile never uses the shared Supabase credentials. Fixture deletion refuses any
-database whose name is not `studybuddy_test`. See [testing evidence](docs/TEAM_C_TESTING.md)
-for browser flows, races, migration repeats, seed checks and restart persistence. CI runs
-the backend on PostgreSQL 17 and the frontend on Node 22 for every PR into `main`.
+CI runs the backend against PostgreSQL 17 and the frontend on Node 22 for every PR into `main`.
 
 ## Libraries
 
-Versions were checked against resolved Maven dependencies and the npm lockfile.
-No new runtime library was introduced for C.
+Versions match the resolved Maven dependencies and the npm lockfile.
 
 | Library/tool | Resolved version | Purpose | Licence / primary source |
 | --- | --- | --- | --- |
@@ -192,30 +216,20 @@ No new runtime library was introduced for C.
 | source-map-js (transitive) | 1.2.2 | Existing source-map support; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
 
 Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing uses
-official PostgreSQL 17; no alternative embedded database was added. The stack choice
-predates C; no comparison of untried libraries is claimed.
+official PostgreSQL 17; no embedded database is used.
 
-Team C chrome uses original CSS pixel patterns, CSS shapes/Unicode and
-Tahoma/Verdana/system font fallbacks; no icon or font files are redistributed. `PixelIcon.tsx`
-defines the small decorative glyphs and `desktop.css` renders them, initials avatars, capacity
-bars and loading/empty artwork. Motion respects the user's reduced-motion preference.
-Existing entry pages load unpinned Google Fonts Inter
+Team C screens use CSS pixel patterns, Unicode glyphs and Tahoma/Verdana/system fonts;
+no icon or font files are bundled. Landing pages load Google Fonts Inter
 and Fraunces under SIL OFL 1.1 ([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
 [Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)).
-Original provenance of Team B's `public/favicon.svg`, unused but bundled
-`public/icons.svg`, and landing inline SVGs is undocumented; their owners should resolve
-that shared asset inventory item before submission. C added no such assets.
+The source of `public/favicon.svg`, `public/icons.svg` and the landing page SVGs is not yet
+recorded.
 
-## Handoff and project delivery
+## Project delivery
 
 Read [AGENTS.md](AGENTS.md) before changes. Team schedule: 11 October core,
 25 October extras/integration, 8 November rehearsal/supporting materials, and
-15 November 2026 at 11:59 pm SGT submission; presentation is the assigned Week 13
-slot. Team-wide slides, rehearsals, runtime extras and private peer evaluation are
-separate from completing C's branch.
+15 November 2026 at 11:59 pm SGT submission; presentation in the Week 13 class slot.
 
-Use feature branches, small commits and a PR into `main`, with another team's human
-review and green CI before squash merge. Do not claim human review, rehearsal or merged
-completion from automated checks. [Handoff/demo](docs/TEAM_C_HANDOFF.md),
-[contribution and assistance record](docs/TEAM_C_CONTRIBUTIONS.md), and the
-[prepared PR description](docs/TEAM_C_MR_DESCRIPTION.md) accompany this implementation.
+Use feature branches, small commits and a PR into `main`, with review from another team
+and green CI before squash merge.
