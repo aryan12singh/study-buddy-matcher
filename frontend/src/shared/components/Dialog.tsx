@@ -3,6 +3,9 @@ import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import Button from './Button'
 
+const openPanels = new Set<HTMLElement>()
+let originalOverflow: string | undefined
+
 export default function Dialog({ title, onClose, busy = false, children }: {
   title: string
   onClose: () => void
@@ -14,13 +17,20 @@ export default function Dialog({ title, onClose, busy = false, children }: {
   useEffect(
     () => {
       const previous = document.activeElement as HTMLElement | null
-      const previousOverflow = document.body.style.overflow
+      const currentPanel = panel.current
+      if (!currentPanel) return
+      if (!openPanels.size) originalOverflow = document.body.style.overflow
+      openPanels.add(currentPanel)
       document.body.style.overflow = 'hidden'
       const first = panel.current?.querySelector<HTMLElement>('button:not(:disabled), input, textarea, select, a[href]')
         ;
       (first || panel.current)?.focus()
       return () => {
-        document.body.style.overflow = previousOverflow
+        openPanels.delete(currentPanel)
+        if (!openPanels.size) {
+          document.body.style.overflow = originalOverflow || ''
+          originalOverflow = undefined
+        }
         if (previous?.isConnected) previous.focus()
       }
     },

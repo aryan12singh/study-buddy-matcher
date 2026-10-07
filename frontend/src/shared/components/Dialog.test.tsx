@@ -9,6 +9,18 @@ function DialogExample({ busy = false }: { busy?: boolean }) {
   return <><Button onClick={() => setOpen(true)}>Open dialog</Button>{open && <Dialog title="Confirm action" onClose={() => setOpen(false)} busy={busy}><input aria-label="Message" /><Button>Confirm</Button></Dialog>}</>
 }
 describe('keyboard dialog access', () => {
+  it('keeps the page locked until the last dialog closes, including out-of-order removal', () => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'auto'
+    const view = render(<><Dialog key="first" title="First" onClose={() => {}}>First dialog</Dialog><Dialog key="second" title="Second" onClose={() => {}}>Second dialog</Dialog></>)
+    try {
+      expect(document.body.style.overflow).toBe('hidden')
+      view.rerender(<><Dialog key="second" title="Second" onClose={() => {}}>Second dialog</Dialog></>)
+      expect(document.body.style.overflow).toBe('hidden')
+      view.unmount()
+      expect(document.body.style.overflow).toBe('auto')
+    } finally { view.unmount(); document.body.style.overflow = previous }
+  })
   it('traps focus, closes on Escape and returns focus to the opener', () => {
     render(<DialogExample />)
     const opener = screen.getByRole('button', { name: 'Open dialog' })

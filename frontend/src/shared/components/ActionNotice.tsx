@@ -2,10 +2,10 @@ export default function ActionNotice({ error, success }: { error?: string; succe
   return (
     <>
       {error && (
-        <p className="action-notice error-panel" role="alert">{error}</p>
+        <p className="action-notice error-panel" role="alert"><span aria-hidden="true">! </span>{error}</p>
       )}
       {success && (
-        <p className="action-notice success-panel" role="status">{success}</p>
+        <p className="action-notice success-panel" role="status"><span aria-hidden="true">✓ </span>{success}</p>
       )}
     </>
   )
