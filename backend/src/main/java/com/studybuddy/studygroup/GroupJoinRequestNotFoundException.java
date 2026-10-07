@@ -1,6 +1,8 @@
 package com.studybuddy.studygroup;
 
-public class GroupJoinRequestNotFoundException extends RuntimeException {
+import com.studybuddy.common.error.NotFoundException;
+
+public class GroupJoinRequestNotFoundException extends NotFoundException {
 
     public GroupJoinRequestNotFoundException(Long requestId) {
         super("Group join request " + requestId + " not found");

@@ -1,8 +1,7 @@
 package com.studybuddy.profile;
 
-import com.studybuddy.matchrequest.StudentNotFoundException;
+import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.student.Student;
-import com.studybuddy.student.StudentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

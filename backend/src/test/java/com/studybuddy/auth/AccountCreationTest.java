@@ -1,6 +1,6 @@
 package com.studybuddy.auth;
 
-import com.studybuddy.admin.DuplicateEmailException;
+import com.studybuddy.common.error.ApiException;
 import com.studybuddy.common.error.InvalidInputException;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
@@ -44,7 +44,8 @@ class AccountCreationTest {
     }
     @Test void duplicatesAreRejectedBeforeHashingOrWriting() {
         when(users.existsByEmail("jamie@example.test")).thenReturn(true);
-        assertThrows(DuplicateEmailException.class,() -> creation.create("JAMIE@example.test","runtime-password",Role.ADMIN,null,null,null,null,null));
+        var error = assertThrows(ApiException.class,() -> creation.create("JAMIE@example.test","runtime-password",Role.ADMIN,null,null,null,null,null));
+        assertEquals("DUPLICATE_EMAIL",error.getCode());
         verify(users,never()).saveAndFlush(any());
         verifyNoInteractions(students,passwords);
     }

@@ -1,22 +1,5 @@
 package com.studybuddy.common.error;
 
-import com.studybuddy.admin.AdminActionNotAllowedException;
-import com.studybuddy.admin.DuplicateEmailException;
-import com.studybuddy.admin.InvalidAdminUserException;
-import com.studybuddy.admin.UserNotFoundException;
-import com.studybuddy.connection.ConnectionNotFoundException;
-import com.studybuddy.connection.NotConnectionParticipantException;
-import com.studybuddy.matchrequest.MatchRequestNotAllowedException;
-import com.studybuddy.matchrequest.MatchRequestNotFoundException;
-import com.studybuddy.matchrequest.StudentNotFoundException;
-import com.studybuddy.notification.NotificationNotAllowedException;
-import com.studybuddy.notification.NotificationNotFoundException;
-import com.studybuddy.studygroup.CourseNotFoundException;
-import com.studybuddy.studygroup.GroupJoinRequestNotFoundException;
-import com.studybuddy.studygroup.InvalidStudyGroupException;
-import com.studybuddy.studygroup.NotGroupLeaderException;
-import com.studybuddy.studygroup.StudyGroupActionNotAllowedException;
-import com.studybuddy.studygroup.StudyGroupNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -44,48 +27,14 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(error.getStatus()).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(ApiProblem.of(error.getStatus(), error.getCode(), error.getMessage(), request.getRequestURI(), error.getFieldErrors()));
     }
 
-    @ExceptionHandler({
-            UserNotFoundException.class, StudentNotFoundException.class, MatchRequestNotFoundException.class,
-            ConnectionNotFoundException.class, StudyGroupNotFoundException.class, GroupJoinRequestNotFoundException.class,
-            CourseNotFoundException.class, NotificationNotFoundException.class
-    })
-    public ResponseEntity<ApiProblem> missing(RuntimeException error) {
-        return problem(HttpStatus.NOT_FOUND, "NOT_FOUND", error.getMessage());
-    }
-
-    @ExceptionHandler({
-            NotGroupLeaderException.class, NotConnectionParticipantException.class, NotificationNotAllowedException.class
-    })
-    public ResponseEntity<ApiProblem> forbidden(RuntimeException error) {
-        return problem(HttpStatus.FORBIDDEN, "FORBIDDEN", error.getMessage());
-    }
-
-    @ExceptionHandler({
-            MatchRequestNotAllowedException.class, StudyGroupActionNotAllowedException.class,
-            AdminActionNotAllowedException.class, IllegalStateException.class
-    })
+    @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiProblem> conflict(RuntimeException error) {
         return problem(HttpStatus.CONFLICT, "STATE_CONFLICT", error.getMessage());
-    }
-
-    @ExceptionHandler(DuplicateEmailException.class)
-    public ResponseEntity<ApiProblem> email(DuplicateEmailException error) {
-        return problem(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "This email is already registered");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiProblem> integrity(DataIntegrityViolationException error) {
         return problem(HttpStatus.CONFLICT, "DATA_CONFLICT", "The action conflicts with saved data; refresh and try again");
-    }
-
-    @ExceptionHandler({
-            InvalidStudyGroupException.class, InvalidAdminUserException.class
-    })
-    public ResponseEntity<ApiProblem> invalid(RuntimeException error) {
-        if (error instanceof ApiException apiError) {
-            return api(apiError);
-        }
-        return problem(HttpStatus.BAD_REQUEST, "INVALID_INPUT", error.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

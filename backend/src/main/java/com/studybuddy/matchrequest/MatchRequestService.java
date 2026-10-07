@@ -11,7 +11,7 @@ import com.studybuddy.course.CourseRepository;
 import com.studybuddy.notification.NotificationResourceType;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
-import com.studybuddy.studygroup.CourseNotFoundException;
+import com.studybuddy.course.CourseNotFoundException;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Service;

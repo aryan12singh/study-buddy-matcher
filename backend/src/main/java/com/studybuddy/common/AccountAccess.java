@@ -1,9 +1,9 @@
 package com.studybuddy.common;
 
-import com.studybuddy.admin.UserNotFoundException;
+import com.studybuddy.user.UserNotFoundException;
 import com.studybuddy.common.error.AuthenticationRequiredException;
 import com.studybuddy.common.error.ForbiddenActionException;
-import com.studybuddy.matchrequest.StudentNotFoundException;
+import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.security.AccountPrincipal;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;

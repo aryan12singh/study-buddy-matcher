@@ -1,8 +1,11 @@
 package com.studybuddy.admin;
 
-public class DuplicateEmailException extends RuntimeException {
+import com.studybuddy.common.error.ApiException;
+import org.springframework.http.HttpStatus;
 
-    public DuplicateEmailException(String email) {
-        super("An account with email " + email + " already exists");
+public class DuplicateEmailException extends ApiException {
+
+    public DuplicateEmailException() {
+        super(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "This email is already registered");
     }
 }

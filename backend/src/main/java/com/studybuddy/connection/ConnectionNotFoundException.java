@@ -1,6 +1,8 @@
 package com.studybuddy.connection;
 
-public class ConnectionNotFoundException extends RuntimeException {
+import com.studybuddy.common.error.NotFoundException;
+
+public class ConnectionNotFoundException extends NotFoundException {
 
     public ConnectionNotFoundException(Long connectionId) {
         super("Connection " + connectionId + " not found");

@@ -3,6 +3,7 @@ package com.studybuddy.studygroup;
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.InputRules;
 import com.studybuddy.course.Course;
+import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.course.CourseRepository;
 import com.studybuddy.notification.NotificationResourceType;
 import com.studybuddy.notification.NotificationService;

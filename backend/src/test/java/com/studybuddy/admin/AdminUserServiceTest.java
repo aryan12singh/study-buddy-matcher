@@ -17,6 +17,7 @@ import com.studybuddy.student.StudentRepository;
 import com.studybuddy.studygroup.*;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
+import com.studybuddy.user.UserNotFoundException;
 import com.studybuddy.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

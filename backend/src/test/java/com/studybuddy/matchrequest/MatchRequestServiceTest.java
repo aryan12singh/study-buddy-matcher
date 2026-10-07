@@ -2,9 +2,11 @@ package com.studybuddy.matchrequest;
 
 import com.studybuddy.connection.Connection;
 import com.studybuddy.connection.ConnectionRepository;
+import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;
+import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.student.StudentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -342,7 +344,7 @@ class MatchRequestServiceTest {
     void overlongMessageAndUnknownContextCourseDoNotSaveOrNotify() {
         givenStudentsExist();
         assertThrows(com.studybuddy.common.error.InvalidInputException.class,() -> service.send(ALICE_ID,BOB_ID,"x".repeat(256)));
-        assertThrows(com.studybuddy.studygroup.CourseNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null,new MatchRequestContext(MatchRequestOrigin.MATCHING,999L,null)));
+        assertThrows(com.studybuddy.course.CourseNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null,new MatchRequestContext(MatchRequestOrigin.MATCHING,999L,null)));
         verify(matchRequestRepository,never()).save(any());
         verifyNoInteractions(notificationService);
     }

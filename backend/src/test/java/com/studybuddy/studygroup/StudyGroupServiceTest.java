@@ -1,11 +1,12 @@
 package com.studybuddy.studygroup;
 
 import com.studybuddy.course.Course;
+import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.course.CourseRepository;
-import com.studybuddy.matchrequest.StudentNotFoundException;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;
+import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;

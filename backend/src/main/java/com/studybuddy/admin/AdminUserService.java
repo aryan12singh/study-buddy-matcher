@@ -7,6 +7,7 @@ import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
+import com.studybuddy.user.UserNotFoundException;
 import com.studybuddy.user.UserRepository;
 import java.util.List;
 import java.util.Objects;
@@ -79,7 +80,7 @@ public class AdminUserService {
         }
         String email = InputRules.email(request.email());
         if (!email.equals(user.getEmail()) && users.existsByEmail(email)) {
-            throw new DuplicateEmailException(email);
+            throw new DuplicateEmailException();
         }
         var student = students.findById(id).orElse(null);
         if (user.getRole() == Role.STUDENT && student == null) {

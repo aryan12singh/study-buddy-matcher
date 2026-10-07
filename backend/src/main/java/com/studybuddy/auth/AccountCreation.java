@@ -1,13 +1,14 @@
 package com.studybuddy.auth;
 
-import com.studybuddy.admin.DuplicateEmailException;
 import com.studybuddy.common.InputRules;
+import com.studybuddy.common.error.ApiException;
 import com.studybuddy.common.error.InvalidInputException;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
 import com.studybuddy.user.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +33,7 @@ public class AccountCreation {
             throw new InvalidInputException("role", "Role is required");
         }
         if (users.existsByEmail(identity)) {
-            throw new DuplicateEmailException(identity);
+            throw new ApiException(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "This email is already registered");
         }
         if (role == Role.STUDENT) {
             name = InputRules.required(name, "Name", InputRules.TEXT_LIMIT);

@@ -1,6 +1,8 @@
 package com.studybuddy.studygroup;
 
-public class StudyGroupNotFoundException extends RuntimeException {
+import com.studybuddy.common.error.NotFoundException;
+
+public class StudyGroupNotFoundException extends NotFoundException {
 
     public StudyGroupNotFoundException(Long groupId) {
         super("Study group " + groupId + " not found");

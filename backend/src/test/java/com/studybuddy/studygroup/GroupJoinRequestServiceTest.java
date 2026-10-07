@@ -1,6 +1,6 @@
 package com.studybuddy.studygroup;
 
-import com.studybuddy.matchrequest.StudentNotFoundException;
+import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;

@@ -15,6 +15,7 @@ import com.studybuddy.studygroup.GroupJoinRequestRepository;
 import com.studybuddy.studygroup.GroupMembership;
 import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroupRepository;
+import com.studybuddy.user.UserNotFoundException;
 import java.util.LinkedHashSet;
 import org.springframework.stereotype.Component;
 
