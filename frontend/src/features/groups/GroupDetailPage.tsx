@@ -10,6 +10,9 @@ import Button from '../../shared/components/Button'
 import WeeklySchedule from '../../shared/components/WeeklySchedule'
 import Dialog from '../../shared/components/Dialog'
 import ApplyGroupDialog from './ApplyGroupDialog'
+import Avatar from '../../shared/components/Avatar'
+import CapacityMeter from '../../shared/components/CapacityMeter'
+import CopyButton from '../../shared/components/CopyButton'
 
 export default function GroupDetailPage() {
   const { id } = useParams(),
@@ -35,7 +38,6 @@ export default function GroupDetailPage() {
           <section className="detail-panel">
             <div className="tag-list">
               <Badge tone={group.active ? 'good' : 'neutral'}>{group.active ? 'Open group' : 'Closed group'}</Badge>
-              <Badge>{group.memberCount}/{group.maxGroupSize} members</Badge>
               {group.viewer.leader ? (
                 <Badge>Group leader</Badge>
               ) : group.viewer.member ? (
@@ -44,6 +46,7 @@ export default function GroupDetailPage() {
                 <Badge tone="pending">Application pending</Badge>
               ) : null}
             </div>
+            <CapacityMeter members={group.memberCount} capacity={group.maxGroupSize} active={group.active} />
             <p className="message-text">{group.description || 'No description provided.'}</p>
             <dl className="detail-facts">
               <dt>Leader</dt>
@@ -66,9 +69,10 @@ export default function GroupDetailPage() {
             </div>
             <div className="actions">
               <Button onClick={() => setAgenda(true)}>View agenda</Button>
+              <CopyButton value={`${window.location.origin}/groups/${group.id}`} label="Copy group link" />
               {group.viewer.leader && (
                 <>
-                  <Link className="retro-button" to={`/groups/${group.id}/manage`}>Manage group</Link>
+                  <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>
                   {group.active && (
                     <Link className="retro-button" to={`/groups/${group.id}/edit`}>Edit group</Link>
                   )}
@@ -108,7 +112,7 @@ export default function GroupDetailPage() {
                 {group.members.map(member => (
                   <div className="data-row" key={member.studentId}>
                     <div>
-                      <Link to={`/students/${member.studentId}`}>{member.name}</Link>
+                      <div className="person-heading"><Avatar name={member.name} small /><Link to={`/students/${member.studentId}`}>{member.name}</Link></div>
                       {member.leader && (
                         <> <Badge>Leader</Badge></>
                       )}

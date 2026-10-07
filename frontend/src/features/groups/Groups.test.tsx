@@ -114,7 +114,7 @@ describe('group fields and saved state', () => {
       if (refresh === 'focus') window.dispatchEvent(new Event('focus'))
       else vi.advanceTimersByTime(REFRESH_INTERVAL_MS)
     })
-    expect(screen.getByRole('status')).toHaveTextContent('Loading')
+    expect(screen.getByText('Loading…', { selector: '.loading-caption' })).toBeInTheDocument()
     expect(screen.getByRole('dialog')).toBe(dialog)
     expect(within(dialog).getByLabelText('Message (optional)')).toHaveValue('I can meet on Monday evenings.')
     await act(async () => {

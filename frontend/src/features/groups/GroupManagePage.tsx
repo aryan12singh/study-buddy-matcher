@@ -12,6 +12,9 @@ import Button from '../../shared/components/Button'
 import Badge from '../../shared/components/Badge'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
+import Avatar from '../../shared/components/Avatar'
+import CopyButton from '../../shared/components/CopyButton'
+import CapacityMeter from '../../shared/components/CapacityMeter'
 
 export default function GroupManagePage() {
   const { id } = useParams(),
@@ -55,10 +58,11 @@ export default function GroupManagePage() {
       {group && !group.viewer.leader && <StatePanel error="Only this group’s leader can manage membership." />}
       {group?.viewer.leader && (
         <>
+          <CapacityMeter members={group.memberCount} capacity={group.maxGroupSize} active={group.active} />
           <div className="actions">
             {group.active ? (
               <>
-                <Link className="retro-button" to={`/groups/${group.id}/edit`}>Edit group</Link>
+                <Link className="retro-button primary" to={`/groups/${group.id}/edit`}>Edit group</Link>
                 <Button
                   variant="danger"
                   disabled={action.pending}
@@ -93,6 +97,8 @@ export default function GroupManagePage() {
                 empty={applicants.data?.length === 0}
                 emptyTitle="No pending applicants"
                 emptyMessage="New requests to join this group will appear here."
+                emptyKind="groups"
+                emptyAction={group.active && <CopyButton label="Copy group link" value={`${window.location.origin}/groups/${group.id}`} />}
               />
               {group.memberCount >= group.maxGroupSize && group.active && (
                 <p className="privacy-note">The group is full. Increase capacity or remove a member before approving another applicant.</p>
@@ -101,9 +107,9 @@ export default function GroupManagePage() {
                 {applicants.data?.map(application => (
                   <article className="data-row" key={application.id}>
                     <div>
-                      <h2>
+                      <div className="person-heading"><Avatar name={application.studentName} /><h2>
                         <Link to={`/students/${application.studentId}`}>{application.studentName}</Link>
-                      </h2>
+                      </h2></div>
                       {application.message && (
                         <p className="message-text">{application.message}</p>
                       )}
@@ -138,9 +144,9 @@ export default function GroupManagePage() {
                 {group.members.map(member => (
                   <article className="data-row" key={member.studentId}>
                     <div>
-                      <h2>
+                      <div className="person-heading"><Avatar name={member.name} /><h2>
                         <Link to={`/students/${member.studentId}`}>{member.name}</Link>
-                      </h2>
+                      </h2></div>
                       {member.leader && (
                         <Badge>Leader</Badge>
                       )}

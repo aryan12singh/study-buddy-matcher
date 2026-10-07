@@ -13,6 +13,8 @@ import ActionNotice from '../../shared/components/ActionNotice'
 import WeeklySchedule from '../../shared/components/WeeklySchedule'
 import SendRequestDialog from '../connections/SendRequestDialog'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
+import Avatar from '../../shared/components/Avatar'
+import CopyButton from '../../shared/components/CopyButton'
 
 export default function StudentProfilePage() {
   const { id } = useParams(),
@@ -46,7 +48,7 @@ export default function StudentProfilePage() {
         <>
           <div className="detail-grid">
             <section className="detail-panel">
-              <h2>{student.name}</h2>
+              <div className="person-heading"><Avatar name={student.name} /><h2>{student.name}</h2></div>
               <dl className="detail-facts">
                 <dt>School</dt>
                 <dd>{student.school}</dd>
@@ -130,6 +132,7 @@ export default function StudentProfilePage() {
                 <div className="privacy-note">
                   <h3>Contact number</h3>
                   <p>{student.contactNumber || 'No contact number provided.'}</p>
+                  {student.contactNumber && <CopyButton value={student.contactNumber} label="Copy contact number" sensitive />}
                 </div>
               ) : (
                 <p className="privacy-note">Contact number is private until a buddy request is accepted. Group membership does not share contact numbers.</p>

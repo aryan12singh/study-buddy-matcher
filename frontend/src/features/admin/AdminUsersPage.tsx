@@ -13,6 +13,8 @@ import Button from '../../shared/components/Button'
 import Badge from '../../shared/components/Badge'
 import ActionNotice from '../../shared/components/ActionNotice'
 import DeactivateUserDialog from './DeactivateUserDialog'
+import Avatar from '../../shared/components/Avatar'
+import FilterSummary from '../../shared/components/FilterSummary'
 
 export default function AdminUsersPage() {
   const { account } = useAuth(),
@@ -31,6 +33,12 @@ export default function AdminUsersPage() {
   )
   const summary = useResource('admin-account-summary', getAccountSummary)
   const users = useResource(`admin-users-${role}-${active}-${search}`, signal => getUsers({ role, active, search }, signal))
+  const activeFilters = [
+    ...(searchInput ? [{ key: 'search', label: `Search: ${searchInput}`, onRemove: () => setSearchInput('') }] : []),
+    ...(role ? [{ key: 'role', label: `Role: ${label(role)}`, onRemove: () => setRole('') }] : []),
+    ...(active ? [{ key: 'active', label: active === 'true' ? 'Active accounts' : 'Inactive accounts', onRemove: () => setActive('') }] : [])
+  ]
+  function clearFilters() { setRole(''); setActive(''); setSearchInput('') }
   return (
     <WindowPage
       title="User accounts"
@@ -91,6 +99,7 @@ export default function AdminUsersPage() {
           </select>
         </Field>
       </div>
+      <FilterSummary filters={activeFilters} onClear={clearFilters} />
       <ActionNotice error={action.error} success={action.success} />
       <StatePanel
         loading={users.loading && !users.data}
@@ -99,13 +108,15 @@ export default function AdminUsersPage() {
         empty={users.data?.length === 0}
         emptyTitle="No accounts match"
         emptyMessage="Try another name, email or filter."
+        emptyKind="accounts"
+        emptyAction={activeFilters.length > 0 ? <Button onClick={clearFilters}>Show all accounts</Button> : <Link className="retro-button primary" to="/admin/users/new">Start a new account</Link>}
       />
       {users.data && users.data.length > 0 && (
         <div className="table-scroll">
-          <table className="account-table">
+          <table className="account-table" role="table">
             <caption className="row-meta">{users.data.length} account{users.data.length === 1 ? '' : 's'} in this view</caption>
-            <thead>
-              <tr>
+            <thead role="rowgroup">
+              <tr role="row">
                 <th scope="col">Account</th>
                 <th scope="col">Role</th>
                 <th scope="col">Status</th>
@@ -113,26 +124,26 @@ export default function AdminUsersPage() {
                 <th scope="col">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {users.data.map(user => (
-                <tr key={user.id}>
-                  <td>
-                    <Link to={`/admin/users/${user.id}`}>{user.name || user.email}</Link>
+                <tr key={user.id} role="row">
+                  <td role="cell" data-label="Account">
+                    <div className="person-heading"><Avatar name={user.name || user.email} small /><Link to={`/admin/users/${user.id}`}>{user.name || user.email}</Link></div>
                     {user.name && (
                       <p className="row-meta">{user.email}</p>
                     )}
                   </td>
-                  <td>{label(user.role)}</td>
-                  <td>
+                  <td role="cell" data-label="Role">{label(user.role)}</td>
+                  <td role="cell" data-label="Status">
                     <Badge tone={user.active ? 'good' : 'neutral'}>{user.active ? 'Active' : 'Inactive'}</Badge>
                   </td>
-                  <td>
+                  <td role="cell" data-label="Last successful login">
                     {formatTimestamp(user.lastLoginAt)}
                     {user.lastLoginAt && ' (SGT)'}
                   </td>
-                  <td>
+                  <td role="cell" data-label="Actions">
                     <div className="actions">
-                      <Link className="retro-button" to={`/admin/users/${user.id}`}>View details</Link>
+                      <Link className="retro-button primary" to={`/admin/users/${user.id}`}>View details</Link>
                       <Link className="retro-button" to={`/admin/users/${user.id}/edit`}>Edit account</Link>
                       {user.active ? (
                         <Button

@@ -12,6 +12,23 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 describe('profile privacy and relationship actions', () => {
+  it.each(['STRANGER', 'OUTGOING_PENDING', 'INCOMING_PENDING'])('withholds copy access for the %s relationship even if a contact field is accidentally supplied', async state => {
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile, contactNumber: 'Hidden contact', relationship: { state, requestId: 10, connectionId: null } }))
+    renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    await screen.findByText('Contact number is private until a buddy request is accepted. Group membership does not share contact numbers.')
+    expect(screen.queryByRole('button', { name: 'Copy contact number' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Hidden contact')).not.toBeInTheDocument()
+  })
+  it('removes the contact copy control during a privacy-purging refresh', async () => {
+    const pending = deferred<never>()
+    vi.spyOn(api, 'get').mockResolvedValueOnce(response({ ...publicProfile, contactNumber: 'Synthetic contact', relationship: { state: 'CONNECTED', requestId: null, connectionId: 7 } })).mockImplementation(() => pending.promise)
+    renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    await screen.findByRole('button', { name: 'Copy contact number' })
+    refreshResources(true)
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Copy contact number' })).not.toBeInTheDocument())
+    pending.resolve(response(publicProfile))
+    await screen.findByRole('button', { name: 'Send match request' })
+  })
   it('shows public study information, honest missing data and a send action', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(publicProfile))
     renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
@@ -69,7 +86,7 @@ describe('profile privacy and relationship actions', () => {
     await refreshProfile()
     expect(profileReads).toBe(3)
     expect(screen.queryByText('+65 9999 1111')).not.toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Loading')
+    expect(screen.getByText('Loading…', { selector: '.loading-caption' })).toBeInTheDocument()
     expectDraft()
     await act(async () => {
       pending.resolve(response(connectedProfile))

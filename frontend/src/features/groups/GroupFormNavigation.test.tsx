@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { createMemoryRouter, createRoutesFromElements, Link, Outlet, Route, RouterProvider, useLocation } from 'react-router-dom'
 import { api } from '../../shared/api/client'
 import { deferred, response } from '../../test/renderApp'
 import GroupFormPage from './GroupFormPage'
@@ -15,15 +15,16 @@ function CurrentPath() {
   return <><p>Current path: {location.pathname}</p><p>Current entry: {location.key}</p></>
 }
 function renderForm(path: string) {
-  render(<MemoryRouter initialEntries={[path]}>
+  const router = createMemoryRouter(createRoutesFromElements(<Route element={<>
     <CurrentPath />
     <Link to="/groups/6/edit">Open another group</Link>
-    <Routes>
+    <Outlet />
+  </>}>
       <Route path="/groups/new" element={<GroupFormPage />} />
       <Route path="/groups/:id/edit" element={<GroupFormPage />} />
       <Route path="*" element={<p>Destination page</p>} />
-    </Routes>
-  </MemoryRouter>)
+  </Route>), { initialEntries: [path] })
+  render(<RouterProvider router={router} />)
 }
 
 afterEach(() => vi.restoreAllMocks())
@@ -45,6 +46,7 @@ describe('group save navigation', () => {
       fireEvent.click(screen.getByRole('button', { name: mode === 'create' ? 'Create study group' : 'Save group changes' }))
       await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
       fireEvent.click(screen.getAllByRole('link', { name: 'Cancel' })[0])
+      fireEvent.click(await screen.findByRole('button', { name: 'Leave page' }))
       const destination = mode === 'create' ? '/groups' : '/groups/5'
       expect(screen.getByText(`Current path: ${destination}`)).toBeInTheDocument()
       const entry = screen.getByText(/^Current entry:/).textContent
@@ -67,6 +69,7 @@ describe('group save navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save group changes' }))
     await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
     fireEvent.click(screen.getByRole('link', { name: 'Open another group' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave page' }))
     await screen.findByDisplayValue('Another group')
     await act(async () => { save.resolve(response(group)) })
     expect(screen.getByText('Current path: /groups/6/edit')).toBeInTheDocument()

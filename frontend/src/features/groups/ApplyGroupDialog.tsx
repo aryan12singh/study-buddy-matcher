@@ -5,6 +5,10 @@ import Dialog from '../../shared/components/Dialog'
 import Field from '../../shared/components/Field'
 import Button from '../../shared/components/Button'
 import ActionNotice from '../../shared/components/ActionNotice'
+import FormActions from '../../shared/components/FormActions'
+import { useFormExit } from '../../shared/components/useFormExit'
+import { useDraftClose } from '../../shared/components/useDraftClose'
+import { useViewLifetime } from '../../shared/components/useViewNavigation'
 
 export default function ApplyGroupDialog({ groupId, groupName, onClose }: {
   groupId: number
@@ -14,6 +18,10 @@ export default function ApplyGroupDialog({ groupId, groupName, onClose }: {
   const [message, setMessage] = useState(''),
     [error, setError] = useState<string>(),
     action = useAction()
+  const dirty = Boolean(message.trim())
+  const exit = useFormExit(dirty, action.pending)
+  const close = useDraftClose(dirty, onClose)
+  const isCurrent = useViewLifetime()
 
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -23,12 +31,15 @@ export default function ApplyGroupDialog({ groupId, groupName, onClose }: {
     }
     setError(undefined)
     const result = await action.run(() => applyToGroup(groupId, message), 'Group membership requested.')
-    if (result.ok) onClose()
+    if (result.ok && isCurrent()) {
+      exit.allowSavedNavigation()
+      onClose()
+    }
   }
   return (
-    <Dialog
+    <><Dialog
       title={`Request to join ${groupName}`}
-      onClose={onClose}
+      onClose={close.requestClose}
       busy={action.pending}
     >
       <form
@@ -51,15 +62,15 @@ export default function ApplyGroupDialog({ groupId, groupName, onClose }: {
           />
         </Field>
         <ActionNotice error={action.error} />
-        <div className="actions">
-          <Button onClick={onClose} disabled={action.pending}>Cancel</Button>
+        <FormActions dirty={dirty} pending={action.pending}>
+          <Button onClick={close.requestClose} disabled={action.pending}>Cancel</Button>
           <Button
             type="submit"
             variant="primary"
             disabled={action.pending}
           >{action.pending ? 'Requesting…' : 'Request membership'}</Button>
-        </div>
+        </FormActions>
       </form>
-    </Dialog>
+    </Dialog>{close.confirmation}{exit.confirmation}</>
   )
 }

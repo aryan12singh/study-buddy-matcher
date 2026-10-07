@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getNotifications, notificationLink, readAllNotifications, readNotification } from './api'
 import type { NotificationFilter } from './api'
 import { useResource } from '../../shared/api/useResource'
@@ -11,10 +10,12 @@ import TabBar from '../../shared/components/TabBar'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import Badge from '../../shared/components/Badge'
+import PixelIcon from '../../shared/components/PixelIcon'
 
 export default function NotificationsPage() {
-  const [filter, setFilter] = useState<NotificationFilter>('ALL'),
-    action = useAction()
+  const [search, setSearch] = useSearchParams()
+  const filter: NotificationFilter = search.get('view') === 'requests' ? 'REQUESTS' : search.get('view') === 'groups' ? 'GROUPS' : 'ALL'
+  const action = useAction()
   const notifications = useResource(`notifications-${filter}`, signal => getNotifications(filter, signal))
   const today = campusDate(new Date().toISOString())
   return (
@@ -34,9 +35,18 @@ export default function NotificationsPage() {
           { value: 'REQUESTS', label: 'Buddy requests' },
           { value: 'GROUPS', label: 'Study groups' }
         ]}
-        onChange={setFilter}
+        onChange={value => {
+          setSearch(previous => {
+            const next = new URLSearchParams(previous)
+            if (value === 'ALL') next.delete('view')
+            else next.set('view', value.toLowerCase())
+            return next
+          })
+          action.clear()
+        }}
       />
       <ActionNotice error={action.error} success={action.success} />
+      {notifications.data && <p className="row-meta">{notifications.data.length} notification{notifications.data.length === 1 ? '' : 's'} · {notifications.data.filter(item => !item.read).length} unread in this view</p>}
       <StatePanel
         loading={notifications.loading && !notifications.data}
         error={notifications.error}
@@ -44,6 +54,8 @@ export default function NotificationsPage() {
         empty={notifications.data?.length === 0}
         emptyTitle="No notifications here"
         emptyMessage="Updates matching this filter will appear when something changes."
+        emptyKind="notifications"
+        emptyAction={<Link className="retro-button" to={filter === 'GROUPS' ? '/groups' : '/connections'}>{filter === 'GROUPS' ? 'Browse study groups' : 'Open connections'}</Link>}
       />
       {['Today', 'Earlier'].map(section => {
         const items = notifications.data?.filter(item => (campusDate(item.createdAt) === today) === (section === 'Today')) || []
@@ -59,6 +71,7 @@ export default function NotificationsPage() {
                     className={`data-row ${notification.read ? '' : 'notification-unread'}`}
                   >
                     <div>
+                      <div className="notification-symbol"><PixelIcon kind={notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
                       {!notification.read && (
                         <Badge tone="pending">Unread</Badge>
                       )}

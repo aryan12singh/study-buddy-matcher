@@ -15,6 +15,8 @@ import ActionNotice from '../../shared/components/ActionNotice'
 import WeeklySlotEditor from '../../shared/components/WeeklySlotEditor'
 import { validateGroupForm } from './validation'
 import type { GroupForm } from './validation'
+import FormActions from '../../shared/components/FormActions'
+import { useFormExit } from '../../shared/components/useFormExit'
 
 export default function GroupFormPage() {
   const { id } = useParams(),
@@ -34,12 +36,13 @@ export default function GroupFormPage() {
     studyGoals: [],
     availability: []
   })
+  const [baseline, setBaseline] = useState(JSON.stringify(form))
   const [errors, setErrors] = useState<Record<string, string>>({})
   useEffect(
     () => {
       if (group.data && initialised.current !== id) {
         const data = group.data
-        setForm({
+        const savedForm: GroupForm = {
           name: data.name,
           description: data.description || '',
           courseId: String(data.courseId),
@@ -47,13 +50,17 @@ export default function GroupFormPage() {
           maxGroupSize: String(data.maxGroupSize),
           studyGoals: data.studyGoals,
           availability: data.availability
-        })
+        }
+        setBaseline(JSON.stringify(savedForm))
+        setForm(savedForm)
         initialised.current = id || null
       }
     },
     [group.data, id]
   )
   const denied = Boolean(group.data && (!group.data.viewer.leader || !group.data.active))
+  const dirty = JSON.stringify(form) !== baseline
+  const exit = useFormExit(dirty, action.pending)
 
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -74,7 +81,10 @@ export default function GroupFormPage() {
       ),
       id ? 'Group updated.' : 'Group created.'
     )
-    if (result.ok) navigate(`/groups/${result.value.id}`)
+    if (result.ok) {
+      exit.allowSavedNavigation()
+      navigate(`/groups/${result.value.id}`, { state: { notice: id ? 'Group updated.' : 'Group created.' } })
+    }
   }
   const fieldError = (field: string) => errors[field] || action.errors[field]
   return (
@@ -206,19 +216,20 @@ export default function GroupFormPage() {
             disabled={action.pending}
           />
           <ActionNotice error={action.error} />
-          <div className="actions">
+          <FormActions dirty={dirty} pending={action.pending}>
             <Link className="retro-button" to={id ? `/groups/${id}` : '/groups'}>Cancel</Link>
             <Button
               type="submit"
               variant="primary"
               disabled={action.pending || !courses.data.length}
             >{action.pending ? 'Saving…' : id ? 'Save group changes' : 'Create study group'}</Button>
-          </div>
+          </FormActions>
           {!courses.data.length && (
             <p className="field-error">No courses are available. A course must be configured before creating a group.</p>
           )}
         </form>
       )}
+      {exit.confirmation}
     </WindowPage>
   )
 }

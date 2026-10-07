@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { createMemoryRouter, createRoutesFromElements, MemoryRouter, Outlet, Route, RouterProvider, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../../shared/api/client'
 import { adminAccount, deferred, response } from '../../test/renderApp'
 import { AuthContext } from '../../shared/auth/context'
@@ -47,14 +47,15 @@ describe('administrator save navigation', () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(detail))
     const save = deferred<never>()
     const write = vi.spyOn(api, mode === 'create' ? 'post' : 'put').mockImplementation(() => save.promise)
-    render(<MemoryRouter initialEntries={[mode === 'create' ? '/admin/users/new' : '/admin/users/100/edit']}>
+    const router = createMemoryRouter(createRoutesFromElements(<Route element={<>
       <CurrentPath />
-      <Routes>
+      <Outlet />
+    </>}>
         <Route path="/admin/users/new" element={<AdminUserFormPage />} />
         <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
         <Route path="*" element={<p>Destination page</p>} />
-      </Routes>
-    </MemoryRouter>)
+    </Route>), { initialEntries: [mode === 'create' ? '/admin/users/new' : '/admin/users/100/edit'] })
+    render(<RouterProvider router={router} />)
     if (mode === 'create') {
       fireEvent.change(screen.getByLabelText('Account role'), { target: { value: 'ADMIN' } })
       fireEvent.change(screen.getByLabelText('Email address'), { target: { value: detail.account.email } })
@@ -63,6 +64,7 @@ describe('administrator save navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: mode === 'create' ? 'Create account' : 'Save account changes' }))
     await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
     fireEvent.click(screen.getAllByRole('link', { name: 'Cancel' })[0])
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave page' }))
     const destination = mode === 'create' ? '/admin/users' : '/admin/users/100'
     expect(screen.getByText(`Current path: ${destination}`)).toBeInTheDocument()
     const entry = screen.getByText(/^Current entry:/).textContent

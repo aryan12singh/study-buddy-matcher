@@ -13,6 +13,7 @@ import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import SendRequestDialog from './SendRequestDialog'
+import Avatar from '../../shared/components/Avatar'
 
 export default function ConnectionsPage() {
   const [search, setSearch] = useSearchParams()
@@ -70,14 +71,16 @@ export default function ConnectionsPage() {
             empty={connections.data?.length === 0}
             emptyTitle="No connected buddies yet"
             emptyMessage="Send a match request or accept an incoming request to connect."
+            emptyKind="connections"
+            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
           />
           <div className="data-list">
             {connections.data?.map(connection => (
               <article className="data-row" key={connection.id}>
                 <div>
-                  <h2>
+                  <div className="person-heading"><Avatar name={connection.otherStudentName} /><h2>
                     <Link to={`/students/${connection.otherStudentId}`}>{connection.otherStudentName}</Link>
-                  </h2>
+                  </h2></div>
                   <p className="row-meta">Connected since {formatTimestamp(connection.createdAt)} (SGT)</p>
                   <Badge tone="good">Connected</Badge>
                 </div>
@@ -110,6 +113,8 @@ export default function ConnectionsPage() {
               'Requests from other students will appear here.'
               :
               'Your sent requests and their decisions will appear here.'}
+            emptyKind="connections"
+            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
           />
           <div className="data-list">
             {requests.data?.map(request => {
@@ -118,9 +123,9 @@ export default function ConnectionsPage() {
               return (
                 <article className="data-row" key={request.id}>
                   <div>
-                    <h2>
+                    <div className="person-heading"><Avatar name={name} /><h2>
                       <Link to={`/students/${id}`}>{name}</Link>
-                    </h2>
+                    </h2></div>
                     <Badge
                       tone={request.status === 'PENDING' ? 'pending' : request.status === 'ACCEPTED' ? 'good' : 'neutral'}
                     >{label(request.status)}</Badge>

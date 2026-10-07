@@ -12,6 +12,10 @@ import Field from '../../shared/components/Field'
 import Button from '../../shared/components/Button'
 import ActionNotice from '../../shared/components/ActionNotice'
 import StatePanel from '../../shared/components/StatePanel'
+import FormActions from '../../shared/components/FormActions'
+import { useFormExit } from '../../shared/components/useFormExit'
+import { useDraftClose } from '../../shared/components/useDraftClose'
+import { useViewLifetime } from '../../shared/components/useViewNavigation'
 
 /** Reuse from a matching card by passing its known MATCHING context. */
 
@@ -30,6 +34,11 @@ export default function SendRequestDialog({ receiverId, receiverName, context = 
     [courseId, setCourseId] = useState(context.courseId ? String(context.courseId) : '')
   const [studyGoal, setStudyGoal] = useState(context.studyGoal || '')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const dirty = Boolean(message.trim()) || target !== (receiverId ? String(receiverId) : '') ||
+    courseId !== (context.courseId ? String(context.courseId) : '') || studyGoal !== (context.studyGoal || '')
+  const exit = useFormExit(dirty, action.pending)
+  const close = useDraftClose(dirty, onClose)
+  const isCurrent = useViewLifetime()
 
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -51,15 +60,16 @@ export default function SendRequestDialog({ receiverId, receiverName, context = 
       ),
       'Match request sent.'
     )
-    if (result.ok) {
+    if (result.ok && isCurrent()) {
+      exit.allowSavedNavigation()
       onSent?.(result.value)
       onClose()
     }
   }
   return (
-    <Dialog
+    <><Dialog
       title={`Send match request${receiverName ? ` to ${receiverName}` : ''}`}
-      onClose={onClose}
+      onClose={close.requestClose}
       busy={action.pending}
     >
       <form
@@ -80,6 +90,7 @@ export default function SendRequestDialog({ receiverId, receiverName, context = 
               min="1"
               step="1"
               value={target}
+              disabled={action.pending}
               onChange={event => setTarget(event.target.value)}
               aria-invalid={Boolean(errors.receiverId)}
             />
@@ -134,15 +145,15 @@ export default function SendRequestDialog({ receiverId, receiverName, context = 
         </fieldset>
         <p className="privacy-note">Contact numbers become available only after the request is accepted.</p>
         <ActionNotice error={action.error} />
-        <div className="actions">
-          <Button disabled={action.pending} onClick={onClose}>Cancel</Button>
+        <FormActions dirty={dirty} pending={action.pending}>
+          <Button disabled={action.pending} onClick={close.requestClose}>Cancel</Button>
           <Button
             type="submit"
             variant="primary"
             disabled={action.pending}
           >{action.pending ? 'Sending…' : 'Send match request'}</Button>
-        </div>
+        </FormActions>
       </form>
-    </Dialog>
+    </Dialog>{close.confirmation}{exit.confirmation}</>
   )
 }

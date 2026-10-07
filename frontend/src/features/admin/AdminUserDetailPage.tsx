@@ -36,7 +36,7 @@ export default function AdminUserDetailPage() {
   async function permanentDelete() {
     if (!deleting || !deleteReady || confirmation !== deleting.email) return
     const result = await action.run(() => deleteUser(deleting.id), 'Account permanently deleted.', true)
-    if (result.ok) navigate('/admin/users')
+    if (result.ok) navigate('/admin/users', { state: { notice: 'Account permanently deleted.' } })
   }
   return (
     <WindowPage

@@ -13,6 +13,8 @@ import Field from '../../shared/components/Field'
 import AccountFields from '../../shared/components/AccountFields'
 import Button from '../../shared/components/Button'
 import ActionNotice from '../../shared/components/ActionNotice'
+import FormActions from '../../shared/components/FormActions'
+import { useFormExit } from '../../shared/components/useFormExit'
 
 export default function AdminUserFormPage() {
   const { id } = useParams(),
@@ -33,12 +35,15 @@ export default function AdminUserFormPage() {
   })
   const [role, setRole] = useState<Role>('STUDENT'),
     [errors, setErrors] = useState<Record<string, string>>({})
+  const [baseline, setBaseline] = useState(JSON.stringify({ form, role }))
+  const dirty = JSON.stringify({ form, role }) !== baseline
+  const exit = useFormExit(dirty, action.pending)
   useEffect(
     () => {
       if (resource.data && initialised.current !== id) {
         const { account, profile } = resource.data
         setRole(account.role)
-        setForm({
+        const savedForm = {
           email: account.email,
           password: '',
           name: profile?.name || '',
@@ -46,7 +51,9 @@ export default function AdminUserFormPage() {
           programme: profile?.programme || '',
           yearOfStudy: String(profile?.yearOfStudy || 1),
           contactNumber: ''
-        })
+        }
+        setBaseline(JSON.stringify({ form: savedForm, role: account.role }))
+        setForm(savedForm)
         initialised.current = id || null
       }
     },
@@ -76,7 +83,10 @@ export default function AdminUserFormPage() {
       id ? 'Account updated.' : 'Account created.',
       true
     )
-    if (result.ok) navigate(`/admin/users/${result.value.account.id}`)
+    if (result.ok) {
+      exit.allowSavedNavigation()
+      navigate(`/admin/users/${result.value.account.id}`, { state: { notice: id ? 'Account updated.' : 'Account created.' } })
+    }
   }
   return (
     <WindowPage
@@ -125,16 +135,17 @@ export default function AdminUserFormPage() {
             <p className="privacy-note">Contact numbers are accepted as input and withheld from all admin responses.</p>
           )}
           <ActionNotice error={action.error} />
-          <div className="actions">
+          <FormActions dirty={dirty} pending={action.pending}>
             <Link className="retro-button" to={id ? `/admin/users/${id}` : '/admin/users'}>Cancel</Link>
             <Button
               type="submit"
               variant="primary"
               disabled={action.pending}
             >{action.pending ? 'Saving…' : id ? 'Save account changes' : 'Create account'}</Button>
-          </div>
+          </FormActions>
         </form>
       )}
+      {exit.confirmation}
     </WindowPage>
   )
 }
