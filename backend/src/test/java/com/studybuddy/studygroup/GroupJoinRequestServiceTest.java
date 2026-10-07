@@ -119,6 +119,18 @@ class GroupJoinRequestServiceTest {
     }
 
     @Test
+    void closedGroupWithAnInactiveLeaderReportsClosedRatherThanMissingLeader() {
+        givenGroupAndBobExist();
+        group.close();
+        org.mockito.Mockito.lenient().when(access.eligibleStudent(ALICE_ID)).thenThrow(new StudentNotFoundException(ALICE_ID));
+
+        assertThrows(StudyGroupActionNotAllowedException.class,
+                () -> service.request(GROUP_ID, BOB_ID, null));
+
+        verify(groupJoinRequestRepository, never()).save(any());
+    }
+
+    @Test
     void existingMemberCannotAskToJoinAgain() {
         givenGroupAndBobExist();
         when(groupMembershipRepository.existsByStudyGroupIdAndStudentId(GROUP_ID, BOB_ID)).thenReturn(true);

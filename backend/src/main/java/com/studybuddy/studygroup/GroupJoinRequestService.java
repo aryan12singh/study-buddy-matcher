@@ -32,11 +32,13 @@ public class GroupJoinRequestService {
     public GroupJoinRequestDto request(Long groupId, Long actorId, String message) {
         access.beginWrite();
         Long leaderId = lookup.leaderId(groupId);
-        access.lockStudents(actorId, actorId, leaderId);
+        access.lockAccounts(actorId, actorId, leaderId);
         StudyGroup group = lookup.findGroupForUpdate(groupId);
         var student = access.requireStudent(actorId);
         String normal = InputRules.optional(message, "Message", InputRules.TEXT_LIMIT);
+        // A closed group must report that it is closed, even when its leader's account is inactive.
         requireOpen(group);
+        access.eligibleStudent(leaderId);
         if (memberships.existsByStudyGroupIdAndStudentId(groupId, actorId)) {
             throw new StudyGroupActionNotAllowedException("You are already a member of this group");
         }

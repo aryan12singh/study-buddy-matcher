@@ -1,6 +1,7 @@
 package com.studybuddy.integration;
 
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -84,6 +85,26 @@ class GroupHttpTest extends PostgresHttpTest {
         long members = count("select count(*) from group_memberships where study_group_id=?", group);
         long capacity = count("select max_group_size from study_groups where id=?", group);
         assertTrue(members <= capacity);
+    }
+
+    @Test
+    void leaderDeactivationKeepsClosedGroupMembersAndReportsTheGroupAsClosed() throws Exception {
+        student("leader@example.test", "Leader", "l");
+        student("member@example.test", "Member", "m");
+        student("outsider@example.test", "Outsider", "o");
+        account("admin@example.test", "ADMIN");
+        String l = login("leader@example.test"), m = login("member@example.test"), o = login("outsider@example.test");
+        long leader = count("select id from users where email='leader@example.test'");
+        long group = group(l, 4);
+        expect(approve(group, apply(group, m), l), 200);
+
+        expect(call("POST", "/admin/users/" + leader + "/deactivate", login("admin@example.test"), null), 200);
+
+        assertFalse(database.queryForObject("select active from study_groups where id=?", Boolean.class, group));
+        assertEquals(1, count("select count(*) from group_memberships where study_group_id=? and student_id=?", group, leader));
+        assertEquals(2, count("select count(*) from group_memberships where study_group_id=?", group));
+        JsonNode problem = expect(call("POST", "/groups/" + group + "/join-requests", o, Map.of()), 409);
+        assertEquals("STATE_CONFLICT", problem.path("code").asString());
     }
 
     @Test

@@ -73,8 +73,18 @@ public class AccountAccess {
         return actor;
     }
 
-    /** Lock account rows in increasing order before any group/request row. */
+    /** Lock account rows in increasing order before any group/request row, and require every affected student to be active. */
     public void lockStudents(Long actorId, Long... affectedIds) {
+        lockAccounts(actorId, affectedIds);
+        for (Long id : affectedIds) {
+            if (!id.equals(actorId)) {
+                eligibleStudent(id);
+            }
+        }
+    }
+
+    /** Lock account rows in increasing order and require an active student actor; other accounts are not checked. */
+    public void lockAccounts(Long actorId, Long... affectedIds) {
         mutationLock.shared();
         if (actorId == null || actorId <= 0) {
             throw new AuthenticationRequiredException();
@@ -83,11 +93,6 @@ public class AccountAccess {
                 users.findByIdForUpdate(id).orElseThrow(() -> id.equals(actorId)
                         ? new AuthenticationRequiredException() : new StudentNotFoundException(id)));
         requireStudent(actorId);
-        for (Long id : affectedIds) {
-            if (!id.equals(actorId)) {
-                eligibleStudent(id);
-            }
-        }
     }
 
     public User lockAdmin(Long actorId) {
