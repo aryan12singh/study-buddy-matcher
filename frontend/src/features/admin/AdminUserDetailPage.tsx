@@ -145,6 +145,7 @@ export default function AdminUserDetailPage() {
           user={deactivating}
           available={!resource.loading && user?.id === deactivating.id && user.active}
           onClose={() => setDeactivating(null)}
+          onDeactivated={() => action.announce('Account deactivated.')}
         />
       )}
       {deleting && deleting.id === userId && (

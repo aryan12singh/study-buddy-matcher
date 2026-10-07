@@ -57,6 +57,16 @@ describe('administrator account forms and privacy', () => {
 })
 
 describe('administrator lifecycle actions', () => {
+  it('confirms a successful deactivation after the dialog closes', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path =>
+      path.endsWith('/summary') ? response({ total: 1, active: 1, inactive: 0, students: 1, admins: 0 }) : response([account]))
+    vi.spyOn(api, 'post').mockResolvedValue(response({ ...account, active: false }))
+    renderPage(<AdminUsersPage />, '/admin/users', '/admin/users', adminAccount)
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Deactivate account' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await screen.findByText('Account deactivated.')).toBeInTheDocument()
+  })
   it('keeps list deactivation pending through refresh and checks the refreshed target status', async () => {
     const reload = deferred<never>(), save = deferred<never>()
     let listReads = 0

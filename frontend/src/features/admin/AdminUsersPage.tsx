@@ -175,6 +175,7 @@ export default function AdminUsersPage() {
           user={deactivating}
           available={!users.loading && Boolean(users.data?.some(user => user.id === deactivating.id && user.active))}
           onClose={() => setDeactivating(null)}
+          onDeactivated={() => action.announce('Account deactivated.')}
         />
       )}
     </WindowPage>
