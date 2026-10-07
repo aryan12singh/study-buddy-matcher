@@ -137,11 +137,10 @@ public class AdminUserService {
     }
 
     private void removalAllowed(User user, Long actorId) {
+        // The actor is an active admin and cannot remove themselves, so at least one active
+        // admin always remains; lifecycle locking serializes admins removing each other.
         if (Objects.equals(user.getId(), actorId)) {
             throw new AdminActionNotAllowedException("You cannot deactivate or delete your own account");
-        }
-        if (user.getRole() == Role.ADMIN && user.isActive() && users.countByRoleAndActiveTrue(Role.ADMIN) <= 1) {
-            throw new AdminActionNotAllowedException("The last active administrator cannot be removed");
         }
     }
 

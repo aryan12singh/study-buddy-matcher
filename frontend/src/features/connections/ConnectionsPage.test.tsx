@@ -4,7 +4,6 @@ import { api } from '../../shared/api/client'
 import { deferred, renderPage, response } from '../../test/renderApp'
 import ConnectionsPage from './ConnectionsPage'
 import SendRequestDialog from './SendRequestDialog'
-import { getRelationshipCounts } from './api'
 
 const request = { id: 10, senderId: 2, senderName: 'Jamie', receiverId: 1, receiverName: 'Priya', message: 'Revise together?', status: 'PENDING', createdAt: '2026-10-07T01:00:00Z', respondedAt: null, context: { origin: 'MATCHING', courseId: 3, courseCode: 'IS442', studyGoal: 'EXAM_PREPARATION' } }
 afterEach(() => vi.restoreAllMocks())
@@ -65,9 +64,5 @@ describe('buddy requests and connections', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send match request' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/match-requests', { receiverId: 2, message: 'Revise together?', context: { origin: 'MATCHING', courseId: 3, studyGoal: 'EXAM_PREPARATION' } }))
     expect(close).toHaveBeenCalledTimes(1)
-  })
-  it('supplies real pending-only counts to absent dashboard consumers', async () => {
-    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/connections' ? [{ id: 7 }] : path.endsWith('/incoming') ? [request, { ...request, status: 'DECLINED' }] : [{ ...request, status: 'ACCEPTED' }]))
-    expect(await getRelationshipCounts()).toEqual({ incoming: 1, outgoing: 0, connections: 1 })
   })
 })

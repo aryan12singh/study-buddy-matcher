@@ -1,6 +1,5 @@
 package com.studybuddy.admin;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -18,5 +17,4 @@ public record AdminUserUpdateRequest(
         @Size(max = 255) String programme,
         Integer yearOfStudy,
         @Size(max = 255) String contactNumber) {
-    public static final int MIN_YEAR_OF_STUDY = 1;
 }

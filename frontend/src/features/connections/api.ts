@@ -13,9 +13,3 @@ export async function sendMatchRequest(receiverId: number, message: string, cont
 }
 export async function decideMatchRequest(id: number, decision: 'accept' | 'decline') { return (await api.post<MatchRequest>(`/match-requests/${id}/${decision}`)).data }
 export async function endConnection(id: number) { await api.delete(`/connections/${id}`) }
-
-/** Shared dashboard boundary: active relationships and still-pending requests only. */
-export async function getRelationshipCounts(signal?: AbortSignal) {
-  const [incoming, outgoing, connections] = await Promise.all([getMatchRequests('incoming', signal), getMatchRequests('outgoing', signal), getConnections(signal)])
-  return { incoming: incoming.filter(request => request.status === 'PENDING').length, outgoing: outgoing.filter(request => request.status === 'PENDING').length, connections: connections.length }
-}

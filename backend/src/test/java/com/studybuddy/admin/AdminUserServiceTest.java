@@ -214,19 +214,9 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void lastActiveAdminCannotBeRemoved() {
-        var other = user(4L,"other@example.test",Role.ADMIN);
-        when(users.findById(4L)).thenReturn(Optional.of(other));
-        when(users.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(1L);
-        assertThrows(AdminActionNotAllowedException.class,() -> service.deactivate(4L,ADMIN_ID));
-        assertTrue(other.isActive());
-    }
-
-    @Test
     void adminDeactivationTouchesNoStudentData() {
         var other = user(4L,"other@example.test",Role.ADMIN);
         when(users.findById(4L)).thenReturn(Optional.of(other));
-        when(users.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(2L);
         service.deactivate(4L,ADMIN_ID);
         assertFalse(other.isActive());
         verifyNoInteractions(connections,applications,memberships,deletion);

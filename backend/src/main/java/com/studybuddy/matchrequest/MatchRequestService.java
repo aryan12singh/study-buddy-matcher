@@ -37,10 +37,6 @@ public class MatchRequestService {
         this.access = access;
     }
 
-    public MatchRequestDto send(Long senderId, Long receiverId, String message) {
-        return send(senderId, receiverId, message, MatchRequestContext.profile());
-    }
-
     public MatchRequestDto send(Long senderId, Long receiverId, String message, MatchRequestContext context) {
         InputRules.positiveId(receiverId, "Receiver");
         if (Objects.equals(senderId, receiverId)) {
@@ -60,10 +56,10 @@ public class MatchRequestService {
             Long courseId = context.courseId();
             course = courses.findById(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
         }
-        if (connections.existsActiveBetween(senderId, receiverId)) {
+        if (connections.findActiveBetween(senderId, receiverId).isPresent()) {
             throw new MatchRequestNotAllowedException("You are already connected with this student");
         }
-        if (requests.existsPendingBetween(senderId, receiverId)) {
+        if (requests.findPendingBetween(senderId, receiverId).isPresent()) {
             throw new MatchRequestNotAllowedException("A match request between you and this student is already pending");
         }
         MatchRequest saved = requests.save(new MatchRequest(sender, receiver, normalMessage, context.origin(), course, context.studyGoal()));
@@ -74,7 +70,7 @@ public class MatchRequestService {
 
     public MatchRequestDto accept(Long requestId, Long actorId) {
         MatchRequest request = forDecision(requestId, actorId);
-        if (connections.existsActiveBetween(request.getSender().getId(), actorId)) {
+        if (connections.findActiveBetween(request.getSender().getId(), actorId).isPresent()) {
             throw new MatchRequestNotAllowedException("You are already connected with this student");
         }
         request.accept();

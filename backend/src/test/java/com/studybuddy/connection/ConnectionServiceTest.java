@@ -139,15 +139,6 @@ class ConnectionServiceTest {
         assertThrows(ConnectionNotFoundException.class, () -> service.end(CONNECTION_ID, ALICE_ID));
     }
 
-    // --- areConnected ---
-
-    @Test
-    void areConnectedAsksForAnActiveConnection() {
-        when(connectionRepository.existsActiveBetween(ALICE_ID, BOB_ID)).thenReturn(true);
-
-        assertTrue(service.areConnected(ALICE_ID, BOB_ID));
-    }
-
     @Test
     void dtoDoesNotExposeContactNumbers() {
         boolean hasContactField = Arrays.stream(ConnectionDto.class.getRecordComponents())

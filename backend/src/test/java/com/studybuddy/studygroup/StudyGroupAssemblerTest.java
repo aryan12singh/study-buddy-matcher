@@ -27,7 +27,7 @@ class StudyGroupAssemblerTest {
                 new GroupAvailabilitySlot(group, DayOfWeek.MONDAY, LocalTime.of(18, 0), LocalTime.of(20, 0)),
                 new GroupAvailabilitySlot(group, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(10, 0)));
 
-        StudyGroupDetailDto dto = assembler.toDetail(group, List.of(), slots);
+        StudyGroupDetailDto dto = assembler.toDetail(group, List.of(), slots, null);
 
         assertEquals(List.of(
                         new GroupAvailabilitySlotDto(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(10, 0)),
@@ -42,7 +42,7 @@ class StudyGroupAssemblerTest {
         StudyGroup group = group(5L, course(1L, "IS442"), alice, 4);
 
         StudyGroupDetailDto dto = assembler.toDetail(group,
-                List.of(membership(group, alice), membership(group, student(2L, "Bob"))), List.of());
+                List.of(membership(group, alice), membership(group, student(2L, "Bob"))), List.of(), null);
 
         assertTrue(dto.members().get(0).leader());
         assertFalse(dto.members().get(1).leader());

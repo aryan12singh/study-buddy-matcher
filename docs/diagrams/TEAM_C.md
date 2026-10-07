@@ -22,7 +22,7 @@ flowchart LR
     Admin[Active administrator] --> Accounts[Create / read / edit user accounts]
     Admin --> Lifecycle[Deactivate / reactivate / delete permanently]
     Profile --> Privacy[Contact only for self or active buddy]
-    Lifecycle --> Guard[Protect self and last active administrator]
+    Lifecycle --> Guard[Block removing your own account]
 ```
 
 An incoming request can be answered only by its receiver; a connection can be ended only

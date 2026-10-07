@@ -41,17 +41,4 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
 
     /** Every request the student has sent, in any status. */
     long countBySenderId(Long senderId);
-
-    /**
-     * Whether a PENDING request exists between the two students, sent in
-     * either direction.
-     */
-    @Query("""
-            select count(r) > 0 from MatchRequest r
-            where r.status = com.studybuddy.matchrequest.MatchRequestStatus.PENDING
-              and ((r.sender.id = :studentId and r.receiver.id = :otherStudentId)
-                or (r.sender.id = :otherStudentId and r.receiver.id = :studentId))
-            """)
-    boolean existsPendingBetween(@Param("studentId") Long studentId,
-        @Param("otherStudentId") Long otherStudentId);
 }

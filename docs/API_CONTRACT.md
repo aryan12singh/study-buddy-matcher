@@ -53,7 +53,7 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 401 | `INVALID_CREDENTIALS` | Login email/password does not identify an active account |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
 | 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
-| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self/last-admin removal |
+| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self-removal |
 | 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
 | 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
 | 500 | `INTERNAL_ERROR` | Safe generic failure; no SQL, internal exception, credential or private data is returned |
@@ -369,10 +369,10 @@ all dependent rows; groups led by others remain. Affected remaining users receiv
 Notifications linked to deleted student/request/group records are removed; replacement generic
 notices contain no broken target. The email becomes available again after permanent deletion.
 
-Self-deactivation/deletion and removal of the last active administrator are blocked. Account
-removals/status changes serialize in PostgreSQL, lock administrators in fixed ID order and
-recount active admins after locking. An actor concurrently revoked cannot finish a privileged
-mutation. All cleanup, notifications and identity changes form one transaction.
+Self-deactivation/deletion is blocked. Because the acting admin must be active, at least one
+active administrator always remains. Account removals/status changes serialize in PostgreSQL
+and lock administrators in fixed ID order, then recheck the acting admin. An actor concurrently
+revoked cannot finish a privileged mutation. All cleanup, notifications and identity changes form one transaction.
 
 ## Database transaction protocol
 

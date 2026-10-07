@@ -24,19 +24,6 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     Optional<Connection> findActiveBetween(@Param("first") Long first, @Param("second") Long second);
     List<Connection> findByStudentAIdOrStudentBId(Long studentAId, Long studentBId);
 
-    /**
-     * Whether the two students have an active (not ended) connection,
-     * regardless of which one is stored as student A.
-     */
-    @Query("""
-            select count(c) > 0 from Connection c
-            where c.endedAt is null
-              and ((c.studentA.id = :studentId and c.studentB.id = :otherStudentId)
-                or (c.studentA.id = :otherStudentId and c.studentB.id = :studentId))
-            """)
-    boolean existsActiveBetween(@Param("studentId") Long studentId,
-        @Param("otherStudentId") Long otherStudentId);
-
     /** The student's active connections, on either side, newest first. */
     @Query("""
             select c from Connection c

@@ -36,7 +36,6 @@ public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinReque
         """)
     List<GroupRequestState> findLatestForGroups(@Param("studentId") Long studentId, @Param("groupIds") List<Long> groupIds);
     List<GroupJoinRequest> findByStudentIdOrderByCreatedAtDescIdDesc(Long studentId);
-    List<GroupJoinRequest> findByStudyGroupIdAndStatus(Long studyGroupId, GroupJoinRequestStatus status);
     List<GroupJoinRequest> findByStudentId(Long studentId);
     List<GroupJoinRequest> findByStudyGroupId(Long groupId);
     List<GroupJoinRequest> findByStudentIdAndStatus(Long studentId, GroupJoinRequestStatus status);

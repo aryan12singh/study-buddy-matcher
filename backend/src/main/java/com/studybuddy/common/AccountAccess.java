@@ -110,7 +110,7 @@ public class AccountAccess {
         return users.findById(targetId).orElseThrow(() -> new UserNotFoundException(targetId));
     }
 
-    /** Serializes all status/removal operations and then locks/recounts admins. */
+    /** Serializes all status/removal operations, locks admin rows and rechecks the acting admin. */
     public User lockLifecycle(Long actorId, Long targetId) {
         mutationLock.exclusive();
         users.findAllAdministratorsForUpdate();

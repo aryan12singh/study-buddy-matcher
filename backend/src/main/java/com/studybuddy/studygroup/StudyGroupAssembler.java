@@ -19,10 +19,6 @@ public class StudyGroupAssembler {
     private static final Comparator<GroupAvailabilitySlot> WEEK_ORDER = Comparator.comparing(GroupAvailabilitySlot::getDayOfWeek)
         .thenComparing(GroupAvailabilitySlot::getStartTime);
 
-    public StudyGroupSummaryDto toSummary(StudyGroup group, long memberCount) {
-        return toSummary(group, memberCount, null);
-    }
-
     public StudyGroupSummaryDto toSummary(StudyGroup group, long memberCount, GroupViewerDto viewer) {
         return new StudyGroupSummaryDto(
             group.getId(),
@@ -37,12 +33,6 @@ public class StudyGroupAssembler {
             group.getMaxGroupSize(),
             memberCount,
             group.isActive(), viewer);
-    }
-
-    public StudyGroupDetailDto toDetail(StudyGroup group,
-        List<GroupMembership> memberships,
-        List<GroupAvailabilitySlot> slots) {
-        return toDetail(group, memberships, slots, null);
     }
 
     public StudyGroupDetailDto toDetail(StudyGroup group, List<GroupMembership> memberships, List<GroupAvailabilitySlot> slots, GroupViewerDto viewer) {

@@ -44,11 +44,4 @@ public class ConnectionService {
             access.requireStudent(actorId).getName() + " ended your study-buddy connection", NotificationResourceType.STUDENT,
             actorId, "connection:" + id + ":ended:" + connection.otherStudent(actorId).getId());
     }
-
-    @Transactional(readOnly = true)
-    public boolean areConnected(Long firstId, Long secondId) {
-        access.eligibleStudent(firstId);
-        access.eligibleStudent(secondId);
-        return connections.existsActiveBetween(firstId, secondId);
-    }
 }

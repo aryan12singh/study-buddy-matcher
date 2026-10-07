@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -84,7 +85,7 @@ class MatchRequestServiceTest {
         givenStudentsExist();
         when(matchRequestRepository.save(any(MatchRequest.class))).thenAnswer(call -> call.getArgument(0));
 
-        MatchRequestDto dto = service.send(ALICE_ID, BOB_ID, "  Want to revise for the midterm?  ");
+        MatchRequestDto dto = service.send(ALICE_ID, BOB_ID, "  Want to revise for the midterm?  ", MatchRequestContext.profile());
 
         assertEquals(ALICE_ID, dto.senderId());
         assertEquals("Alice", dto.senderName());
@@ -99,7 +100,7 @@ class MatchRequestServiceTest {
         givenStudentsExist();
         when(matchRequestRepository.save(any(MatchRequest.class))).thenAnswer(call -> call.getArgument(0));
 
-        MatchRequestDto dto = service.send(ALICE_ID, BOB_ID, "   ");
+        MatchRequestDto dto = service.send(ALICE_ID, BOB_ID, "   ", MatchRequestContext.profile());
 
         assertNull(dto.message());
     }
@@ -107,7 +108,7 @@ class MatchRequestServiceTest {
     @Test
     void sendToSelfIsRejected() {
         assertThrows(MatchRequestNotAllowedException.class,
-                () -> service.send(ALICE_ID, ALICE_ID, null));
+                () -> service.send(ALICE_ID, ALICE_ID, null, MatchRequestContext.profile()));
 
         verify(matchRequestRepository, never()).save(any());
     }
@@ -115,10 +116,10 @@ class MatchRequestServiceTest {
     @Test
     void sendToAlreadyConnectedStudentIsRejected() {
         givenStudentsExist();
-        when(connectionRepository.existsActiveBetween(ALICE_ID, BOB_ID)).thenReturn(true);
+        when(connectionRepository.findActiveBetween(ALICE_ID, BOB_ID)).thenReturn(Optional.of(mock(Connection.class)));
 
         assertThrows(MatchRequestNotAllowedException.class,
-                () -> service.send(ALICE_ID, BOB_ID, null));
+                () -> service.send(ALICE_ID, BOB_ID, null, MatchRequestContext.profile()));
 
         verify(matchRequestRepository, never()).save(any());
     }
@@ -126,10 +127,10 @@ class MatchRequestServiceTest {
     @Test
     void sendWhilePendingRequestExistsIsRejected() {
         givenStudentsExist();
-        when(matchRequestRepository.existsPendingBetween(ALICE_ID, BOB_ID)).thenReturn(true);
+        when(matchRequestRepository.findPendingBetween(ALICE_ID, BOB_ID)).thenReturn(Optional.of(mock(MatchRequest.class)));
 
         assertThrows(MatchRequestNotAllowedException.class,
-                () -> service.send(ALICE_ID, BOB_ID, null));
+                () -> service.send(ALICE_ID, BOB_ID, null, MatchRequestContext.profile()));
 
         verify(matchRequestRepository, never()).save(any());
     }
@@ -140,7 +141,7 @@ class MatchRequestServiceTest {
         when(studentRepository.findById(CAROL_ID)).thenReturn(Optional.empty());
 
         assertThrows(StudentNotFoundException.class,
-                () -> service.send(ALICE_ID, CAROL_ID, null));
+                () -> service.send(ALICE_ID, CAROL_ID, null, MatchRequestContext.profile()));
 
         verify(matchRequestRepository, never()).save(any());
     }
@@ -285,7 +286,7 @@ class MatchRequestServiceTest {
         givenStudentsExist();
         when(matchRequestRepository.save(any(MatchRequest.class))).thenAnswer(call -> call.getArgument(0));
 
-        service.send(ALICE_ID, BOB_ID, null);
+        service.send(ALICE_ID, BOB_ID, null, MatchRequestContext.profile());
 
         verify(notificationService).notify(eq(bob), eq(NotificationType.MATCH_REQUEST_RECEIVED), contains("Alice"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
@@ -293,9 +294,9 @@ class MatchRequestServiceTest {
     @Test
     void rejectedSendNotifiesNobody() {
         givenStudentsExist();
-        when(connectionRepository.existsActiveBetween(ALICE_ID, BOB_ID)).thenReturn(true);
+        when(connectionRepository.findActiveBetween(ALICE_ID, BOB_ID)).thenReturn(Optional.of(mock(Connection.class)));
 
-        assertThrows(MatchRequestNotAllowedException.class, () -> service.send(ALICE_ID, BOB_ID, null));
+        assertThrows(MatchRequestNotAllowedException.class, () -> service.send(ALICE_ID, BOB_ID, null, MatchRequestContext.profile()));
 
         verifyNoInteractions(notificationService);
     }
@@ -343,7 +344,7 @@ class MatchRequestServiceTest {
     @Test
     void overlongMessageAndUnknownContextCourseDoNotSaveOrNotify() {
         givenStudentsExist();
-        assertThrows(com.studybuddy.common.error.InvalidInputException.class,() -> service.send(ALICE_ID,BOB_ID,"x".repeat(256)));
+        assertThrows(com.studybuddy.common.error.InvalidInputException.class,() -> service.send(ALICE_ID,BOB_ID,"x".repeat(256), MatchRequestContext.profile()));
         assertThrows(com.studybuddy.course.CourseNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null,new MatchRequestContext(MatchRequestOrigin.MATCHING,999L,null)));
         verify(matchRequestRepository,never()).save(any());
         verifyNoInteractions(notificationService);
@@ -352,7 +353,7 @@ class MatchRequestServiceTest {
     @Test
     void inactiveRecipientFromEligibilityPolicyIsRejected() {
         when(access.eligibleStudent(BOB_ID)).thenThrow(new StudentNotFoundException(BOB_ID));
-        assertThrows(StudentNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null));
+        assertThrows(StudentNotFoundException.class,() -> service.send(ALICE_ID,BOB_ID,null, MatchRequestContext.profile()));
         verify(matchRequestRepository,never()).save(any());
     }
 
