@@ -36,8 +36,9 @@ adoption. The shared hosted migrations are already applied as of 7 October 2026.
    Asia/Singapore; the conversion uses `AT TIME ZONE 'Asia/Singapore'` only while the column
    is still timestamp-without-time-zone. Changing timezone assumptions needs a reviewed
    migration, not a runtime flag.
-5. Apply files in order and verify mappings, constraints and access. `ddl-auto=validate`
-   deliberately refuses an old/mismatched schema. Never re-enable Hibernate update to bypass it.
+5. Apply files in order and verify mappings, constraints and access. The app runs with
+   `ddl-auto: update`, which adds missing tables and columns but never creates constraints,
+   indexes or access rules, so the migrations are still required. Tests use `validate`.
 
 The shared upgrade preflight found the mapped database empty. An ignored private schema
 snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,

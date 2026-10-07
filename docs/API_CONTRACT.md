@@ -388,7 +388,7 @@ edited identity when recording a successful login.
 Partial unique indexes protect unordered pending buddy pairs, unordered active connection
 pairs, pending `(study_group_id,student_id)` applications and `(recipient_id,event_key)` notices.
 Membership `(study_group_id,student_id)` stays unique. Answered/ended history remains legal.
-The backend validates the versioned schema on startup. RLS and browser-role privilege removal
+The migrations create these constraints; Hibernate `update` does not. RLS and browser-role privilege removal
 protect the alternate Supabase access path; operational evidence is recorded separately.
 
 ## Team A integration surface still pending
