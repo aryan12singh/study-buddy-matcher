@@ -39,6 +39,7 @@ class AdminUserServiceTest {
     private static final Long CAROL_ID = 3L;
     @Mock private UserRepository users;
     @Mock private StudentRepository students;
+    @Mock private StudentNameRepository studentNames;
     @Mock private ConnectionRepository connections;
     @Mock private MatchRequestRepository requests;
     @Mock private StudyGroupRepository groups;
@@ -68,12 +69,12 @@ class AdminUserServiceTest {
         var closure = new GroupClosure(applications, memberships, notifications);
         var deactivation = new StudentDeactivation(connections, requests, applications, groups, memberships, closure, notifications);
         var counter = new UserUsageCounter(connections, requests, groups, memberships);
-        service = new AdminUserService(users,students,new AdminUserAssembler(),counter,deactivation,deletion,creation,access);
+        service = new AdminUserService(users,students,studentNames,new AdminUserAssembler(),counter,deactivation,deletion,creation,access);
     }
 
     @Test
     void listFiltersAndNamesStudentsOnly() {
-        when(students.findAll()).thenReturn(List.of(bob));
+        when(studentNames.findAllNames()).thenReturn(List.of(new StudentNameRepository.StudentName(BOB_ID,"Bob")));
         when(users.findAll(any(Sort.class))).thenReturn(List.of(bobUser,admin));
         var all = service.list(AdminUserFilter.none(),ADMIN_ID);
         var filtered = service.list(new AdminUserFilter(Role.STUDENT,null,"BOB"),ADMIN_ID);

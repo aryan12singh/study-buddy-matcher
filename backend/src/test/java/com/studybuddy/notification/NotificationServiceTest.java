@@ -150,7 +150,8 @@ class NotificationServiceTest {
     void filtersDoNotChangeGlobalUnreadCount() {
         var request = notification(30L,NotificationType.MATCH_REQUEST_RECEIVED);
         var group = notification(31L,NotificationType.GROUP_CLOSED);
-        when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(group,request));
+        when(notificationRepository.findByRecipientIdAndTypeInOrderByCreatedAtDesc(BOB_ID,NotificationFilter.GROUPS.types())).thenReturn(List.of(group));
+        when(notificationRepository.findByRecipientIdAndTypeInOrderByCreatedAtDesc(BOB_ID,NotificationFilter.REQUESTS.types())).thenReturn(List.of(request));
         when(notificationRepository.countByRecipientIdAndReadFalse(BOB_ID)).thenReturn(2L);
         assertEquals(List.of(31L),notificationService.list(BOB_ID,NotificationFilter.GROUPS).stream().map(NotificationDto::id).toList());
         assertEquals(List.of(30L),notificationService.list(BOB_ID,NotificationFilter.REQUESTS).stream().map(NotificationDto::id).toList());

@@ -1,6 +1,5 @@
 package com.studybuddy.admin;
 
-import com.studybuddy.student.Student;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
 
@@ -19,10 +18,10 @@ public record AdminUserFilter(Role role, Boolean active, String search) {
     }
 
     /**
-     * @param student the user's student profile, or null for an admin account
+     * @param studentName the student's name, or null for an admin account
      */
-    public boolean matches(User user, Student student) {
-        return matchesRole(user) && matchesActive(user) && matchesSearch(user, student);
+    public boolean matches(User user, String studentName) {
+        return matchesRole(user) && matchesActive(user) && matchesSearch(user, studentName);
     }
 
     private boolean matchesRole(User user) {
@@ -33,12 +32,12 @@ public record AdminUserFilter(Role role, Boolean active, String search) {
         return active == null || active == user.isActive();
     }
 
-    private boolean matchesSearch(User user, Student student) {
+    private boolean matchesSearch(User user, String studentName) {
         if (search == null || search.isBlank()) {
             return true;
         }
         String term = search.strip().toLowerCase(Locale.ROOT);
-        return contains(user.getEmail(), term) || (student != null && contains(student.getName(), term));
+        return contains(user.getEmail(), term) || contains(studentName, term);
     }
 
     private static boolean contains(String text, String term) {

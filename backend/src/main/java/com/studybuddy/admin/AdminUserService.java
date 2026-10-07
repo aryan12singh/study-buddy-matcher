@@ -3,7 +3,6 @@ package com.studybuddy.admin;
 import com.studybuddy.auth.AccountCreation;
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.InputRules;
-import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
@@ -11,7 +10,6 @@ import com.studybuddy.user.UserNotFoundException;
 import com.studybuddy.user.UserRepository;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -22,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminUserService {
     private final UserRepository users;
     private final StudentRepository students;
+    private final StudentNameRepository studentNames;
     private final AdminUserAssembler assembler;
     private final UserUsageCounter usage;
     private final StudentDeactivation deactivation;
@@ -29,10 +28,11 @@ public class AdminUserService {
     private final AccountCreation creation;
     private final AccountAccess access;
 
-    public AdminUserService(UserRepository users, StudentRepository students, AdminUserAssembler assembler, UserUsageCounter usage,
+    public AdminUserService(UserRepository users, StudentRepository students, StudentNameRepository studentNames, AdminUserAssembler assembler, UserUsageCounter usage,
         StudentDeactivation deactivation, StudentDeletion deletion, AccountCreation creation, AccountAccess access) {
         this.users = users;
         this.students = students;
+        this.studentNames = studentNames;
         this.assembler = assembler;
         this.usage = usage;
         this.deactivation = deactivation;
@@ -44,9 +44,10 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public List<AdminUserSummaryDto> list(AdminUserFilter filter, Long actorId) {
         access.requireAdmin(actorId);
-        var profiles = students.findAll().stream().collect(Collectors.toMap(Student::getId, Function.identity()));
+        var names = studentNames.findAllNames().stream()
+            .collect(Collectors.toMap(StudentNameRepository.StudentName::id, StudentNameRepository.StudentName::name));
         return users.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
-            .filter(user -> filter.matches(user, profiles.get(user.getId()))).map(user -> assembler.toSummary(user, profiles.get(user.getId()))).toList();
+            .filter(user -> filter.matches(user, names.get(user.getId()))).map(user -> assembler.toSummary(user, names.get(user.getId()))).toList();
     }
 
     @Transactional(readOnly = true)

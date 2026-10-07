@@ -32,8 +32,9 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public List<NotificationDto> list(Long actorId, NotificationFilter filter) {
         access.requireStudent(actorId);
-        return assembler.toDtos(notifications.findByRecipientIdOrderByCreatedAtDesc(actorId).stream()
-            .filter(filter::matches).toList());
+        return assembler.toDtos(filter == NotificationFilter.ALL
+            ? notifications.findByRecipientIdOrderByCreatedAtDesc(actorId)
+            : notifications.findByRecipientIdAndTypeInOrderByCreatedAtDesc(actorId, filter.types()));
     }
 
     @Transactional(readOnly = true)

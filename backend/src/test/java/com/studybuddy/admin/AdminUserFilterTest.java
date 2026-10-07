@@ -1,6 +1,5 @@
 package com.studybuddy.admin;
 
-import com.studybuddy.student.Student;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
 import org.junit.jupiter.api.Test;
@@ -11,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AdminUserFilterTest {
 
     private final User aliceUser = new User("alice@smu.edu.sg", "hash", Role.STUDENT);
-    private final Student alice = new Student(aliceUser, "Alice Tan", "SCIS", "Information Systems", 3, "+65 9000 0001");
+    private final String alice = "Alice Tan";
     private final User admin = new User("admin@smu.edu.sg", "hash", Role.ADMIN);
 
     @Test
