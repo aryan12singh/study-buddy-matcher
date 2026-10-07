@@ -93,9 +93,13 @@ The one final Astra sweep produced three P2 findings, all corrected and tested: 
 login lookup (`LoginConcurrencyTest`, actual row-lock red/green regression), request-dialog
 draft retention through focus/polling while purging private data (four rendered cases), and
 recipient request direction for withdrawal/answered notification links (`NotificationDirectionTest`,
-three HTTP cases plus unit/rendered cases and a live link journey). Final results are
-223 backend tests and 65 frontend tests, with passing lint/build and migration checks.
+three HTTP cases plus unit/rendered cases and a live link journey). The approved follow-up
+also fixes late-save navigation/admin refresh state and batches list reads, with regression
+evidence in TEAM_C_TESTING.md. Current results are **228 backend tests and 77 frontend tests**,
+with passing lint/build and migration checks.
 
-Remaining external work: publish PR when authorized, another team's human review/hosted CI/
-merge, A/B product integration, shared original-asset provenance, team slides/rehearsal and
+Published as [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48); initial hosted
+CI passed, and the PR checks show each pushed revision. Remaining external work: another team's
+human review, both owners' walkthrough, latest-commit CI verification and merge, A/B product
+integration, shared original-asset provenance, team slides/rehearsal and
 later extras. These do not imply that matching, the full dashboard or extras were built in C.

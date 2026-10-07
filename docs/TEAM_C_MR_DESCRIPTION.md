@@ -1,8 +1,10 @@
-# Prepared pull request into main
+# Team C pull request into main
 
-This is a review-ready description; no PR has been published or merged by preparing it.
+Published as [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48).
+This is the concise repository summary; the published PR contains the detailed review map.
+Human review and squash merge remain outstanding.
 
-**Title:** `feat: complete team c connections, groups and account administration`
+**Title:** `feat: complete team c requests, groups, notifications and admin`
 
 ## Description
 
@@ -48,11 +50,11 @@ access-policy notices and recovery.
 
 ### Validation
 
-- 223 backend tests passed on fresh PostgreSQL 17.11, including 31 real HTTP/database tests,
+- 228 backend tests passed on fresh PostgreSQL 17.11, including 34 real HTTP/database tests,
   separate-transaction races, literal contact absence, role/token checks and rollback.
 - Legacy schema upgrade, duplicate-email preflight rollback, UTC/weekly-slot preservation
   and repeated migrations passed in a separate disposable database.
-- 65 frontend tests across 9 suites passed on Node 22; lint has zero warnings/errors,
+- 77 frontend tests across 11 suites passed on Node 22; lint has zero warnings/errors,
   TypeScript/production build passed and npm audit reported zero vulnerabilities.
 - Three browser sessions exercised real student request/accept/disconnect, group create/
   edit/apply/approve/reject/remove/close, agenda, notification read/filter and admin flows.
@@ -65,9 +67,18 @@ access-policy notices and recovery.
   regressions: concurrent login/email edit, refresh-retained request drafts, and recipient
   direction on withdrawal notification links. Disposition is in TEAM_C_TESTING.md.
 
-Hosted CI is pending publication; these are local results. Another team's human review and
+The initial [hosted CI run](https://github.com/aryan12singh/study-buddy-matcher/actions/runs/37547938687)
+passed both jobs at `d0270cf`; [PR checks](https://github.com/aryan12singh/study-buddy-matcher/pull/48/checks)
+show the latest pushed commit. Another team's human review and
 both C authors' code walkthrough remain required before merge. Controllers use services,
 API services return assembled DTOs, and empty/invalid/unauthorized/error states are covered.
+
+The approved follow-up fixes late-save navigation and refresh-discarded admin action state,
+including permanent-delete confirmation/current-email checks. A shared `useViewNavigation`
+guard is the only added frontend foundation. Group summaries and notification links use batch
+queries without changing API responses: browse/own lists use 7 queries across the measured
+small/large fixtures, and notifications use 5. Regression details and original failure counts
+are in TEAM_C_TESTING.md. No dependency, migration or A/B matching/profile feature was added.
 
 ### Review references
 

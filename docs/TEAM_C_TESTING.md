@@ -1,8 +1,12 @@
 # Team C verification record
 
 Verified on **7 October 2026, SGT**, on `feat/team-c/match-request-state-machine`.
-This records actual checks of the implementation tree. Hosted CI, another team's human
-review and merge are separate release gates; no hosted green run is claimed here.
+This records actual checks of the implementation tree, including the approved follow-up fixes.
+[PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48) is published. Its initial
+[hosted run](https://github.com/aryan12singh/study-buddy-matcher/actions/runs/37547938687) passed
+223 backend and 65 frontend tests at `d0270cf`. The current results below include subsequent
+regressions; see [PR checks](https://github.com/aryan12singh/study-buddy-matcher/pull/48/checks)
+for the latest hosted commit. Human cross-team review and merge remain separate gates.
 
 ## Reproduce automated checks
 
@@ -40,16 +44,22 @@ contains `application-local.yml`. Process environment supplies deployed credenti
 
 | Check | Environment | Result |
 | --- | --- | --- |
-| Backend unit/context/HTTP/database suite | Java 21, PostgreSQL 17.11, fresh schema | **223 passed across 26 suites; 0 failures, errors or skips** |
-| Real HTTP/database integration subset | Random-port Spring server, real JWT/JPA/PostgreSQL | **31 passed** across the four original suites plus LoginConcurrencyTest and NotificationDirectionTest; included above (191 unit + 1 context + 31 integration) |
+| Backend unit/context/HTTP/database suite | Java 21, PostgreSQL 17.11, fresh schema | **228 passed across 27 suites; 0 failures, errors or skips** |
+| Real HTTP/database integration subset | Random-port Spring server, real JWT/JPA/PostgreSQL | **34 passed**, including LoginConcurrencyTest, NotificationDirectionTest and ListQueryTest; included above (193 unit + 1 context + 34 integration) |
 | Legacy upgrade / rollback / repeat | Separate empty migration fixture database | Passed: invalid duplicate identity rejected without partial changes; all ten legacy event columns converted once; weekly slots preserved; repeat is stable |
-| Frontend rendered interactions | Node 22 official container, locked packages, jsdom | **65 passed across 9 suites** |
+| Frontend rendered interactions | Node 22.23.3 official container, fresh locked install, jsdom | **77 passed across 11 suites**; local Node 26 also passed |
 | Frontend lint/build | Same Node 22 run | 0 warnings/errors; TypeScript and production build passed |
 | npm audit | Patched existing transitive lock entry | **0 vulnerabilities** at verification time |
 | Backend distribution | Existing Maven JAR/Boot plugins | Packaging passed; private local YAML absent from both JARs |
 | Shared Supabase startup/authenticated reads | PostgreSQL 17.6, backend JDBC | Schema validation/startup passed; auth/me, courses and student activity read returned 200 |
 | Shared seed repeat | Two backend startups, private runtime passwords | 51 accounts / 50 students / 10 courses; identity/password-hash/creation checksum unchanged |
 | Shared database access boundary | Operator metadata plus isolated role execution | 16 RLS tables, 0 browser/PUBLIC application-table grants; actual anon/authenticated reads and writes denied in isolated PostgreSQL |
+
+The backend/frontend suites, migration tests, lint and build were rerun after the follow-up.
+The application changes are committed as `3e2e71d` (backend batching) and `cded795`
+(frontend completion/refresh fixes). Subsequent delivery-document changes do not alter them.
+The unchanged packaging, browser, restart and shared-environment rows record the earlier
+end-to-end implementation checks; the follow-up did not repeat those manual/cloud operations.
 
 CI uses the same SQL and test profile on a PostgreSQL 17 service, and Node 22 for frontend
 test/lint/build. Every PR into `main`, including workflow-only changes, runs both jobs.
@@ -83,6 +93,15 @@ normalized-email, recipient-event and domain constraints directly in PostgreSQL.
 Race tests use independent HTTP transactions with a synchronization barrier, then assert
 persisted row/state/event counts. Rollback tests deliberately fail notification insertion
 and assert the domain mutation did not persist.
+
+`ListQueryTest` compares real prepared-statement counts for small and larger lists, including
+JWT/account authorization. Group browse stays at **7 queries for 2 and 26 groups**; own groups
+stay at **7 for 1 and 13 groups**. Request-notification lists stay at **5 for 1 and 25 distinct
+requests**. Before batching, browse required **14 / 110** and notifications **5 / 29**, and
+both growth regressions failed. Fixtures use multiple goals to detect duplicate group rows.
+Additional HTTP assertions preserve latest application state with equal-timestamp ID ordering,
+member counts, leader/member flags, closed led-group history and contact absence.
+These are statement-count regressions, not a latency/load benchmark or new pagination contract.
 
 Existing domain/service/assembler tests remain, alongside input, token and authentication
 tests. Frontend suites cover auth/guards/logout, private profile states, request actions,
@@ -180,5 +199,21 @@ the regression checks and final disposition below.
 | Background resource purge unmounts request dialogs and discards drafts | Keep dialog/draft alive using minimal public identity metadata, while purging private profile data | **Fixed**; four focus/timer regressions and real profile/group polling checks passed |
 | Sender-deactivation notice links to the recipient's wrong request tab | Return safe recipient request direction and use it for notification navigation | **Fixed**; three HTTP cases, unit direction cases, two rendered link cases and live link journey passed |
 
-No additional review-agent sweep is planned. Human cross-team review, hosted CI and merge
-remain external release gates.
+No additional review-agent sweep is planned. Publication and initial hosted CI are complete;
+human cross-team review, checking the latest PR CI and merge remain release responsibilities.
+
+## Approved post-publication follow-up
+
+The subsequent branch audit reproduced two further frontend P2 issues and stale delivery
+status text. Aryan approved their correction and the proposed list-query batching.
+
+| Finding | Correction and regression evidence |
+| --- | --- |
+| A successful save redirects after leaving the group/account form | Shared route-scoped navigation guard; create/edit cancellation, same-component route replacement, unchanged history entry and permanent-delete browser-back cases pass. Global resource refresh still happens after a completed write |
+| Admin deactivation refresh loses its pending/error state | Keep minimal public target metadata and the mounted dialog; focus/timer failures, list/detail entry points and refreshed inactive targets are covered |
+| Permanent-delete confirmation disappears during refresh | Retain dialog/draft/pending/error; require current account identity before confirmation, including a changed-email regression |
+| Per-item list lookups cause query growth | Batch member counts, membership/latest-request projections and notification request participants; real PostgreSQL failure/passing query-growth tests plus repeated/missing/unrelated-resource cases pass |
+| Handoff describes unpublished PR and pending hosted CI | Link published PR and verified initial CI, publish current counts and keep human review/merge clearly outstanding |
+
+The follow-up adds **5 backend tests** and **12 frontend tests** to the initial 223/65 suites.
+It changes no endpoint/DTO, dependency, migration, credential configuration or matching logic.

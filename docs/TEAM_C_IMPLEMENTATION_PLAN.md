@@ -4,13 +4,16 @@ Status: **approved by Aryan on 7 October 2026; implementation and final-review f
 
 This records the approved implementation scope. Actual completion evidence is in
 [TEAM_C_TESTING.md](TEAM_C_TESTING.md) and [TEAM_C_REQUIREMENT_COVERAGE.md](TEAM_C_REQUIREMENT_COVERAGE.md):
-223 backend tests, 65 frontend tests, passing lint/build/package/migration checks, real
-browser and restart journeys, shared schema/seed verification, and all three Astra findings
-fixed. Cross-team human review, hosted CI and merge remain the release gate.
+228 backend tests and 77 frontend tests after the approved follow-up, with rerun lint/build
+and migration checks. Earlier implementation evidence also covers packaging, real browser
+and restart journeys, shared schema/seed verification, and all three Astra findings
+fixed. [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48) is published and
+initial hosted CI passed. Human cross-team review, both owners' walkthrough, latest PR CI
+verification and merge remain release responsibilities.
 Approval authorises the described application changes, the bounded shared foundations,
 the proposed account policy and screen layouts, and the tested database upgrades described
-below. Aryan subsequently authorised clean commits to the feature branch. Publishing a PR
-or merging changes remains a separate release action; a review-ready description is included.
+below. Aryan subsequently authorised clean commits, PR publication and the additional audit
+fixes/list-query batching. Merge remains a separate release action.
 
 ## 1. Objective and scope
 

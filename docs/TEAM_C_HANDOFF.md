@@ -6,8 +6,11 @@ administration. [Coverage](TEAM_C_REQUIREMENT_COVERAGE.md), [verification](TEAM_
 [API contract](API_CONTRACT.md), [decisions](DESIGN_DECISIONS.md) and
 [diagrams](diagrams/TEAM_C.md) describe the finished interfaces and evidence.
 
-This branch still needs authorized publication, hosted CI and another team's human review
-before squash merge. An automated review does not establish that Aryan and Charlize can
+Published as [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48).
+The initial [hosted CI run](https://github.com/aryan12singh/study-buddy-matcher/actions/runs/37547938687)
+passed both jobs at `d0270cf`; check the [PR checks](https://github.com/aryan12singh/study-buddy-matcher/pull/48/checks)
+for the latest pushed commit. Another team's human review and squash merge remain required.
+An automated review does not establish that Aryan and Charlize can
 explain every line; the walkthrough below is their preparation checklist.
 
 ## Integrating Team A and B
@@ -53,6 +56,19 @@ and every 30 seconds by default (15–300 seconds configurable); hidden tabs do 
 Edit/create forms do not refresh over unsaved edits. Another user's mutation becomes visible
 on reload/focus or the next refresh, rather than via an invented WebSocket/live-presence API.
 The backend remains authoritative for permission and eligibility after waiting for locks.
+
+Group/account saves and permanent-delete completion use `useViewNavigation`: a late response
+still refreshes mounted resources but cannot redirect after leaving or replacing its originating
+route. Cancel leaves the form; it does not undo a write already submitted to the backend.
+Admin lifecycle dialogs retain only ID/name/email/role as their target across refreshes.
+Pending state, failure feedback and typed deletion confirmation survive focus/polling;
+confirmation waits for current account data, and changed email requires reopening deletion.
+
+Group browse/own-group summaries fetch course/leader/goals together and batch member counts,
+viewer membership and latest application state. Notification lists batch distinct referenced
+request participants. The API DTOs, ordering, filters, privacy and transaction/lock protocol
+are unchanged; no new migration or dependency is needed. `ListQueryTest` checks actual query
+growth through authenticated HTTP rather than assuming that mocked repository calls are fast.
 
 ## Shared files and integration exceptions to review
 
@@ -117,11 +133,16 @@ Suggested C segment within the team's presentation:
 - Trace StudentDeactivation versus StudentDeletion, survivor events and removed resource links.
 - Explain UTC event instants versus recurring Singapore weekly slots and the legacy upgrade.
 - Run the isolated suite, inspect a privacy/race/rollback assertion and reproduce the browser flow.
+- Explain how route-scoped completion avoids late redirects and why cancelling a form cannot
+  roll back a submitted HTTP write; demonstrate the refresh-retained admin confirmation.
+- Trace list batching and latest-application timestamp/ID ordering, then read ListQueryTest's
+  query-count assertions and unchanged DTO/privacy checks.
 
 ## What remains outside C development
 
-Publish the prepared PR when authorized, obtain another team's human review, run hosted CI
-and squash merge before closing issues. Integrate A's matching/admin-config UI and B's full
+Obtain another team's human review, complete both owners' walkthrough, verify both CI jobs
+on the latest PR commit, and squash merge before closing issues. Publication and initial hosted
+CI are complete. Integrate A's matching/admin-config UI and B's full
 profile/preferences/availability/dashboard product features through the boundaries above.
 Resolve the original shared landing/favicon/icon provenance, team-wide slides and rehearsal,
 and individual peer evaluation before submission. Existing landing footer Privacy/Contact

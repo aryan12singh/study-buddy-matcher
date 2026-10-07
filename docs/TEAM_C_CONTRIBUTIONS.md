@@ -27,16 +27,20 @@ the submitted code; assisted implementation is not evidence of viva readiness.
 | Frontend implementation | GPT-6.1 Sol, max reasoning: C screens, shared client/guards/primitives and interaction tests | React source and rendered tests; owners review UX and contracts |
 | Integration/operations/documentation | Assistant orchestration: PostgreSQL migrations/races/serialization tests, browser checks, CI and current docs/diagrams | Reproducible scripts and verification record; no fabricated hosted CI/human review |
 | Final independent sweep | GPT-6 Astra, medium reasoning, one read-only sweep after implementation | Three P2 findings fixed with Sol assistance and regression checks; disposition in TEAM_C_TESTING.md |
+| Approved follow-up after publication | Further source review, rendered regression reproduction and database statement-count verification; implementation/tests/docs corrections | Late navigation and admin refresh fixes, batched list reads, current verification and published PR status; no second independent-agent sweep |
 
 AI was used to propose and implement code/tests/docs, inspect errors and run checks. The
 record describes categories of use; it does not reproduce supplied credentials or raw
 private prompts. Credentials remain ignored and excluded from packaged distribution.
 The formal brief's assistance-record requirement is documented here separately from
-Git messages. Commits and the proposed PR carry no attribution footer or assistant trailer.
+Git messages. Commits and the published PR carry no attribution footer or assistant trailer.
 
 ## Before submission
 
 Each owner should walk through the code paths listed in [TEAM_C_HANDOFF.md](TEAM_C_HANDOFF.md),
 run the tests/demo, note any real changes or human review and record their actual personal
-contribution. Add concrete dates/review evidence when it exists. Cross-team approval,
-hosted CI, slides/rehearsal and peer evaluation remain team/person delivery responsibilities.
+contribution. Add concrete dates/review evidence when it exists. Publication is complete as
+[PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48), and its initial
+[hosted CI](https://github.com/aryan12singh/study-buddy-matcher/actions/runs/37547938687) passed.
+Verify the latest PR checks before merging. Cross-team approval, both owners' walkthrough,
+slides/rehearsal and peer evaluation remain team/person delivery responsibilities.
