@@ -8,8 +8,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Decides what "basic usage information" means on the admin screen. Team
- * decision: counts of active connections, match requests sent (any status),
- * groups led (open or closed) and groups joined but not led. Last login is provided by the account DTO. Change the definition here and nowhere else.
+ * decision: last successful sign-in (on the account DTO), active connections,
+ * and accepted memberships in open groups, including groups the student leads.
+ * Requests sent, groups led and groups joined are extra history counts that the
+ * screen labels separately. Change the definition here and nowhere else.
  */
 @Component
 public class UserUsageCounter {
