@@ -1,0 +1,15 @@
+# Dedicated configuration for isolated PostgreSQL tests. Never loads local secrets.
+spring:
+  datasource:
+    url: ${STUDYBUDDY_TEST_DATABASE_URL:jdbc:postgresql://127.0.0.1:55432/studybuddy_test}
+    username: ${STUDYBUDDY_TEST_DATABASE_USERNAME:studybuddy_test}
+    password: ${STUDYBUDDY_TEST_DATABASE_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+jwt:
+  secret: ${STUDYBUDDY_TEST_JWT_SECRET}
+app:
+  demo-seed:
+    enabled: false
