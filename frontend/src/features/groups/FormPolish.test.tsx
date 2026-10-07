@@ -33,8 +33,10 @@ describe('form protection and destination feedback', () => {
   it('restores scrolling when browser Back discards a form with its schedule-copy dialog open', async () => {
     reads()
     const { router } = renderApplication('/groups/5/edit', studentAccount, ['/groups/5', '/groups/5/edit'])
-    fireEvent.click(await screen.findByRole('button', { name: 'Add time block' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Copy time block 1 to other days' }))
+    // Wait for the saved group to fill the form, or loading it would replace the added block
+    expect(await screen.findByDisplayValue('OOP crew')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add time block' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Copy time block 1 to other days' }))
     expect(document.body.style.overflow).toBe('hidden')
     await act(async () => { await router.navigate(-1) })
     fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }))
