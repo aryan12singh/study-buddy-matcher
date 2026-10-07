@@ -155,8 +155,9 @@ any active connection between the pair are 409. Inactive/missing recipients are 
 }
 ```
 
-Nullable course/context values remain explicit nulls. Request status is `PENDING`, `ACCEPTED`
-or `DECLINED`. Decisions are one-way. Acceptance creates exactly one symmetric active
+Nullable course/context values remain explicit nulls. Request status is `PENDING`, `ACCEPTED`,
+`DECLINED` or `CANCELLED`. `CANCELLED` means nobody answered because one of the two accounts was
+deactivated or deleted. Decisions are one-way. Acceptance creates exactly one symmetric active
 connection. Repeated decisions produce a conflict and no duplicate event. Answered history
 and ended connections remain available to admin counts and request history; ended connections
 are not returned by the connection list.
@@ -277,7 +278,7 @@ notification metadata does not confer permissions.
 
 `requestDirection` is `INCOMING`, `OUTGOING` or null. For a `MATCH_REQUEST` resource it follows
 the stored participants and notification recipient: the receiver's event links to Incoming,
-the sender's event links to Outgoing. A declined withdrawal after sender deactivation therefore
+the sender's event links to Outgoing. A cancellation after sender deactivation therefore
 remains `INCOMING` for the receiver. Ordinary acceptance/decline events to the sender are
 `OUTGOING`. Event type and message text do not determine direction. Other resource types,
 generic notices and missing or unrelated request targets have null direction.
@@ -291,12 +292,13 @@ and descriptions at their valid limits cannot cause a notification-column overfl
 | --- | --- | --- |
 | Buddy send | Receiver, one | `MATCH_REQUEST_RECEIVED` |
 | Accept / decline | Sender, one | `MATCH_REQUEST_ACCEPTED` / `MATCH_REQUEST_DECLINED` |
+| Request cancelled by deactivation or deletion | Other participant, one | `MATCH_REQUEST_CANCELLED` |
 | Disconnect | Other participant, one | `CONNECTION_ENDED` |
 | Group application | Leader, one | `GROUP_JOIN_REQUEST_RECEIVED` |
 | Group accept / reject | Applicant, one | `GROUP_JOIN_REQUEST_ACCEPTED` / `GROUP_JOIN_REQUEST_REJECTED` |
 | Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
 | Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
-| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/declined/rejected/removed events |
+| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/removed events; the ended-connection notice has no profile link |
 | Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |
 
 Failed/conflicting domain actions create no notification. Locked transitions and the partial
@@ -356,9 +358,9 @@ groups the student does not lead, including closed; acceptedGroups = current mem
 open groups including leadership. Counts are real; absent relations produce zero.
 
 Deactivation retains account/profile/history, revokes access, ends active connections,
-declines pending buddy requests both ways, closes led groups and rejects their pending
-applicants, rejects the student's pending applications and removes their memberships. Closed
-groups/history remain. Reactivation restores access through fresh login only; it restores no
+cancels pending buddy requests both ways, closes led groups and rejects their pending
+applicants, rejects the student's pending applications and removes their memberships in open
+groups they do not lead. Closed groups keep their members, including the leader, as history. Reactivation restores access through fresh login only; it restores no
 ended relation or membership. Repeated status operations are 409.
 
 Permanent deletion removes the account/student, their buddy requests/connections, memberships,

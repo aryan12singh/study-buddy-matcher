@@ -108,7 +108,9 @@ class AccountHttpTest extends PostgresHttpTest {
         assertEquals(0, count("select count(*) from connections where ended_at is null"));
         assertEquals(0, count("select count(*) from match_requests where status='PENDING'"));
         assertEquals(0, count("select count(*) from group_join_requests where status='PENDING'"));
-        assertEquals(0, count("select count(*) from group_memberships where student_id=?", target));
+        // Leaves the open group but stays the leader-member of the group it led, which is now closed history.
+        assertEquals(0, count("select count(*) from group_memberships where study_group_id=? and student_id=?", other, target));
+        assertEquals(1, count("select count(*) from group_memberships where study_group_id=? and student_id=?", led, target));
         assertFalse(database.queryForObject("select active from study_groups where id=?", Boolean.class, led));
         assertTrue(database.queryForObject("select active from study_groups where id=?", Boolean.class, other));
         expect(call("GET", "/connections", t, null), 401);

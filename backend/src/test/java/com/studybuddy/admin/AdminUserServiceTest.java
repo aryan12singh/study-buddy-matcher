@@ -11,6 +11,7 @@ import com.studybuddy.matchrequest.MatchRequest;
 import com.studybuddy.matchrequest.MatchRequestRepository;
 import com.studybuddy.matchrequest.MatchRequestStatus;
 import com.studybuddy.notification.NotificationService;
+import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.studygroup.*;
@@ -176,19 +177,30 @@ class AdminUserServiceTest {
         ReflectionTestUtils.setField(request,"id",9L);
         var group = new StudyGroup("Study group",null,new Course("IS442","OOP"),bob,4);
         ReflectionTestUtils.setField(group,"id",5L);
-        var member = new GroupMembership(group,bob);
+        var ledMembership = new GroupMembership(group,bob);
+        var openGroup = new StudyGroup("Open group",null,new Course("IS442","OOP"),carol,4);
+        ReflectionTestUtils.setField(openGroup,"id",6L);
+        var openMembership = new GroupMembership(openGroup,bob);
+        var closedGroup = new StudyGroup("Closed group",null,new Course("IS442","OOP"),carol,4);
+        closedGroup.close();
+        var closedMembership = new GroupMembership(closedGroup,bob);
         when(connections.findActiveByStudentId(BOB_ID)).thenReturn(List.of(connection));
         when(requests.findByReceiverIdAndStatus(BOB_ID,MatchRequestStatus.PENDING)).thenReturn(List.of(request));
         when(groups.findByLeaderIdAndActiveTrue(BOB_ID)).thenReturn(List.of(group));
         when(groups.findByIdForUpdate(5L)).thenReturn(Optional.of(group));
-        when(memberships.findByStudentId(BOB_ID)).thenReturn(List.of(member));
+        when(memberships.findByStudentId(BOB_ID)).thenReturn(List.of(ledMembership,openMembership,closedMembership));
         var detail = service.deactivate(BOB_ID,ADMIN_ID);
         assertFalse(detail.account().active());
         assertEquals(1,bobUser.getTokenVersion());
         assertFalse(connection.isActive());
-        assertEquals(MatchRequestStatus.DECLINED,request.getStatus());
+        // Nobody answered the request, so it is cancelled rather than declined.
+        assertEquals(MatchRequestStatus.CANCELLED,request.getStatus());
+        verify(notifications).notify(eq(carol),eq(NotificationType.MATCH_REQUEST_CANCELLED),anyString(),any(),eq(9L),anyString());
+        // The ended-connection notice has no link to the now-inactive profile.
+        verify(notifications).notify(eq(carol),eq(NotificationType.CONNECTION_ENDED),anyString(),isNull(),isNull(),anyString());
         assertFalse(group.isActive());
-        verify(memberships).deleteAll(List.of(member));
+        // Only the open group is left; the leader stays in the group they led, and closed groups keep history.
+        verify(memberships).deleteAll(List.of(openMembership));
         verify(access).lockLifecycle(ADMIN_ID,BOB_ID);
     }
 

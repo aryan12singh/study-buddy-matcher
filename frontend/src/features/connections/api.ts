@@ -3,7 +3,7 @@ import type { StudyGoal } from '../../shared/api/types'
 
 export type RequestContext = { origin: 'PROFILE' | 'MATCHING'; courseId?: number | null; courseCode?: string | null; courseName?: string | null; studyGoal?: StudyGoal | null }
 export type MatchRequest = { id: number; senderId: number; senderName: string; receiverId: number; receiverName: string; message: string | null;
-  status: 'PENDING' | 'ACCEPTED' | 'DECLINED'; createdAt: string; respondedAt: string | null; context: RequestContext }
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED'; createdAt: string; respondedAt: string | null; context: RequestContext }
 export type Connection = { id: number; otherStudentId: number; otherStudentName: string; createdAt: string }
 
 export async function getMatchRequests(direction: 'incoming' | 'outgoing', signal?: AbortSignal) { return (await api.get<MatchRequest[]>(`/match-requests/${direction}`, { signal })).data }

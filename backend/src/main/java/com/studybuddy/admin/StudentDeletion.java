@@ -57,7 +57,7 @@ public class StudentDeletion {
             notificationRows.deleteAll(notificationRows.findByResourceTypeAndResourceId(NotificationResourceType.MATCH_REQUEST, request.getId()));
             if (request.isPending()) {
                 var other = request.getSender().getId().equals(id) ? request.getReceiver() : request.getSender();
-                notifications.notify(other, NotificationType.MATCH_REQUEST_DECLINED, "A study-buddy request was closed because the other account was deleted",
+                notifications.notify(other, NotificationType.MATCH_REQUEST_CANCELLED, "A study-buddy request was cancelled because the other account was deleted",
                     null, null, "account-delete:" + id + ":request:" + request.getId() + ":" + other.getId());
             }
         }

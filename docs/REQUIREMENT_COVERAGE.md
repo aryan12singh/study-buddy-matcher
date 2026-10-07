@@ -62,7 +62,7 @@ API paths are listed in [API_CONTRACT.md](API_CONTRACT.md).
 | Create and edit students and admins | `AdminUserService`, `AccountCreation` | `admin/AdminUserFormPage` | `AccountHttpTest`, `AccountCreationTest` |
 | Contact number is write-only for admins | `AdminUserAssembler` | Optional replacement field | `AccountHttpTest` |
 | Basic usage: last sign-in, active connections, open group memberships | `UserUsageCounter` | `admin/AdminUserDetailPage` | `AccountHttpTest`, `AdminUserServiceTest` |
-| Deactivate and reactivate an account | `StudentDeactivation` | `admin/DeactivateUserDialog` | `AccountHttpTest` |
+| Deactivate and reactivate an account; pending requests become `CANCELLED` | `StudentDeactivation` | `admin/DeactivateUserDialog` | `AccountHttpTest`, `GroupHttpTest`, `NotificationDirectionTest` |
 | Permanently delete an account and its dependent records | `StudentDeletion`, `GroupClosure` | Delete confirmation on `admin/AdminUserDetailPage` | `AccountHttpTest` |
-| Admins cannot remove themselves or the last admin | `AdminUserService` | Self controls disabled | `AccountHttpTest`, `AdminUserServiceTest` |
+| Admins cannot remove themselves, so an active admin always remains | `AdminUserService` | Self controls disabled | `AccountHttpTest`, `AdminUserServiceTest` |
 | Deactivated or deleted accounts lose API access | `JwtTokenService`, account version check | Sign-out on 401 | `AccountHttpTest`, `JwtTokenServiceTest` |

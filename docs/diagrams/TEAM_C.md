@@ -59,6 +59,7 @@ classDiagram
         Instant respondedAt
         accept()
         decline()
+        cancel()
     }
     class Connection {
         Instant endedAt
@@ -324,11 +325,11 @@ sequenceDiagram
     API->>Service: lifecycle(targetId, principal.id)
     Service->>Access: exclusive lifecycle guard
     Access->>DB: lock administrators and target; recheck actor/version
-    Service->>Service: protect self / last usable administrator
+    Service->>Service: block removing own account
     alt deactivate
         Service->>Cleanup: StudentDeactivation.apply()
-        Cleanup->>DB: end connections; decline pending buddy requests
-        Cleanup->>DB: close led groups; reject pending applications; remove memberships
+        Cleanup->>DB: end connections; cancel pending buddy requests
+        Cleanup->>DB: close led groups; reject pending applications; leave open groups
         Service->>DB: inactive + increment token version
     else delete permanently
         Service->>Cleanup: StudentDeletion.apply()

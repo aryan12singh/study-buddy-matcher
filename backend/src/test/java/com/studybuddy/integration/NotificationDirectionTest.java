@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 class NotificationDirectionTest extends PostgresHttpTest {
 
     @Test
-    void senderDeactivationLeavesAnIncomingWithdrawalAndDeclinedHistoryForTheReceiver() {
+    void senderDeactivationLeavesAnIncomingCancelledRequestForTheReceiver() {
         long sender = student("sender@example.test", "Sender", "Sender contact");
         long receiver = student("receiver@example.test", "Receiver", "Receiver contact");
         account("admin@example.test", "ADMIN");
@@ -22,7 +22,7 @@ class NotificationDirectionTest extends PostgresHttpTest {
         expect(call("POST", "/admin/users/" + sender + "/deactivate", adminToken, null), 200);
 
         JsonNode events = expect(call("GET", "/notifications?filter=REQUESTS", receiverToken, null), 200);
-        JsonNode withdrawal = requestEvent(events, request, "MATCH_REQUEST_DECLINED");
+        JsonNode withdrawal = requestEvent(events, request, "MATCH_REQUEST_CANCELLED");
         assertEquals("INCOMING", withdrawal.path("requestDirection").asString());
         assertEquals("INCOMING", requestEvent(events, request, "MATCH_REQUEST_RECEIVED")
                 .path("requestDirection").asString());
@@ -31,7 +31,7 @@ class NotificationDirectionTest extends PostgresHttpTest {
         assertEquals(request, history.get(0).path("id").asLong());
         assertEquals(sender, history.get(0).path("senderId").asLong());
         assertEquals(receiver, history.get(0).path("receiverId").asLong());
-        assertEquals("DECLINED", history.get(0).path("status").asString());
+        assertEquals("CANCELLED", history.get(0).path("status").asString());
         assertEquals(0, expect(call("GET", "/match-requests/outgoing", receiverToken, null), 200).size());
 
         JsonNode read = expect(call("POST", "/notifications/" + withdrawal.path("id").asLong() + "/read",

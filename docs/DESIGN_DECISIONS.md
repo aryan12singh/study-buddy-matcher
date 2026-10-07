@@ -8,10 +8,10 @@ not rules from the brief.
 | Decision | Choice and reason | Alternative / affected work |
 | --- | --- | --- |
 | Leader model | Creating student + leader FK + accepted membership; STUDENT/ADMIN are the only roles | A subclass or GROUP_LEADER JWT role would misrepresent per-group permissions; #12 |
-| Deactivate | Retain identity/profile/history, revoke access, end active buddies, decline pending buddy requests, close led groups/reject applicants, reject own pending applications, remove memberships atomically | Merely flipping active leaves usable relations; #10/#12/#14 |
+| Deactivate | Retain identity/profile/history, revoke access, end active buddies, cancel pending buddy requests, close led groups/reject applicants, reject own pending applications, leave open groups atomically; closed groups keep the leader and members | Merely flipping active leaves usable relations; #10/#12/#14 |
 | Reactivate | Fresh sign-in, no relation restoration, old JWT versions remain invalid | Restoring ended resources or old JWTs changes consent; #14 |
 | Permanent delete | Remove user/student and all dependencies; remove led groups and dependent records, preserve other groups, notify surviving participants generically and purge deleted-resource links | Delete-as-deactivate fails distinct operation; orphan leaders/implicit transfer unsupported; #14 |
-| Administrative safeguards | Self removal blocked; exclusive lifecycle guard plus locked recount protects last usable admin and revoked actors | Check-then-write count races; #14 |
+| Administrative safeguards | Self removal blocked, and the actor must be an active admin, so one always remains; the exclusive lifecycle guard serializes admins removing each other and rejects revoked actors | Check-then-write count races; #14 |
 | Role changes | Select at create; fixed on normal edit, no implicit Student/Admin conversion | Conversion needs separate profile/data policy; #14 |
 | Email identity | Strip + lowercase; unique DB expression index; inactive email reserved, deletion releases it | Case-sensitive app-only check permits duplicates; #6/#14 |
 | Contact reads | Separate public/connected profile DTOs; self or current buddy only, never group peers or admin payloads | Entity serialization/CSS hiding discloses private values; #11/#14 |

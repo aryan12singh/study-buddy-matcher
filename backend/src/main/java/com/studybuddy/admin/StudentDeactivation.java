@@ -39,18 +39,19 @@ public class StudentDeactivation {
         for (var connection : connections.findActiveByStudentId(studentId)) {
             connection.end();
             var other = connection.otherStudent(studentId);
+            // No profile link: an inactive student's profile cannot be opened.
             notifications.notify(other, NotificationType.CONNECTION_ENDED, "Your study-buddy connection has ended because the other account is no longer active",
-                NotificationResourceType.STUDENT, studentId, "connection:" + connection.getId() + ":ended:" + other.getId());
+                null, null, "connection:" + connection.getId() + ":ended:" + other.getId());
         }
         for (var request : requests.findByReceiverIdAndStatus(studentId, MatchRequestStatus.PENDING)) {
-            request.decline();
-            notifications.notify(request.getSender(), NotificationType.MATCH_REQUEST_DECLINED, "The other account is no longer active, so your study-buddy request was closed",
-                NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":declined");
+            request.cancel();
+            notifications.notify(request.getSender(), NotificationType.MATCH_REQUEST_CANCELLED, "The other account is no longer active, so your study-buddy request was cancelled",
+                NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":cancelled");
         }
         for (var request : requests.findBySenderIdAndStatus(studentId, MatchRequestStatus.PENDING)) {
-            request.decline();
-            notifications.notify(request.getReceiver(), NotificationType.MATCH_REQUEST_DECLINED, "The other account is no longer active, so their study-buddy request was withdrawn",
-                NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":declined");
+            request.cancel();
+            notifications.notify(request.getReceiver(), NotificationType.MATCH_REQUEST_CANCELLED, "The other account is no longer active, so their study-buddy request was cancelled",
+                NotificationResourceType.MATCH_REQUEST, request.getId(), "match:" + request.getId() + ":cancelled");
         }
         for (var group : groups.findByLeaderIdAndActiveTrue(studentId)) {
             var locked = groups.findByIdForUpdate(group.getId()).orElseThrow(() -> new StudyGroupNotFoundException(group.getId()));
@@ -62,12 +63,15 @@ public class StudentDeactivation {
                 "An applicant's account is no longer active; their application was withdrawn", NotificationResourceType.GROUP,
                 request.getStudyGroup().getId(), "group-request:" + request.getId() + ":withdrawn");
         }
-        var current = memberships.findByStudentId(studentId);
-        for (var member : current) if (!member.getStudyGroup().isLeader(studentId)) {
+        // Leave open groups only. Closed groups, including the ones closed above, keep their
+        // members as history, and a leader always stays a member of their own group.
+        var leaving = memberships.findByStudentId(studentId).stream()
+            .filter(member -> member.getStudyGroup().isActive() && !member.getStudyGroup().isLeader(studentId)).toList();
+        for (var member : leaving) {
             notifications.notify(member.getStudyGroup().getLeader(), NotificationType.GROUP_MEMBER_REMOVED,
                 "A member's account is no longer active; their membership was removed", NotificationResourceType.GROUP,
                 member.getStudyGroup().getId(), "membership:" + member.getId() + ":account-removed");
         }
-        memberships.deleteAll(current);
+        memberships.deleteAll(leaving);
     }
 }
