@@ -1,162 +1,275 @@
-# Study Buddy Matcher
+# Study Buddy Matcher System
 
-IS442 Object Oriented Programming, SMU. Students find study partners by course,
-availability and preferences, connect by accepting buddy requests, and join or lead
-course-specific study groups. Administrators manage accounts and matching settings.
+> Finding a study partner shouldn't be harder than the subject itself.
 
-## Current branch status
+**Study Buddy Matcher** is a web application that helps university students find
+compatible study partners and form study groups — matched by shared courses,
+timetable availability, study mode, and study goals, instead of relying on word
+of mouth or scattered group chats.
 
-Team C features are implemented end to end: match requests and connections, profile
-privacy, study groups, notifications and admin accounts. See
-[requirement coverage](docs/REQUIREMENT_COVERAGE.md).
+Students maintain a profile and set of study preferences, get ranked matches
+from a configurable matching engine, connect with matched peers, and join or
+lead study groups. An admin role manages accounts and tunes the matching
+engine's criteria and weights, so the matching strategy can evolve without a
+code change.
 
-The branch also includes a shared foundation: login/registration, JWT and role guards,
-course listing, demo seed, API client, navigation and UI primitives. Matching (Team A) and
-own-profile, availability editor and dashboard (Team B) are integrated separately. Bonus
-features go on later branches.
+## Table of Contents
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [User Roles & Features](#user-roles--features)
+- [Architecture](#architecture)
+- [Folder Structure](#folder-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Running the App](#running-the-app)
+- [Seed Data](#seed-data)
+- [Matching Engine](#matching-engine)
+- [Requests, Groups, Notifications and Admin](#requests-groups-notifications-and-admin)
+- [Testing](#testing)
+- [Libraries](#libraries)
+- [Team Workflow](#team-workflow)
 
-## Architecture and ownership
+## Overview
 
-Java 21, Spring Boot, Spring Data JPA, Spring Security/JWT, Supabase PostgreSQL,
-React, Vite, Maven and npm are the fixed stack. Controllers validate input and call
-services; services use domain objects/repositories and return assembled DTOs. A
-`Student` composes a `User` with a shared primary key. A group leader is its creating
-student, rather than a third account role or a separate subclass.
+Three roles use the system:
+- **Students** manage a profile + preferences and get matched with compatible peers.
+- **Study Group Leaders** (students who create a group) manage group membership.
+- **System Administrators** manage accounts and configure the matching engine.
 
-Contact numbers are present only in self or active-buddy profile responses. Membership,
-leadership and admin access do not grant contact reads. Ending a connection revokes
-subsequent reads. The frontend never connects to Supabase directly; browser roles have
-neither application-table grants nor RLS policies. See [API contract](docs/API_CONTRACT.md),
-[design decisions](docs/DESIGN_DECISIONS.md) and [Team C diagrams](docs/diagrams/TEAM_C.md).
+Private information (contact number) stays hidden on a student's public profile
+until a match request is accepted — enforced by the backend, not the client.
 
-| Team | Members | Product scope |
-| --- | --- | --- |
-| A | Natthida, Chong Yee, Joanne | Matching/scorers/strategies, search, matching configuration |
-| B | Angel, Averyl, Guang Hao | Platform, entities/repositories, authentication, own profile/preferences, seed, dashboard/shared shell |
-| C | Aryan, Charlize | Buddy lifecycle/privacy, groups/membership, notifications, admin accounts and their screens |
+## Tech Stack
 
-Within Team C:
+| Layer | Technology | Notes |
+|---|---|---|
+| Frontend | React (Vite) | talks only to our backend, not the database directly |
+| Backend | Java + Spring Boot | handles all the business logic and data access |
+| Build Tool | Maven (`mvnw` wrapper) | no separate Maven install needed |
+| Auth | Spring Security + JWT | login/session handling |
+| Database | Supabase (Postgres) | shared by the whole team |
+| ORM | Spring Data JPA / Hibernate | connects our Java code to the database |
 
-- **Charlize**: `StudyGroup` and `GroupJoinRequest` domain rules (close, leader, capacity,
-  accept/reject), group lookup queries and browse filter, group DTOs/assemblers,
-  `StudyGroupService` and `GroupJoinRequestService`, and the group endpoint proposal.
-- **Aryan**: `MatchRequest` state machine and service, `Connection` and `ConnectionService`,
-  `ProfileViewAssembler`, notifications, admin user management and deactivation, and the
-  end-to-end integration: HTTP controllers, React screens, the shared auth/client/UI
-  foundation, database migrations and the integration tests.
+## User Roles & Features
 
-AI tool usage is recorded in [AI_USAGE.md](docs/AI_USAGE.md).
+**Student**
+- Create/update profile (name, school, programme, year of study, contact number, courses taken) and study preferences (target course, study mode, weekly availability, group size preference, study goals).
+- Get a ranked list of compatible students; filter by course, availability, study mode, study goal, minimum match quality.
+- View another student's public profile (contact number hidden until a match is accepted).
+- Send/accept/decline study-buddy requests; view and end active connections.
 
-Team C added a small shared foundation (login/registration, JWT, API client, app shell and
-UI primitives) so its screens could run before Team B's integration. Reuse it rather than
-building a second auth flow, client or shell; `frontend/src/routes.tsx` is the single route
-tree for new screens.
+**Study Group Leader** *(a Student who creates a group — not a separate account type)*
+- Create a study group (name, description, study goals, preferred mode, availability, max size).
+- View and accept/reject join requests; remove members.
 
-```text
-backend/src/main/java/com/studybuddy/
-  auth/ security/ common/       identity, validation, permissions and write locking
-  user/ student/ course/        shared mapped data and course/activity reads
-  matchrequest/ connection/     buddy state machine and symmetric connections
-  profile/ notification/       privacy assemblers and recipient-scoped events
-  studygroup/ admin/ seed/      group/account lifecycle and opt-in demo data
-backend/src/main/resources/
-  application.yml              public configuration; schema validation
-  application-local.yml        ignored personal configuration
-  db/migrations/               ordered, repeatable SQL upgrades
-backend/src/test/               units, context, real HTTP/PostgreSQL races and privacy
-frontend/src/
-  features/auth/ landing/       entry points
-  features/connections/ students/ notifications/ groups/ admin/
-  shared/api/ auth/ components/ shared client, guards, hooks and UI
-scripts/                       migration and isolated backend test runners
-docs/                          API contract, decisions, coverage, operations and diagrams
+**System Administrator**
+- Create/update/delete user accounts; view account status and usage info.
+- Configure the matching engine's criteria, weights, and strategy.
+
+## Architecture
+
+Backend follows a layered, package-by-feature structure:
+`Controller → Service → Repository → Entity`, with DTOs (Data Transfer Objects)
+at the controller boundary so persistence entities are never returned directly
+from the API. `Student` and
+`StudyGroupLeader` follow the class relationship in the design doc (a student
+becomes a group leader by creating a group, rather than a separate hierarchy).
+Matching criteria/weights are externalized (DB-configurable via the admin role),
+not hardcoded, so the matching strategy can change without a code deploy.
+
+Frontend follows a feature-folder structure (`features/auth`, `features/matching`,
+`features/studygroup`, etc.), with shared API client/hooks/components under `shared/`.
+
+## Folder Structure
+
+```
+study-buddy-matcher/
+├── backend/
+│   ├── mvnw, mvnw.cmd, .mvn/            # Maven wrapper
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/studybuddy/
+│       │   ├── StudyBuddyApplication.java
+│       │   ├── auth/ security/          # login, registration, JWT and role guards
+│       │   ├── common/                  # error responses, input rules, account checks
+│       │   ├── user/ student/ course/   # shared entities, repositories, course listing
+│       │   ├── matchrequest/ connection/ # buddy requests and connections
+│       │   ├── profile/ notification/   # profile privacy and notifications
+│       │   ├── studygroup/ admin/       # study groups and admin accounts
+│       │   └── seed/                    # opt-in demo data
+│       ├── main/resources/
+│       │   ├── application.yml          # committed, reads env vars, no secrets
+│       │   ├── application-local.yml    # gitignored — your real values, see below
+│       │   └── db/migrations/           # ordered SQL migrations
+│       └── test/
+│           ├── java/com/studybuddy/     # unit tests, context-load test, integration/ HTTP tests
+│           └── resources/application-test.yml   # isolated test database profile
+├── frontend/
+│   ├── package.json, vite.config.ts, tsconfig*.json
+│   ├── .env.example                     # committed template, no secrets
+│   └── src/
+│       ├── App.tsx, routes.tsx           # route tree
+│       ├── main.tsx, index.css
+│       ├── shared/                       # API client, auth context, guards, UI components
+│       └── features/
+│           ├── landing/LandingPage.tsx
+│           ├── auth/LoginPage.tsx, RegisterPage.tsx
+│           └── connections/ students/ groups/ notifications/ admin/
+├── scripts/                              # migration runner and isolated backend tests
+├── docs/                                 # API contract, decisions, coverage, diagrams
+└── README.md
 ```
 
-## Setup and run
+This grows as each team builds their part — packages like `student/`, `matching/`,
+`studygroup/`, etc. get created when the code for them actually exists, not scaffolded
+ahead of time as empty folders.
 
-Prerequisites: Java 21, Node 22 LTS (22.22.2 or newer), npm and Git. Isolated backend
-tests also use Docker, `psql` and OpenSSL. Production data uses the team's shared
-Supabase project; disposable local PostgreSQL is only for tests.
+## Prerequisites
 
-1. Install frontend packages using the existing lockfile: `cd frontend && npm ci`.
-2. Copy `frontend/.env.example` to `frontend/.env`.
-3. Create the ignored `backend/src/main/resources/application-local.yml`:
+- JDK 21
+- Node.js 22 LTS + npm (matches CI)
+- Git
+- For the full backend test suite only: Docker, `psql` and OpenSSL
+- A Supabase project (ask a team member for an invite to the shared project — see [Environment Variables](#environment-variables))
 
-   ```yaml
-   spring:
-     datasource:
-       url: jdbc:postgresql://<database-host>:5432/postgres
-       username: postgres
-       password: <private-database-password>
-   jwt:
-     secret: <generate-a-private-value-with-openssl-rand-base64-48>
-   ```
+## Getting Started
 
-4. An operator applies [database migrations](docs/DATABASE_OPERATIONS.md) before startup.
-   The Team C shared-project upgrade is already applied; a fresh database needs all four
-   SQL files in filename order. Hibernate validates mappings and never installs access
-   policies or constraints automatically.
-5. Run the two terminals:
+```bash
+git clone <repo-url>
+cd study-buddy-matcher
 
-   ```bash
-   # Repository/backend; application-local.yml loads under the default local profile
-   ./mvnw spring-boot:run
+# Backend
+cd backend
+# create src/main/resources/application-local.yml — see Environment Variables below
+./mvnw clean install
 
-   # Repository/frontend
-   npm run dev
-   ```
+# Frontend
+cd ../frontend
+cp .env.example .env
+# fill in real values in .env (gitignored, never commit it)
+npm install
+```
 
-Normal URLs: `http://localhost:8080/api` and `http://localhost:5173`. Frontend requests
-read `VITE_API_BASE_URL`; the template includes the local API prefix. A deployed JAR
-uses process environment variables and an explicit non-local profile. The local credential
-YAML remains available for development but is excluded from the distributable JAR.
+## Environment Variables
 
-## Configuration
+These are **never committed**. Get real values from the shared Supabase project
+(Project Settings → Database).
 
-Only public build settings may use a `VITE_` prefix. Database credentials and JWT/demo
-passwords belong in ignored backend configuration or process environment. Never commit
-them, put them in screenshots/logs, or pass them to frontend code.
+**Backend — `backend/src/main/resources/application-local.yml`** (gitignored, create it yourself):
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://<host>:5432/postgres
+    username: postgres
+    password: <supabase-db-password>
+jwt:
+  secret: <generate with: openssl rand -base64 48>
+```
+`application.yml` defaults `spring.profiles.active` to `local`, so this file loads automatically
+— no export step, no `.env`, just `./mvnw spring-boot:run` and it works.
+
+**Frontend — `frontend/.env`** (copy from `.env.example`):
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+Vite reads this file automatically.
+
+### Configuration reference
+
+Only `VITE_`-prefixed values reach the frontend, and they end up in the public bundle, so
+never put a secret there. Database credentials, the JWT secret and demo passwords belong
+in `application-local.yml` or the process environment.
 
 | Key | Default / requirement | Purpose |
 | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `local` | Loads ignored personal backend config in development |
-| `SPRING_DATASOURCE_URL` | Required unless local YAML sets it | Backend JDBC connection |
-| `SPRING_DATASOURCE_USERNAME` | Required unless local YAML sets it | Backend database identity |
-| `SPRING_DATASOURCE_PASSWORD` | Required unless local YAML sets it | Private JDBC password |
-| `JWT_SECRET` / `jwt.secret` | Required, at least 32 UTF-8 bytes | HMAC signing secret; use a random value |
-| `JWT_EXPIRATION_MS` / `jwt.expiration-ms` | `86400000` | JWT lifetime in milliseconds, must be positive |
+| `SPRING_PROFILES_ACTIVE` | `local` | Loads `application-local.yml` in development |
+| `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | Required unless set in `application-local.yml` | Backend database connection |
+| `JWT_SECRET` / `jwt.secret` | Required, at least 32 characters | Signs login tokens; use a random value |
+| `JWT_EXPIRATION_MS` / `jwt.expiration-ms` | `86400000` (24 hours) | Token lifetime in milliseconds |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated frontend origins |
-| `app.auth.secret` | Alias of `jwt.secret` | Typed authentication setting |
-| `app.auth.token-lifetime` | Alias of JWT milliseconds, as a duration | Typed token lifetime |
-| `app.auth.allowed-origins` | Alias of CORS origins | Typed origin list |
-| `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Explicit opt-in seed bootstrap |
-| `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Private runtime password for new demo students |
-| `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Private runtime password for the new demo admin |
-| `VITE_API_BASE_URL` | Same-origin `/api` when absent | Backend origin or API prefix; template sets localhost API |
-| `VITE_REFRESH_INTERVAL_MS` | `30000`; minimum `15000`, maximum `300000` | Bounded list/detail refresh; forms retain edits |
+| `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three settings above | Typed authentication config (`AuthProperties`) |
+| `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
+| `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
+| `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
+| `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
+| `VITE_REFRESH_INTERVAL_MS` | `30000` (min `15000`, max `300000`) | Background refresh interval for lists and details |
 
-`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` configure the migration runner.
-`STUDYBUDDY_TEST_DATABASE_URL`, `STUDYBUDDY_TEST_DATABASE_USERNAME`,
-`STUDYBUDDY_TEST_DATABASE_PASSWORD` and `STUDYBUDDY_TEST_JWT_SECRET` configure the test
-profile. The isolated runner supplies them automatically and removes its container.
+The test profile reads `STUDYBUDDY_TEST_DATABASE_URL`, `STUDYBUDDY_TEST_DATABASE_USERNAME`,
+`STUDYBUDDY_TEST_DATABASE_PASSWORD` and `STUDYBUDDY_TEST_JWT_SECRET`; the migration runner
+reads the standard `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD`.
+`scripts/test-backend.sh` sets all of these itself.
 
-## Demo seed
+### Database schema
 
-The seed is disabled by default. Supply both passwords privately and enable it for one
-startup. It adds missing entries only: 10 courses, 50 varied synthetic students and one
-admin. Repeat runs preserve existing profiles, passwords and data; there is no shared
-reset/truncate endpoint or default password.
+The SQL files in `backend/src/main/resources/db/migrations/` define the full schema:
+tables, indexes, integrity constraints and database access rules. Apply them in filename
+order with `scripts/migrate-database.sh` (connection from the `PG*` variables above); it is
+safe to re-run. `spring.jpa.hibernate.ddl-auto` is `update`, so Hibernate also adds missing
+tables and columns on startup, but it never creates the constraints or access rules, so a
+fresh database still needs the migrations. The test profile uses `validate` against a
+freshly migrated database.
 
-Demo identifiers: `priya@demo.example.test`, `jamie@demo.example.test`,
-`alex@demo.example.test`, `student04@demo.example.test` through
-`student50@demo.example.test`, and `admin@demo.example.test`. Initial passwords come
-from the operator's private seed config. Keep them in an ignored file such as
-`.env.demo.local` (not a frontend env file). Disable seeding
-after use. [Operations](docs/DATABASE_OPERATIONS.md) explains safe repeats and recovery.
+## Running the App
+
+```bash
+# Terminal 1 — backend, http://localhost:8080
+cd backend && ./mvnw spring-boot:run
+
+# Terminal 2 — frontend, http://localhost:5173
+cd frontend && npm run dev
+```
+
+## Seed Data
+
+Per project requirements, the database must contain at least **10 courses** and
+**50 student profiles**. This runs against the one shared Supabase DB — the seed
+only needs to be run **once by one team member**, not per developer.
+
+The seeder is off by default. To run it, set `DEMO_SEED_ENABLED=true` plus
+`DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` (private values, never committed) for
+one startup, then turn it off again. It only adds what is missing — 10 courses, 50
+synthetic students (`priya@demo.example.test`, `jamie@demo.example.test`,
+`alex@demo.example.test`, `student04@demo.example.test` … `student50@demo.example.test`)
+and one admin (`admin@demo.example.test`) — so repeat runs never duplicate data or reset
+passwords.
+
+## Matching Engine
+
+Students are matched on course, availability overlap, and study mode, with
+study goal and group size as secondary criteria. The matching strategy and
+criteria weights are admin-configurable (not hardcoded), supporting at least:
+- **Balanced Matching** — weighted combination of all criteria.
+- **Availability-First Matching** — prioritizes timetable overlap.
+- **Course-First Matching** — prioritizes exact course match, then ranks by remaining preferences.
+
+Match quality is shown to users in plain language (e.g. "Strong match"), not a raw score.
+
+## Requests, Groups, Notifications and Admin
+
+Built by Team C on top of the platform foundation:
+
+- **Match requests and connections:** send a request with an optional message and
+  course/goal context, accept or decline, and end a connection.
+- **Profile privacy:** the contact number is in the profile response only for the student
+  themselves or an active connection. Group membership and admin access never reveal it,
+  and ending a connection removes access immediately.
+- **Study groups:** create, browse and filter, apply, approve or reject, edit, remove
+  members and close. The leader counts toward capacity.
+- **Notifications:** for request and group events, with read state and an unread badge.
+- **Admin accounts:** create, edit, deactivate/reactivate and permanently delete accounts,
+  with last sign-in, active connections and open group memberships as usage.
+
+See the [API contract](docs/API_CONTRACT.md), [design decisions](docs/DESIGN_DECISIONS.md),
+[requirement coverage](docs/REQUIREMENT_COVERAGE.md), [database operations](docs/DATABASE_OPERATIONS.md)
+and [diagrams](docs/diagrams/TEAM_C.md).
 
 ## Testing
 
-**Backend unit tests** (no database needed; skips the integration and context-load tests):
+- Backend: JUnit + Mockito.
+- Frontend: Vitest + React Testing Library.
+
+**Backend unit tests** (no database needed):
 
 ```bash
 cd backend
@@ -164,20 +277,18 @@ cd backend
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-**Full backend suite with Docker.** From the repository root, with Java 21, Docker, `psql`
-and OpenSSL installed:
+**Full backend suite**, including the context-load test and the HTTP/database tests in
+`integration/`, from the repository root (needs Docker, `psql` and OpenSSL):
 
 ```bash
 scripts/test-backend.sh
 ```
 
-The script starts a throwaway PostgreSQL 17 container on a random local port, generates
-private test credentials, runs the migration tests, migrates a `studybuddy_test` database and
-runs every Maven test, including the HTTP/database integration tests. It removes the
-container and credentials when it exits and never connects to the shared Supabase project.
-Test fixtures refuse to clear any database not named `studybuddy_test`.
+It starts a throwaway PostgreSQL 17 container with generated credentials, tests and
+applies the migrations, runs every Maven test, then removes the container. It never
+touches the shared Supabase project.
 
-**Frontend** (Node 22 LTS, 22.22.2 or newer):
+**Frontend:**
 
 ```bash
 cd frontend
@@ -187,7 +298,7 @@ npm run lint
 npm run build
 ```
 
-CI runs the backend against PostgreSQL 17 and the frontend on Node 22 for every PR into `main`.
+CI runs all of the above on every pull request into `main`.
 
 ## Libraries
 
@@ -225,11 +336,19 @@ and Fraunces under SIL OFL 1.1 ([Inter licence](https://raw.githubusercontent.co
 The source of `public/favicon.svg`, `public/icons.svg` and the landing page SVGs is not yet
 recorded.
 
-## Project delivery
+## Team Workflow
 
-Read [AGENTS.md](AGENTS.md) before changes. Team schedule: 11 October core,
-25 October extras/integration, 8 November rehearsal/supporting materials, and
-15 November 2026 at 11:59 pm SGT submission; presentation in the Week 13 class slot.
+- One shared Supabase project for the whole team; don't spin up individual projects.
+- Own feature branch → open a Pull Request (PR) to `main` → get teammate review/approval → merge.
+- Read [AGENTS.md](AGENTS.md) before making changes.
 
-Use feature branches, small commits and a PR into `main`, with review from another team
-and green CI before squash merge.
+| Team | Members | Owns |
+| --- | --- | --- |
+| A | Natthida, Chong Yee, Joanne | Matching engine, search, matching configuration |
+| B | Angel, Averyl, Guang Hao | Platform, entities, authentication, own profile, seed, dashboard and shell |
+| C | Aryan, Charlize | Requests and connections, profile privacy, study groups, notifications, admin accounts |
+
+Within Team C, Charlize built the `StudyGroup` and `GroupJoinRequest` rules, group queries,
+DTOs and services. Aryan built match requests, connections, `ProfileViewAssembler`,
+notifications, admin accounts, and the controllers, screens, migrations and integration
+tests that connect them. AI use is recorded in [AI_USAGE.md](docs/AI_USAGE.md).
