@@ -3,111 +3,78 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
+# Both halves run on every PR, including changes to workflows, SQL and setup scripts.
 jobs:
-  # Works out which halves of the repo this pull request actually touches, and
-  # whether they are scaffolded yet. Until Team B lands the Spring Boot and Vite
-  # skeletons there is nothing to build, so both jobs below skip and the workflow
-  # still reports green.
-  changes:
-    name: Detect changed areas
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - id: filter
-        run: |
-          base="origin/${{ github.base_ref }}"
-          git fetch --no-tags origin "${{ github.base_ref }}"
-          changed="$(git diff --name-only "$base...HEAD")"
-          echo "Changed files:"
-          echo "$changed"
-
-          backend=false
-          frontend=false
-          if echo "$changed" | grep -q '^backend/' && [ -f backend/pom.xml ]; then
-            backend=true
-          fi
-          if echo "$changed" | grep -q '^frontend/' && [ -f frontend/package.json ]; then
-            frontend=true
-          fi
-
-          echo "backend=$backend" >> "$GITHUB_OUTPUT"
-          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
-          echo "Run backend: $backend, run frontend: $frontend"
-
   backend:
-    name: Backend tests
-    needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    name: Backend tests and PostgreSQL integrity
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: studybuddy_test
+          POSTGRES_USER: studybuddy_test
+          POSTGRES_PASSWORD: ${{ github.run_id }}-isolated-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U studybuddy_test -d studybuddy_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: studybuddy_test
+      PGUSER: studybuddy_test
+      PGPASSWORD: ${{ github.run_id }}-isolated-ci
+      SPRING_PROFILES_ACTIVE: test
+      STUDYBUDDY_TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/studybuddy_test
+      STUDYBUDDY_TEST_DATABASE_USERNAME: studybuddy_test
+      STUDYBUDDY_TEST_DATABASE_PASSWORD: ${{ github.run_id }}-isolated-ci
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: temurin
           cache: maven
-
-      # A green tick from `mvn test` means nothing if nobody has written a test,
-      # so refuse to pass a backend with none. The cheapest way to satisfy this
-      # is also the most valuable test in the project: a context-load test.
-      - name: Check tests exist
+      - name: Generate an isolated test signing key
+        shell: bash
         run: |
-          if [ -z "$(find src/test -name '*.java' 2>/dev/null)" ]; then
-            echo "::error::No test classes found under backend/src/test."
-            echo ""
-            echo "At minimum, add a Spring context-load test:"
-            echo ""
-            echo "    @SpringBootTest"
-            echo "    class ApplicationTests {"
-            echo "        @Test void contextLoads() {}"
-            echo "    }"
-            echo ""
-            echo "It fails whenever a bean cannot be wired, a config property is"
-            echo "missing or an entity mapping is malformed, which is most of what"
-            echo "actually breaks a Spring Boot app. Without it, 'mvn test' passes"
-            echo "even when the application cannot start."
-            exit 1
-          fi
-
-      - name: Run tests
-        run: mvn -B test
+          task_jwt_secret="$(openssl rand -base64 48)"
+          echo "::add-mask::$task_jwt_secret"
+          echo "STUDYBUDDY_TEST_JWT_SECRET=$task_jwt_secret" >> "$GITHUB_ENV"
+      - name: Apply and repeat migrations
+        run: |
+          psql --no-psqlrc --set=ON_ERROR_STOP=1 --command='CREATE DATABASE studybuddy_migration_test'
+          PGDATABASE=studybuddy_migration_test scripts/test-migrations.sh
+          scripts/migrate-database.sh
+          scripts/migrate-database.sh
+      - name: Run backend tests
+        working-directory: backend
+        run: ./mvnw -B clean test
 
   frontend:
-    name: Frontend build
-    needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    name: Frontend interactions, lint and build
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node 20
+      - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install
+      - name: Install locked dependencies
         run: npm ci
-
-      # --if-present so this is a no-op until a lint script exists.
+      - name: Run interaction tests
+        run: npm test
       - name: Lint
-        run: npm run lint --if-present
-
+        run: npm run lint
       - name: Build
         run: npm run build
