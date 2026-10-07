@@ -10,3 +10,5 @@ All on 7 Oct 2026, reviewed by Aryan.
 - **Follow-up fixes:** navigation after save, admin dialog state, batched list queries.
 - **UI polish:** responsive admin view, URL filters, capacity meters, unsaved-changes warnings.
 - **Docs (Claude):** trimmed working notes, wrote this file and the coverage table.
+- **Test fixes and branch split (Claude):** fixed timing-dependent tests; moved platform
+  code to `feat/team-b/platform-foundation` for Team B.
