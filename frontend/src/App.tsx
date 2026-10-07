@@ -1,18 +1,12 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import LoginPage from './features/auth/LoginPage'
-import RegisterPage from './features/auth/RegisterPage'
-import LandingPage from './features/landing/LandingPage'
+import { RouterProvider, useRoutes } from 'react-router-dom'
+import type { RouterProviderProps } from 'react-router-dom'
+import AuthProvider from './shared/auth/AuthProvider'
+import { appRoutes } from './routes'
 
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      </Routes>
-    </BrowserRouter>
-  )
+export function AppRoutes() {
+  return useRoutes(appRoutes)
 }
 
-export default App
+export default function App({ router }: { router: RouterProviderProps['router'] }) {
+  return <AuthProvider><RouterProvider router={router} /></AuthProvider>
+}
