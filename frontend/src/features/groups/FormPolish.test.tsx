@@ -41,6 +41,8 @@ describe('form protection and destination feedback', () => {
     await act(async () => { await router.navigate(-1) })
     fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/groups/5'))
+    // The router updates its location before React commits the new page, so wait for the detail page itself
+    expect(await screen.findByRole('heading', { level: 1, name: 'OOP crew' })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(document.body.style.overflow).not.toBe('hidden')
   })
