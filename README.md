@@ -12,6 +12,11 @@ and React screens. See [requirement coverage](docs/TEAM_C_REQUIREMENT_COVERAGE.m
 [verified results](docs/TEAM_C_TESTING.md). Development on this branch does not mean
 the change has been reviewed by another team or merged into `main`.
 
+The approved [UI polish](docs/TEAM_C_UI_POLISH.md) is also implemented: responsive account
+cards, URL-backed browsing, capacity meters, weekly schedule copy/preview, contact/group-link
+copy, destination feedback and draft protection. These flows use the existing authenticated
+APIs. Current verification passes 228 backend tests and 108 frontend tests, plus lint/build.
+
 The bounded shared foundation includes login/registration, JWT/role guards, course listing,
 synthetic seeding, a shared API client, navigation and reusable UI primitives. Team A's
 matching engine/search/configuration screens and Team B's full own-profile/preferences,
@@ -190,8 +195,11 @@ Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing
 official PostgreSQL 17; no alternative embedded database was added. The stack choice
 predates C; no comparison of untried libraries is claimed.
 
-Team C chrome uses CSS shapes/Unicode and Tahoma/Verdana/system font fallbacks; no icon
-or font files are redistributed. Existing entry pages load unpinned Google Fonts Inter
+Team C chrome uses original CSS pixel patterns, CSS shapes/Unicode and
+Tahoma/Verdana/system font fallbacks; no icon or font files are redistributed. `PixelIcon.tsx`
+defines the small decorative glyphs and `desktop.css` renders them, initials avatars, capacity
+bars and loading/empty artwork. Motion respects the user's reduced-motion preference.
+Existing entry pages load unpinned Google Fonts Inter
 and Fraunces under SIL OFL 1.1 ([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
 [Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)).
 Original provenance of Team B's `public/favicon.svg`, unused but bundled

@@ -59,7 +59,8 @@ The backend remains authoritative for permission and eligibility after waiting f
 
 Group/account saves and permanent-delete completion use `useViewNavigation`: a late response
 still refreshes mounted resources but cannot redirect after leaving or replacing its originating
-route. Cancel leaves the form; it does not undo a write already submitted to the backend.
+route. Dirty Cancel/Back/sidebar exits now require a discard choice. Choosing to leave does not
+undo a write already submitted to the backend.
 Admin lifecycle dialogs retain only ID/name/email/role as their target across refreshes.
 Pending state, failure feedback and typed deletion confirmation survive focus/polling;
 confirmation waits for current account data, and changed email requires reopening deletion.
@@ -69,6 +70,32 @@ viewer membership and latest application state. Notification lists batch distinc
 request participants. The API DTOs, ordering, filters, privacy and transaction/lock protocol
 are unchanged; no new migration or dependency is needed. `ListQueryTest` checks actual query
 growth through authenticated HTTP rather than assuming that mocked repository calls are fast.
+
+### Completed UI polish and integration
+
+[TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH.md) records all eight approved improvements and the
+retro delighters. Current local verification is **228 backend tests / 108 frontend tests**
+with a clean Node 22 install, lint/build and zero audit vulnerabilities. Native browser flows
+used actual backend writes and a disposable database; no new backend contract was required.
+
+A/B routes join `frontend/src/routes.tsx`. `main.tsx` creates one `createBrowserRouter`,
+`App` supplies one auth provider and `RouterProvider`, and the existing role-based account
+redirect lives in `AccountHome.tsx`. Form/request dialogs using `useFormExit` must live under
+this data router. Do not add a second `BrowserRouter`, auth client or shell. Matching can reuse
+`SendRequestDialog` with its supplied context and the new draft guard.
+
+Reuse `PixelIcon`/`Avatar`, `CapacityMeter`, `FilterSummary`, `CopyButton`, `RouteNotice` and
+`FormActions`; `useFormExit` protects SPA/reload exits and `useDraftClose` protects local
+Cancel/X/Escape. `useViewLifetime` ignores callbacks from an abandoned request dialog while
+completed writes still refresh resources. Copy works only on a user's explicit action, with
+manual fallback; contact copy is removed by the same existing privacy purge as its value.
+
+Group/notification view state lives in valid URL query keys, not component-only tabs. Weekly
+copy/duplicate still sends the original weekly-slot contract; live preview sorts only display.
+Generic save/delete notices are consumed from history so Back/reload does not replay them.
+No private draft value is persisted. Shared CSS improves all window primitives and supplies
+labelled narrow account cards and reduced motion, so check A/B integration against the same
+styles. There is no new icon/font library, endpoint, schema or dependency in this polish.
 
 ## Shared files and integration exceptions to review
 
@@ -80,7 +107,7 @@ growth through authenticated HTTP rather than assuming that mocked repository ca
 | Four SQL migrations; scripts/migrate-database.sh | Reproducible upgrade/uniqueness/checks/indexes/timestamps; deny-all browser database access |
 | scripts/test-backend.sh, test-migrations.sh and synthetic SQL fixtures | Ephemeral PostgreSQL tests, old-schema upgrade/repeat/preflight rollback |
 | backend/pom.xml | Existing inherited JAR-plugin configuration excludes private application-local.yml; no dependency added |
-| Frontend App/main, auth entry points and narrow landing auth links | Working provider/routing/guards and entry to C screens |
+| Frontend App/main/routes, AccountHome, auth entry points and narrow landing auth links | One shared data router/provider/guards; existing route paths and role redirect; entry to C screens and supported navigation blocking |
 | Frontend shared/ and .env.example | One API/auth/refetch boundary and shared retro primitives |
 | frontend/package-lock.json | Existing transitive source-map-js 1.2.1 → 1.2.2 security patch; direct dependencies/package.json unchanged |
 | .github/workflows/ci.yml | PostgreSQL-backed backend checks and Node 22 frontend tests/lint/build on every PR |
@@ -137,6 +164,8 @@ Suggested C segment within the team's presentation:
   roll back a submitted HTTP write; demonstrate the refresh-retained admin confirmation.
 - Trace list batching and latest-application timestamp/ID ordering, then read ListQueryTest's
   query-count assertions and unchanged DTO/privacy checks.
+- Demonstrate dirty Back/Cancel, a kept and discarded request draft, weekly copy/preview and
+  canonical link copy; explain the single data router and consumed generic success state.
 
 ## What remains outside C development
 

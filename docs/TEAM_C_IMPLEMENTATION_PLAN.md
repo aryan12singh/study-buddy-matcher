@@ -1,10 +1,10 @@
 # Team C implementation and completion plan
 
-Status: **approved by Aryan on 7 October 2026; implementation and final-review fixes complete**.
+Status: **approved by Aryan on 7 October 2026; implementation, final-review fixes and approved UI polish complete**.
 
 This records the approved implementation scope. Actual completion evidence is in
 [TEAM_C_TESTING.md](TEAM_C_TESTING.md) and [TEAM_C_REQUIREMENT_COVERAGE.md](TEAM_C_REQUIREMENT_COVERAGE.md):
-228 backend tests and 77 frontend tests after the approved follow-up, with rerun lint/build
+228 backend tests and 108 frontend tests after the approved follow-up and UI polish, with rerun lint/build
 and migration checks. Earlier implementation evidence also covers packaging, real browser
 and restart journeys, shared schema/seed verification, and all three Astra findings
 fixed. [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48) is published and
@@ -13,7 +13,10 @@ verification and merge remain release responsibilities.
 Approval authorises the described application changes, the bounded shared foundations,
 the proposed account policy and screen layouts, and the tested database upgrades described
 below. Aryan subsequently authorised clean commits, PR publication and the additional audit
-fixes/list-query batching. Merge remains a separate release action.
+fixes/list-query batching, then the full eight-item UI polish and retro delighters.
+The polish is implemented and verified in [TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH.md);
+its flows use the existing authenticated backend without a schema or API change.
+Merge remains a separate release action.
 
 ## 1. Objective and scope
 

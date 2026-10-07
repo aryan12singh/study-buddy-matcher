@@ -151,7 +151,9 @@ Student profile, Matching, Notifications, Study prep, study timer.
   information uses readable Tahoma/Verdana/system fallbacks; no new font dependency.
 - C layouts adapt to narrow screens; tables scroll inside their container. Actual projector
   rehearsal remains a team delivery check, not a claimed automated result.
-- CSS shapes and Unicode chrome/icons; no external C icon set. A may reuse the primitives
+- Admin accounts keep a semantic desktop table and become labelled cards below 800px;
+  actions remain visible. Motion respects `prefers-reduced-motion`.
+- Original CSS pixel patterns and Unicode chrome/icons; no external C icon set. A may reuse the primitives
   while retaining its own matching-view decisions. Existing landing assets and Google Fonts
   are inventoried in README, including unresolved original provenance.
 
@@ -173,6 +175,11 @@ The set we expect to need:
 | Empty, loading and error states | `StatePanel.tsx` |
 | Weekly schedule and slot editor | `WeeklySchedule.tsx`, `WeeklySlotEditor.tsx`; B owns the own-profile screen |
 | Action and unread feedback | `ActionNotice.tsx`, notification APIs, shell badge |
+| Destination outcome feedback | `RouteNotice.tsx`; generic messages consumed once, no form values in history |
+| Pixel glyphs and initials | `PixelIcon.tsx`, `Avatar.tsx`; decorative, no presence claims |
+| Group capacity / filter summary | `CapacityMeter.tsx`, `FilterSummary.tsx`; use actual DTO counts |
+| Clipboard convenience | `CopyButton.tsx`; explicit user action and manual fallback |
+| Form save / discard controls | `FormActions.tsx`, `useFormExit.tsx`, `useDraftClose.tsx`; drafts stay in memory |
 | Score breakdown bar | Team A matching integration |
 | Shared-hours heatmap | Team A matching integration |
 
@@ -209,6 +216,11 @@ schema/CI and setup. Reuse these during B integration; do not duplicate or broad
 them. `pom.xml` only configures the inherited JAR plugin to exclude local credentials;
 `package-lock.json` only patches the existing transitive source-map-js dependency.
 Matching logic and full own-profile/preferences/dashboard features remain A/B scope.
+
+The approved UI polish uses one `createBrowserRouter` with the existing route tree in
+`frontend/src/routes.tsx`, one `AuthProvider` and `RouterProvider`. New screens join that
+tree; do not wrap form screens in a second `BrowserRouter`. `useFormExit` relies on the
+existing React Router data-router blocker, including Back/sidebar exits and reload warnings.
 
 ---
 

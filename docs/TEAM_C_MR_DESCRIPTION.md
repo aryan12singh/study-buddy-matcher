@@ -54,7 +54,7 @@ access-policy notices and recovery.
   separate-transaction races, literal contact absence, role/token checks and rollback.
 - Legacy schema upgrade, duplicate-email preflight rollback, UTC/weekly-slot preservation
   and repeated migrations passed in a separate disposable database.
-- 77 frontend tests across 11 suites passed on Node 22; lint has zero warnings/errors,
+- 108 frontend tests across 16 suites passed on Node 22; lint has zero warnings/errors,
   TypeScript/production build passed and npm audit reported zero vulnerabilities.
 - Three browser sessions exercised real student request/accept/disconnect, group create/
   edit/apply/approve/reject/remove/close, agenda, notification read/filter and admin flows.
@@ -75,10 +75,35 @@ API services return assembled DTOs, and empty/invalid/unauthorized/error states 
 
 The approved follow-up fixes late-save navigation and refresh-discarded admin action state,
 including permanent-delete confirmation/current-email checks. A shared `useViewNavigation`
-guard is the only added frontend foundation. Group summaries and notification links use batch
+guard was the added frontend foundation in that follow-up. Group summaries and notification links use batch
 queries without changing API responses: browse/own lists use 7 queries across the measured
 small/large fixtures, and notifications use 5. Regression details and original failure counts
 are in TEAM_C_TESTING.md. No dependency, migration or A/B matching/profile feature was added.
+
+### Approved UI polish
+
+All eight approved improvements and retro delighters are complete: consistent pixel
+icons/initials and hierarchy, compact responsive shell/account cards, destination save/delete
+messages, URL tabs/filter chips/counts/empty actions, capacity meters, weekly copy/duplicate/
+sorted preview, canonical group/contact copy with fallback, and dirty/pending draft guards
+with sticky actions. Copy contact still relies on the current self/CONNECTED profile DTO;
+actual acceptance/disconnect browser checks verified visibility and immediate removal.
+
+`routes.tsx` now exports the same guarded route paths; `main.tsx` creates the existing
+React Router data router once and `App` supplies auth/RouterProvider. This supports official
+Back/sidebar/reload blocking. A/B should add routes to this tree and reuse the new shared
+primitives, rather than mount a second router. Form and request/application dialogs retain
+inputs until explicit discard, while late completions refresh data without changing newer
+views. Generic destination messages are consumed once; private drafts never enter history.
+
+Native browser verification used synthetic accounts against a disposable PostgreSQL/Java
+backend: three weekly slots persisted, membership approval updated 2/4 capacity, clipboard
+success/denial worked, admin create/edit/deactivate/reactivate/permanent deletion completed
+through the UI, narrow cards retained actions, and reduced motion removed transitions.
+The pass added 31 frontend tests (108 total across 16 suites), reran all 228 backend tests,
+and passed a fresh Node 22 locked install/test/lint/build/audit. No new backend endpoint/DTO,
+schema, configuration, dependency, external icon/font or A/B product feature was needed.
+[UI acceptance/integration/screenshots](TEAM_C_UI_POLISH.md) gives the full evidence.
 
 ### Review references
 

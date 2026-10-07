@@ -1,7 +1,8 @@
 # Team C verification record
 
 Verified on **7 October 2026, SGT**, on `feat/team-c/match-request-state-machine`.
-This records actual checks of the implementation tree, including the approved follow-up fixes.
+This records actual checks of the implementation tree, including the approved follow-up fixes
+and full UI polish.
 [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48) is published. Its initial
 [hosted run](https://github.com/aryan12singh/study-buddy-matcher/actions/runs/37547938687) passed
 223 backend and 65 frontend tests at `d0270cf`. The current results below include subsequent
@@ -47,7 +48,7 @@ contains `application-local.yml`. Process environment supplies deployed credenti
 | Backend unit/context/HTTP/database suite | Java 21, PostgreSQL 17.11, fresh schema | **228 passed across 27 suites; 0 failures, errors or skips** |
 | Real HTTP/database integration subset | Random-port Spring server, real JWT/JPA/PostgreSQL | **34 passed**, including LoginConcurrencyTest, NotificationDirectionTest and ListQueryTest; included above (193 unit + 1 context + 34 integration) |
 | Legacy upgrade / rollback / repeat | Separate empty migration fixture database | Passed: invalid duplicate identity rejected without partial changes; all ten legacy event columns converted once; weekly slots preserved; repeat is stable |
-| Frontend rendered interactions | Node 22.23.3 official container, fresh locked install, jsdom | **77 passed across 11 suites**; local Node 26 also passed |
+| Frontend rendered interactions | Node 22.23.3 official container, fresh locked install, jsdom | **108 passed across 16 suites**; local Node 26 also passed |
 | Frontend lint/build | Same Node 22 run | 0 warnings/errors; TypeScript and production build passed |
 | npm audit | Patched existing transitive lock entry | **0 vulnerabilities** at verification time |
 | Backend distribution | Existing Maven JAR/Boot plugins | Packaging passed; private local YAML absent from both JARs |
@@ -55,9 +56,12 @@ contains `application-local.yml`. Process environment supplies deployed credenti
 | Shared seed repeat | Two backend startups, private runtime passwords | 51 accounts / 50 students / 10 courses; identity/password-hash/creation checksum unchanged |
 | Shared database access boundary | Operator metadata plus isolated role execution | 16 RLS tables, 0 browser/PUBLIC application-table grants; actual anon/authenticated reads and writes denied in isolated PostgreSQL |
 
-The backend/frontend suites, migration tests, lint and build were rerun after the follow-up.
+The backend/frontend suites, migration tests, lint and build were rerun after the follow-up
+and again after the approved UI polish.
 The application changes are committed as `3e2e71d` (backend batching) and `cded795`
-(frontend completion/refresh fixes). Subsequent delivery-document changes do not alter them.
+(frontend completion/refresh fixes). The current UI polish is committed as `fa7dcc5` (shared controls/router) and `27ddb45`
+(C screen workflows), with full evidence below. Subsequent documentation edits do not
+change code.
 The unchanged packaging, browser, restart and shared-environment rows record the earlier
 end-to-end implementation checks; the follow-up did not repeat those manual/cloud operations.
 
@@ -119,7 +123,7 @@ carry the correct recipient direction and link to the matching history. Four ren
 timer cases retain request-dialog message/context during a pending fetch while private
 profile data is purged; two rendered lifecycle-link cases check Incoming versus Outgoing.
 
-## Running-browser evidence
+## Initial running-browser evidence
 
 The actual Vite app called the running backend at port 18080 and an isolated PostgreSQL
 database. Three independent in-app browser sessions used synthetic Priya, Jamie and an
@@ -144,14 +148,15 @@ administrator; these flows did not modify shared Supabase relationships or delet
 | Profile and group request drafts across real background polling | Profile message/course/goal and group application message retained after multiple refreshes; neither draft submitted |
 | Final sender-deactivation notice link | Opened Incoming and displayed the matching Declined request, using the final backend DTO |
 
-The final permanent-delete submission was tested through real HTTP and rendered frontend
-tests; the browser exercise inspected the confirmation without clicking its irreversible
-submit. Invalid/unauthorized/rollback/race behavior is automated rather than claimed from
+In the initial pass, permanent-delete submission was tested through real HTTP and rendered
+frontend tests; that browser exercise inspected the confirmation without submitting it.
+The subsequent isolated polish pass below also completed permanent deletion through the UI.
+Invalid/unauthorized/rollback/race behavior is automated rather than claimed from
 every manual click. The browser platform was the macOS in-app browser at its default desktop
 viewport plus the explicit admin narrow check; this is not an all-browser accessibility audit.
 
-The group screenshot captures Jamie's successful membership before subsequent removal and
-closure. It is real saved backend data, rather than a static mock screen:
+The screenshots have been refreshed in the polish pass below. They now show the latest
+polished UI and real saved synthetic backend data:
 
 ![Accepted group membership and saved weekly schedule](images/team-c-group.jpg)
 
@@ -217,3 +222,39 @@ status text. Aryan approved their correction and the proposed list-query batchin
 
 The follow-up adds **5 backend tests** and **12 frontend tests** to the initial 223/65 suites.
 It changes no endpoint/DTO, dependency, migration, credential configuration or matching logic.
+
+## Approved UI polish verification
+
+All eight polish items and retro delighters are implemented; the complete behaviour,
+shared integration boundary and evidence are in [TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH.md).
+This pass reran **228 backend tests across 27 suites** and migration checks against fresh
+PostgreSQL. No backend/API/schema/dependency change was needed. A clean official Node
+22.23.3 container with `npm ci` passed **108 tests across 16 suites**, zero lint warnings/errors,
+TypeScript/production build and an audit with zero vulnerabilities. The local Node 26 run
+also passed. This adds 31 meaningful frontend regressions to the earlier 77-test baseline.
+
+| New actual-browser check | Observed result |
+| --- | --- |
+| Group create/update with duplicate and selected-day copy | Saved reads contained Tuesday/Thursday/Friday 09:00–11:00 SGT; destination notices displayed once and did not replay on reload |
+| Group filters/tabs, Back/reload and clearing | Valid URL state and API results remained aligned; clear restored the unfiltered list |
+| Group application/approval | Accepted member count changed to 2/4; existing leader/member permissions remained authoritative |
+| Buddy send/accept/contact copy/disconnect | Contact copy available after actual acceptance; removed with private contact after confirmed disconnect; group membership remained |
+| Native clipboard success and denied access | Canonical group URL copied; denied write showed selectable manual link, without query/hash |
+| Dirty group Back/sidebar and nested copy dialog exit | Keep editing retained inputs; explicit discard navigated; all closing orders restored scrolling |
+| Buddy/application draft Cancel/X/Escape | Keep editing retained each message; explicit discard closed both dialogs; neither draft was sent |
+| Admin create/edit/deactivate/reactivate/permanent delete | Entire UI journey against a disposable fixture; generic create/update/delete destination messages, and 51 accounts after deletion |
+| Actual 375px admin/group form | All account actions visible, no page-width overflow; weekly preview and sticky save controls displayed |
+| Reduced motion / final browser console | Button transition duration 0s; final journeys produced 0 console errors/warnings |
+
+These Playwright-driven native browser journeys used the actual Vite app, running Java backend
+and a separate disposable PostgreSQL 17 database with generated runtime credentials and
+synthetic Priya/Jamie/Alex/admin identities. They did not load or mutate shared Supabase data.
+Accounts were switched through the normal login/logout UI; permissions were decided by real
+JWT-authenticated backend responses. Invalid/race/rollback paths remain covered by the existing
+HTTP/database suite rather than being claimed from every manual click.
+
+Updated evidence: [filtered group list](images/team-c-groups-polished.jpg),
+[saved group](images/team-c-group.jpg), [narrow account cards](images/team-c-admin-narrow.jpg),
+[protected request draft](images/team-c-request-draft.jpg), and
+[narrow schedule editor/preview](images/team-c-schedule-preview.jpg). Human cross-team review,
+authors' walkthrough, projector rehearsal and squash merge remain separate delivery checks.

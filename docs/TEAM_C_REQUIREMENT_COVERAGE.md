@@ -75,6 +75,25 @@ stack against migrated PostgreSQL 17, rather than mocked controllers. Class name
 | No orphan active buddy/member/led resources, no broken deleted links | StudentDeactivation / StudentDeletion / GroupClosure | Real refreshed status and counts | Full dependency HTTP fixtures, delete/send and deactivate/approve races |
 | Self/last-admin removal protected across concurrent actions | Exclusive guard + locked administrator recount | Self controls disabled, safe conflict | AccountHttpTest selfRemovalAndConcurrentAdministratorRemoval; unit last-admin cases |
 
+## Approved UI polish coverage
+
+| Behaviour | Source / evidence |
+| --- | --- |
+| Shared hierarchy, original pixels/initials, reduced motion | desktop.css, PixelIcon/Avatar; live desktop/narrow screenshots and computed motion check |
+| Narrow admin cards and compact shell | AdminUsersPage/AppShell; real 375px viewport with all fields/actions and no overflow |
+| Consumed create/edit/delete destination success | RouteNotice and group/admin forms/detail; FormPolish and actual UI saves/deletion |
+| URL tabs/validated filters/counts/chips/empty CTAs | GroupsPage/NotificationsPage/FilterSummary; rendered valid/invalid/Back cases and live API browsing |
+| Server-derived capacity/member states | CapacityMeter/GroupCard/detail/manage; GroupsBrowsing, existing GroupHttpTest and live 2/4 approval |
+| Duplicate/copy/sorted weekly preview | WeeklySlotEditor/WeeklySchedule; focused validation/copy tests and three saved backend slots |
+| Canonical link/authorised contact copy | CopyButton/GroupDetail/StudentProfile; native copy/denial, regression value-change cases and disconnect purge |
+| Dirty/pending/clean/successful SPA and reload exits | useFormExit/FormActions; FormPolish/navigation tests, native Back/sidebar keep/discard |
+| Request/application Cancel/X/Escape and stale callbacks | useDraftClose/useViewLifetime; DialogDrafts, retained-refresh tests and actual unsent draft checks |
+| Nested scroll restoration and session cleanup | Dialog/FormPolish regressions, native nested copy/route exit and expired-session tests |
+
+Full acceptance/evidence and the A/B routing/primitives boundary are recorded in
+[TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH.md). Existing C backend validation, lifecycle locks
+and privacy assemblers support every new UI flow; no unimplemented endpoint is assumed.
+
 ## Foundations and delivery evidence
 
 Auth/current principal/role guards/course listing, synthetic seed, shared client/primitives,
@@ -95,8 +114,9 @@ draft retention through focus/polling while purging private data (four rendered 
 recipient request direction for withdrawal/answered notification links (`NotificationDirectionTest`,
 three HTTP cases plus unit/rendered cases and a live link journey). The approved follow-up
 also fixes late-save navigation/admin refresh state and batches list reads, with regression
-evidence in TEAM_C_TESTING.md. Current results are **228 backend tests and 77 frontend tests**,
-with passing lint/build and migration checks.
+evidence in TEAM_C_TESTING.md. Current results are **228 backend tests and 108 frontend tests**,
+with passing lint/build and migration checks. The approved UI polish adds 31 frontend
+regressions and real backend/browser verification without changing the API/schema.
 
 Published as [PR #48](https://github.com/aryan12singh/study-buddy-matcher/pull/48); initial hosted
 CI passed, and the PR checks show each pushed revision. Remaining external work: another team's

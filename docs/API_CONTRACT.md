@@ -403,3 +403,26 @@ protect the alternate Supabase access path; operational evidence is recorded sep
 
 These are proposals, not implemented C endpoints. Reuse C profile privacy, active-student
 eligibility and structured match-request context when connecting the matching screen.
+
+## UI polish consumers of the existing contract
+
+The approved C polish adds no endpoint or DTO field. Group capacity/leader/member/application
+indicators use the existing `memberCount`, `maxGroupSize`, `active` and `viewer` fields;
+they never infer membership from a local click or reserve a place for a pending request.
+Schedule duplicate/copy produces the same weekly-slot array accepted by POST/PUT groups;
+the saved detail read supplies the schedule/agenda afterward. Existing group validation and
+transactional capacity checks still apply.
+
+Browser query state is distinct from API input: `/groups?view=mine` reads groups/mine,
+`view=applications` reads group-join-requests/mine; browse passes only valid `courseId`,
+`studyGoal` and `studyMode` filters. `/notifications?view=requests|groups` maps to the
+existing REQUESTS/GROUPS filter, and the default is ALL. Other URL keys are preserved by
+the UI but never added to API requests. Connection notification links retain their existing
+incoming/outgoing view contract.
+
+Copy contact is offered only for a supplied self/CONNECTED profile contact; group membership
+and administrator privileges do not grant it. The same privacy assembler and profile
+no-store/session-purge rules govern that read. Group-link copy uses the client origin plus
+`/groups/{id}` and drops query/hash. Clipboard denial has a manual fallback, not another API.
+Create/update/delete destination feedback contains generic outcome text and no DTO/private
+fields. See [UI behaviour and verification](TEAM_C_UI_POLISH.md).

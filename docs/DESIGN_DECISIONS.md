@@ -67,3 +67,21 @@ The formal brief states Week 13, a 12-minute demo and 8-minute Q&A. Current proj
 and 15 November 2026 11:59 pm SGT final handoff. README and AGENTS use these team dates.
 The presentation, human review, library/asset provenance, slides, full product integration
 and private peer evaluation remain team delivery work; they are not claimed completed here.
+
+## Approved UI polish
+
+The eight polish items and retro delighters were approved for this branch on 7 October.
+Their completion and live evidence are in [TEAM_C_UI_POLISH.md](TEAM_C_UI_POLISH.md).
+
+| Choice | Behaviour and integration consequence |
+| --- | --- |
+| Existing APIs | Group forms, membership, privacy and admin flows use the current authenticated contracts; no new backend endpoint, schema, configuration or dependency was required |
+| One data router | `routes.tsx` contains the unchanged guarded route paths; `main.tsx` creates the browser router once and `App` supplies auth and `RouterProvider`. This enables the supported router blocker without custom history interception |
+| Transient drafts | Group/account edits and buddy/application dialogs prompt on dirty SPA exits, Cancel/X/Escape where applicable, and native reload. Successful saves leave normally; choosing to leave a pending write does not cancel its backend transaction. Late completion cannot redirect or invoke an abandoned dialog callback |
+| Destination feedback | Generic create/update/delete messages are displayed at the destination, consumed from the history state and dismissible. Back/reload does not replay them; no account/contact/password/draft values enter these messages |
+| URL views | Groups use `view`, `courseId`, `studyGoal`, `studyMode`; notifications use `view`. Tabs push history; group filter edits replace the current entry. Invalid enum/numeric values default safely and unrelated query keys are preserved |
+| Weekly editing | Duplicate creates an independent block; copy adds it to selected other days without adding an identical existing block. The live preview sorts for display without reordering the input. Existing whole-minute, same-day validation remains authoritative |
+| Copy convenience | An explicit click copies the canonical group URL without query/hash, or an already-authorised contact. Denied/unavailable clipboard gives manual guidance. Contacts are never duplicated into the fallback or persisted by the component |
+| Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No fabricated percentage or online indicator |
+| Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
+| Nested dialogs | Scroll remains locked until the last modal closes, even when a route exit removes dialogs out of order; each dialog retains its keyboard focus/Escape handling |
