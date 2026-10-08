@@ -196,6 +196,8 @@
 .account-table th { background: #e8eff2; font-size: .84rem; color: #365062; }
 .account-table th, .account-table td { border-color: #b7c4cb; }
 .account-table td { font-size: .88rem; overflow-wrap: anywhere; }
+/* Short labels such as a role or status stay whole instead of breaking mid-word */
+.account-table td.keep-words { overflow-wrap: normal; white-space: nowrap; }
 .account-table caption { padding: .3rem 0 .7rem; text-align: left; }
 .account-table .retro-button { min-height: 36px; }
 .account-table .person-heading { align-items: flex-start; }
