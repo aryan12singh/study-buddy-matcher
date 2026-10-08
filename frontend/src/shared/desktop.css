@@ -110,6 +110,18 @@
 .person-heading { display: flex; align-items: center; gap: .7rem; margin-bottom: .55rem; min-width: 0; }
 .person-heading h2 { margin: 0; }
 .person-heading a { overflow-wrap: anywhere; }
+/* PersonCard: name and View profile on top, details, then decisions along the bottom */
+.data-row.person-card { flex-direction: column; align-items: stretch; gap: 0; }
+.person-card .person-heading .profile-link { margin-left: auto; flex-shrink: 0; }
+.person-card > .actions { margin-top: .6rem; }
+/* Space between a page's own actions and the tabs or list below them */
+.page-actions { margin: .8rem 0 1.2rem; }
+/* Something waiting for this viewer, e.g. applications for a group leader */
+.attention-panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .65rem; margin: 1rem 0; padding: .8rem 1rem; background: #fbf0d3; color: #705219; border: 1px solid #bca160; }
+.attention-panel p { margin: 0; }
+/* Unread count sits on the corner of the nav icon so the label keeps its full width */
+.desktop .desktop-navigation a > .pixel-icon { grid-column: 1; grid-row: 1; }
+.desktop .desktop-navigation a > .unread-count { grid-column: 1; grid-row: 1; justify-self: end; align-self: start; transform: translate(45%, -45%); z-index: 1; }
 .initials-avatar { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex: 0 0 42px; border: 1px solid #657c91; box-shadow: inset 2px 2px 0 #ffffffb0, 2px 2px 0 #20395119; font-size: .92rem; font-weight: 700; line-height: 1; letter-spacing: .04em; color: #233e5d; }
 .avatar-small { width: 29px; height: 29px; flex-basis: 29px; font-size: .68rem; }
 .avatar-tone-0 { background: #d9e9f5; }

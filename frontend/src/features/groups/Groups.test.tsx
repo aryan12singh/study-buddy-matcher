@@ -88,6 +88,23 @@ describe('group fields and saved state', () => {
     expect(dialog).toHaveTextContent('Asia/Singapore')
     expect(screen.getByText(/Being in the same group does not share contact numbers/)).toBeInTheDocument()
   })
+  it.each([
+    { who: 'the leader', viewer: { leader: true, member: true, requestId: null, requestStatus: null }, pendingApplications: 2, banner: true },
+    { who: 'a member', viewer: { leader: false, member: true, requestId: null, requestStatus: null }, pendingApplications: null, banner: false }
+  ])('shows waiting applications to $who only, with one manage action and the copy link last', async ({ viewer, pendingApplications, banner }) => {
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...group, viewer, pendingApplications }))
+    renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
+    await screen.findByRole('button', { name: 'View agenda' })
+    if (banner) {
+      expect(screen.getByText('2 students have asked to join this group.')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Review applications' })).toHaveAttribute('href', '/groups/5/manage')
+    } else {
+      expect(screen.queryByText(/asked to join this group/)).not.toBeInTheDocument()
+    }
+    expect(screen.queryByRole('link', { name: 'Edit group' })).not.toBeInTheDocument()
+    const buttons = screen.getByRole('button', { name: 'Copy group link' }).closest('.actions')!.querySelectorAll('a, button')
+    expect(buttons[buttons.length - 1]).toHaveTextContent('Copy group link')
+  })
   it('renders full, pending and closed states without a request action', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ ...group, active: false, viewer: { leader: false, member: false, requestStatus: 'PENDING', requestId: 20 } }))
     renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')

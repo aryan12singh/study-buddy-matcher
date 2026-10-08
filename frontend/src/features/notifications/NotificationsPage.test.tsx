@@ -89,6 +89,7 @@ describe('notifications', () => {
     expect(notificationLink({ ...notification, requestDirection: null })).toBeNull()
     expect(notificationLink({ ...notification, type: 'MATCH_REQUEST_ACCEPTED' })?.to).toBe('/connections?view=outgoing')
     expect(notificationLink({ ...notification, resourceType: 'GROUP', resourceId: 5 })?.to).toBe('/groups/5')
+    expect(notificationLink({ ...notification, type: 'GROUP_JOIN_REQUEST_RECEIVED', resourceType: 'GROUP', resourceId: 5 })).toEqual({ to: '/groups/5/manage', label: 'Review applications' })
   })
   it('refreshes the shell unread badge after a successful read mutation', async () => {
     let read = false

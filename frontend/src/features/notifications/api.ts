@@ -17,7 +17,12 @@ export async function readAllNotifications() { await api.post('/notifications/re
 
 export function notificationLink(notification: Notification) {
   if (!notification.resourceId) return null
-  if (notification.resourceType === 'GROUP') return { to: `/groups/${notification.resourceId}`, label: 'View group' }
+  if (notification.resourceType === 'GROUP') {
+    // A leader's join-request notice goes straight to where the decision is made
+    return notification.type === 'GROUP_JOIN_REQUEST_RECEIVED'
+      ? { to: `/groups/${notification.resourceId}/manage`, label: 'Review applications' }
+      : { to: `/groups/${notification.resourceId}`, label: 'View group' }
+  }
   if (notification.resourceType === 'STUDENT') return { to: `/students/${notification.resourceId}`, label: 'View profile' }
   if (notification.resourceType === 'MATCH_REQUEST') {
     const direction = notification.requestDirection === undefined
