@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Course, WeeklySlot } from '../../shared/api/types'
 import { useAction } from '../../shared/api/useAction'
+import { useAuth } from '../../shared/auth/useAuth'
 import ActionNotice from '../../shared/components/ActionNotice'
 import Button from '../../shared/components/Button'
 import FormActions from '../../shared/components/FormActions'
@@ -28,6 +29,7 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
   welcome: boolean
 }) {
   const [tab, setTab] = useState<ProfileTab>(initialTab)
+  const { updateAccountName } = useAuth()
   const profileAction = useAction()
   const availabilityAction = useAction()
   const [saved, setSaved] = useState(profile)
@@ -63,6 +65,7 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
     const result = await profileAction.run(() => updateMyProfile(toRequest(form)), 'Profile saved.')
     if (result.ok) {
       setSaved(result.value)
+      updateAccountName?.(result.value.name)
       setForm(toForm(result.value))
     }
   }

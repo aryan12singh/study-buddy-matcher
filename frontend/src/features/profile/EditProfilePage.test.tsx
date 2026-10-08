@@ -67,6 +67,14 @@ describe('edit study profile', () => {
     expect(screen.getByLabelText('Full name')).toHaveValue('Priya N.')
   })
 
+  it('updates the name in the menu bar as soon as a new name is saved', async () => {
+    serve(profile)
+    vi.spyOn(api, 'put').mockResolvedValue(response({ ...profile, name: 'Priya N.' }))
+    const { auth } = renderPage(<EditProfilePage />, '/students/1/edit', '/students/:id/edit')
+    fireEvent.change(await screen.findByLabelText('Full name'), { target: { value: 'Priya N.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save profile' }))
+    await waitFor(() => expect(auth.updateAccountName).toHaveBeenCalledWith('Priya N.'))
+  })
   it('blocks saving without a course before calling the server', async () => {
     serve(profile)
     const put = vi.spyOn(api, 'put')
