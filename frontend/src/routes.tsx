@@ -27,9 +27,9 @@ export const appRoutes = createRoutesFromElements(
         <Route element={<AppShell />}>
           <Route path="/app" element={<AccountHome />} />
           <Route element={<RequireRole role="STUDENT" />}>
-            <Route path="/profile" element={<EditProfilePage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
+            <Route path="/students/:id/edit" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/new" element={<GroupFormPage />} />

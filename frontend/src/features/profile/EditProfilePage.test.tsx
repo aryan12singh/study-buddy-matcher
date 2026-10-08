@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
 import { renderPage, response } from '../../test/renderApp'
+import StudentProfilePage from '../students/StudentProfilePage'
 import EditProfilePage from './EditProfilePage'
 import type { MyProfile } from './api'
 
@@ -24,10 +25,34 @@ function serve(data: MyProfile) {
 
 afterEach(() => vi.restoreAllMocks())
 
+describe('getting to the edit page', () => {
+  const viewed = { id: 1, name: 'Priya Nair', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, coursesTaken: [],
+    targetCourse: null, preferredStudyMode: null, studyGoals: [], preferredGroupSizeMin: null, preferredGroupSizeMax: null,
+    availability: [], relationship: { state: 'SELF', requestId: null, connectionId: null } }
+
+  it('offers Edit my profile only on your own profile', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response(viewed))
+    renderPage(<StudentProfilePage />, '/students/1', '/students/:id')
+    expect(await screen.findByRole('link', { name: 'Edit my profile' })).toHaveAttribute('href', '/students/1/edit')
+  })
+  it('does not offer editing on another student’s profile', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...viewed, id: 2, name: 'Jamie', relationship: { state: 'STRANGER', requestId: null, connectionId: null } }))
+    renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    await screen.findByRole('heading', { name: "Jamie's study profile" })
+    expect(screen.queryByRole('link', { name: 'Edit my profile' })).not.toBeInTheDocument()
+  })
+  it('sends another student’s edit URL back to their profile without loading anything', async () => {
+    const get = vi.spyOn(api, 'get')
+    renderPage(<EditProfilePage />, '/students/2/edit', '/students/:id/edit')
+    expect(await screen.findByText('Destination page')).toBeInTheDocument()
+    expect(get).not.toHaveBeenCalled()
+  })
+})
+
 describe('edit study profile', () => {
   it('shows the saved profile and keeps edits when switching tabs', async () => {
     serve(profile)
-    renderPage(<EditProfilePage />, '/profile', '/profile')
+    renderPage(<EditProfilePage />, '/students/1/edit', '/students/:id/edit')
     expect(await screen.findByLabelText('Full name')).toHaveValue('Priya Nair')
     expect(screen.getByLabelText('Contact number')).toHaveValue('Synthetic contact 1')
     fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Priya N.' } })
@@ -45,7 +70,7 @@ describe('edit study profile', () => {
   it('blocks saving without a course before calling the server', async () => {
     serve(profile)
     const put = vi.spyOn(api, 'put')
-    renderPage(<EditProfilePage />, '/profile?tab=preferences', '/profile')
+    renderPage(<EditProfilePage />, '/students/1/edit?tab=preferences', '/students/:id/edit')
     fireEvent.click(await screen.findByLabelText('IS442 Object Oriented Programming'))
     fireEvent.click(screen.getByLabelText('IS212 Software Project Management'))
     fireEvent.click(screen.getByRole('button', { name: 'Save profile' }))
@@ -59,7 +84,7 @@ describe('edit study profile', () => {
       config: { headers: new AxiosHeaders() }, status: 400, statusText: 'Bad Request', headers: {},
       data: { message: 'Check the highlighted fields', fieldErrors: { courseIds: 'Choose at most 8 courses' } }
     }))
-    renderPage(<EditProfilePage />, '/profile?tab=preferences', '/profile')
+    renderPage(<EditProfilePage />, '/students/1/edit?tab=preferences', '/students/:id/edit')
     fireEvent.click(await screen.findByLabelText('IS210 Business Process Analysis and Solutioning'))
     fireEvent.click(screen.getByRole('button', { name: 'Save profile' }))
     await waitFor(() => expect(put).toHaveBeenCalledWith('/profile/me', expect.objectContaining({
@@ -72,7 +97,7 @@ describe('edit study profile', () => {
   it('explains an empty week and saves new availability', async () => {
     serve({ ...profile, availability: [] })
     const put = vi.spyOn(api, 'put').mockResolvedValue(response([{ dayOfWeek: 'MONDAY', startTime: '09:00:00', endTime: '10:00:00' }]))
-    renderPage(<EditProfilePage />, '/profile?tab=availability', '/profile')
+    renderPage(<EditProfilePage />, '/students/1/edit?tab=availability', '/students/:id/edit')
     expect(await screen.findByRole('heading', { name: 'No weekly times yet' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Add time block' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save availability' }))
@@ -87,7 +112,7 @@ describe('edit study profile', () => {
       { dayOfWeek: 'MONDAY', startTime: '10:00:00', endTime: '12:00:00' }
     ] })
     const put = vi.spyOn(api, 'put')
-    renderPage(<EditProfilePage />, '/profile?tab=availability', '/profile')
+    renderPage(<EditProfilePage />, '/students/1/edit?tab=availability', '/students/:id/edit')
     fireEvent.click(await screen.findByRole('button', { name: 'Save availability' }))
     expect(await screen.findByText('Time blocks on the same day cannot overlap.')).toBeInTheDocument()
     expect(put).not.toHaveBeenCalled()

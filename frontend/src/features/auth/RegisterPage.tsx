@@ -37,7 +37,7 @@ function RegisterPage() {
       contactNumber: form.contactNumber.trim(),
       yearOfStudy: Number(form.yearOfStudy)
     }))
-    if (result.ok) navigate('/profile?welcome=1&tab=preferences', { replace: true, state: { notice: 'Account created.' } })
+    if (result.ok) navigate(`/students/${result.value.id}/edit?welcome=1&tab=preferences`, { replace: true, state: { notice: 'Account created.' } })
   }
   return (
     <div className="desktop auth-desktop">
