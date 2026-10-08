@@ -30,7 +30,7 @@ export default function AppShell() {
               <NavLink to="/connections"><PixelIcon kind="connections" /><span>Connections</span></NavLink>
               <NavLink to="/groups"><PixelIcon kind="groups" /><span>Study groups</span></NavLink>
               <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span></NavLink>
-              <NavLink to={`/students/${account.id}`}><PixelIcon kind="profile" /><span>My study profile</span></NavLink>
+              <NavLink to="/profile"><PixelIcon kind="profile" /><span>My study profile</span></NavLink>
             </>
           ) : (
             <NavLink to="/admin/users"><PixelIcon kind="accounts" /><span>User accounts</span></NavLink>

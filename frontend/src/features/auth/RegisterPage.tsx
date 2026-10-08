@@ -37,13 +37,13 @@ function RegisterPage() {
       contactNumber: form.contactNumber.trim(),
       yearOfStudy: Number(form.yearOfStudy)
     }))
-    if (result.ok) navigate('/connections', { replace: true })
+    if (result.ok) navigate('/profile?welcome=1&tab=preferences', { replace: true, state: { notice: 'Account created.' } })
   }
   return (
     <div className="desktop auth-desktop">
       <WindowPage
         title="Create a student account"
-        description="Start with your identity. Courses and study preferences can be added through the profile editor when available."
+        description="Start with your identity. You will add courses and study preferences right after."
       >
         <form
           onSubmit={submit}
