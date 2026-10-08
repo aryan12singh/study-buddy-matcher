@@ -25,7 +25,9 @@ code change.
 - [Running the App](#running-the-app)
 - [Seed Data](#seed-data)
 - [Matching Engine](#matching-engine)
+- [Requests, Groups, Notifications and Admin](#requests-groups-notifications-and-admin)
 - [Testing](#testing)
+- [Libraries](#libraries)
 - [Team Workflow](#team-workflow)
 
 ## Overview
@@ -92,13 +94,16 @@ study-buddy-matcher/
 │       │   ├── auth/ security/          # login, registration, JWT and role guards
 │       │   ├── common/                  # error responses, input rules, account checks
 │       │   ├── user/ student/ course/   # shared entities, repositories, course listing
+│       │   ├── matchrequest/ connection/ # buddy requests and connections
+│       │   ├── profile/ notification/   # profile privacy and notifications
+│       │   ├── studygroup/ admin/       # study groups and admin accounts
 │       │   └── seed/                    # opt-in demo data
 │       ├── main/resources/
 │       │   ├── application.yml          # committed, reads env vars, no secrets
 │       │   ├── application-local.yml    # gitignored — your real values, see below
 │       │   └── db/migrations/           # ordered SQL migrations
 │       └── test/
-│           ├── java/com/studybuddy/     # unit tests and the context-load test
+│           ├── java/com/studybuddy/     # unit tests, context-load test, integration/ HTTP tests
 │           └── resources/application-test.yml   # isolated test database profile
 ├── frontend/
 │   ├── package.json, vite.config.ts, tsconfig*.json
@@ -109,8 +114,10 @@ study-buddy-matcher/
 │       ├── shared/                       # API client, auth context, guards, UI components
 │       └── features/
 │           ├── landing/LandingPage.tsx
-│           └── auth/LoginPage.tsx, RegisterPage.tsx
+│           ├── auth/LoginPage.tsx, RegisterPage.tsx
+│           └── connections/ students/ groups/ notifications/ admin/
 ├── scripts/                              # migration runner and isolated backend tests
+├── docs/                                 # API contract, decisions, coverage, diagrams
 └── README.md
 ```
 
@@ -238,6 +245,25 @@ criteria weights are admin-configurable (not hardcoded), supporting at least:
 
 Match quality is shown to users in plain language (e.g. "Strong match"), not a raw score.
 
+## Requests, Groups, Notifications and Admin
+
+Built by Team C on top of the platform foundation:
+
+- **Match requests and connections:** send a request with an optional message and
+  course/goal context, accept or decline, and end a connection.
+- **Profile privacy:** the contact number is in the profile response only for the student
+  themselves or an active connection. Group membership and admin access never reveal it,
+  and ending a connection removes access immediately.
+- **Study groups:** create, browse and filter, apply, approve or reject, edit, remove
+  members and close. The leader counts toward capacity.
+- **Notifications:** for request and group events, with read state and an unread badge.
+- **Admin accounts:** create, edit, deactivate/reactivate and permanently delete accounts,
+  with last sign-in, active connections and open group memberships as usage.
+
+See the [API contract](docs/API_CONTRACT.md), [design decisions](docs/DESIGN_DECISIONS.md),
+[requirement coverage](docs/REQUIREMENT_COVERAGE.md), [database operations](docs/DATABASE_OPERATIONS.md)
+and [diagrams](docs/diagrams/TEAM_C.md).
+
 ## Testing
 
 - Backend: JUnit + Mockito.
@@ -247,11 +273,12 @@ Match quality is shown to users in plain language (e.g. "Strong match"), not a r
 
 ```bash
 cd backend
-./mvnw test -Dtest='!StudyBuddyApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw test -Dtest='!com.studybuddy.integration.**,!StudyBuddyApplicationTests' \
+  -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-**Full backend suite**, including the context-load test, from the repository root (needs
-Docker, `psql` and OpenSSL):
+**Full backend suite**, including the context-load test and the HTTP/database tests in
+`integration/`, from the repository root (needs Docker, `psql` and OpenSSL):
 
 ```bash
 scripts/test-backend.sh
@@ -273,7 +300,55 @@ npm run build
 
 CI runs all of the above on every pull request into `main`.
 
+## Libraries
+
+Versions match the resolved Maven dependencies and the npm lockfile.
+
+| Library/tool | Resolved version | Purpose | Licence / primary source |
+| --- | --- | --- | --- |
+| Spring Boot JPA, Security, Validation, WebMVC and test starters | 4.1.1 | Fixed stack, wiring and tests | Apache-2.0, [Spring Boot](https://github.com/spring-projects/spring-boot) |
+| Spring Framework / Data JPA / Security | 7.0.9 / 4.1.1 / 7.1.1 | Transactions, repositories, web/security | Apache-2.0, [Spring](https://github.com/spring-projects) |
+| Hibernate ORM | 7.4.5.Final | JPA persistence | Apache-2.0, [Hibernate](https://github.com/hibernate/hibernate-orm) |
+| PostgreSQL JDBC | 42.7.13 | Server-side JDBC | BSD-2-Clause, [pgJDBC](https://github.com/pgjdbc/pgjdbc) |
+| JJWT API/impl/Jackson | 0.12.6 | JWT signing/verification | Apache-2.0, [JJWT](https://github.com/jwtk/jjwt) |
+| Jackson 3 / Jackson 2 | 3.1.5 / 2.21.5 (annotations 2.21) | Spring JSON / JJWT JSON | Apache-2.0, [Jackson](https://github.com/FasterXML) |
+| JUnit Jupiter / Mockito | 6.0.3 / 5.23.0 | Backend tests/mocks | EPL-2.0 / MIT, [JUnit](https://github.com/junit-team/junit-framework), [Mockito](https://github.com/mockito/mockito) |
+| Maven / wrapper | 3.9.16 / 3.3.4 | Existing build bootstrap | Apache-2.0, [Maven](https://maven.apache.org/) |
+| React / React DOM | 19.3.0 | Components/rendering | MIT, [React](https://github.com/facebook/react) |
+| React Router DOM | 7.18.4 | Routes and guards | MIT, [React Router](https://github.com/remix-run/react-router) |
+| Axios | 1.20.0 | Shared HTTP client | MIT, [Axios](https://github.com/axios/axios) |
+| Vite / React plugin | 8.3.0 / 6.1.1 | Existing dev/build pipeline | MIT, [Vite](https://github.com/vitejs/vite), [plugin](https://github.com/vitejs/vite-plugin-react) |
+| TypeScript | 6.0.3 | API/component typing | Apache-2.0, [TypeScript](https://github.com/microsoft/TypeScript) |
+| Tailwind CSS / Vite plugin | 4.3.3 | Existing entry styling | MIT, [Tailwind](https://github.com/tailwindlabs/tailwindcss) |
+| Oxlint | 1.83.0 | Lint | MIT, [Oxc](https://github.com/oxc-project/oxc) |
+| Vitest / jsdom | 5.0.1 / 30.1.0 | Frontend tests/DOM | MIT, [Vitest](https://github.com/vitest-dev/vitest), [jsdom](https://github.com/jsdom/jsdom) |
+| Testing Library React / jest-dom | 16.3.3 / 7.0.1 | Rendered interactions/assertions | MIT, [React Testing Library](https://github.com/testing-library/react-testing-library), [jest-dom](https://github.com/testing-library/jest-dom) |
+| @types/node / react / react-dom | 24.13.6 / 19.3.0 / 19.3.0 | Development declarations | MIT, [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
+| source-map-js (transitive) | 1.2.2 | Existing source-map support; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
+
+Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing uses
+official PostgreSQL 17; no embedded database is used.
+
+Team C screens use CSS pixel patterns, Unicode glyphs and Tahoma/Verdana/system fonts;
+no icon or font files are bundled. Landing pages load Google Fonts Inter
+and Fraunces under SIL OFL 1.1 ([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
+[Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)).
+The source of `public/favicon.svg`, `public/icons.svg` and the landing page SVGs is not yet
+recorded.
+
 ## Team Workflow
 
 - One shared Supabase project for the whole team; don't spin up individual projects.
 - Own feature branch → open a Pull Request (PR) to `main` → get teammate review/approval → merge.
+- Read [AGENTS.md](AGENTS.md) before making changes.
+
+| Team | Members | Owns |
+| --- | --- | --- |
+| A | Natthida, Chong Yee, Joanne | Matching engine, search, matching configuration |
+| B | Angel, Averyl, Guang Hao | Platform, entities, authentication, own profile, seed, dashboard and shell |
+| C | Aryan, Charlize | Requests and connections, profile privacy, study groups, notifications, admin accounts |
+
+Within Team C, Charlize built the `StudyGroup` and `GroupJoinRequest` rules, group queries,
+DTOs and services. Aryan built match requests, connections, `ProfileViewAssembler`,
+notifications, admin accounts, and the controllers, screens, migrations and integration
+tests that connect them. AI use is recorded in [AI_USAGE.md](docs/AI_USAGE.md).

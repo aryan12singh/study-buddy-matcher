@@ -52,6 +52,6 @@ data/
 Thumbs.db
 
 # ---------------------------------------------------------------------------
-# Local-only Claude Code skills/config (not shared with collaborators)
+# Local editor/tool config
 # ---------------------------------------------------------------------------
 .claude/

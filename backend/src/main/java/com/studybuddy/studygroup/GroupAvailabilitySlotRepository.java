@@ -7,4 +7,6 @@ import java.util.List;
 public interface GroupAvailabilitySlotRepository extends JpaRepository<GroupAvailabilitySlot, Long> {
 
     List<GroupAvailabilitySlot> findByStudyGroupId(Long studyGroupId);
+
+    void deleteByStudyGroupId(Long studyGroupId);
 }

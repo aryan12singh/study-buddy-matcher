@@ -46,10 +46,12 @@ docs/       API contract, UML diagrams
   categorical reading is a small compatibility matrix; a numeric one is interval overlap like
   `TimeSlot`. `GroupSizeScorer`, the profile form, the seeder and the filter panel all depend
   on the answer. **Team A to decide.**
-- **Is admin account deletion a hard delete or deactivation**, and what happens to that
-  student's connections and group memberships? **Team C to decide.**
-- **What counts as "basic usage information"** on the admin screen: last login, or counts of
-  matches, connections and groups? **Team C to decide.**
+- **Admin deletion vs deactivation: decided by Team C.** Two separate actions. Deactivate is
+  reversible: it revokes sign-in, ends active connections and group memberships, and keeps
+  history. Delete is permanent and removes the account and its dependent records. Details in
+  [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md).
+- **Basic usage information: decided by Team C.** Last successful sign-in, number of active
+  connections, and number of open groups the student belongs to (including ones they lead).
 - **Is the window chrome real or decorative?** See [Visual direction](#visual-direction) below.
 
 ---
@@ -154,6 +156,9 @@ Student profile, Matching, Notifications, Study prep, study timer.
 - TODO: Fix the palette and check contrast. Retro palettes are often low contrast.
 - TODO: Decide the responsive story, or state plainly that the app is desktop-only.
 - TODO: Confirm the icon set and its licence; add it to the libraries table if it ships.
+
+Team C has a working implementation of these (decorative chrome, shared primitives under
+`frontend/src/shared/components/`) that the team can adopt or change.
 
 ### Shared components
 

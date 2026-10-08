@@ -9,17 +9,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * An accepted study-buddy connection between two students. {@code endedAt}
  * being null is what "active" means; no separate status flag is kept in sync.
+ * Ending is one-way, through {@link #end()}; there is no setter that reopens
+ * a connection.
  */
 @Entity
 @Table(name = "connections")
 public class Connection {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,10 +33,10 @@ public class Connection {
     private Student studentB;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "ended_at")
-    private LocalDateTime endedAt;
+    private Instant endedAt;
 
     protected Connection() {
     }
@@ -58,19 +58,44 @@ public class Connection {
         return studentB;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getEndedAt() {
+    public Instant getEndedAt() {
         return endedAt;
-    }
-
-    public void setEndedAt(LocalDateTime endedAt) {
-        this.endedAt = endedAt;
     }
 
     public boolean isActive() {
         return endedAt == null;
+    }
+
+    public boolean involves(Long studentId) {
+        return studentA.getId().equals(studentId) || studentB.getId().equals(studentId);
+    }
+
+    /**
+     * The participant on the other side from {@code studentId}.
+     *
+     * @throws IllegalArgumentException if the student is not in this connection
+     */
+    public Student otherStudent(Long studentId) {
+        if (studentA.getId().equals(studentId)) {
+            return studentB;
+        }
+        if (studentB.getId().equals(studentId)) {
+            return studentA;
+        }
+        throw new IllegalArgumentException("Student " + studentId + " is not part of connection " + id);
+    }
+
+    /**
+     * @throws IllegalStateException if the connection has already ended
+     */
+    public void end() {
+        if (!isActive()) {
+            throw new IllegalStateException("Connection " + id + " has already ended");
+        }
+        this.endedAt = Instant.now();
     }
 }

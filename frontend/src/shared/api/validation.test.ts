@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { validateAccountFields } from '../auth/validation'
 import { validateSlots } from './schedules'
+import { validateGroupForm } from '../../features/groups/validation'
 import { REFRESH_INTERVAL_MS } from './useResource'
 
 const student = { email: 'student@example.test', password: 'a-long-passphrase', name: 'Student', school: 'SCIS', programme: 'IS', yearOfStudy: '1', contactNumber: '+65 9999 1111' }
@@ -17,6 +18,9 @@ describe('form contract limits', () => {
     expect(validateSlots([])).toBeUndefined()
     expect(validateSlots([{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '09:00:00' }])).toBeDefined()
     expect(validateSlots([{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '11:00' }, { dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00' }])).toBeUndefined()
+  })
+  it('retains honest optional group goals, mode and availability', () => {
+    expect(validateGroupForm({ name: 'Group', description: '', courseId: '1', preferredStudyMode: '', maxGroupSize: '2', studyGoals: [], availability: [] }, 1)).toEqual({})
   })
   it('bounds background refresh to 15 seconds through 5 minutes', () => {
     expect(REFRESH_INTERVAL_MS).toBeGreaterThanOrEqual(15000)
