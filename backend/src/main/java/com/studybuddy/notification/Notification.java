@@ -11,13 +11,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 
-import java.time.LocalDateTime;
-
+/**
+ * Something that happened which a student should know about. Starts unread;
+ * {@link #markRead()} is the only way to change that, and there is no way
+ * back to unread.
+ */
 @Entity
 @Table(name = "notifications")
 public class Notification {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,14 +33,44 @@ public class Notification {
     @Column(nullable = false, length = 40)
     private NotificationType type;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String message;
 
     @Column(nullable = false)
     private boolean read = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resource_type", length = 30)
+    private NotificationResourceType resourceType;
+
+    @Column(name = "resource_id")
+    private Long resourceId;
+
+    @Column(name = "event_key", length = 160)
+    private String eventKey;
+
+    public NotificationResourceType getResourceType() {
+        return resourceType;
+    }
+
+    public Long getResourceId() {
+        return resourceId;
+    }
+
+    public String getEventKey() {
+        return eventKey;
+    }
+
+    public Notification(Student recipient, NotificationType type, String message, NotificationResourceType resourceType,
+        Long resourceId, String eventKey) {
+        this(recipient, type, message);
+        this.resourceType = resourceType;
+        this.resourceId = resourceId;
+        this.eventKey = eventKey;
+    }
 
     protected Notification() {
     }
@@ -68,11 +101,16 @@ public class Notification {
         return read;
     }
 
-    public void setRead(boolean read) {
-        this.read = read;
+    public boolean isFor(Long studentId) {
+        return recipient.getId().equals(studentId);
     }
 
-    public LocalDateTime getCreatedAt() {
+    /** Marking an already-read notification again changes nothing. */
+    public void markRead() {
+        this.read = true;
+    }
+
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

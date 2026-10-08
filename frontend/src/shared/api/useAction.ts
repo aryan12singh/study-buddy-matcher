@@ -20,5 +20,7 @@ export function useAction() {
     } finally { setPending(false) }
   }
   function clear() { setError(undefined); setSuccess(undefined); setErrors({}) }
-  return { pending, error, errors, success, run, clear }
+  /** Shows a success message for an action completed elsewhere, such as in a dialog that has closed. */
+  function announce(message: string) { setError(undefined); setErrors({}); setSuccess(message) }
+  return { pending, error, errors, success, run, clear, announce }
 }

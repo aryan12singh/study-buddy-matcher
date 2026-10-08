@@ -11,13 +11,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 
-import java.time.LocalDateTime;
-
+/**
+ * A student's request to join a study group. Starts PENDING and moves once,
+ * to ACCEPTED or REJECTED, through {@link #accept()} or {@link #reject()}; the
+ * status has no public setter so no other transition is possible. A separate
+ * state machine from {@code MatchRequest}, per the API contract.
+ */
 @Entity
 @Table(name = "group_join_requests")
 public class GroupJoinRequest {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,10 +42,10 @@ public class GroupJoinRequest {
     private GroupJoinRequestStatus status = GroupJoinRequestStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "responded_at")
-    private LocalDateTime respondedAt;
+    private Instant respondedAt;
 
     protected GroupJoinRequest() {
     }
@@ -72,19 +76,52 @@ public class GroupJoinRequest {
         return status;
     }
 
-    public void setStatus(GroupJoinRequestStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getRespondedAt() {
+    public Instant getRespondedAt() {
         return respondedAt;
     }
 
-    public void setRespondedAt(LocalDateTime respondedAt) {
-        this.respondedAt = respondedAt;
+    public boolean isPending() {
+        return status == GroupJoinRequestStatus.PENDING;
+    }
+
+    public boolean belongsTo(Long studyGroupId) {
+        return studyGroup.getId().equals(studyGroupId);
+    }
+
+    /**
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void accept() {
+        respond(GroupJoinRequestStatus.ACCEPTED);
+    }
+
+    /**
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void reject() {
+        respond(GroupJoinRequestStatus.REJECTED);
+    }
+
+    /**
+     * Lets a caller check the state first, so a stale request is reported as
+     * such rather than as whatever other rule happens to fail next.
+     *
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void requirePending() {
+        if (!isPending()) {
+            throw new IllegalStateException(
+                "Group join request " + id + " is already " + status + " and cannot be changed");
+        }
+    }
+
+    private void respond(GroupJoinRequestStatus newStatus) {
+        requirePending();
+        this.status = newStatus;
+        this.respondedAt = Instant.now();
     }
 }

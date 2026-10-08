@@ -16,15 +16,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A study group led by one student. The leader is also stored as a
+ * {@link GroupMembership}, so the member count already includes them when it
+ * is compared against {@code maxGroupSize}. Closing is one-way: there is no
+ * setter that reopens a group.
+ */
 @Entity
 @Table(name = "study_groups")
 public class StudyGroup {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,7 +36,7 @@ public class StudyGroup {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(length = 4000)
     private String description;
 
     @ManyToOne
@@ -60,7 +64,7 @@ public class StudyGroup {
     private boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     protected StudyGroup() {
     }
@@ -121,15 +125,41 @@ public class StudyGroup {
         return studyGoals;
     }
 
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
+    public void replaceStudyGoals(Set<StudyGoal> newStudyGoals) {
+        studyGoals.clear();
+        studyGoals.addAll(newStudyGoals);
+    }
+
     public boolean isActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public boolean isLeader(Long studentId) {
+        return leader.getId().equals(studentId);
     }
 
-    public LocalDateTime getCreatedAt() {
+    /**
+     * @param currentMemberCount members already in the group, leader included
+     */
+    public boolean hasRoomFor(long currentMemberCount) {
+        return currentMemberCount < maxGroupSize;
+    }
+
+    /**
+     * @throws IllegalStateException if the group is already closed
+     */
+    public void close() {
+        if (!active) {
+            throw new IllegalStateException("Study group " + id + " is already closed");
+        }
+        this.active = false;
+    }
+
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

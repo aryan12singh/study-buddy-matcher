@@ -11,7 +11,7 @@ export const WEEK_DAYS: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSD
 export const CAMPUS_TIMEZONE = 'Asia/Singapore'
 const labels: Record<string, string> = { IN_PERSON: 'In person', ONLINE: 'Online', EITHER: 'In person or online', CONCEPT_REVIEW: 'Concept review',
   PROBLEM_SOLVING: 'Problem solving', EXAM_PREPARATION: 'Exam preparation', PROJECT_DISCUSSION: 'Project discussion',
-  PENDING: 'Pending', ACCEPTED: 'Accepted', DECLINED: 'Declined', REJECTED: 'Rejected', STUDENT: 'Student', ADMIN: 'Administrator' }
+  PENDING: 'Pending', ACCEPTED: 'Accepted', DECLINED: 'Declined', CANCELLED: 'Cancelled', REJECTED: 'Rejected', STUDENT: 'Student', ADMIN: 'Administrator' }
 export function label(value: string | null | undefined) {
   if (!value) return 'Not specified'
   return labels[value] || value.charAt(0) + value.slice(1).toLowerCase().replaceAll('_', ' ')

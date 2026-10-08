@@ -1,6 +1,8 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuth } from '../auth/useAuth'
+import { api } from '../api/client'
+import { useResource } from '../api/useResource'
 import Button from './Button'
 import Avatar from './Avatar'
 import PixelIcon from './PixelIcon'
@@ -9,6 +11,11 @@ import RouteNotice from './RouteNotice'
 export default function AppShell() {
   const { account, logout } = useAuth()
   const { pathname } = useLocation()
+  const notifications = useResource(
+    'shell-unread',
+    async signal => (await api.get<{ count: number }>('/notifications/unread-count', { signal })).data,
+    account?.role === 'STUDENT'
+  )
   useEffect(() => {
     document.querySelector<HTMLElement>('#main-content')?.focus()
   }, [pathname])
@@ -29,8 +36,13 @@ export default function AppShell() {
             <>
               <NavLink to="/connections"><PixelIcon kind="connections" /><span>Connections</span></NavLink>
               <NavLink to="/groups"><PixelIcon kind="groups" /><span>Study groups</span></NavLink>
-              <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span></NavLink>
-              <NavLink to="/profile"><PixelIcon kind="profile" /><span>My study profile</span></NavLink>
+              <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span>{notifications.data && notifications.data.count > 0 && (
+                <span className="unread-count" aria-label={`${notifications.data.count} unread notifications`}>{notifications.data.count}</span>
+              )}</NavLink>
+              <NavLink to={`/students/${account.id}`}><PixelIcon kind="profile" /><span>My study profile</span></NavLink>
+              {notifications.error && (
+                <span className="nav-error" role="status">Unread count unavailable. <button type="button" onClick={() => notifications.reload()}>Retry</button></span>
+              )}
             </>
           ) : (
             <NavLink to="/admin/users"><PixelIcon kind="accounts" /><span>User accounts</span></NavLink>
