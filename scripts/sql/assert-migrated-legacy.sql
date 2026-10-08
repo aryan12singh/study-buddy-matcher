@@ -24,7 +24,7 @@ BEGIN
      OR NOT EXISTS(SELECT 1 FROM availability_slots WHERE day_of_week='TUESDAY' AND start_time='09:00' AND end_time='11:00') THEN
     RAISE EXCEPTION 'Upgrade changed recurring campus-local availability';
   END IF;
-  IF (SELECT count(*) FROM pg_tables WHERE schemaname='public' AND rowsecurity) <> 16
+  IF (SELECT count(*) FROM pg_tables WHERE schemaname='public' AND rowsecurity) <> 18
      OR EXISTS(SELECT 1 FROM information_schema.role_table_grants WHERE table_schema='public' AND grantee IN ('anon','authenticated','PUBLIC')) THEN
     RAISE EXCEPTION 'Backend-only access did not survive the upgrade';
   END IF;
