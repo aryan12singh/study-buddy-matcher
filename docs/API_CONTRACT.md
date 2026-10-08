@@ -28,10 +28,37 @@ exception handler in place.
 | ------ | ---- | ------- | -------- | ---- | ------ |
 | POST | `/api/auth/register` | TODO | TODO | Public | TODO |
 | POST | `/api/auth/login` | TODO | TODO | Public | TODO |
-| GET | `/api/profile/me` | none | TODO | Student | TODO |
-| PUT | `/api/profile/me` | TODO | TODO | Student | TODO |
-| PUT | `/api/profile/me/availability` | TODO | TODO | Student | TODO |
+| GET | `/api/profile/me` | none | `MyProfileDto` (below) | Student | Proposed |
+| PUT | `/api/profile/me` | `UpdateProfileRequest` (below); replaces the whole profile | `MyProfileDto` | Student | Proposed |
+| PUT | `/api/profile/me/availability` | `{ "slots": [AvailabilitySlot] }`; replaces the whole week, `[]` clears it | `[AvailabilitySlot]`, Monday first | Student | Proposed |
 | GET | `/api/courses` | none | TODO | Student | TODO |
+
+Profile shapes:
+
+```
+MyProfileDto {
+  id, email, name, school, programme, yearOfStudy, contactNumber,   // own profile, so contact is included
+  coursesTaken: [{ id, code, name }], targetCourse: { id, code, name } | null,
+  preferredStudyMode: "IN_PERSON" | "ONLINE" | "EITHER",
+  groupSizePreference: "ONE_TO_ONE" | "SMALL_GROUP" | "EITHER",
+  groupSizeMax,                                                        // largest group, from app.profile.group-size-max
+  studyGoals: ["CONCEPT_REVIEW" | "PROBLEM_SOLVING" | "EXAM_PREPARATION" | "PROJECT_DISCUSSION"],
+  availability: [AvailabilitySlot]
+}
+UpdateProfileRequest {
+  name, school, programme, yearOfStudy, contactNumber,                // required, as at registration
+  courseIds: [id],                                                     // at least 1, at most app.profile.max-courses
+  targetCourseId: id | null,                                           // need not be one of courseIds
+  preferredStudyMode, groupSizePreference,                             // required
+  studyGoals: [goal]                                                   // optional
+}
+AvailabilitySlot { dayOfWeek: "MONDAY".."SUNDAY", startTime: "HH:mm", endTime: "HH:mm" }
+```
+
+Group size is stored on `students` as a minimum and maximum: one-to-one = 2-2, small group =
+3-max, either = 2-max. Availability blocks must start before they end, use whole minutes and not
+overlap on the same day; there is no limit on how many. Invalid input
+returns 400 with `fieldErrors` keyed by the request field (`courseIds`, `availability`, ...).
 
 ## Matching (Team A)
 
