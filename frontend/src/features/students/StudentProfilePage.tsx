@@ -42,6 +42,11 @@ export default function StudentProfilePage() {
         loading={profile.loading && !student}
         error={!validId ? 'This student link is invalid.' : profile.error}
         onRetry={validId ? () => profile.reload(true) : undefined}
+        empty={profile.data === null}
+        emptyTitle="Profile unavailable"
+        emptyMessage="This student's profile can't be shown. Their account may have been deactivated or deleted."
+        emptyKind="connections"
+        emptyAction={<Link className="retro-button" to="/connections">Back to connections</Link>}
       />
       <ActionNotice error={ending ? undefined : action.error} success={action.success} />
       {student && (
