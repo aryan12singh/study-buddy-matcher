@@ -71,6 +71,11 @@ abstract class PostgresHttpTest {
                 Long.class, email, passwordHash, role);
     }
 
+    /** A login attempt with the fixture password or a wrong one, returned without asserting success. */
+    protected Reply attemptLogin(String email, boolean correctPassword) {
+        return call("POST", "/auth/login", null, Map.of("email", email, "password", correctPassword ? fixturePassword : "not-the-password"));
+    }
+
     protected String login(String email) {
         return expect(call("POST", "/auth/login", null,
                 Map.of("email", email, "password", fixturePassword)), 200).path("token").asString();

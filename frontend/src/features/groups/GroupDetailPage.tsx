@@ -10,7 +10,7 @@ import Button from '../../shared/components/Button'
 import WeeklySchedule from '../../shared/components/WeeklySchedule'
 import Dialog from '../../shared/components/Dialog'
 import ApplyGroupDialog from './ApplyGroupDialog'
-import Avatar from '../../shared/components/Avatar'
+import PersonCard from '../../shared/components/PersonCard'
 import CapacityMeter from '../../shared/components/CapacityMeter'
 import CopyButton from '../../shared/components/CopyButton'
 
@@ -47,6 +47,12 @@ export default function GroupDetailPage() {
               ) : null}
             </div>
             <CapacityMeter members={group.memberCount} capacity={group.maxGroupSize} active={group.active} />
+            {group.active && group.pendingApplications ? (
+              <div className="attention-panel" role="status">
+                <p>{group.pendingApplications === 1 ? '1 student has' : `${group.pendingApplications} students have`} asked to join this group.</p>
+                <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Review applications</Link>
+              </div>
+            ) : null}
             <p className="message-text">{group.description || 'No description provided.'}</p>
             <dl className="detail-facts">
               <dt>Leader</dt>
@@ -69,14 +75,8 @@ export default function GroupDetailPage() {
             </div>
             <div className="actions">
               <Button onClick={() => setAgenda(true)}>View agenda</Button>
-              <CopyButton value={`${window.location.origin}/groups/${group.id}`} label="Copy group link" />
-              {group.viewer.leader && (
-                <>
-                  <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>
-                  {group.active && (
-                    <Link className="retro-button" to={`/groups/${group.id}/edit`}>Edit group</Link>
-                  )}
-                </>
+              {group.viewer.leader && group.active && (
+                <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>
               )}
               {group.active && !group.viewer.member && group.viewer.requestStatus !== 'PENDING' &&
                 group.memberCount < group.maxGroupSize && (
@@ -87,6 +87,8 @@ export default function GroupDetailPage() {
                     Request membership
                   </Button>
                 )}
+              {/* Last, so its "Copied." confirmation appears at the end instead of pushing other buttons */}
+              <CopyButton value={`${window.location.origin}/groups/${group.id}`} label="Copy group link" />
             </div>
             {!group.active ? (
               <p className="muted">This group is closed. It cannot accept new members or changes.</p>
@@ -110,16 +112,12 @@ export default function GroupDetailPage() {
             ) : (
               <div className="data-list">
                 {group.members.map(member => (
-                  <div className="data-row" key={member.studentId}>
-                    <div>
-                      <div className="person-heading"><Avatar name={member.name} small /><Link to={`/students/${member.studentId}`}>{member.name}</Link></div>
-                      {member.leader && (
-                        <> <Badge>Leader</Badge></>
-                      )}
-                      <p className="row-meta">Joined {formatTimestamp(member.joinedAt)} (SGT)</p>
-                    </div>
-                    <Link className="retro-button" to={`/students/${member.studentId}`}>View profile</Link>
-                  </div>
+                  <PersonCard key={member.studentId} studentId={member.studentId} name={member.name} compact>
+                    {member.leader && (
+                      <Badge>Leader</Badge>
+                    )}
+                    <p className="row-meta">Joined {formatTimestamp(member.joinedAt)} (SGT)</p>
+                  </PersonCard>
                 ))}
               </div>
             )}

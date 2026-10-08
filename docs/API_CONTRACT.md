@@ -50,7 +50,8 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 400 | `VALIDATION_FAILED` | Annotated body validation; errors keyed by the field path |
 | 400 | `INVALID_INPUT` | Invalid enum/JSON/query value or service field/size/time validation |
 | 401 | `UNAUTHENTICATED` | Missing, invalid, expired, revoked token; missing/inactive current account |
-| 401 | `INVALID_CREDENTIALS` | Login email/password does not identify an active account |
+| 401 | `INVALID_CREDENTIALS` | Login email/password does not match an account (checked before account state) |
+| 403 | `ACCOUNT_DEACTIVATED` | Login with the correct password for a deactivated account |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
 | 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
 | 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self-removal |
@@ -246,7 +247,9 @@ caller even when deactivation removed their membership.
 Summary fields: `id,name,courseId,courseCode,courseName,leaderId,leaderName,preferredStudyMode,
 studyGoals,maxGroupSize,memberCount,active,viewer`. `viewer` is
 `{leader:boolean,member:boolean,requestId:number|null,requestStatus:status|null}` and reports
-the caller's latest application. Detail adds `description,createdAt,availability,members`.
+the caller's latest application. Detail adds `description,createdAt,availability,members,
+pendingApplications`; `pendingApplications` is the number of applications awaiting a decision
+for the leader and `null` for every other caller.
 Member shape is `{studentId,name,leader,joinedAt}` in joining order. No group response carries
 contact data. The agenda UI uses saved goals and availability from detail.
 

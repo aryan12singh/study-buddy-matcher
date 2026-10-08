@@ -48,6 +48,17 @@ describe('notifications', () => {
     expect(await screen.findByText(message)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View buddy requests' })).toHaveAttribute('href', `/connections?view=${view}`)
   })
+  it.each([
+    { read: false, marks: true },
+    { read: true, marks: false }
+  ])('following the link of a notification with read=$read marks it read: $marks', async ({ read, marks }) => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([{ ...notification, read }]))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...notification, read: true }))
+    renderPage(<NotificationsPage />)
+    fireEvent.click(await screen.findByRole('link', { name: 'View buddy requests' }))
+    if (marks) expect(post).toHaveBeenCalledWith('/notifications/30/read')
+    else expect(post).not.toHaveBeenCalled()
+  })
   it('passes the selected category to the API and renders empty results', async () => {
     const get = vi.spyOn(api, 'get').mockResolvedValue(response([]))
     renderPage(<NotificationsPage />)
@@ -78,6 +89,7 @@ describe('notifications', () => {
     expect(notificationLink({ ...notification, requestDirection: null })).toBeNull()
     expect(notificationLink({ ...notification, type: 'MATCH_REQUEST_ACCEPTED' })?.to).toBe('/connections?view=outgoing')
     expect(notificationLink({ ...notification, resourceType: 'GROUP', resourceId: 5 })?.to).toBe('/groups/5')
+    expect(notificationLink({ ...notification, type: 'GROUP_JOIN_REQUEST_RECEIVED', resourceType: 'GROUP', resourceId: 5 })).toEqual({ to: '/groups/5/manage', label: 'Review applications' })
   })
   it('refreshes the shell unread badge after a successful read mutation', async () => {
     let read = false

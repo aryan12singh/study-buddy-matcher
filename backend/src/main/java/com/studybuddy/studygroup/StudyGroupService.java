@@ -20,6 +20,7 @@ public class StudyGroupService {
     private final StudyGroupRepository groups;
     private final GroupMembershipRepository memberships;
     private final GroupAvailabilitySlotRepository availability;
+    private final GroupJoinRequestRepository requests;
     private final CourseRepository courses;
     private final StudyGroupLookup lookup;
     private final StudyGroupAssembler assembler;
@@ -29,12 +30,13 @@ public class StudyGroupService {
     private final AccountAccess access;
 
     public StudyGroupService(StudyGroupRepository groups, GroupMembershipRepository memberships,
-        GroupAvailabilitySlotRepository availability, CourseRepository courses, StudyGroupLookup lookup,
+        GroupAvailabilitySlotRepository availability, GroupJoinRequestRepository requests, CourseRepository courses, StudyGroupLookup lookup,
         StudyGroupAssembler assembler, GroupViewerAssembler viewers, GroupClosure closure,
         NotificationService notifications, AccountAccess access) {
         this.groups = groups;
         this.memberships = memberships;
         this.availability = availability;
+        this.requests = requests;
         this.courses = courses;
         this.lookup = lookup;
         this.assembler = assembler;
@@ -55,7 +57,7 @@ public class StudyGroupService {
         group = groups.save(group);
         var membership = memberships.save(new GroupMembership(group, leader));
         var slots = saveAvailability(group, details.availability());
-        return assembler.toDetail(group, List.of(membership), slots, new GroupViewerDto(true, true, null, null));
+        return assembler.toDetail(group, List.of(membership), slots, new GroupViewerDto(true, true, null, null), 0L);
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +98,7 @@ public class StudyGroupService {
         availability.deleteByStudyGroupId(id);
         availability.flush();
         var slots = saveAvailability(group, details.availability());
-        return assembler.toDetail(group, current, slots, viewers.assemble(group, actorId));
+        return assembler.toDetail(group, current, slots, viewers.assemble(group, actorId), pendingApplications(group));
     }
 
     public StudyGroupDetailDto close(Long id, Long actorId) {
@@ -138,8 +140,13 @@ public class StudyGroupService {
     }
 
     private StudyGroupDetailDto detail(StudyGroup group, Long viewerId) {
+        var viewer = viewers.assemble(group, viewerId);
         return assembler.toDetail(group, memberships.findByStudyGroupIdOrderByJoinedAtAsc(group.getId()),
-            availability.findByStudyGroupId(group.getId()), viewers.assemble(group, viewerId));
+            availability.findByStudyGroupId(group.getId()), viewer, viewer.leader() ? pendingApplications(group) : null);
+    }
+
+    private long pendingApplications(StudyGroup group) {
+        return requests.countByStudyGroupIdAndStatus(group.getId(), GroupJoinRequestStatus.PENDING);
     }
 
     private Course course(Long id) {

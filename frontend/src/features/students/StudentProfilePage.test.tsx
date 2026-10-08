@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
 import { refreshResources } from '../../shared/api/client'
 import { REFRESH_INTERVAL_MS } from '../../shared/api/useResource'
@@ -12,6 +13,22 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 describe('profile privacy and relationship actions', () => {
+  it.each([
+    { status: 404, unavailable: true },
+    { status: 500, unavailable: false }
+  ])('shows a $status as unavailable: $unavailable', async ({ status, unavailable }) => {
+    const config = { headers: new AxiosHeaders() }
+    vi.spyOn(api, 'get').mockRejectedValue(new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, undefined,
+      { status, statusText: '', headers: {}, config, data: { message: 'Student 2 not found' } }))
+    renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    if (unavailable) {
+      expect(await screen.findByText('Profile unavailable')).toBeInTheDocument()
+      expect(screen.queryByText('Student 2 not found')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
+    } else {
+      expect(await screen.findByRole('button', { name: 'Try again' })).toBeInTheDocument()
+    }
+  })
   it.each(['STRANGER', 'OUTGOING_PENDING', 'INCOMING_PENDING'])('withholds copy access for the %s relationship even if a contact field is accidentally supplied', async state => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile, contactNumber: 'Hidden contact', relationship: { state, requestId: 10, connectionId: null } }))
     renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
