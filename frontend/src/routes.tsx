@@ -13,6 +13,7 @@ import GroupsPage from './features/groups/GroupsPage'
 import GroupDetailPage from './features/groups/GroupDetailPage'
 import GroupFormPage from './features/groups/GroupFormPage'
 import GroupManagePage from './features/groups/GroupManagePage'
+import StudyRoomPage from './features/studyroom/StudyRoomPage'
 import AdminUsersPage from './features/admin/AdminUsersPage'
 import AdminUserDetailPage from './features/admin/AdminUserDetailPage'
 import AdminUserFormPage from './features/admin/AdminUserFormPage'
@@ -34,6 +35,7 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/groups/:id" element={<GroupDetailPage />} />
             <Route path="/groups/:id/edit" element={<GroupFormPage />} />
             <Route path="/groups/:id/manage" element={<GroupManagePage />} />
+            <Route path="/groups/:id/room" element={<StudyRoomPage />} />
           </Route>
           <Route element={<RequireRole role="ADMIN" />}>
             <Route path="/admin/users" element={<AdminUsersPage />} />
