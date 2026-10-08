@@ -14,3 +14,16 @@
   code to `feat/team-b/platform-foundation` for Team B.
 - **Code review and fixes (Claude, 8 Oct):** found deactivation bugs and dead code; fixed
   with regression tests and simplified the exception handling.
+
+9 Oct 2026, room foundation; author walkthrough remains pending.
+
+- **AI-assisted drafting:** immutable timer, private room/presence endpoints, migration,
+  retro screen, original audio synthesis and focused regression tests.
+- **Scope decisions by Aryan:** existing retro components, original built-in audio,
+  a modest E2 foundation, and sessions/calendar/E1 left for teammates.
+- **Validation:** local isolated database and frontend checks; results recorded in the
+  coverage document. AI assistance and automated checks do not replace author understanding,
+  cross-team review or the viva walkthrough. No AI provider is integrated into the product.
+- **Final review correction:** leaving switched to preview after the global refresh event,
+  allowing an expired heartbeat. Changed participation/cancellation order and added a
+  regression for a deleted lease.

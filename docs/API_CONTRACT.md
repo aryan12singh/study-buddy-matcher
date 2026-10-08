@@ -259,6 +259,70 @@ has no authority. Repeated decisions are 409. Editing, approving, removing and r
 blocked on closed groups. Closure rejects every pending application once and notifies current
 members other than the leader. The leader cannot be removed.
 
+## Private study room foundation (E2 #16)
+
+Accepted active student members of an open group can read its room. Pending
+applicants, non-members and admins cannot enter. A GET returns default state
+without creating a row; the first join/control/settings write creates one.
+Every route rechecks eligibility. Room payloads omit contacts, emails and tokens.
+
+| Method | Path | Input / result |
+| --- | --- | --- |
+| GET | `/api/groups/{groupId}/room` | Current `StudyRoomDto`, 200 |
+| POST | `/api/groups/{groupId}/room/join` | `{clientId: UUID}`; idempotent lease, DTO, 200 |
+| PUT | `/api/groups/{groupId}/room/presence` | `{clientId: UUID, presence: PRESENT / FOCUS / BREAK}`; renewed DTO, 200 |
+| DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
+| POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
+| PUT | `/api/groups/{groupId}/room/audio` | `{preset: CALM_MUSIC / RAIN / WHITE_NOISE / CAFE, playing: boolean, expectedVersion}`; DTO, 200 |
+| PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
+
+`expectedVersion` is a non-negative integer matching the current room version.
+Shared changes increment it; presence renewals do not. A stale command or invalid
+timer transition returns 409. Only the leader or a currently present assigned
+host/co-host can change timer/audio. The leader retains these controls without
+joining, so room capacity cannot block administrative recovery. Only the leader
+changes settings/roles. Null `hostId` uses the leader; null `coHostId` means none.
+Assigned IDs must be active accepted members and distinct after that fallback.
+
+Durations are positive whole minutes, bounded by the configured maxima. Changing
+durations requires IDLE (reset first); roles/capacity can change while running.
+Capacity is positive, at most the current group capacity and at least current
+distinct present students. Concurrent joins for the last place serialize; one
+gets 409. Multiple tabs from one student count once. The client UUID is scoped
+to the authenticated actor, not an authorization credential.
+
+Each heartbeat extends its lease by the configured lifetime. An unknown/expired
+lease returns 409 and requires an explicit join; it cannot bypass capacity by
+renewing. Inactive/removed members are excluded immediately; closed groups return
+409. The timer continues across disconnects and repeating focus/break phases.
+A removed/deleted/inactive host falls back to the leader, and invalid co-hosts
+are omitted. Account deletion cascades presences; leader/group deletion removes
+the room. Clients purge snapshots/stop audio on refresh failure, then retry and
+explicitly rejoin. Browser timer rendering does not confer control authority.
+
+`StudyRoomDto` fields:
+
+```text
+groupId, groupName, version, serverTime (UTC Instant)
+focusMinutes, breakMinutes, maxFocusMinutes, maxBreakMinutes
+participantLimit (effective, capped at current groupLimit), groupLimit
+hostId, coHostId (nullable), hostOnline
+leader, canControl, joined (actor present in any tab)
+pollIntervalMillis, leaseLifetimeMillis
+timer {phase: FOCUS/BREAK, status: IDLE/RUNNING/PAUSED,
+       remainingMillis (at serverTime), focusMillis, breakMillis}
+audio {preset, playing}
+audioPresets [{id, label, kind: MUSIC/AMBIENT}]
+participants [{studentId, name, presence, expiresAt, leader, host, coHost}]
+members [{studentId, name}] (active accepted members for role selectors)
+```
+
+The browser renders elapsed time from each server snapshot and reconciles on the
+server-provided poll interval (default two seconds). Local enable/volume/mute are
+not sent to the API. Original synthesized audio shares a selection/play state,
+without synchronizing playback positions. No external music credentials/assets
+are required. Dated sessions/calendar are a later slice, with no placeholder APIs.
+
 ## Notifications
 
 | Method | Path | Request | Response | Auth |

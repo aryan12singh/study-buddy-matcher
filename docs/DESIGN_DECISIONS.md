@@ -55,9 +55,29 @@ learning style without a defined field/scorer: the professor clarification remai
 #41 item, rather than a new C field. Team B retains the full own-profile/preferences/
 availability editor and dashboard. Their absence is not a remaining C screen.
 
-Global online status, group-score recommendations, richer notes/task boards and dated/live
-room features remain proposals/later scope. Agenda displays the actual recurring schedule
-and goals. No fake presence, progress, room participants or scheduled session data is shown.
+Global online status, group-score recommendations, richer notes/task boards and dated
+sessions remain later scope. The separate E2 room foundation below uses real expiring
+presence. The existing agenda still displays recurring schedules and goals.
+
+## E2 room foundation — 9 October 2026
+
+These are implementation choices for the room subset of #16. Aryan approved the
+existing retro components and original built-in audio. Sessions/calendar and E1
+are deliberately left for teammates; see [the handoff](BONUS_IMPLEMENTATION_PLAN.md).
+
+| Choice | Behaviour and reason |
+| --- | --- |
+| Private access | Active student + accepted membership + open group, rechecked on every request; admin authority does not grant entry |
+| Per-group roles | Leader assigns an accepted host and optional distinct co-host; STUDENT/ADMIN JWT roles stay unchanged |
+| Host disconnect | Timer continues; leader retains controls and a present co-host can control. Removed/inactive host falls back to the leader; invalid co-host is omitted |
+| Immutable timer | Persist duration, status, phase, anchor and remaining milliseconds; elapsed server time advances repeating focus/break phases, including across restarts. No scheduler/tick writes |
+| Concurrent controls | Group lock serializes room creation, joins and mutations; version check rejects stale timer/audio/settings requests with 409 |
+| Presence/capacity | UUID lease per authenticated browser page, 30-second default TTL. Distinct students count, multiple tabs share a place; leaving removes only that tab. Expired leases are pruned on join |
+| Eligibility/lifecycle | Removed/inactive members stop appearing immediately in server reads; closed groups deny entry. Account/group deletion cascades leases/rooms; deleting a delegated host clears its FK. Existing account lifecycle services are unchanged |
+| Bounded polling | Two-second default authenticated polling plus local elapsed-time display; background browser throttling may expire presence, requiring rejoin. This avoids a new transport dependency for a small coursework dataset |
+| Duration/limit changes | Only leader; room capacity cannot exceed group capacity or fall below current participants. Duration changes require an idle/reset timer |
+| Original audio | Native Web Audio synthesis: calm melody, rain, white noise, cafe-style hum. Shared preset/play state; explicit local enable, volume and mute. No external provider/assets and no sample-position sync |
+| Local failure | Private snapshots are purged and audio stops on refresh/access failure; retry loads current state and joining is explicit. Leave/reset/discard confirm, dirty settings survive polls and detect stale versions |
 
 ## Schedule and submission record
 
