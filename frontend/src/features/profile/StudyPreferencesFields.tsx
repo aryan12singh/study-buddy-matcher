@@ -8,7 +8,7 @@ import type { ProfileForm } from './profileForm'
 function groupSizeLabel(choice: GroupSizePreference, largestGroup: number) {
   if (choice === 'ONE_TO_ONE') return { title: 'One-to-one', hint: 'You and one buddy, 2 people' }
   if (choice === 'SMALL_GROUP') return { title: 'Small group', hint: `3 to ${largestGroup} people` }
-  return { title: 'Either', hint: 'One-to-one or a small group' }
+  return { title: 'Either', hint: `2 to ${largestGroup} people` }
 }
 
 function FieldError({ id, error }: { id: string; error?: string }) {
