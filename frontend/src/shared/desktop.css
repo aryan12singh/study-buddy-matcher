@@ -187,7 +187,7 @@
 .account-table caption { padding: .3rem 0 .7rem; text-align: left; }
 .account-table .retro-button { min-height: 36px; }
 .account-table .person-heading { align-items: flex-start; }
-.notification-symbol { display: inline-flex; align-items: center; color: #537795; margin-bottom: .5rem; }
+.notification-symbol { display: inline-flex; align-items: center; color: #537795; }
 .notification-symbol .pixel-icon { width: 21px; height: 21px; }
 .notification-unread { background: #f8fbff; border-left-color: #597cae; }
 .notification-section > h2 { font-size: .88rem; letter-spacing: .05em; color: #506b7c; margin-top: 1.4rem; }

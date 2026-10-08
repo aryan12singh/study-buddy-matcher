@@ -1,8 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { getNotifications, notificationLink, readAllNotifications, readNotification } from './api'
-import type { NotificationFilter } from './api'
+import type { Notification, NotificationFilter } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
+import { refreshResources } from '../../shared/api/client'
 import { campusDate, formatTimestamp } from '../../shared/api/types'
 import WindowPage from '../../shared/components/WindowPage'
 import Button from '../../shared/components/Button'
@@ -11,6 +12,11 @@ import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import Badge from '../../shared/components/Badge'
 import PixelIcon from '../../shared/components/PixelIcon'
+
+/** Following a notification's link counts as reading it; a failed write just leaves it unread. */
+function openNotification(notification: Notification) {
+  if (!notification.read) readNotification(notification.id).then(() => refreshResources(), () => undefined)
+}
 
 export default function NotificationsPage() {
   const [search, setSearch] = useSearchParams()
@@ -71,10 +77,12 @@ export default function NotificationsPage() {
                     className={`data-row ${notification.read ? '' : 'notification-unread'}`}
                   >
                     <div>
-                      <div className="notification-symbol"><PixelIcon kind={notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
-                      {!notification.read && (
-                        <Badge tone="pending">Unread</Badge>
-                      )}
+                      <div className="person-heading">
+                        <div className="notification-symbol"><PixelIcon kind={notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
+                        {!notification.read && (
+                          <Badge tone="pending">Unread</Badge>
+                        )}
+                      </div>
                       <p className="message-text">{notification.message}</p>
                       <p className="row-meta">{formatTimestamp(notification.createdAt)} (SGT)</p>
                       {!link && (
@@ -83,7 +91,7 @@ export default function NotificationsPage() {
                     </div>
                     <div className="actions">
                       {link && (
-                        <Link className="retro-button" to={link.to}>{link.label}</Link>
+                        <Link className="retro-button" to={link.to} onClick={() => openNotification(notification)}>{link.label}</Link>
                       )}
                       {!notification.read && (
                         <Button

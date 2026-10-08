@@ -48,6 +48,17 @@ describe('notifications', () => {
     expect(await screen.findByText(message)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View buddy requests' })).toHaveAttribute('href', `/connections?view=${view}`)
   })
+  it.each([
+    { read: false, marks: true },
+    { read: true, marks: false }
+  ])('following the link of a notification with read=$read marks it read: $marks', async ({ read, marks }) => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([{ ...notification, read }]))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...notification, read: true }))
+    renderPage(<NotificationsPage />)
+    fireEvent.click(await screen.findByRole('link', { name: 'View buddy requests' }))
+    if (marks) expect(post).toHaveBeenCalledWith('/notifications/30/read')
+    else expect(post).not.toHaveBeenCalled()
+  })
   it('passes the selected category to the API and renders empty results', async () => {
     const get = vi.spyOn(api, 'get').mockResolvedValue(response([]))
     renderPage(<NotificationsPage />)
