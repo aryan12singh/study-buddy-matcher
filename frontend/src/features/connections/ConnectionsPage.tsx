@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getConnections, getMatchRequests, decideMatchRequest, endConnection } from './api'
-import type { Connection } from './api'
+import type { Connection, MatchRequest } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
 import { formatTimestamp, label } from '../../shared/api/types'
@@ -35,6 +35,52 @@ export default function ConnectionsPage() {
     tab !== 'connected'
   )
   const connections = useResource('active-connections', getConnections, tab === 'connected')
+
+  // Incoming is an inbox: answered requests move to a collapsed history; outgoing keeps every status visible.
+  const waiting = tab === 'incoming' ? requests.data?.filter(request => request.status === 'PENDING') : requests.data
+  const answered = tab === 'incoming' ? requests.data?.filter(request => request.status !== 'PENDING') ?? [] : []
+
+  function requestRow(request: MatchRequest) {
+    const id = tab === 'incoming' ? request.senderId : request.receiverId
+    const name = tab === 'incoming' ? request.senderName : request.receiverName
+    return (
+      <article className="data-row" key={request.id}>
+        <div>
+          <div className="person-heading"><Avatar name={name} /><h2>
+            <Link to={`/students/${id}`}>{name}</Link>
+          </h2></div>
+          <Badge
+            tone={request.status === 'PENDING' ? 'pending' : request.status === 'ACCEPTED' ? 'good' : 'neutral'}
+          >{label(request.status)}</Badge>
+          {request.message && (
+            <p className="message-text">{request.message}</p>
+          )}
+          <p className="row-meta">Sent {formatTimestamp(request.createdAt)} (SGT){request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
+          {request.context && contextSummary(request.context) && (
+            <p className="row-meta">{contextSummary(request.context)}</p>
+          )}
+        </div>
+        <div className="actions">
+          <Link className="retro-button" to={`/students/${id}`}>View profile</Link>
+          {tab === 'incoming' && request.status === 'PENDING' && (
+            <>
+              <Button
+                variant="primary"
+                disabled={action.pending}
+                onClick={() => action.run(() => decideMatchRequest(request.id, 'accept'), 'Request accepted.', true)}
+              >
+                Accept request
+              </Button>
+              <Button
+                disabled={action.pending}
+                onClick={() => action.run(() => decideMatchRequest(request.id, 'decline'), 'Request declined.')}
+              >Decline request</Button>
+            </>
+          )}
+        </div>
+      </article>
+    )
+  }
 
   async function disconnect() {
     if (!ending) return
@@ -113,58 +159,26 @@ export default function ConnectionsPage() {
             loading={requests.loading && !requests.data}
             error={requests.error}
             onRetry={() => requests.reload()}
-            empty={requests.data?.length === 0}
-            emptyTitle={tab === 'incoming' ? 'No incoming requests' : 'No outgoing requests'}
+            empty={waiting?.length === 0}
+            emptyTitle={tab === 'incoming' ? (answered.length > 0 ? 'No requests waiting for you' : 'No incoming requests') : 'No outgoing requests'}
             emptyMessage={tab === 'incoming' ?
-              'Requests from other students will appear here.'
+              (answered.length > 0 ? 'Requests you have answered are under Past requests below.' : 'Requests from other students will appear here.')
               :
               'Your sent requests and their decisions will appear here.'}
             emptyKind="connections"
             emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
           />
           <div className="data-list">
-            {requests.data?.map(request => {
-              const id = tab === 'incoming' ? request.senderId : request.receiverId
-              const name = tab === 'incoming' ? request.senderName : request.receiverName
-              return (
-                <article className="data-row" key={request.id}>
-                  <div>
-                    <div className="person-heading"><Avatar name={name} /><h2>
-                      <Link to={`/students/${id}`}>{name}</Link>
-                    </h2></div>
-                    <Badge
-                      tone={request.status === 'PENDING' ? 'pending' : request.status === 'ACCEPTED' ? 'good' : 'neutral'}
-                    >{label(request.status)}</Badge>
-                    {request.message && (
-                      <p className="message-text">{request.message}</p>
-                    )}
-                    <p className="row-meta">Sent {formatTimestamp(request.createdAt)} (SGT){request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
-                    {request.context && contextSummary(request.context) && (
-                      <p className="row-meta">{contextSummary(request.context)}</p>
-                    )}
-                  </div>
-                  <div className="actions">
-                    <Link className="retro-button" to={`/students/${id}`}>View profile</Link>
-                    {tab === 'incoming' && request.status === 'PENDING' && (
-                      <>
-                        <Button
-                          variant="primary"
-                          disabled={action.pending}
-                          onClick={() => action.run(() => decideMatchRequest(request.id, 'accept'), 'Request accepted.', true)}
-                        >
-                          Accept request
-                        </Button>
-                        <Button
-                          disabled={action.pending}
-                          onClick={() => action.run(() => decideMatchRequest(request.id, 'decline'), 'Request declined.')}
-                        >Decline request</Button>
-                      </>
-                    )}
-                  </div>
-                </article>
-              )
-            })}
+            {waiting?.map(requestRow)}
           </div>
+          {answered.length > 0 && (
+            <details className="notification-section">
+              <summary>Past requests ({answered.length})</summary>
+              <div className="data-list">
+                {answered.map(requestRow)}
+              </div>
+            </details>
+          )}
         </>
       )}
       {sending &&

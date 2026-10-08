@@ -22,16 +22,25 @@ describe('buddy requests and connections', () => {
     expect(await screen.findByText('No outgoing requests')).toBeInTheDocument()
     expect(get).toHaveBeenCalledTimes(3)
   })
-  it('accepts the pending request and refreshes the answered history', async () => {
+  it('accepts the pending request and moves it to past requests', async () => {
     const get = vi.spyOn(api, 'get').mockResolvedValueOnce(response([request])).mockResolvedValue(response([{ ...request, status: 'ACCEPTED', respondedAt: '2026-10-07T02:00:00Z' }]))
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...request, status: 'ACCEPTED' }))
     renderPage(<ConnectionsPage />, '/connections', '/connections')
     expect(await screen.findByText('Found through matching · For IS442 · Exam preparation')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Accept request' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/match-requests/10/accept'))
-    expect(await screen.findByText('Accepted', { selector: '.status-badge' })).toBeInTheDocument()
+    expect(await screen.findByText('No requests waiting for you')).toBeInTheDocument()
+    const history = screen.getByText('Past requests (1)').closest('details')!
+    expect(history).not.toHaveAttribute('open')
+    expect(within(history).getByText('Accepted', { selector: '.status-badge' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Accept request' })).not.toBeInTheDocument()
     expect(get).toHaveBeenCalledTimes(2)
+  })
+  it('keeps every status visible on outgoing requests', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([{ ...request, status: 'DECLINED', respondedAt: '2026-10-07T02:00:00Z' }]))
+    renderPage(<ConnectionsPage />, '/connections?view=outgoing', '/connections')
+    expect(await screen.findByText('Declined', { selector: '.status-badge' })).toBeInTheDocument()
+    expect(screen.queryByText(/Past requests/)).not.toBeInTheDocument()
   })
   it('keeps decline available after a rejected action', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([request]))
