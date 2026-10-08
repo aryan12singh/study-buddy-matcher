@@ -105,6 +105,21 @@ describe('group fields and saved state', () => {
     const buttons = screen.getByRole('button', { name: 'Copy group link' }).closest('.actions')!.querySelectorAll('a, button')
     expect(buttons[buttons.length - 1]).toHaveTextContent('Copy group link')
   })
+  it('offers no management on a closed group, even to its leader', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...group, active: false, pendingApplications: 0 }))
+    renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
+    expect(await screen.findByText('Closed group', { selector: '.status-badge' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Manage group' })).not.toBeInTheDocument()
+  })
+  it('lists closed groups under a collapsed section below the open ones', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([{ ...group, id: 5, name: 'Open crew' }, { ...group, id: 6, name: 'Old crew', active: false }]))
+    renderPage(<GroupsPage />, '/groups?view=mine', '/groups')
+    expect(await screen.findByText('Open crew')).toBeInTheDocument()
+    const closed = screen.getByText('Closed groups (1)').closest('details')!
+    expect(closed).not.toHaveAttribute('open')
+    expect(within(closed).getByText('Old crew')).toBeInTheDocument()
+    expect(within(closed).queryByText('Open crew')).not.toBeInTheDocument()
+  })
   it('renders full, pending and closed states without a request action', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ ...group, active: false, viewer: { leader: false, member: false, requestStatus: 'PENDING', requestId: 20 } }))
     renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')

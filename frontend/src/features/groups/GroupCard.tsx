@@ -34,7 +34,7 @@ export default function GroupCard({ group }: { group: GroupSummary }) {
       </div>
       <div className="actions">
         <Link className={`retro-button${group.viewer.leader ? '' : ' primary'}`} to={`/groups/${group.id}`}>View group</Link>
-        {group.viewer.leader && (
+        {group.viewer.leader && group.active && (
           <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>
         )}
       </div>

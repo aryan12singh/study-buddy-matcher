@@ -75,7 +75,7 @@ export default function GroupDetailPage() {
             </div>
             <div className="actions">
               <Button onClick={() => setAgenda(true)}>View agenda</Button>
-              {group.viewer.leader && (
+              {group.viewer.leader && group.active && (
                 <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>
               )}
               {group.active && !group.viewer.member && group.viewer.requestStatus !== 'PENDING' &&
