@@ -26,7 +26,7 @@ describe('buddy requests and connections', () => {
     const get = vi.spyOn(api, 'get').mockResolvedValueOnce(response([request])).mockResolvedValue(response([{ ...request, status: 'ACCEPTED', respondedAt: '2026-10-07T02:00:00Z' }]))
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...request, status: 'ACCEPTED' }))
     renderPage(<ConnectionsPage />, '/connections', '/connections')
-    expect(await screen.findByText('From matching · IS442 · Exam preparation')).toBeInTheDocument()
+    expect(await screen.findByText('Found through matching · For IS442 · Exam preparation')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Accept request' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/match-requests/10/accept'))
     expect(await screen.findByText('Accepted', { selector: '.status-badge' })).toBeInTheDocument()

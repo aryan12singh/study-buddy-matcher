@@ -15,6 +15,12 @@ import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import SendRequestDialog from './SendRequestDialog'
 import Avatar from '../../shared/components/Avatar'
 
+/** What a request is about; a profile origin is the default, so only matching is called out. */
+function contextSummary(context: { origin: string, courseCode?: string | null, studyGoal?: string | null }) {
+  const topic = [context.courseCode, context.studyGoal && label(context.studyGoal)].filter(Boolean).join(' · ')
+  return [context.origin === 'MATCHING' && 'Found through matching', topic && `For ${topic}`].filter(Boolean).join(' · ')
+}
+
 export default function ConnectionsPage() {
   const [search, setSearch] = useSearchParams()
   const requestedView = search.get('view')
@@ -133,8 +139,8 @@ export default function ConnectionsPage() {
                       <p className="message-text">{request.message}</p>
                     )}
                     <p className="row-meta">Sent {formatTimestamp(request.createdAt)} (SGT){request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
-                    {request.context && (
-                      <p className="row-meta">From {request.context.origin === 'MATCHING' ? 'matching' : 'a profile'}{request.context.courseCode && ` · ${request.context.courseCode}`}{request.context.studyGoal && ` · ${label(request.context.studyGoal)}`}</p>
+                    {request.context && contextSummary(request.context) && (
+                      <p className="row-meta">{contextSummary(request.context)}</p>
                     )}
                   </div>
                   <div className="actions">
