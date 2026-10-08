@@ -66,3 +66,43 @@ API paths are listed in [API_CONTRACT.md](API_CONTRACT.md).
 | Permanently delete an account and its dependent records | `StudentDeletion`, `GroupClosure` | Delete confirmation on `admin/AdminUserDetailPage` | `AccountHttpTest` |
 | Admins cannot remove themselves, so an active admin always remains | `AdminUserService` | Self controls disabled | `AccountHttpTest`, `AdminUserServiceTest` |
 | Deactivated or deleted accounts lose API access | `JwtTokenService`, account version check | Sign-out on 401 | `AccountHttpTest`, `JwtTokenServiceTest` |
+
+## E2 room foundation (#16, partial)
+
+| Implemented slice | Backend | Screen | Evidence |
+| --- | --- | --- | --- |
+| Active accepted members only; contacts withheld | `RoomAccess`, `RoomAssembler`, RLS migration | `studyroom/StudyRoomPage`, active-group entry link | `StudyRoomHttpTest`, `DatabaseBoundaryTest` |
+| Immutable repeating focus/break timer, pause/resume/reset | `PomodoroTimer`, `StudyRoomService` | `RoomTimerPanel` | 22 `PomodoroTimerTest` cases; HTTP and timer-rendering tests |
+| Distinct-student capacity and expiring per-tab presence | Group lock, `RoomPresence`, `RoomPresenceRepository` | Join/leave and participant status | HTTP tests: last-slot race, multi-tab, expiry, actor scoping |
+| Host/co-host assignment, current version and recovery | `StudyRoomService`, `RoomAssembler` | Leader settings, role-specific controls | HTTP and frontend tests: non-host denial, stale edits, leader recovery |
+| Lifecycle access loss and permanent-delete cleanup | Eligibility queries and FK cascade/set-null | Purge room snapshot and stop audio on failure | HTTP tests: removal/deactivation/closure/deletion; frontend rejected-heartbeat test |
+| Original shared audio with local consent/volume/mute | `AudioPreset`, persisted preset/play state | `RoomAudioEngine`, `RoomAudioPanel` | Audio consent, local-only controls and failure frontend tests |
+
+Local verification on 9 October 2026: full backend suite **262 passed**, including
+fresh/legacy/repeat migration checks against disposable PostgreSQL 17. Frontend
+suite **123 passed**; lint had no warnings and the production build passed.
+
+An actual two-account browser walkthrough used a disposable local database and
+confirmed group entry, saved durations/host assignment, two distinct participants,
+focus-to-break progression, shared pause/resume, shared rain selection, separate
+local audio enable/mute, and refresh/rejoin with retained timer state. Both clocks
+displayed `01:00` after start and `00:56` when paused in break, matching to the
+displayed second in this local sample. The configured poll is two seconds; this
+sample is not a production latency guarantee. Closing the host browser expired
+its presence, while the timer continued and the leader could pause it. No browser
+console errors/warnings were observed. Automated tests additionally cover rejected
+heartbeats, stale edits, capacity races and lifecycle cleanup.
+
+The final source review found a post-leave heartbeat ordering bug. Participation
+now changes and pending polls cancel before the shared refresh event. The added
+regression and a browser leave/preview check passed; the review confirmed the fix.
+
+The room migration has not been applied to shared Supabase. Cross-team review and
+an author walkthrough remain delivery gates. The branch is a complete room
+foundation, not a claim that the whole E2 bonus is accepted.
+
+**Deliberately remaining for teammates:** dated group/buddy sessions, session
+agenda/editor, calendar exports and real calendar-import acceptance, mutual
+availability via Team A, session notifications/dashboard integration, and E1 AI
+explanations. Neither #16 nor #15 is completed by this foundation. The next slices
+and integration boundaries are in [BONUS_IMPLEMENTATION_PLAN.md](BONUS_IMPLEMENTATION_PLAN.md).

@@ -70,6 +70,9 @@ export default function GroupDetailPage() {
             <div className="actions">
               <Button onClick={() => setAgenda(true)}>View agenda</Button>
               <CopyButton value={`${window.location.origin}/groups/${group.id}`} label="Copy group link" />
+              {group.active && group.viewer.member && (
+                <Link className="retro-button primary" to={`/groups/${group.id}/room`}>Open study room</Link>
+              )}
               {group.viewer.leader && (
                 <>
                   <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>

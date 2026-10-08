@@ -192,6 +192,12 @@ in `application-local.yml` or the process environment.
 | `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
 | `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
 | `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
+| `ROOM_DEFAULT_FOCUS_MINUTES` / `app.study-room.default-focus-minutes` | `25` | Initial room focus duration |
+| `ROOM_DEFAULT_BREAK_MINUTES` / `app.study-room.default-break-minutes` | `5` | Initial room break duration |
+| `ROOM_MAX_FOCUS_MINUTES` / `app.study-room.max-focus-minutes` | `180` | Maximum leader-configurable focus minutes |
+| `ROOM_MAX_BREAK_MINUTES` / `app.study-room.max-break-minutes` | `60` | Maximum leader-configurable break minutes |
+| `ROOM_LEASE_LIFETIME` / `app.study-room.lease-lifetime` | `30s` | Presence expiry; must exceed poll interval |
+| `ROOM_POLL_INTERVAL` / `app.study-room.poll-interval` | `2s` | Server-provided room refresh interval |
 | `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
 | `VITE_REFRESH_INTERVAL_MS` | `30000` (min `15000`, max `300000`) | Background refresh interval for lists and details |
 
@@ -263,6 +269,18 @@ Built by Team C on top of the platform foundation:
 See the [API contract](docs/API_CONTRACT.md), [design decisions](docs/DESIGN_DECISIONS.md),
 [requirement coverage](docs/REQUIREMENT_COVERAGE.md), [database operations](docs/DATABASE_OPERATIONS.md)
 and [diagrams](docs/diagrams/TEAM_C.md).
+
+The E2 foundation adds **Open study room** to active groups for accepted members:
+shared Pomodoro, expiring presence, leader-assigned host/co-host, and original
+music/ambient presets using native Web Audio. Audio needs a local enable click;
+volume and mute are private to that browser. Timer state continues through
+disconnects. The shared selection/control state reconciles on a two-second poll,
+with local countdown rendering; playback positions are not synchronized.
+Apply the new room migration before starting against a shared database.
+
+This is a deliberately limited bonus foundation. Dated sessions, calendar export,
+availability suggestions and E1 AI explanations remain teammate work. See the
+[bonus handoff](docs/BONUS_IMPLEMENTATION_PLAN.md).
 
 ## Testing
 

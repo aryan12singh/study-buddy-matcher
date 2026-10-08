@@ -24,6 +24,13 @@ jwt:
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 app:
+  study-room:
+    default-focus-minutes: ${ROOM_DEFAULT_FOCUS_MINUTES:25}
+    default-break-minutes: ${ROOM_DEFAULT_BREAK_MINUTES:5}
+    max-focus-minutes: ${ROOM_MAX_FOCUS_MINUTES:180}
+    max-break-minutes: ${ROOM_MAX_BREAK_MINUTES:60}
+    lease-lifetime: ${ROOM_LEASE_LIFETIME:30s}
+    poll-interval: ${ROOM_POLL_INTERVAL:2s}
   auth:
     secret: ${jwt.secret}
     token-lifetime: ${jwt.expiration-ms}ms

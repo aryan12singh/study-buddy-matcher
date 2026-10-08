@@ -30,6 +30,46 @@ by a participant. Leader authority is checked against the URL's particular group
 authority does not bypass profile contact privacy. Server checks remain necessary when
 the UI hides or disables unavailable actions.
 
+## E2 room foundation
+
+```mermaid
+classDiagram
+    StudyGroup "1" --> "0..1" StudyRoom
+    StudyRoom --> PomodoroTimer : reconstructs immutable value
+    StudyRoom "1" --> "0..*" RoomPresence
+    RoomPresence --> Student : authenticated owner
+    StudyRoom --> Student : optional host and coHost
+    StudyRoomController --> StudyRoomService
+    StudyRoomService --> RoomAccess
+    StudyRoomService --> RoomAssembler
+    StudyRoomService --> StudyRoomRepository
+    StudyRoomService --> RoomPresenceRepository
+    RoomAccess --> AccountAccess
+    RoomAccess --> StudyGroupLookup
+    RoomAccess --> GroupMembershipRepository
+    RoomAssembler --> StudyRoomDto
+    class PomodoroTimer {
+        Duration focusDuration
+        Duration breakDuration
+        TimerPhase phase
+        TimerStatus status
+        Duration remainingAtAnchor
+        Instant anchor
+        snapshot(now)
+        start(now)
+        pause(now)
+        resume(now)
+        reset()
+    }
+```
+
+Room controls persist a versioned timer snapshot; presence heartbeats update
+separate expiring leases. All access takes the established account-before-group
+locks and rechecks active membership. Assemblers expose only DTOs. The leader
+retains controls, delegated hosts must be present, and distinct students count
+toward capacity. Sessions/calendar and matching explanations are separate later
+slices; this diagram does not imply those features exist.
+
 ## Domain and OO boundaries
 
 ```mermaid

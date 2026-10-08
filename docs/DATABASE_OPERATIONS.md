@@ -1,7 +1,8 @@
 # Database operations
 
 The application uses backend JDBC with application JWTs. It does not use a browser Supabase
-SDK or Supabase Auth policies. SQL changes touch the 16 mapped public application tables,
+SDK or Supabase Auth policies. This branch adds two room tables to the 16 baseline tables;
+SQL changes touch the 18 mapped public application tables,
 their sequences/default privileges and browser grants; provider-managed schemas are untouched.
 
 ## Ordered migrations
@@ -12,6 +13,8 @@ their sequences/default privileges and browser grants; provider-managed schemas 
 | `20261006170327_team_c_integrity.sql` | Preflight, normalized identity, JWT version/last login, request context, safe event metadata, description width, UTC conversion, checks/unique/query indexes |
 | `20261006170448_backend_only_database_access.sql` | RLS and deny browser table/sequence grants; future default privileges follow the same model |
 | `20261006172934_collection_goal_primary_keys.sql` | Natural owner/goal primary keys for the two set collections; preserve valid rows and reject legacy null goals |
+| `20261007220000_match_request_cancellation.sql` | Add cancelled request status for account deactivation |
+| `20261009010000_study_rooms.sql` | Durable room state, per-tab expiring presence, role FKs, capacity/timer checks, indexes and backend-only grants/RLS |
 
 These are versioned source files, generated using the existing Supabase CLI. The shared
 MCP migration runner records its own deployment timestamps, so do not expect those history
@@ -20,7 +23,13 @@ an applied file to change a deployed schema: add another migration.
 
 `scripts/migrate-database.sh` wraps all files in one transaction with ON_ERROR_STOP and the
 exclusive application advisory lock. It is intentionally repeatable, including existing-schema
-adoption. The shared hosted migrations are already applied as of 7 October 2026.
+adoption. Baseline deployment evidence below is from 7 October 2026. The new room
+migration is verified locally only and has not been applied to shared Supabase by this branch.
+
+Room/group and student/presence foreign keys cascade on permanent deletion. Host and
+co-host foreign keys become null when those students are deleted. Membership removal,
+deactivation and group closure are enforced by fresh eligibility checks; expired/stale
+lease rows never count as online. Expired rows are pruned when someone joins the room.
 
 ## Before applying to a populated database
 
@@ -89,7 +98,7 @@ second startup without identity/password/creation changes.
 
 ## Privacy and access verification
 
-All 16 application tables have RLS enabled; PUBLIC/anon/authenticated grants are revoked,
+All 18 application tables in the migrated branch have RLS enabled; PUBLIC/anon/authenticated grants are revoked,
 and there are no browser policies. The backend owner is intentionally not FORCE-RLS, so
 JDBC still works. Revocation of browser sequence and future default table/sequence/function
 privileges prevents an alternate direct API data path. Do not add a permissive policy to make
@@ -104,7 +113,7 @@ WHERE table_schema='public' AND grantee IN ('PUBLIC','anon','authenticated');
 ```
 
 The second query must return no rows for application tables. In an isolated authorized test
-session, SET ROLE anon/authenticated must make student/contact/user/notification reads and
+session, SET ROLE anon/authenticated must make student/contact/user/notification/room reads and
 table writes fail with SQLSTATE 42501, while normal backend operations pass. These checks
 are in `DatabaseBoundaryTest`. Hosted advisor review found no security WARNING/ERROR;
 the remaining [RLS enabled/no policy INFO](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
