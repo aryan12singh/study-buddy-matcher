@@ -35,7 +35,8 @@ public class StudyGroupAssembler {
             group.isActive(), viewer);
     }
 
-    public StudyGroupDetailDto toDetail(StudyGroup group, List<GroupMembership> memberships, List<GroupAvailabilitySlot> slots, GroupViewerDto viewer) {
+    public StudyGroupDetailDto toDetail(StudyGroup group, List<GroupMembership> memberships, List<GroupAvailabilitySlot> slots,
+        GroupViewerDto viewer, Long pendingApplications) {
         return new StudyGroupDetailDto(
             group.getId(),
             group.getName(),
@@ -52,7 +53,7 @@ public class StudyGroupAssembler {
             group.isActive(),
             group.getCreatedAt(),
             slots.stream().sorted(WEEK_ORDER).map(this::toSlotDto).toList(),
-            memberships.stream().map(membership -> toMemberDto(group, membership)).toList(), viewer);
+            memberships.stream().map(membership -> toMemberDto(group, membership)).toList(), viewer, pendingApplications);
     }
 
     private GroupAvailabilitySlotDto toSlotDto(GroupAvailabilitySlot slot) {

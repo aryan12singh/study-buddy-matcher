@@ -246,7 +246,9 @@ caller even when deactivation removed their membership.
 Summary fields: `id,name,courseId,courseCode,courseName,leaderId,leaderName,preferredStudyMode,
 studyGoals,maxGroupSize,memberCount,active,viewer`. `viewer` is
 `{leader:boolean,member:boolean,requestId:number|null,requestStatus:status|null}` and reports
-the caller's latest application. Detail adds `description,createdAt,availability,members`.
+the caller's latest application. Detail adds `description,createdAt,availability,members,
+pendingApplications`; `pendingApplications` is the number of applications awaiting a decision
+for the leader and `null` for every other caller.
 Member shape is `{studentId,name,leader,joinedAt}` in joining order. No group response carries
 contact data. The agenda UI uses saved goals and availability from detail.
 
