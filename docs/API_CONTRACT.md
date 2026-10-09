@@ -436,6 +436,13 @@ eligibility and structured match-request context when connecting the matching sc
 
 ## UI use of the existing contract
 
+The student home page (`/home`, Team B) adds no endpoint or DTO field. It only reads existing
+endpoints, each section independently so one failure does not hide the others:
+`GET /api/profile/me` (profile progress and weekly availability), `GET /api/students/me/summary` (activity counts),
+`GET /api/match-requests/incoming` (pending requests, preview only; accept/decline stays on
+Connections), `GET /api/groups/mine` (open groups) and `GET /api/notifications` (latest five).
+A change to any of these response shapes needs a matching change to the home page.
+
 The UI polish adds no endpoint or DTO field. Group capacity/leader/member/application
 indicators use the existing `memberCount`, `maxGroupSize`, `active` and `viewer` fields;
 they never infer membership from a local click or reserve a place for a pending request.
