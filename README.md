@@ -54,6 +54,7 @@ until a match request is accepted — enforced by the backend, not the client.
 ## User Roles & Features
 
 **Student**
+- See a home page with their next step, activity counts, waiting buddy requests, weekly availability, their study groups and recent notifications.
 - Create/update profile (name, school, programme, year of study, contact number, courses taken) and study preferences (target course, study mode, weekly availability, group size preference, study goals).
 - Get a ranked list of compatible students; filter by course, availability, study mode, study goal, minimum match quality.
 - View another student's public profile (contact number hidden until a match is accepted).

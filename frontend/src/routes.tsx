@@ -3,6 +3,7 @@ import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import LandingPage from './features/landing/LandingPage'
 import EditProfilePage from './features/profile/EditProfilePage'
+import HomePage from './features/home/HomePage'
 import AccountHome from './shared/auth/AccountHome'
 import RequireRole from './shared/auth/RequireRole'
 import AppShell from './shared/components/AppShell'
@@ -27,6 +28,7 @@ export const appRoutes = createRoutesFromElements(
         <Route element={<AppShell />}>
           <Route path="/app" element={<AccountHome />} />
           <Route element={<RequireRole role="STUDENT" />}>
+            <Route path="/home" element={<HomePage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/students/:id/edit" element={<EditProfilePage />} />
