@@ -98,8 +98,38 @@ Team A eligibility consumers can reuse `AccountAccess.eligibleStudent`, `require
 `eligibleStudentIds` / `StudentRepository.findActiveIds`; existing and active STUDENT identities
 are required. This contract does not provide scoring or ranking.
 
-The full own-profile/preferences APIs (`GET/PUT /api/profile/me`,
-`PUT /api/profile/me/availability`) remain Team B work.
+## Own profile and preferences (Team B)
+
+| Method | Path | Request | Response | Auth |
+| --- | --- | --- | --- | --- |
+| GET | `/api/profile/me` | none | 200 `MyProfileDto` | Student |
+| PUT | `/api/profile/me` | `UpdateProfileRequest`; replaces the whole profile | 200 `MyProfileDto` | Student |
+| PUT | `/api/profile/me/availability` | `{ "slots": [AvailabilitySlot] }`; replaces the whole week, `[]` clears it | 200 `[AvailabilitySlot]`, Monday first | Student |
+
+```
+MyProfileDto {
+  id, email, name, school, programme, yearOfStudy, contactNumber,   // own profile, so contact is included
+  coursesTaken: [{ id, code, name }], targetCourse: { id, code, name } | null,
+  preferredStudyMode: "IN_PERSON" | "ONLINE" | "EITHER",
+  groupSizePreference: "ONE_TO_ONE" | "SMALL_GROUP" | "EITHER",
+  groupSizeMax,                                                        // largest group, from app.profile.group-size-max
+  studyGoals: ["CONCEPT_REVIEW" | "PROBLEM_SOLVING" | "EXAM_PREPARATION" | "PROJECT_DISCUSSION"],
+  availability: [AvailabilitySlot]
+}
+UpdateProfileRequest {
+  name, school, programme, yearOfStudy, contactNumber,                // required, as at registration
+  courseIds: [id],                                                     // at least 1, at most app.profile.max-courses
+  targetCourseId: id | null,                                           // need not be one of courseIds
+  preferredStudyMode, groupSizePreference,                             // required
+  studyGoals: [goal]                                                   // optional
+}
+AvailabilitySlot { dayOfWeek: "MONDAY".."SUNDAY", startTime: "HH:mm", endTime: "HH:mm" }
+```
+
+Group size is stored on `students` as a minimum and maximum: one-to-one = 2-2, small group =
+3-max, either = 2-max. Availability blocks must start before they end, use whole minutes and not
+overlap on the same day; there is no limit on how many. Invalid input returns 400
+`INVALID_INPUT` with `fieldErrors` keyed by the request field (`courseIds`, `availability`, ...).
 
 ## Buddy requests, connections and study profiles
 

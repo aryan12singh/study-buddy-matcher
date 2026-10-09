@@ -2,6 +2,7 @@ import { createRoutesFromElements, Link, Route } from 'react-router-dom'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import LandingPage from './features/landing/LandingPage'
+import EditProfilePage from './features/profile/EditProfilePage'
 import AccountHome from './shared/auth/AccountHome'
 import RequireRole from './shared/auth/RequireRole'
 import AppShell from './shared/components/AppShell'
@@ -28,6 +29,7 @@ export const appRoutes = createRoutesFromElements(
           <Route element={<RequireRole role="STUDENT" />}>
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
+            <Route path="/students/:id/edit" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/new" element={<GroupFormPage />} />

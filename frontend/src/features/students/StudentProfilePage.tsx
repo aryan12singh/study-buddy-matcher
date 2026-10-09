@@ -36,7 +36,12 @@ export default function StudentProfilePage() {
     <WindowPage
       title={student?.name ? `${student.name}'s study profile` : 'Student profile'}
       description="Courses, goals and weekly availability."
-      actions={<Link className="retro-button" to="/connections">Back to connections</Link>}
+      actions={(
+        <>
+          {relationship?.state === 'SELF' && <Link className="retro-button primary" to={`/students/${studentId}/edit`}>Edit my profile</Link>}
+          <Link className="retro-button" to="/connections">Back to connections</Link>
+        </>
+      )}
     >
       <StatePanel
         loading={profile.loading && !student}
