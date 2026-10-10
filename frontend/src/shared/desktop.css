@@ -398,3 +398,11 @@
   .home-feed-item { grid-template-columns: auto minmax(0, 1fr); }
   .home-feed-time, .home-feed-item > a, .home-feed-item > span:last-child { grid-column: 2; }
 }
+
+/* Matching settings (admin) */
+.settings-fieldset { border: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+.settings-fieldset legend { font-weight: 700; margin-bottom: .5rem; padding: 0; }
+.settings-fieldset:disabled { opacity: .7; }
+.strategy-option { display: flex; gap: .65rem; align-items: flex-start; padding: .6rem .75rem; border: 1px solid #6a7479; background: #fff; cursor: pointer; }
+.strategy-option > span { display: flex; flex-direction: column; gap: .15rem; }
+.strategy-option input { margin-top: .2rem; }

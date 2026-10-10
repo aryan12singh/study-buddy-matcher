@@ -72,13 +72,13 @@ describe('student home', () => {
     expect(screen.queryByText('Alex Tan')).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Next step' })).toHaveTextContent('Reply to 1 study buddy request')
   })
-  it('shows the matching placeholder without controls that look usable', async () => {
+  it('links to the matching search on the Connections page', async () => {
     serve(activeData)
     renderPage(<HomePage />, '/home', '/home')
     const finder = screen.getByRole('region', { name: /Find study buddies/ })
-    expect(within(finder).getByText('Coming soon')).toBeInTheDocument()
     expect(within(finder).getByText('See ranked matches')).toBeInTheDocument()
-    expect(within(finder).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(finder).queryByText('Coming soon')).not.toBeInTheDocument()
+    expect(within(finder).getByRole('link', { name: 'Search for study buddies' })).toHaveAttribute('href', '/connections?view=find')
   })
   it('guides a new student to finish their profile and explains every empty list', async () => {
     serve(newStudentData)

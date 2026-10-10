@@ -46,7 +46,10 @@ export default function AppShell() {
               )}
             </>
           ) : (
-            <NavLink to="/admin/users"><PixelIcon kind="accounts" /><span>User accounts</span></NavLink>
+            <>
+              <NavLink to="/admin/users"><PixelIcon kind="accounts" /><span>User accounts</span></NavLink>
+              <NavLink to="/admin/matching"><PixelIcon kind="search" /><span>Matching settings</span></NavLink>
+            </>
           )}
         </nav>
         <main

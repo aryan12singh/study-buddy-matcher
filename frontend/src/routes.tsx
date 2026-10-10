@@ -18,6 +18,7 @@ import GroupManagePage from './features/groups/GroupManagePage'
 import AdminUsersPage from './features/admin/AdminUsersPage'
 import AdminUserDetailPage from './features/admin/AdminUserDetailPage'
 import AdminUserFormPage from './features/admin/AdminUserFormPage'
+import MatchingSettingsPage from './features/matching/MatchingSettingsPage'
 
 export const appRoutes = createRoutesFromElements(
     <>
@@ -44,6 +45,7 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/admin/users/new" element={<AdminUserFormPage />} />
             <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
             <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
+            <Route path="/admin/matching" element={<MatchingSettingsPage />} />
           </Route>
           <Route
             path="*"
