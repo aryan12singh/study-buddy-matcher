@@ -423,16 +423,62 @@ Membership `(study_group_id,student_id)` stays unique. Answered/ended history re
 The migrations create these constraints; Hibernate `update` does not. RLS and browser-role privilege removal
 protect the alternate Supabase access path; operational evidence is recorded separately.
 
-## Team A integration surface still pending
+## Matching configuration (Team A)
 
-| Method | Path | Owning work remaining |
+Admin only. `GET /api/admin/matching-config` returns the settings in force;
+`PUT /api/admin/matching-config` replaces them and returns the saved result.
+
+```json
+{
+  "activeStrategy": "BALANCED",
+  "weights": {
+    "BALANCED": { "COURSE": 0.3, "AVAILABILITY": 0.3, "STUDY_MODE": 0.2, "STUDY_GOAL": 0.1, "GROUP_SIZE": 0.1 },
+    "AVAILABILITY_FIRST": { "COURSE": 0.4, "STUDY_MODE": 0.3, "STUDY_GOAL": 0.15, "GROUP_SIZE": 0.15 },
+    "COURSE_FIRST": { "AVAILABILITY": 0.4, "STUDY_MODE": 0.3, "STUDY_GOAL": 0.15, "GROUP_SIZE": 0.15 }
+  }
+}
+```
+
+The PUT body has the same shape and must include all three strategies. `activeStrategy` is
+`BALANCED`, `AVAILABILITY_FIRST` or `COURSE_FIRST`; search scores and ranks with the active
+strategy's own weights. Balanced ranks by weighted total; Availability-first ranks by the
+availability score, then the total; Course-first by the course score, then the total. A strategy
+does not weight the criterion it ranks by first: it is absent from that strategy's weights in
+responses, and in a PUT it may be left out or set to 0 (any other value is a 400). Each listed
+weight is from 0 to 1 and a strategy's weights must add up to 1 (within 0.001 for rounding), so
+each is that criterion's share of the total score. Weights saved before this rule are rescaled to
+add up to 1 when read, keeping each share. Invalid input returns 400 `INVALID_INPUT`, naming
+the strategy. Until an admin saves, the defaults from `app.matching.*` apply.
+
+## Match search (Team A)
+
+Student only. `GET /api/matches` returns other active students ranked best match first by the
+admin's active strategy. The Find buddies tab on the Connections page (`/connections?view=find`)
+calls it.
+
+| Query parameter | Values | Meaning |
 | --- | --- | --- |
-| GET | `/api/matches` | Team A scoring/ranking: course or study-goal entry point, additional filters/strategy/threshold and per-criterion MatchScore |
-| GET | `/api/admin/matching-config` | Team A current weights/threshold/active strategy |
-| PUT | `/api/admin/matching-config` | Team A validation and persistence of matching settings |
+| `courseId` | course ID | Only students who take or target this course |
+| `studyGoal` | `StudyGoal` enum | Only students with this study goal |
+| `studyMode` | `StudyMode` enum, optional | Only students who chose this mode or `EITHER`; `EITHER` filters nothing; students with no mode are excluded |
+| `groupSize` | `ONE_TO_ONE`, `SMALL_GROUP` or `EITHER`, optional | Only students whose preferred size range overlaps it (one-to-one is 2 people, small group 3 to `app.profile.group-size-max`); `EITHER` filters nothing; students with no range are excluded |
+| `minSharedHours` | positive integer, optional | Only students with at least this many hours a week free at the same time as the searcher, from both students' saved availability |
+| `minQuality` | `GOOD` or `STRONG`, optional | Hide matches below this quality |
 
-These are proposals, not implemented C endpoints. Reuse C profile privacy, active-student
-eligibility and structured match-request context when connecting the matching screen.
+At least one of `courseId` or `studyGoal` is required; otherwise 400 `INVALID_INPUT`. An unknown
+course ID returns 404 and `minSharedHours` below 1 returns 400. The searcher never appears in their own
+results, and only active students are searched. `sharedHoursPerWeek` is rounded to a tenth of an hour.
+
+```json
+[
+  { "studentId": 2, "name": "Jamie Lee", "school": "SCIS", "programme": "Information Systems",
+    "yearOfStudy": 2, "quality": "STRONG", "sharedHoursPerWeek": 3 }
+]
+```
+
+`quality` is `STRONG`, `GOOD` or `FAIR`, a plain-language label of the weighted total; the raw
+score is not returned. The cut-offs are configuration, not constants. Results carry no contact
+number; the profile link and match-request flow keep Team C's privacy rules.
 
 ## UI use of the existing contract
 

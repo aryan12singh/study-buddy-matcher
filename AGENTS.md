@@ -40,12 +40,12 @@ docs/       API contract, UML diagrams
 
 ## Open questions to settle before coding
 
-- **How is preferred group size represented?** The brief contradicts itself: the functional
-  requirements list it categorically ("one-to-one, small group, or either") while Appendix A
-  scores it numerically, treating "2-3 students" against "2 students" as compatible. A
-  categorical reading is a small compatibility matrix; a numeric one is interval overlap like
-  `TimeSlot`. `GroupSizeScorer`, the profile form, the seeder and the filter panel all depend
-  on the answer. **Team A to decide.**
+- **Preferred group size: decided by Team A.** Both readings, layered. Students choose
+  categorically ("one-to-one, small group, or either"), and the profile stores the choice as a
+  minimum and maximum number of people. `GroupSizeScorer` scores interval overlap, as Appendix A
+  does ("2-3 students" against "2 students" is compatible), and the search filter keeps students
+  whose range overlaps the chosen category. Details in the matching section of
+  [`README.md`](README.md#matching-engine).
 - **Admin deletion vs deactivation: decided by Team C.** Two separate actions. Deactivate is
   reversible: it revokes sign-in, ends active connections and group memberships, and keeps
   history. Delete is permanent and removes the account and its dependent records. Details in

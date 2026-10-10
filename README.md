@@ -56,7 +56,7 @@ until a match request is accepted — enforced by the backend, not the client.
 **Student**
 - See a home page with their next step, activity counts, waiting buddy requests, weekly availability, their study groups and recent notifications.
 - Create/update profile (name, school, programme, year of study, contact number, courses taken) and study preferences (target course, study mode, weekly availability, group size preference, study goals).
-- Get a ranked list of compatible students; filter by course, availability, study mode, study goal, minimum match quality.
+- Get a ranked list of compatible students; filter by course, availability, study mode, study goal, preferred group size, minimum match quality.
 - View another student's public profile (contact number hidden until a match is accepted).
 - Send/accept/decline study-buddy requests; view and end active connections.
 
@@ -191,7 +191,11 @@ in `application-local.yml` or the process environment.
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated frontend origins |
 | `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three settings above | Typed authentication config (`AuthProperties`) |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (min `3`) | Largest group a "small group" or "either" preference covers |
-| `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list as currently taken || `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
+| `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list as currently taken |
+| `app.matching.default-strategy` | `BALANCED` | Strategy used until an admin chooses one (`BALANCED`, `AVAILABILITY_FIRST`, `COURSE_FIRST`) |
+| `app.matching.default-weights.<strategy>.*` | balanced: course `0.30`, availability `0.30`, study-mode `0.20`, study-goal `0.10`, group-size `0.10`; availability-first: course `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15`; course-first: availability `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15` | Each strategy's criterion weights until an admin saves their own; each from 0 to 1, adding up to 1. A strategy leaves out the criterion it ranks by first |
+| `app.matching.quality.strong` / `app.matching.quality.good` | `0.75` / `0.50` | Weighted-total cut-offs for the Strong and Good match labels; anything lower is Fair |
+| `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
 | `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
 | `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
 | `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
@@ -241,11 +245,35 @@ passwords.
 Students are matched on course, availability overlap, and study mode, with
 study goal and group size as secondary criteria. The matching strategy and
 criteria weights are admin-configurable (not hardcoded), supporting at least:
-- **Balanced Matching** — weighted combination of all criteria.
-- **Availability-First Matching** — prioritizes timetable overlap.
-- **Course-First Matching** — prioritizes exact course match, then ranks by remaining preferences.
+- **Balanced Matching** — ranks by the weighted total of all criteria.
+- **Availability-First Matching** — ranks by shared free time, then by the weighted total of the other criteria.
+- **Course-First Matching** — ranks by course match, then by the weighted total of the remaining preferences.
 
-Match quality is shown to users in plain language (e.g. "Strong match"), not a raw score.
+Students search from the **Find buddies** tab on the Connections page, starting from a course or
+a study goal, with optional filters for study mode, preferred group size, shared free time and
+minimum match quality. Administrators choose the active strategy and its weights under
+**Matching settings**.
+
+Match quality is shown to users in plain language ("Strong match", "Good match", "Fair match"),
+not a raw score. The cut-offs are configuration (`app.matching.quality.*`).
+
+Each strategy keeps its own weights, from 0 to 1 and adding up to 1, so each weight is that
+criterion's share of the total score. A strategy does not weight the criterion it ranks by
+first, so it is never counted twice. Each criterion scores 0 to 1; if either student has left a
+preference blank, that criterion scores a neutral 0.5 so an incomplete profile is neither
+rewarded nor punished.
+
+| Criterion | Score |
+| --- | --- |
+| Course | 1 if the candidate's target course is the course in focus (the searched course, else the searcher's target course); 0.5 if they only take it; 0 otherwise |
+| Availability | Shared weekly free time ÷ the searcher's total free time |
+| Study mode | 1 if the same or either chose "either"; 0 if one is in person and the other online |
+| Study goals | Goals in common ÷ the searcher's goals |
+| Group size | 1 if the two preferred size ranges overlap; 0 otherwise |
+
+The code lives in `backend/.../matching/`: the search (`MatchService`, `MatchSearchFilter`) at the
+top, with `scoring/` (one `CriterionScorer` per criterion), `strategy/` (one `MatchingStrategy`
+per strategy), `availability/` (`TimeSlot` overlap maths) and `config/` (admin settings).
 
 ## Requests, Groups, Notifications and Admin
 
