@@ -31,6 +31,30 @@ app:
   profile:
     group-size-max: ${PROFILE_GROUP_SIZE_MAX:5}
     max-courses: ${PROFILE_MAX_COURSES:8}
+  matching:
+    default-strategy: BALANCED
+    # Each strategy's weights add up to 1. A strategy that ranks by a criterion first
+    # does not weight it again, so that criterion is left out.
+    default-weights:
+      balanced:
+        course: 0.30
+        availability: 0.30
+        study-mode: 0.20
+        study-goal: 0.10
+        group-size: 0.10
+      availability-first:
+        course: 0.40
+        study-mode: 0.30
+        study-goal: 0.15
+        group-size: 0.15
+      course-first:
+        availability: 0.40
+        study-mode: 0.30
+        study-goal: 0.15
+        group-size: 0.15
+    quality:
+      strong: 0.75
+      good: 0.50
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

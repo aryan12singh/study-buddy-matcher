@@ -1,5 +1,6 @@
-package com.studybuddy.matching;
+package com.studybuddy.matching.config;
 
+import com.studybuddy.matching.strategy.MatchingStrategyType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

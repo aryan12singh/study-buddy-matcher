@@ -1,4 +1,4 @@
-package com.studybuddy.matching;
+package com.studybuddy.matching.scoring;
 
 public enum MatchingCriterion {
     COURSE,
