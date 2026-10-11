@@ -249,13 +249,15 @@ criteria weights are admin-configurable (not hardcoded), supporting at least:
 - **Availability-First Matching** — ranks by shared free time, then by the weighted total of the other criteria.
 - **Course-First Matching** — ranks by course match, then by the weighted total of the remaining preferences.
 
-Students search from the **Find buddies** tab on the Connections page, starting from a course or
-a study goal, with optional filters for study mode, preferred group size, shared free time and
-minimum match quality. Administrators choose the active strategy and its weights under
+Students search from the **Find buddies** page in the sidebar. It lists every other active
+student best match first, narrowed by optional filters for course, study goal, study mode,
+preferred group size, shared free time and minimum match quality. The admin's strategy decides
+the order, and the page names it and shows strong, then good, then fair matches in that order. Each result shows a per-criterion score breakdown and a heatmap
+of the weekly time both students are free. Administrators choose the active strategy and its weights under
 **Matching settings**.
 
 Match quality is shown to users in plain language ("Strong match", "Good match", "Fair match"),
-not a raw score. The cut-offs are configuration (`app.matching.quality.*`).
+not a raw total score. The cut-offs are configuration (`app.matching.quality.*`).
 
 Each strategy keeps its own weights, from 0 to 1 and adding up to 1, so each weight is that
 criterion's share of the total score. A strategy does not weight the criterion it ranks by

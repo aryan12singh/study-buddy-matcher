@@ -14,12 +14,11 @@ import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import SendRequestDialog from './SendRequestDialog'
 import Avatar from '../../shared/components/Avatar'
-import FindBuddiesPanel from '../matching/FindBuddiesPanel'
 
 export default function ConnectionsPage() {
   const [search, setSearch] = useSearchParams()
   const requestedView = search.get('view')
-  const tab = requestedView === 'outgoing' || requestedView === 'connected' || requestedView === 'find' ? requestedView : 'incoming'
+  const tab = requestedView === 'outgoing' || requestedView === 'connected' ? requestedView : 'incoming'
   const [sending, setSending] = useState(false),
     [ending, setEnding] = useState<Connection | null>(null)
   const [notice, setNotice] = useState<string>()
@@ -54,8 +53,7 @@ export default function ConnectionsPage() {
         options={[
           { value: 'incoming', label: 'Incoming requests' },
           { value: 'outgoing', label: 'Outgoing requests' },
-          { value: 'connected', label: 'Connected buddies' },
-          { value: 'find', label: 'Find buddies' }
+          { value: 'connected', label: 'Connected buddies' }
         ]}
         onChange={value => {
           setSearch({ view: value })
@@ -64,9 +62,7 @@ export default function ConnectionsPage() {
         }}
       />
       <ActionNotice error={ending ? undefined : action.error} success={notice || action.success} />
-      {tab === 'find' ? (
-        <FindBuddiesPanel />
-      ) : tab === 'connected' ? (
+      {tab === 'connected' ? (
         <>
           <StatePanel
             loading={connections.loading && !connections.data}

@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/matches")
 public class MatchController {
@@ -23,7 +21,7 @@ public class MatchController {
     }
 
     @GetMapping
-    public List<MatchResultDto> search(@AuthenticationPrincipal AccountPrincipal actor,
+    public MatchSearchResultDto search(@AuthenticationPrincipal AccountPrincipal actor,
             @RequestParam(required = false) Long courseId,
             @RequestParam(required = false) StudyGoal studyGoal,
             @RequestParam(required = false) StudyMode studyMode,

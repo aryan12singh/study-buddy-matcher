@@ -35,11 +35,6 @@ export const QUALITY_LABELS: Record<MatchQuality, string> = { STRONG: 'Strong ma
 /** Green, amber and grey, so the three labels can be told apart at a glance and not only by their text. */
 export const QUALITY_TONES: Record<MatchQuality, 'good' | 'pending' | 'neutral'> = { STRONG: 'good', GOOD: 'pending', FAIR: 'neutral' }
 
-/** A search starts from a course or a study goal; the other filters are optional. */
-export function validateSearch(form: MatchSearchForm): Record<string, string> {
-  return form.courseId || form.studyGoal ? {} : { 'match-course': 'Choose a course or a study goal to search.' }
-}
-
 export function toSearch(form: MatchSearchForm): MatchSearch {
   return {
     ...(form.courseId ? { courseId: Number(form.courseId) } : {}),
@@ -54,4 +49,16 @@ export function toSearch(form: MatchSearchForm): MatchSearch {
 export function sharedHoursText(hours: number) {
   if (hours <= 0) return 'No shared free time in your weekly schedules'
   return `${hours} ${hours === 1 ? 'hour' : 'hours'} of shared free time a week`
+}
+
+/** The search as the form shows it, so removing a filter chip can reset the matching field. */
+export function toForm(search: MatchSearch): MatchSearchForm {
+  return {
+    courseId: search.courseId ? String(search.courseId) : '',
+    studyGoal: search.studyGoal || '',
+    studyMode: search.studyMode || '',
+    groupSize: search.groupSize || '',
+    minSharedHours: search.minSharedHours ? String(search.minSharedHours) : '',
+    minQuality: search.minQuality || ''
+  }
 }

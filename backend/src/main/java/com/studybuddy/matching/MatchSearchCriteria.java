@@ -4,8 +4,8 @@ import com.studybuddy.student.GroupSizePreference;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
 /**
- * What a student searched for. A search starts from a course or a study goal;
- * every other field is an optional filter and may be null.
+ * What a student searched for. Every field is an optional filter and may be
+ * null; a search with none set ranks every other active student.
  */
 public record MatchSearchCriteria(
         Long courseId,

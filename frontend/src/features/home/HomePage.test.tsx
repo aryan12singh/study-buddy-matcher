@@ -78,7 +78,7 @@ describe('student home', () => {
     const finder = screen.getByRole('region', { name: /Find study buddies/ })
     expect(within(finder).getByText('See ranked matches')).toBeInTheDocument()
     expect(within(finder).queryByText('Coming soon')).not.toBeInTheDocument()
-    expect(within(finder).getByRole('link', { name: 'Search for study buddies' })).toHaveAttribute('href', '/connections?view=find')
+    expect(within(finder).getByRole('link', { name: 'Search for study buddies' })).toHaveAttribute('href', '/find-buddies')
   })
   it('guides a new student to finish their profile and explains every empty list', async () => {
     serve(newStudentData)

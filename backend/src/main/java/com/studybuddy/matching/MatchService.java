@@ -12,6 +12,7 @@ import com.studybuddy.matching.scoring.MatchingProfile;
 import com.studybuddy.matching.scoring.MatchingWeights;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
 import com.studybuddy.matching.strategy.MatchingStrategy;
+import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.AvailabilitySlotRepository;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
@@ -41,10 +42,12 @@ public class MatchService {
     private final MatchSearchFilter filter;
     private final WeightedMatchScorer scorer;
     private final MatchResultAssembler assembler;
+    private final MatchRelationships relationships;
 
     public MatchService(AccountAccess access, StudentRepository students, AvailabilitySlotRepository availabilitySlots,
             CourseRepository courses, MatchingConfigService config, MatchingProperties properties,
-            MatchSearchFilter filter, WeightedMatchScorer scorer, MatchResultAssembler assembler) {
+            MatchSearchFilter filter, WeightedMatchScorer scorer, MatchResultAssembler assembler,
+            MatchRelationships relationships) {
         this.access = access;
         this.students = students;
         this.availabilitySlots = availabilitySlots;
@@ -54,9 +57,10 @@ public class MatchService {
         this.filter = filter;
         this.scorer = scorer;
         this.assembler = assembler;
+        this.relationships = relationships;
     }
 
-    public List<MatchResultDto> search(MatchSearchCriteria search, Long actorId) {
+    public MatchSearchResultDto search(MatchSearchCriteria search, Long actorId) {
         Student self = access.requireStudent(actorId);
         validate(search);
         Map<Long, WeeklyAvailability> availability = availabilityByStudent();
@@ -65,8 +69,9 @@ public class MatchService {
         MatchingStrategy strategy = config.activeStrategy();
         QualityThresholds thresholds = properties.quality();
         MatchQuality minimum = search.minQuality() == null ? MatchQuality.FAIR : search.minQuality();
+        Map<Long, RelationshipState> standing = relationships.of(self.getId());
 
-        return students.findAllById(access.eligibleStudentIds()).stream()
+        List<MatchResultDto> matches = students.findAllById(access.eligibleStudentIds()).stream()
                 .filter(student -> !student.getId().equals(self.getId()))
                 .map(student -> profileOf(student, availability))
                 .filter(candidate -> filter.accepts(search, searcher, candidate))
@@ -74,14 +79,14 @@ public class MatchService {
                 .filter(scored -> thresholds.classify(scored.score().total()).isAtLeast(minimum))
                 .sorted(Comparator.comparing(ScoredCandidate::score, strategy.ranking())
                         .thenComparing(scored -> scored.profile().student().getName()))
-                .map(scored -> assembler.toDto(searcher, scored.profile(), thresholds.classify(scored.score().total())))
+                .map(scored -> assembler.toDto(searcher, scored.profile(), scored.score(),
+                        thresholds.classify(scored.score().total()),
+                        standing.getOrDefault(scored.profile().student().getId(), RelationshipState.STRANGER)))
                 .toList();
+        return new MatchSearchResultDto(strategy.type(), matches);
     }
 
     private void validate(MatchSearchCriteria search) {
-        if (search.courseId() == null && search.studyGoal() == null) {
-            throw new InvalidMatchSearchException("Choose a course or a study goal to search");
-        }
         if (search.minSharedHours() != null && search.minSharedHours() < 1) {
             throw new InvalidMatchSearchException("Minimum shared hours must be at least 1");
         }

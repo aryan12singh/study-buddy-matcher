@@ -453,7 +453,8 @@ the strategy. Until an admin saves, the defaults from `app.matching.*` apply.
 ## Match search (Team A)
 
 Student only. `GET /api/matches` returns other active students ranked best match first by the
-admin's active strategy. The Find buddies tab on the Connections page (`/connections?view=find`)
+admin's active strategy and its weights, together with that strategy's name. The page groups them
+into strong, good and fair sections, keeping this order within each. The Find buddies page (`/find-buddies`, in the student sidebar under Home)
 calls it.
 
 | Query parameter | Values | Meaning |
@@ -465,19 +466,40 @@ calls it.
 | `minSharedHours` | positive integer, optional | Only students with at least this many hours a week free at the same time as the searcher, from both students' saved availability |
 | `minQuality` | `GOOD` or `STRONG`, optional | Hide matches below this quality |
 
-At least one of `courseId` or `studyGoal` is required; otherwise 400 `INVALID_INPUT`. An unknown
+Every parameter is optional; with none, every other active student is returned. An unknown
 course ID returns 404 and `minSharedHours` below 1 returns 400. The searcher never appears in their own
 results, and only active students are searched. `sharedHoursPerWeek` is rounded to a tenth of an hour.
 
 ```json
-[
+{
+  "strategy": "BALANCED",
+  "matches": [
   { "studentId": 2, "name": "Jamie Lee", "school": "SCIS", "programme": "Information Systems",
-    "yearOfStudy": 2, "quality": "STRONG", "sharedHoursPerWeek": 3 }
-]
+    "yearOfStudy": 2, "studyMode": "ONLINE", "studyGoals": ["EXAM_PREPARATION"], "quality": "STRONG",
+    "breakdown": [
+      { "criterion": "COURSE", "score": 1.0 }, { "criterion": "AVAILABILITY", "score": 0.5 },
+      { "criterion": "STUDY_MODE", "score": 1.0 }, { "criterion": "STUDY_GOAL", "score": 1.0 },
+      { "criterion": "GROUP_SIZE", "score": 0.5 }
+    ],
+    "sharedHoursPerWeek": 3,
+    "sharedSlots": [{ "dayOfWeek": "MONDAY", "startTime": "09:00:00", "endTime": "12:00:00" }],
+    "relationship": "STRANGER" }
+  ]
+}
 ```
 
-`quality` is `STRONG`, `GOOD` or `FAIR`, a plain-language label of the weighted total; the raw
-score is not returned. The cut-offs are configuration, not constants. Results carry no contact
+`strategy` is the `MatchingStrategyType` that ranked `matches`, read in the same request, so the
+page can say "Ranked by Availability first matching" without calling the admin-only config endpoint.
+
+`quality` is `STRONG`, `GOOD` or `FAIR`, a plain-language label of the weighted total; the weighted
+total itself is not returned. `breakdown` lists every criterion's unweighted score from 0 to 1,
+rounded to two places, in the order above; 0.5 also means either student left that preference
+unset. `sharedSlots` are the weekly blocks both students are free, Monday first, in SGT.
+`studyMode` may be null. `relationship` is where the searcher already stands with that student,
+using the profile page's `RelationshipState`: `CONNECTED`, `OUTGOING_PENDING` (the searcher sent a
+request still awaiting a reply), `INCOMING_PENDING` (the student sent the searcher one) or
+`STRANGER` (nothing active; a declined or cancelled request leaves this). The page only offers
+"Send match request" to strangers, matching the rules `POST /api/match-requests` already enforces. The cut-offs are configuration, not constants. Results carry no contact
 number; the profile link and match-request flow keep Team C's privacy rules.
 
 ## UI use of the existing contract

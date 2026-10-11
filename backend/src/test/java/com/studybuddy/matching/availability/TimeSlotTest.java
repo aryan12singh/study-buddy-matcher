@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
 
 import static com.studybuddy.matching.MatchingFixtures.slot;
 import static com.studybuddy.matching.MatchingFixtures.week;
@@ -49,6 +51,18 @@ class TimeSlotTest {
     }
 
     @Test
+    void intersectionIsTheSharedBlock() {
+        assertEquals(Optional.of(slot(MONDAY, "10:00", "11:00")),
+                slot(MONDAY, "09:00", "11:00").intersection(slot(MONDAY, "10:00", "12:00")));
+    }
+
+    @Test
+    void slotsThatOnlyTouchOrAreOnDifferentDaysHaveNoIntersection() {
+        assertTrue(slot(MONDAY, "09:00", "10:00").intersection(slot(MONDAY, "10:00", "11:00")).isEmpty());
+        assertTrue(slot(MONDAY, "09:00", "11:00").intersection(slot(TUESDAY, "09:00", "11:00")).isEmpty());
+    }
+
+    @Test
     void rejectsASlotThatDoesNotStartBeforeItEnds() {
         assertThrows(IllegalArgumentException.class, () -> slot(MONDAY, "10:00", "10:00"));
         assertThrows(IllegalArgumentException.class, () -> slot(MONDAY, "11:00", "10:00"));
@@ -66,10 +80,21 @@ class TimeSlotTest {
     }
 
     @Test
+    void sharedSlotsAreListedInWeekOrder() {
+        WeeklyAvailability mine = week(slot(DayOfWeek.WEDNESDAY, "14:00", "16:00"), slot(MONDAY, "09:00", "11:00"));
+        WeeklyAvailability theirs = week(slot(MONDAY, "10:00", "12:00"), slot(DayOfWeek.WEDNESDAY, "13:00", "14:30"),
+                slot(DayOfWeek.FRIDAY, "09:00", "17:00"));
+
+        assertEquals(List.of(slot(MONDAY, "10:00", "11:00"), slot(DayOfWeek.WEDNESDAY, "14:00", "14:30")),
+                mine.sharedSlotsWith(theirs));
+    }
+
+    @Test
     void emptyWeekSharesNothing() {
         WeeklyAvailability empty = week();
 
         assertTrue(empty.isEmpty());
         assertEquals(0, empty.sharedMinutesWith(week(slot(MONDAY, "09:00", "10:00"))));
+        assertTrue(empty.sharedSlotsWith(week(slot(MONDAY, "09:00", "10:00"))).isEmpty());
     }
 }

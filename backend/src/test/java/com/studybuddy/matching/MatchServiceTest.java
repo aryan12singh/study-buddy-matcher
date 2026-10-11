@@ -2,6 +2,8 @@ package com.studybuddy.matching;
 
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.error.ForbiddenActionException;
+import com.studybuddy.connection.Connection;
+import com.studybuddy.connection.ConnectionRepository;
 import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.course.CourseRepository;
 import com.studybuddy.matching.config.MatchingConfigService;
@@ -9,11 +11,19 @@ import com.studybuddy.matching.config.MatchingProperties;
 import com.studybuddy.matching.scoring.AvailabilityOverlapScorer;
 import com.studybuddy.matching.scoring.CourseScorer;
 import com.studybuddy.matching.scoring.GroupSizeScorer;
+import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingWeights;
 import com.studybuddy.matching.scoring.StudyGoalScorer;
 import com.studybuddy.matching.scoring.StudyModeScorer;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
+import com.studybuddy.matching.strategy.AvailabilityFirstStrategy;
 import com.studybuddy.matching.strategy.BalancedStrategy;
+import com.studybuddy.matching.strategy.MatchingStrategyType;
+import com.studybuddy.matchrequest.MatchRequest;
+import com.studybuddy.matchrequest.MatchRequestOrigin;
+import com.studybuddy.matchrequest.MatchRequestRepository;
+import com.studybuddy.matchrequest.MatchRequestStatus;
+import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.AvailabilitySlot;
 import com.studybuddy.student.AvailabilitySlotRepository;
 import com.studybuddy.student.ProfileProperties;
@@ -31,6 +41,8 @@ import org.mockito.quality.Strictness;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.studybuddy.matching.MatchingFixtures.course;
 import static com.studybuddy.matching.MatchingFixtures.student;
@@ -53,6 +65,8 @@ class MatchServiceTest {
     @Mock private AvailabilitySlotRepository availabilitySlots;
     @Mock private CourseRepository courses;
     @Mock private MatchingConfigService config;
+    @Mock private ConnectionRepository connections;
+    @Mock private MatchRequestRepository requests;
 
     private MatchService service;
     private Student me;
@@ -65,7 +79,8 @@ class MatchServiceTest {
         WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(), new AvailabilityOverlapScorer(),
                 new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()));
         service = new MatchService(access, students, availabilitySlots, courses, config, properties,
-                new MatchSearchFilter(new ProfileProperties(5, 8)), scorer, new MatchResultAssembler());
+                new MatchSearchFilter(new ProfileProperties(5, 8)), scorer, new MatchResultAssembler(),
+                new MatchRelationships(connections, requests));
 
         me = student(ME, "Priya");
         me.setPreferredStudyMode(StudyMode.ONLINE);
@@ -97,7 +112,7 @@ class MatchServiceTest {
 
     @Test
     void ranksOtherStudentsBestFirstAndNeverIncludesTheSearcher() {
-        List<MatchResultDto> results = service.search(courseSearch(null), ME);
+        List<MatchResultDto> results = service.search(courseSearch(null), ME).matches();
 
         assertEquals(List.of(2L, 3L), results.stream().map(MatchResultDto::studentId).toList());
         assertEquals(MatchQuality.STRONG, results.get(0).quality());
@@ -106,8 +121,34 @@ class MatchServiceTest {
     }
 
     @Test
+    void reportsTheAdminsActiveStrategy() {
+        when(config.activeStrategy()).thenReturn(new AvailabilityFirstStrategy());
+
+        assertEquals(MatchingStrategyType.AVAILABILITY_FIRST, service.search(courseSearch(null), ME).strategy());
+    }
+
+    @Test
+    void showsWhereTheSearcherAlreadyStandsWithEachStudent() {
+        Student pending = student(4, "Sam");
+        Student connected = student(5, "Kai");
+        when(access.eligibleStudentIds()).thenReturn(List.of(1L, 2L, 3L, 4L, 5L));
+        when(students.findAllById(List.of(1L, 2L, 3L, 4L, 5L))).thenReturn(List.of(weak, me, strong, pending, connected));
+        when(requests.findBySenderIdAndStatus(ME, MatchRequestStatus.PENDING))
+                .thenReturn(List.of(new MatchRequest(me, strong, null, MatchRequestOrigin.MATCHING, null, null)));
+        when(requests.findByReceiverIdAndStatus(ME, MatchRequestStatus.PENDING))
+                .thenReturn(List.of(new MatchRequest(pending, me, null, MatchRequestOrigin.PROFILE, null, null)));
+        when(connections.findActiveByStudentId(ME)).thenReturn(List.of(new Connection(connected, me)));
+
+        Map<Long, RelationshipState> states = service.search(new MatchSearchCriteria(null, null, null, null, null, null), ME)
+                .matches().stream().collect(Collectors.toMap(MatchResultDto::studentId, MatchResultDto::relationship));
+
+        assertEquals(Map.of(2L, RelationshipState.OUTGOING_PENDING, 3L, RelationshipState.STRANGER,
+                4L, RelationshipState.INCOMING_PENDING, 5L, RelationshipState.CONNECTED), states);
+    }
+
+    @Test
     void minimumQualityHidesWeakerMatches() {
-        List<MatchResultDto> results = service.search(courseSearch(MatchQuality.STRONG), ME);
+        List<MatchResultDto> results = service.search(courseSearch(MatchQuality.STRONG), ME).matches();
 
         assertEquals(List.of(2L), results.stream().map(MatchResultDto::studentId).toList());
     }
@@ -116,20 +157,32 @@ class MatchServiceTest {
     void filtersNarrowTheResults() {
         MatchSearchCriteria online = new MatchSearchCriteria(4L, null, StudyMode.ONLINE, null, null, null);
 
-        assertEquals(List.of(2L), service.search(online, ME).stream().map(MatchResultDto::studentId).toList());
+        assertEquals(List.of(2L), service.search(online, ME).matches().stream().map(MatchResultDto::studentId).toList());
     }
 
     @Test
     void returnsAnEmptyListWhenNobodyFits() {
         MatchSearchCriteria planning = new MatchSearchCriteria(null, StudyGoal.PROJECT_DISCUSSION, null, null, null, null);
 
-        assertTrue(service.search(planning, ME).isEmpty());
+        assertTrue(service.search(planning, ME).matches().isEmpty());
     }
 
     @Test
-    void rejectsASearchWithNoCourseOrGoal() {
-        assertThrows(InvalidMatchSearchException.class,
-                () -> service.search(new MatchSearchCriteria(null, null, StudyMode.ONLINE, null, null, null), ME));
+    void searchWithNoFiltersRanksEveryOtherStudent() {
+        List<MatchResultDto> results = service.search(new MatchSearchCriteria(null, null, null, null, null, null), ME).matches();
+
+        assertEquals(List.of(2L, 3L), results.stream().map(MatchResultDto::studentId).toList());
+    }
+
+    @Test
+    void resultsCarryTheBreakdownSharedSlotsAndPreferences() {
+        MatchResultDto jamie = service.search(courseSearch(null), ME).matches().get(0);
+
+        assertEquals(List.of(MatchingCriterion.values()), jamie.breakdown().stream().map(CriterionScoreDto::criterion).toList());
+        assertEquals(1.0, jamie.breakdown().get(0).score());
+        assertEquals(List.of(new SharedSlotDto(MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0))), jamie.sharedSlots());
+        assertEquals(StudyMode.EITHER, jamie.studyMode());
+        assertEquals(List.of(StudyGoal.EXAM_PREPARATION), jamie.studyGoals());
     }
 
     @Test

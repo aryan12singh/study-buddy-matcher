@@ -3,7 +3,7 @@ import PixelIcon from '../../shared/components/PixelIcon'
 
 const STEPS = ['Pick a course', 'See ranked matches', 'Send a request']
 
-/** Introduces the matching search and opens it on the Connections page. */
+/** Introduces the matching search and opens the Find buddies page. */
 export default function FindBuddiesCard() {
   return (
     <section className="home-finder" aria-labelledby="home-finder">
@@ -14,7 +14,7 @@ export default function FindBuddiesCard() {
         <ol className="home-finder-steps">
           {STEPS.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}
         </ol>
-        <p><Link className="retro-button primary" to="/connections?view=find">Search for study buddies</Link></p>
+        <p><Link className="retro-button primary" to="/find-buddies">Search for study buddies</Link></p>
       </div>
     </section>
   )

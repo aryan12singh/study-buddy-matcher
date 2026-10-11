@@ -2,6 +2,7 @@ package com.studybuddy.matching.availability;
 
 import com.studybuddy.student.AvailabilitySlot;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -28,8 +29,14 @@ public record WeeklyAvailability(List<TimeSlot> slots) {
     }
 
     public long sharedMinutesWith(WeeklyAvailability other) {
+        return sharedSlotsWith(other).stream().mapToLong(TimeSlot::durationMinutes).sum();
+    }
+
+    /** The blocks of time both students are free, in week order from Monday morning. */
+    public List<TimeSlot> sharedSlotsWith(WeeklyAvailability other) {
         return slots.stream()
-                .mapToLong(mine -> other.slots.stream().mapToLong(mine::overlapMinutes).sum())
-                .sum();
+                .flatMap(mine -> other.slots.stream().flatMap(theirs -> mine.intersection(theirs).stream()))
+                .sorted(Comparator.comparing(TimeSlot::day).thenComparing(TimeSlot::start))
+                .toList();
     }
 }

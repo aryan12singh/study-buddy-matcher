@@ -1,5 +1,6 @@
 import { api } from '../../shared/api/client'
-import type { StudyGoal } from '../../shared/api/types'
+import type { StudyGoal, StudyMode, WeeklySlot } from '../../shared/api/types'
+import type { Relationship } from '../students/api'
 
 export type MatchingStrategyType = 'BALANCED' | 'AVAILABILITY_FIRST' | 'COURSE_FIRST'
 export type MatchingCriterion = 'COURSE' | 'AVAILABILITY' | 'STUDY_MODE' | 'STUDY_GOAL' | 'GROUP_SIZE'
@@ -21,10 +22,21 @@ export type MatchResult = {
   school: string
   programme: string
   yearOfStudy: number
+  studyMode: StudyMode | null
+  studyGoals: StudyGoal[]
   quality: MatchQuality
+  /** Every criterion from 0 to 1, in the same order each time. */
+  breakdown: { criterion: MatchingCriterion; score: number }[]
   sharedHoursPerWeek: number
+  /** The weekly blocks when both students are free, Monday first. */
+  sharedSlots: WeeklySlot[]
+  /** Where the searcher already stands with this student; decides whether a request can be sent. */
+  relationship: Exclude<Relationship['state'], 'SELF'>
 }
 
 export async function getMatchingConfig(signal?: AbortSignal) { return (await api.get<MatchingConfig>('/admin/matching-config', { signal })).data }
 export async function updateMatchingConfig(config: MatchingConfig) { return (await api.put<MatchingConfig>('/admin/matching-config', config)).data }
-export async function searchMatches(search: MatchSearch, signal?: AbortSignal) { return (await api.get<MatchResult[]>('/matches', { params: search, signal })).data }
+/** The matches with the admin's strategy that ranked them. */
+export type MatchSearchResult = { strategy: MatchingStrategyType; matches: MatchResult[] }
+
+export async function searchMatches(search: MatchSearch, signal?: AbortSignal) { return (await api.get<MatchSearchResult>('/matches', { params: search, signal })).data }
