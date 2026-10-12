@@ -35,3 +35,4 @@ app:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
     admin-password: ${DEMO_ADMIN_PASSWORD:}
+
