@@ -12,6 +12,7 @@ their sequences/default privileges and browser grants; provider-managed schemas 
 | `20261006170327_team_c_integrity.sql` | Preflight, normalized identity, JWT version/last login, request context, safe event metadata, description width, UTC conversion, checks/unique/query indexes |
 | `20261006170448_backend_only_database_access.sql` | RLS and deny browser table/sequence grants; future default privileges follow the same model |
 | `20261006172934_collection_goal_primary_keys.sql` | Natural owner/goal primary keys for the two set collections; preserve valid rows and reject legacy null goals |
+| `20261011090000_matching_weights_per_strategy.sql` | Matching weights belong to a strategy: adds `matching_configs.strategy` (existing rows become Balanced) and replaces one weight per criterion with one per strategy and criterion |
 
 These are versioned source files, generated using the existing Supabase CLI. The shared
 MCP migration runner records its own deployment timestamps, so do not expect those history

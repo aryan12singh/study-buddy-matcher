@@ -3,6 +3,7 @@ import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import LandingPage from './features/landing/LandingPage'
 import EditProfilePage from './features/profile/EditProfilePage'
+import HomePage from './features/home/HomePage'
 import AccountHome from './shared/auth/AccountHome'
 import RequireRole from './shared/auth/RequireRole'
 import AppShell from './shared/components/AppShell'
@@ -17,6 +18,8 @@ import GroupManagePage from './features/groups/GroupManagePage'
 import AdminUsersPage from './features/admin/AdminUsersPage'
 import AdminUserDetailPage from './features/admin/AdminUserDetailPage'
 import AdminUserFormPage from './features/admin/AdminUserFormPage'
+import MatchingSettingsPage from './features/matching/MatchingSettingsPage'
+import FindBuddiesPage from './features/matching/FindBuddiesPage'
 
 export const appRoutes = createRoutesFromElements(
     <>
@@ -27,6 +30,8 @@ export const appRoutes = createRoutesFromElements(
         <Route element={<AppShell />}>
           <Route path="/app" element={<AccountHome />} />
           <Route element={<RequireRole role="STUDENT" />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/find-buddies" element={<FindBuddiesPage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/students/:id/edit" element={<EditProfilePage />} />
@@ -42,6 +47,7 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/admin/users/new" element={<AdminUserFormPage />} />
             <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
             <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
+            <Route path="/admin/matching" element={<MatchingSettingsPage />} />
           </Route>
           <Route
             path="*"
