@@ -6,11 +6,12 @@ const saved: Record<MatchingCriterion, string> = { COURSE: '0.3', AVAILABILITY: 
 
 describe('matching settings form precision', () => {
   const config: MatchingConfig = {
-    activeStrategy: 'BALANCED',
+    activeStrategy: 'BALANCED', minScore: 0, version: 1, usingDefaults: true,
+    enabledCriteria: ['COURSE', 'AVAILABILITY', 'STUDY_MODE', 'STUDY_GOAL', 'GROUP_SIZE'],
     weights: {
       BALANCED: { COURSE: 0.004, AVAILABILITY: 0.996, STUDY_MODE: 0, STUDY_GOAL: 0, GROUP_SIZE: 0 },
-      AVAILABILITY_FIRST: { COURSE: 1 / 3, STUDY_MODE: 1 / 3, STUDY_GOAL: 1 / 3, GROUP_SIZE: 0 },
-      COURSE_FIRST: { AVAILABILITY: 0.25, STUDY_MODE: 0.25, STUDY_GOAL: 0.25, GROUP_SIZE: 0.25 }
+      AVAILABILITY_FIRST: { AVAILABILITY: 0, COURSE: 1 / 3, STUDY_MODE: 1 / 3, STUDY_GOAL: 1 / 3, GROUP_SIZE: 0 },
+      COURSE_FIRST: { COURSE: 0, AVAILABILITY: 0.25, STUDY_MODE: 0.25, STUDY_GOAL: 0.25, GROUP_SIZE: 0.25 }
     }
   }
 
@@ -19,7 +20,7 @@ describe('matching settings form precision', () => {
     expect(form.weights.BALANCED.COURSE).toBe('0.004')
     expect(form.weights.BALANCED.AVAILABILITY).toBe('0.996')
     expect(form.weights.AVAILABILITY_FIRST.COURSE).toBe(String(1 / 3))
-    expect(toConfig(form)).toEqual(config)
+    expect(toConfig(form)).toEqual({ activeStrategy: config.activeStrategy, weights: config.weights, minScore: config.minScore, enabledCriteria: config.enabledCriteria })
     Object.values(form.weights).forEach(weights => { expect(validateWeights(weights)).toEqual({}) })
   })
 

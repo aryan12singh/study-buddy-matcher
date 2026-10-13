@@ -6,25 +6,25 @@ import FindBuddiesPage from './FindBuddiesPage'
 
 const is442 = { id: 4, code: 'IS442', name: 'Object Oriented Programming' }
 const is216 = { id: 3, code: 'IS216', name: 'Web Application Development' }
-const myProfile = { id: 1, coursesTaken: [is442, is216], targetCourse: is442 }
+const myProfile = { id: 1, coursesTaken: [is442, is216], targetCourse: is442, preferredStudyMode: 'ONLINE', availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '11:00' }] }
 const breakdown = (course: number, availability: number) => [
-  { criterion: 'COURSE', score: course }, { criterion: 'AVAILABILITY', score: availability },
-  { criterion: 'STUDY_MODE', score: 1 }, { criterion: 'STUDY_GOAL', score: 0 }, { criterion: 'GROUP_SIZE', score: 0.5 }
+  { criterion: 'COURSE', score: course, enabled: true }, { criterion: 'AVAILABILITY', score: availability, enabled: true },
+  { criterion: 'STUDY_MODE', score: 1, enabled: true }, { criterion: 'STUDY_GOAL', score: 0, enabled: true }, { criterion: 'GROUP_SIZE', score: 0.5, enabled: true }
 ]
 const jamie = {
   studentId: 2, name: 'Jamie Lee', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, studyMode: 'ONLINE',
-  studyGoals: ['EXAM_PREPARATION'], quality: 'STRONG', breakdown: breakdown(1, 0.5), sharedHoursPerWeek: 2,
+  studyGoals: ['EXAM_PREPARATION'], totalScore: 0.8, explanation: 'Same course and 2 shared hours per week.', relevantCourse: is442, quality: 'STRONG', breakdown: breakdown(1, 0.5), sharedHoursPerWeek: 2,
   sharedSlots: [{ dayOfWeek: 'MONDAY', startTime: '09:00:00', endTime: '11:00:00' }], relationship: 'STRANGER'
 }
 const alex = {
   studentId: 5, name: 'Alex Tan', school: 'SOE', programme: 'Economics', yearOfStudy: 1, studyMode: null,
-  studyGoals: [], quality: 'FAIR', breakdown: breakdown(0, 0), sharedHoursPerWeek: 0, sharedSlots: [], relationship: 'STRANGER'
+  studyGoals: [], totalScore: 0.2, explanation: 'Different courses and no shared hours.', relevantCourse: null, quality: 'FAIR', breakdown: breakdown(0, 0), sharedHoursPerWeek: 0, sharedSlots: [], relationship: 'STRANGER'
 }
 afterEach(() => { vi.restoreAllMocks() })
 
 /** A search response ranked by the given strategy. */
 function ranked(matches: object[], strategy = 'BALANCED') {
-  return { strategy, matches }
+  return { strategy, matches, sort: 'BEST_MATCH', configurationVersion: 2, totalMatches: matches.length, limit: 20 }
 }
 
 /** Answers the student's profile and match searches by URL; a custom match response or profile can be supplied. */
@@ -33,8 +33,8 @@ function mockApi(matches: () => Promise<unknown> = () => Promise.resolve(respons
     : Promise.resolve(response(url === '/courses' ? [is442, is216] : profile))) as never)
 }
 
-function openPage() {
-  return renderPage(<FindBuddiesPage />, '/find-buddies', '/find-buddies')
+function openPage(path = '/find-buddies?courseId=4') {
+  return renderPage(<FindBuddiesPage />, path, '/find-buddies')
 }
 
 function names() {
@@ -42,7 +42,7 @@ function names() {
 }
 
 async function openFilters() {
-  fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }))
   await screen.findByRole('option', { name: 'IS216 Web Application Development' })
 }
 
@@ -61,13 +61,13 @@ async function sendRequest(name: string) {
 }
 
 describe('Find buddies page', () => {
-  it('lists every student best match first without any filters', async () => {
+  it('uses an explicit course search in backend rank order', async () => {
     const get = mockApi()
     openPage()
     expect(await screen.findByRole('link', { name: 'Jamie Lee' })).toHaveAttribute('href', '/students/2')
     expect(screen.getByRole('heading', { name: 'Find buddies' })).toBeInTheDocument()
-    expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: {} }))
-    expect(screen.getByText('2 students to study with')).toBeInTheDocument()
+    expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 4 } }))
+    expect(screen.getByText('2 students match your search')).toBeInTheDocument()
     expect(names()).toEqual(['Jamie Lee Year 2', 'Alex Tan Year 1'])
     expect(screen.queryByRole('form', { name: 'Filter study buddies' })).not.toBeInTheDocument()
   })
@@ -75,7 +75,7 @@ describe('Find buddies page', () => {
   it('names the ranking strategy the admin chose', async () => {
     mockApi(() => Promise.resolve(response(ranked([jamie], 'AVAILABILITY_FIRST'))))
     openPage()
-    expect(await screen.findByText(/Ranked by Availability first matching\. Ranks by shared free time/)).toBeInTheDocument()
+    expect(await screen.findByText(/Ranked by Availability first matching\. Ranks by availability overlap/)).toBeInTheDocument()
   })
 
   it.each(['AVAILABILITY_FIRST', 'COURSE_FIRST', 'BALANCED'])('preserves the %s response order across match qualities', async strategy => {
@@ -115,7 +115,7 @@ describe('Find buddies page', () => {
     const card = (await screen.findByRole('link', { name: 'Jamie Lee' })).closest('article') as HTMLElement
     fireEvent.click(within(card).getByRole('link', { name: 'View profile' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/students/2'))
-    expect(router.state.location.state).toEqual({ returnTo: { path: '/find-buddies', label: 'Back to find buddies' } })
+    expect(router.state.location.state).toEqual({ returnTo: { path: '/find-buddies?courseId=4', label: 'Back to find buddies' } })
   })
 
   it('only offers a match request when none is pending and they are not connected', async () => {
@@ -138,35 +138,36 @@ describe('Find buddies page', () => {
     openPage()
     await screen.findByRole('link', { name: 'Jamie Lee' })
     await openFilters()
-    expect(screen.getByLabelText('Course')).toHaveValue('')
+    expect(screen.getByLabelText('Course')).toHaveValue('4')
     fireEvent.change(screen.getByLabelText('Course'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Study mode'), { target: { value: 'ONLINE' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
-    await waitFor(() => expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 4, studyMode: 'ONLINE' } })))
-    expect(await screen.findByText('2 students match your filters')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Filters · 2' })).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 4, studyGoal: 'EXAM_PREPARATION', studyMode: 'ONLINE' } })))
+    expect(await screen.findByText('2 students match your search')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Filters · 3' })).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(screen.getByRole('button', { name: 'Remove IS442 Object Oriented Programming filter' }))
-    await waitFor(() => expect(get).toHaveBeenLastCalledWith('/matches', expect.objectContaining({ params: { studyMode: 'ONLINE' } })))
-    expect(screen.getByRole('button', { name: 'Filters · 1' })).toBeInTheDocument()
+    await waitFor(() => expect(get).toHaveBeenLastCalledWith('/matches', expect.objectContaining({ params: { studyGoal: 'EXAM_PREPARATION', studyMode: 'ONLINE' } })))
+    expect(screen.getByRole('button', { name: 'Filters · 2' })).toBeInTheDocument()
   })
 
-  it('points a student with no courses to their profile', async () => {
+  it('lets an incomplete profile search the course catalog and offers profile setup', async () => {
     mockApi(undefined, { id: 1, coursesTaken: [], targetCourse: null })
     openPage()
     await screen.findByRole('link', { name: 'Jamie Lee' })
-    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
-    expect(await screen.findByRole('link', { name: 'Add courses to your profile' })).toHaveAttribute('href', '/students/1/edit')
-    expect(screen.getByLabelText('Course')).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }))
+    expect(await screen.findByRole('link', { name: 'Complete your study profile' })).toHaveAttribute('href', '/students/1/edit')
+    expect(screen.getByLabelText('Course')).toBeEnabled()
   })
 
-  it('explains an empty result with and without filters', async () => {
+  it('explains an empty search result and updated filters', async () => {
     mockApi(() => Promise.resolve(response(ranked([]))))
     openPage()
-    expect(await screen.findByText('No other students to match yet')).toBeInTheDocument()
+    expect(await screen.findByText('No students match this search')).toBeInTheDocument()
     await openFilters()
     fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
-    expect(await screen.findByText('No students match these filters')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    expect(await screen.findByText('No students match this search')).toBeInTheDocument()
   })
 
   it('shows an error with a working retry', async () => {
@@ -187,8 +188,8 @@ describe('Find buddies page', () => {
     await openFilters()
     fireEvent.change(screen.getByLabelText('Course'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
-    await screen.findByText('2 students match your filters')
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    await screen.findByText('2 students match your search')
     const jamieRow = screen.getByRole('link', { name: 'Jamie Lee' }).closest('article') as HTMLElement
     fireEvent.click(within(jamieRow).getByRole('button', { name: 'Send match request' }))
     const dialog = await screen.findByRole('dialog', { name: 'Send match request to Jamie Lee' })
@@ -381,7 +382,7 @@ describe('Find buddies page', () => {
     await sendRequest('Jamie Lee')
     await openFilters()
     fireEvent.change(screen.getByLabelText('Study mode'), { target: { value: 'ONLINE' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
     await waitFor(() => expect(loads).toBe(3))
     await act(async () => { filtered.resolve(response(ranked([{ ...jamie, relationship: 'INCOMING_PENDING' }]))) })
     const row = await card('Jamie Lee')
@@ -393,4 +394,93 @@ describe('Find buddies page', () => {
     act(() => { refreshResources() })
     expect(await within(row).findByRole('button', { name: 'Send match request' })).toBeEnabled()
   })
+
+  it('requires a course or goal on first use and sends no unqualified request', async () => {
+    const get = mockApi()
+    openPage('/find-buddies')
+    expect(await screen.findByText('Start your first matching search')).toBeInTheDocument()
+    await screen.findByRole('option', { name: 'IS442 Object Oriented Programming' })
+    expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(0)
+    expect(screen.getByLabelText('Sort matches')).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    expect(screen.getAllByText('Choose a course or study goal before searching.')).toHaveLength(2)
+    expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(0)
+    fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    await screen.findByRole('link', { name: 'Jamie Lee' })
+    expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { studyGoal: 'EXAM_PREPARATION' } }))
+  })
+
+  it.each(['MOST_SHARED_HOURS', 'SAME_YEAR_FIRST', 'BEST_MATCH'])('passes the %s sort to the server and preserves its order', async sort => {
+    const get = mockApi(() => Promise.resolve(response({ ...ranked([alex, jamie]), sort })))
+    openPage()
+    await screen.findByRole('link', { name: 'Jamie Lee' })
+    fireEvent.change(screen.getByLabelText('Sort matches'), { target: { value: sort } })
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 4, sort } })))
+    expect(names()).toEqual(['Alex Tan Year 1', 'Jamie Lee Year 2'])
+    if (sort === 'BEST_MATCH') expect(screen.getByText(/Ranked by Balanced matching/)).toBeInTheDocument()
+    else expect(screen.getByText(new RegExp(`Sorted by ${sort === 'MOST_SHARED_HOURS' ? 'Most shared hours' : 'Same year first'}\\. Balanced matching breaks ties`))).toBeInTheDocument()
+  })
+
+  it('shows exact server compatibility, explanation, relevant course and disabled bars', async () => {
+    const match = { ...jamie, totalScore: 0.747, explanation: 'Course aligned; study goals disabled.',
+      breakdown: jamie.breakdown.map(item => ({ ...item, enabled: item.criterion !== 'STUDY_GOAL' })) }
+    mockApi(() => Promise.resolve(response(ranked([match]))))
+    openPage()
+    const row = await card('Jamie Lee')
+    expect(within(row).getByText('74.7% compatibility')).toBeInTheDocument()
+    expect(within(row).getByText('A comparison of study preferences, not a probability of success.')).toBeInTheDocument()
+    expect(within(row).getByText('Course aligned; study goals disabled.')).toBeInTheDocument()
+    expect(within(row).getByText('Relevant course: IS442 Object Oriented Programming')).toBeInTheDocument()
+    expect(within(row).getByRole('meter', { name: 'Study goal score' })).toHaveAttribute('aria-valuetext', 'Disabled by administrator')
+    expect(screen.getByText(/Configuration version 2/)).toBeInTheDocument()
+  })
+
+  it('explains a bounded result and resets without requesting a context-free search', async () => {
+    const get = mockApi(() => Promise.resolve(response({ ...ranked([jamie]), totalMatches: 35 })))
+    openPage()
+    expect(await screen.findByText('Showing 1 of 35 matching students. Narrow your filters to see others.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Remove IS442 Object Oriented Programming filter' }))
+    expect(await screen.findByText('Start your first matching search')).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: 'Filter study buddies' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Jamie Lee' })).not.toBeInTheDocument()
+    expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(1)
+    fireEvent.change(screen.getByLabelText('Course'), { target: { value: '3' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    await screen.findByRole('link', { name: 'Jamie Lee' })
+    await openFilters()
+    fireEvent.click(screen.getByRole('button', { name: 'Reset search' }))
+    expect(await screen.findByText('Start your first matching search')).toBeInTheDocument()
+    expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(2)
+  })
+
+  it('applies every optional filter and preserves context when a preference chip is removed', async () => {
+    const get = mockApi()
+    openPage()
+    await screen.findByRole('link', { name: 'Jamie Lee' })
+    await openFilters()
+    fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
+    fireEvent.change(screen.getByLabelText('Study mode'), { target: { value: 'ONLINE' } })
+    fireEvent.change(screen.getByLabelText('Group size'), { target: { value: 'ONE_TO_ONE' } })
+    fireEvent.change(screen.getByLabelText('Shared free time'), { target: { value: '2' } })
+    fireEvent.change(screen.getByLabelText('Minimum match quality'), { target: { value: 'STRONG' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
+    const params = { courseId: 4, studyGoal: 'EXAM_PREPARATION', studyMode: 'ONLINE', groupSize: 'ONE_TO_ONE', minSharedHours: 2, minQuality: 'STRONG' }
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params })))
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Strong only filter' }))
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 4, studyGoal: 'EXAM_PREPARATION', studyMode: 'ONLINE', groupSize: 'ONE_TO_ONE', minSharedHours: 2 } })))
+  })
+
+
+  it('restores selected filters and sort from a shared or return link', async () => {
+    const get = mockApi()
+    openPage('/find-buddies?courseId=3&studyGoal=EXAM_PREPARATION&studyMode=ONLINE&groupSize=SMALL_GROUP&minSharedHours=4&minQuality=GOOD&sort=SAME_YEAR_FIRST')
+    await screen.findByRole('link', { name: 'Jamie Lee' })
+    expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 3, studyGoal: 'EXAM_PREPARATION', studyMode: 'ONLINE', groupSize: 'SMALL_GROUP', minSharedHours: 4, minQuality: 'GOOD', sort: 'SAME_YEAR_FIRST' } }))
+    expect(screen.getByLabelText('Sort matches')).toHaveValue('SAME_YEAR_FIRST')
+    await openFilters()
+    expect(screen.getByLabelText('Course')).toHaveValue('3')
+    expect(screen.getByLabelText('Shared free time')).toHaveValue('4')
+  })
+
 })

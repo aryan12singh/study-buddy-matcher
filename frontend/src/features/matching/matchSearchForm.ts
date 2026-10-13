@@ -1,10 +1,10 @@
 import type { StudyGoal } from '../../shared/api/types'
-import type { MatchQuality, MatchSearch } from './api'
+import type { MatchQuality, MatchSearch, MatchSort } from './api'
 
 /** Select values are kept as text; an empty string means "any". */
-export type MatchSearchForm = { courseId: string; studyGoal: string; studyMode: string; groupSize: string; minSharedHours: string; minQuality: string }
+export type MatchSearchForm = { courseId: string; studyGoal: string; studyMode: string; groupSize: string; minSharedHours: string; minQuality: string; sort: MatchSort }
 
-export const EMPTY_SEARCH: MatchSearchForm = { courseId: '', studyGoal: '', studyMode: '', groupSize: '', minSharedHours: '', minQuality: '' }
+export const EMPTY_SEARCH: MatchSearchForm = { courseId: '', studyGoal: '', studyMode: '', groupSize: '', minSharedHours: '', minQuality: '', sort: 'BEST_MATCH' }
 
 export const STUDY_MODE_FILTERS = [
   { value: '', label: 'Any study mode' },
@@ -31,6 +31,14 @@ export const QUALITY_FILTERS = [
   { value: 'STRONG', label: 'Strong only' }
 ]
 
+export const SORT_OPTIONS: { value: MatchSort; label: string }[] = [
+  { value: 'BEST_MATCH', label: 'Best match' },
+  { value: 'MOST_SHARED_HOURS', label: 'Most shared hours' },
+  { value: 'SAME_YEAR_FIRST', label: 'Same year first' }
+]
+
+export function hasSearchContext(search: MatchSearch) { return Boolean(search.courseId || search.studyGoal) }
+
 export const QUALITY_LABELS: Record<MatchQuality, string> = { STRONG: 'Strong match', GOOD: 'Good match', FAIR: 'Fair match' }
 /** Green, amber and grey, so the three labels can be told apart at a glance and not only by their text. */
 export const QUALITY_TONES: Record<MatchQuality, 'good' | 'pending' | 'neutral'> = { STRONG: 'good', GOOD: 'pending', FAIR: 'neutral' }
@@ -42,7 +50,8 @@ export function toSearch(form: MatchSearchForm): MatchSearch {
     ...(form.studyMode ? { studyMode: form.studyMode as MatchSearch['studyMode'] } : {}),
     ...(form.groupSize ? { groupSize: form.groupSize as MatchSearch['groupSize'] } : {}),
     ...(form.minSharedHours ? { minSharedHours: Number(form.minSharedHours) } : {}),
-    ...(form.minQuality ? { minQuality: form.minQuality as MatchSearch['minQuality'] } : {})
+    ...(form.minQuality ? { minQuality: form.minQuality as MatchSearch['minQuality'] } : {}),
+    ...(form.sort !== 'BEST_MATCH' ? { sort: form.sort } : {})
   }
 }
 
@@ -59,6 +68,7 @@ export function toForm(search: MatchSearch): MatchSearchForm {
     studyMode: search.studyMode || '',
     groupSize: search.groupSize || '',
     minSharedHours: search.minSharedHours ? String(search.minSharedHours) : '',
-    minQuality: search.minQuality || ''
+    minQuality: search.minQuality || '',
+    sort: search.sort || 'BEST_MATCH'
   }
 }

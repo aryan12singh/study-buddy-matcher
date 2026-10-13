@@ -4,8 +4,15 @@ import type { Relationship } from '../students/api'
 
 export type MatchingStrategyType = 'BALANCED' | 'AVAILABILITY_FIRST' | 'COURSE_FIRST'
 export type MatchingCriterion = 'COURSE' | 'AVAILABILITY' | 'STUDY_MODE' | 'STUDY_GOAL' | 'GROUP_SIZE'
-/** Each strategy's weights; a strategy leaves out the criterion it ranks by first. */
-export type MatchingConfig = { activeStrategy: MatchingStrategyType; weights: Record<MatchingStrategyType, Partial<Record<MatchingCriterion, number>>> }
+export type MatchingSettings = {
+  activeStrategy: MatchingStrategyType
+  weights: Record<MatchingStrategyType, Record<MatchingCriterion, number>>
+  enabledCriteria: MatchingCriterion[]
+  minScore: number
+}
+export type MatchingConfig = MatchingSettings & { version: number; usingDefaults: boolean }
+export type MatchingConfigUpdate = MatchingSettings & { expectedVersion: number }
+export type MatchSort = 'BEST_MATCH' | 'MOST_SHARED_HOURS' | 'SAME_YEAR_FIRST'
 
 export type MatchQuality = 'STRONG' | 'GOOD' | 'FAIR'
 export type MatchSearch = {
@@ -15,6 +22,8 @@ export type MatchSearch = {
   groupSize?: 'ONE_TO_ONE' | 'SMALL_GROUP'
   minSharedHours?: number
   minQuality?: 'GOOD' | 'STRONG'
+  sort?: MatchSort
+  limit?: number
 }
 export type MatchResult = {
   studentId: number
@@ -25,8 +34,11 @@ export type MatchResult = {
   studyMode: StudyMode | null
   studyGoals: StudyGoal[]
   quality: MatchQuality
+  totalScore: number
+  explanation: string
+  relevantCourse: { id: number; code: string; name: string } | null
   /** Every criterion from 0 to 1, in the same order each time. */
-  breakdown: { criterion: MatchingCriterion; score: number }[]
+  breakdown: { criterion: MatchingCriterion; score: number; enabled: boolean }[]
   sharedHoursPerWeek: number
   /** The weekly blocks when both students are free, Monday first. */
   sharedSlots: WeeklySlot[]
@@ -35,8 +47,11 @@ export type MatchResult = {
 }
 
 export async function getMatchingConfig(signal?: AbortSignal) { return (await api.get<MatchingConfig>('/admin/matching-config', { signal })).data }
-export async function updateMatchingConfig(config: MatchingConfig) { return (await api.put<MatchingConfig>('/admin/matching-config', config)).data }
-/** The matches with the admin's strategy that ranked them. */
-export type MatchSearchResult = { strategy: MatchingStrategyType; matches: MatchResult[] }
+export async function updateMatchingConfig(config: MatchingConfigUpdate) { return (await api.put<MatchingConfig>('/admin/matching-config', config)).data }
+export async function restoreMatchingDefaults(expectedVersion: number) {
+  return (await api.post<MatchingConfig>('/admin/matching-config/restore-defaults', { expectedVersion })).data
+}
+/** Ranked and bounded by the server using one saved configuration version. */
+export type MatchSearchResult = { strategy: MatchingStrategyType; configurationVersion: number; sort: MatchSort; totalMatches: number; limit: number; matches: MatchResult[] }
 
 export async function searchMatches(search: MatchSearch, signal?: AbortSignal) { return (await api.get<MatchSearchResult>('/matches', { params: search, signal })).data }

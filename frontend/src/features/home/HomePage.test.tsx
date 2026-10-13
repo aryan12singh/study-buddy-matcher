@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within, waitFor } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
 import { renderPage, response } from '../../test/renderApp'
@@ -13,6 +13,7 @@ const completeProfile = {
 }
 const activeData: Record<string, unknown> = {
   '/profile/me': completeProfile,
+  '/matches': { strategy: 'BALANCED', configurationVersion: 1, sort: 'BEST_MATCH', limit: 3, totalMatches: 0, matches: [] },
   '/students/me/summary': { activeConnections: 3, pendingIncoming: 1, pendingOutgoing: 1, acceptedGroups: 1 },
   '/match-requests/incoming': [
     { id: 7, senderId: 2, senderName: 'Jamie Lee', receiverId: 1, receiverName: 'Priya', message: 'Want to revise IS442?', status: 'PENDING', createdAt: '2026-10-08T06:20:00Z', respondedAt: null, context: { origin: 'MATCHING', courseCode: 'IS442' } },
@@ -75,10 +76,11 @@ describe('student home', () => {
   it('links to the matching search on the Connections page', async () => {
     serve(activeData)
     renderPage(<HomePage />, '/home', '/home')
+    await screen.findByText(/your saved target course/)
     const finder = screen.getByRole('region', { name: /Find study buddies/ })
     expect(within(finder).getByText('See ranked matches')).toBeInTheDocument()
     expect(within(finder).queryByText('Coming soon')).not.toBeInTheDocument()
-    expect(within(finder).getByRole('link', { name: 'Search for study buddies' })).toHaveAttribute('href', '/find-buddies')
+    expect(within(finder).getByRole('link', { name: 'Search for study buddies' })).toHaveAttribute('href', '/find-buddies?courseId=1')
   })
   it('guides a new student to finish their profile and explains every empty list', async () => {
     serve(newStudentData)
@@ -101,4 +103,62 @@ describe('student home', () => {
     expect(await screen.findByRole('link', { name: 'OOP study crew' })).toBeInTheDocument()
     expect(await screen.findByText('Profile complete')).toBeInTheDocument()
   })
+
+  it('loads a real three-result preview for the saved target through the matching endpoint', async () => {
+    const preview = {
+      strategy: 'COURSE_FIRST', configurationVersion: 7, sort: 'BEST_MATCH', limit: 3, totalMatches: 12,
+      matches: [{ studentId: 20, name: 'Sam Ong', quality: 'GOOD', totalScore: 0.655, sharedHoursPerWeek: 3, explanation: 'Course aligned and 3 shared hours each week.' }]
+    }
+    const get = serve({ ...activeData, '/matches': preview })
+    renderPage(<HomePage />, '/home', '/home')
+    const finder = screen.getByRole('region', { name: 'Find study buddies' })
+    expect(await within(finder).findByRole('link', { name: 'Sam Ong' })).toHaveAttribute('href', '/students/20')
+    expect(within(finder).getByText('Good match')).toBeInTheDocument()
+    expect(within(finder).getByText('65.5% compatibility · 3 shared hours a week')).toBeInTheDocument()
+    expect(within(finder).getByText('Course aligned and 3 shared hours each week.')).toBeInTheDocument()
+    expect(within(finder).getByText('Top 1 of 12 · Course first matching · configuration version 7')).toBeInTheDocument()
+    expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 1 } }))
+  })
+
+  it('uses a saved study goal when there is no target course', async () => {
+    const get = serve({ ...activeData, '/profile/me': { ...completeProfile, targetCourse: null, studyGoals: ['EXAM_PREPARATION'] } })
+    renderPage(<HomePage />, '/home', '/home')
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { studyGoal: 'EXAM_PREPARATION' } })))
+    const finder = screen.getByRole('region', { name: 'Find study buddies' })
+    expect(within(finder).getByRole('link', { name: 'Search for study buddies' })).toHaveAttribute('href', '/find-buddies?studyGoal=EXAM_PREPARATION')
+  })
+
+  it('makes no context-free matching call and points a new student to preferences', async () => {
+    const get = serve(newStudentData)
+    renderPage(<HomePage />, '/home', '/home')
+    const finder = screen.getByRole('region', { name: 'Find study buddies' })
+    expect(await within(finder).findByRole('link', { name: 'set a target course or study goal in your profile' })).toHaveAttribute('href', '/students/1/edit?tab=preferences')
+    expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(0)
+  })
+
+  it('retries a failed matching preview while the other dashboard sections still work', async () => {
+    const get = serve(activeData, '/matches')
+    renderPage(<HomePage />, '/home', '/home')
+    const finder = screen.getByRole('region', { name: 'Find study buddies' })
+    expect(await within(finder).findByText('Unable to load this view')).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'OOP study crew' })).toBeInTheDocument()
+    get.mockImplementation(async path => response(activeData[path as string]))
+    fireEvent.click(within(finder).getByRole('button', { name: 'Try again' }))
+    expect(await within(finder).findByText('No matches for your saved preferences yet')).toBeInTheDocument()
+  })
+
+
+  it.each([2, 5])('shows up to three of %s server-bounded results without overriding its configured limit', async count => {
+    const matches = Array.from({ length: count }, (_, index) => ({ studentId: 20 + index, name: `Match student ${index + 1}`,
+      quality: 'GOOD', totalScore: 0.65, sharedHoursPerWeek: 3, explanation: 'Course aligned.' }))
+    const get = serve({ ...activeData, '/matches': { strategy: 'BALANCED', configurationVersion: 8, sort: 'BEST_MATCH', limit: count, totalMatches: 12, matches } })
+    renderPage(<HomePage />, '/home', '/home')
+    const finder = screen.getByRole('region', { name: 'Find study buddies' })
+    const preview = await within(finder).findByRole('list', { name: 'Top matching students' })
+    expect(within(preview).getAllByRole('link').map(link => link.textContent)).toEqual(matches.slice(0, 3).map(match => match.name))
+    expect(within(finder).getByText(`Top ${Math.min(count, 3)} of 12 · Balanced matching · configuration version 8`)).toBeInTheDocument()
+    expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 1 } }))
+    expect(get.mock.calls.find(([url]) => url === '/matches')?.[1]?.params).not.toHaveProperty('limit')
+  })
+
 })

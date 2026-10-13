@@ -6,8 +6,8 @@ import Button from '../../shared/components/Button'
 import { GROUP_SIZE_FILTERS, QUALITY_FILTERS, SHARED_HOURS_FILTERS, STUDY_MODE_FILTERS } from './matchSearchForm'
 import type { MatchSearchForm } from './matchSearchForm'
 
-/** The filter panel. Every filter is optional; applying none lists everyone. */
-export default function MatchFilters({ id, form, courses, coursesLoading, coursesError, profileEditLink, onChange, onApply, onClear }: {
+/** Course or goal selects the search; the remaining filters narrow its results. */
+export default function MatchFilters({ id, form, courses, coursesLoading, coursesError, profileEditLink, onChange, onApply, onClear, searchError }: {
   id: string
   form: MatchSearchForm
   courses: Course[] | undefined
@@ -18,6 +18,7 @@ export default function MatchFilters({ id, form, courses, coursesLoading, course
   onChange: (field: keyof MatchSearchForm, value: string) => void
   onApply: () => void
   onClear: () => void
+  searchError?: string
 }) {
   const noCourses = courses?.length === 0
   return (
@@ -32,18 +33,19 @@ export default function MatchFilters({ id, form, courses, coursesLoading, course
         <Field
           id="match-course"
           label="Course"
+          error={searchError}
           hint={coursesError ?
-            'Your courses could not be loaded. You can still filter by the other options.'
-            : noCourses ? 'Add the courses you take to your profile to filter by course.' : 'Your courses this term.'}
+            'Courses could not be loaded. You can still search by study goal.'
+            : noCourses ? 'No courses are available yet. Search by study goal.' : 'Choose any course. This search does not change your saved target or enrolments.'}
         >
           <select id="match-course" value={form.courseId} disabled={!courses || noCourses} onChange={event => onChange('courseId', event.target.value)}>
-            <option value="">{coursesLoading && !courses ? 'Loading your courses…' : 'Any course'}</option>
+            <option value="">{coursesLoading && !courses ? 'Loading your courses…' : 'Choose a course (or a goal)'}</option>
             {courses?.map(course => <option key={course.id} value={course.id}>{course.code} {course.name}</option>)}
           </select>
         </Field>
-        <Field id="match-goal" label="Study goal">
+        <Field id="match-goal" label="Study goal" hint="Choose a course, a study goal, or both." error={searchError}>
           <select id="match-goal" value={form.studyGoal} onChange={event => onChange('studyGoal', event.target.value)}>
-            <option value="">Any study goal</option>
+            <option value="">Choose a goal (or a course)</option>
             {STUDY_GOALS.map(goal => <option key={goal} value={goal}>{label(goal)}</option>)}
           </select>
         </Field>
@@ -70,8 +72,8 @@ export default function MatchFilters({ id, form, courses, coursesLoading, course
       </div>
       {noCourses && profileEditLink && <p><Link to={profileEditLink}>Add courses to your profile</Link></p>}
       <div className="actions">
-        <Button type="button" onClick={onClear}>Clear filters</Button>
-        <Button type="submit" variant="primary">Apply filters</Button>
+        <Button type="button" onClick={onClear}>Reset search</Button>
+        <Button type="submit" variant="primary">Find study buddies</Button>
       </div>
     </form>
   )
