@@ -184,6 +184,7 @@ separately on the PR.
 | Full backend, `scripts/test-backend.sh -o` | 364 tests passed, 0 failures/errors/skips |
 | Matching-focused backend tests | 101 passed |
 | Matching HTTP integration | 11 passed against real PostgreSQL |
+| Configuration isolation regression | Paused search between the real settings and weights queries while another admin saved; deliberately weakening isolation produced the expected mixed-snapshot assertion failure, then production isolation was restored |
 | Database and packaging | Legacy upgrade, failed-preflight rollback, repeated and fresh migrations passed; application JAR packaged |
 | Frontend, `npm test` | 215 tests passed across 26 files |
 | Frontend lint and production build | `npm run lint` and `npm run build` passed |

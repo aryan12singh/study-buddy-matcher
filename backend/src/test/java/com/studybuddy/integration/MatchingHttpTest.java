@@ -1,14 +1,19 @@
 package com.studybuddy.integration;
 
+import com.studybuddy.matching.config.MatchingConfigRepository;
 import com.studybuddy.matching.config.MatchingConfigService;
 import com.studybuddy.matching.config.MatchingConfigSnapshot;
 import org.junit.jupiter.api.Test;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.framework.Advised;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,9 +24,11 @@ import static org.mockito.Mockito.doAnswer;
 /** Uses real HTTP, JWT authorization, PostgreSQL persistence and matching scorers. */
 class MatchingHttpTest extends PostgresHttpTest {
 
-    // The spy pauses only after the real read; no configuration or scoring results are replaced.
+    // Test coordination retains real database configuration and scoring results.
     @MockitoSpyBean
     private MatchingConfigService config;
+    @Autowired
+    private MatchingConfigRepository weightRows;
 
     private Map<String, Object> settings(String strategy, Map<String, Double> balanced) {
         return Map.of("activeStrategy", strategy, "enabledCriteria", java.util.List.of("COURSE","AVAILABILITY","STUDY_MODE","STUDY_GOAL","GROUP_SIZE"),
@@ -293,19 +300,35 @@ class MatchingHttpTest extends PostgresHttpTest {
         assertEquals("BALANCED", before.path("strategy").asString());
         assertEquals("GOOD", before.path("matches").get(0).path("quality").asString());
 
-        CountDownLatch weightsRead = new CountDownLatch(1);
+        CountDownLatch settingsRead = new CountDownLatch(1);
         CountDownLatch saveFinished = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            MatchingConfigSnapshot settings = (MatchingConfigSnapshot) invocation.callRealMethod();
-            weightsRead.countDown();
-            assertTrue(saveFinished.await(10, TimeUnit.SECONDS), "Admin save did not finish");
-            return settings;
-        }).when(config).snapshot();
+        Advised repository = (Advised) weightRows;
+        AtomicBoolean firstRead = new AtomicBoolean(true);
+        MethodInterceptor pauseBeforeWeights = invocation -> {
+            if (invocation.getMethod().getName().equals("findAll") && invocation.getArguments().length == 0
+                    && firstRead.getAndSet(false)) {
+                settingsRead.countDown();
+                assertTrue(saveFinished.await(10, TimeUnit.SECONDS), "Admin save did not finish");
+            }
+            return invocation.proceed();
+        };
+        if (saveInitialSettings) {
+            // Pause between the real settings query and the real weights query.
+            repository.addAdvice(0, pauseBeforeWeights);
+        } else {
+            // With no override, defaults need no second database read.
+            doAnswer(invocation -> {
+                MatchingConfigSnapshot settings = (MatchingConfigSnapshot) invocation.callRealMethod();
+                settingsRead.countDown();
+                assertTrue(saveFinished.await(10, TimeUnit.SECONDS), "Admin save did not finish");
+                return settings;
+            }).when(config).snapshot();
+        }
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             var searching = executor.submit(() -> call("GET", path, studentToken, null));
             try {
-                assertTrue(weightsRead.await(10, TimeUnit.SECONDS), "Search did not read its weights");
+                assertTrue(settingsRead.await(10, TimeUnit.SECONDS), "Search did not read its settings");
                 expect(call("PUT", "/admin/matching-config", adminToken,
                         settings("AVAILABILITY_FIRST", balanced(0.0, 0.0, 1.0))), 200);
             } finally {
@@ -317,6 +340,8 @@ class MatchingHttpTest extends PostgresHttpTest {
             assertEquals("STRONG", after.path("matches").get(0).path("quality").asString());
             assertTrue(concurrent.equals(before) || concurrent.equals(after),
                     "A concurrent search must use a complete old or new configuration: " + concurrent);
+        } finally {
+            if (saveInitialSettings) repository.removeAdvice(pauseBeforeWeights);
         }
     }
 }
