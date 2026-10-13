@@ -45,7 +45,7 @@ export default function HomePage() {
         <RequestCards requests={requests} pending={pending} />
         <WeekGlance profile={profile} studentId={studentId} />
         <GroupCards groups={groups} />
-        <FindBuddiesCard />
+        <FindBuddiesCard profile={profile} />
         <ActivityFeed notifications={notifications} />
       </div>
     </WindowPage>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { getStudentProfile } from './api'
 import { decideMatchRequest, endConnection } from '../connections/api'
 import { useResource } from '../../shared/api/useResource'
@@ -15,11 +15,13 @@ import SendRequestDialog from '../connections/SendRequestDialog'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import Avatar from '../../shared/components/Avatar'
 import CopyButton from '../../shared/components/CopyButton'
+import { returnToFrom } from '../../shared/navigation/returnTo'
 
 export default function StudentProfilePage() {
   const { id } = useParams(),
     studentId = Number(id)
   const validId = Number.isSafeInteger(studentId) && studentId > 0
+  const back = returnToFrom(useLocation(), { path: '/connections', label: 'Back to connections' })
   const profile = useResource(`student-${id}`, signal => getStudentProfile(studentId, signal), validId)
   const action = useAction()
   const [requestRecipient, setRequestRecipient] = useState<{ id: number; name: string } | null>(null)
@@ -39,7 +41,7 @@ export default function StudentProfilePage() {
       actions={(
         <>
           {relationship?.state === 'SELF' && <Link className="retro-button primary" to={`/students/${studentId}/edit`}>Edit my profile</Link>}
-          <Link className="retro-button" to="/connections">Back to connections</Link>
+          <Link className="retro-button" to={back.path}>{back.label}</Link>
         </>
       )}
     >

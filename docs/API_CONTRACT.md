@@ -55,6 +55,7 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
 | 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self-removal |
 | 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
+| 409 | `STALE_MATCHING_CONFIG` | Expected configuration revision no longer matches; reload before saving/restoring |
 | 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
 | 500 | `INTERNAL_ERROR` | Safe generic failure; no SQL, internal exception, credential or private data is returned |
 
@@ -423,20 +424,167 @@ Membership `(study_group_id,student_id)` stays unique. Answered/ended history re
 The migrations create these constraints; Hibernate `update` does not. RLS and browser-role privilege removal
 protect the alternate Supabase access path; operational evidence is recorded separately.
 
-## Team A integration surface still pending
+## Matching configuration (Team A)
 
-| Method | Path | Owning work remaining |
+All three configuration operations require an active administrator. Students receive 403;
+missing/invalid authentication receives 401. They return DTOs, never persistence entities.
+
+| Method | Path | Request | Response |
+| --- | --- | --- | --- |
+| GET | `/api/admin/matching-config` | none | 200 `MatchingConfigDto` |
+| PUT | `/api/admin/matching-config` | Full replacement and required `expectedVersion` | 200 saved `MatchingConfigDto` |
+| POST | `/api/admin/matching-config/restore-defaults` | `{expectedVersion:number}` | 200 default `MatchingConfigDto` with increased version |
+
+Example default read:
+
+```json
+{
+  "activeStrategy": "BALANCED",
+  "weights": {
+    "BALANCED": { "COURSE": 0.3, "AVAILABILITY": 0.3, "STUDY_MODE": 0.2, "STUDY_GOAL": 0.1, "GROUP_SIZE": 0.1 },
+    "AVAILABILITY_FIRST": { "COURSE": 0.4, "AVAILABILITY": 0, "STUDY_MODE": 0.3, "STUDY_GOAL": 0.15, "GROUP_SIZE": 0.15 },
+    "COURSE_FIRST": { "COURSE": 0, "AVAILABILITY": 0.4, "STUDY_MODE": 0.3, "STUDY_GOAL": 0.15, "GROUP_SIZE": 0.15 }
+  },
+  "enabledCriteria": ["COURSE", "AVAILABILITY", "STUDY_MODE", "STUDY_GOAL", "GROUP_SIZE"],
+  "minScore": 0,
+  "version": 0,
+  "usingDefaults": true
+}
+```
+
+The PUT body replaces `version`/`usingDefaults` with `expectedVersion` and includes every
+other field shown. `activeStrategy` is `BALANCED`, `AVAILABILITY_FIRST` or `COURSE_FIRST`.
+All three weight maps must include all five criteria. Every weight is finite and between 0
+and 1; disabled criteria require 0. Enabled weights total 1 within `0.001` for decimal
+rounding in every strategy. At least one criterion must be enabled. `minScore` is finite
+and between 0 and 1, inclusive. Missing required top-level fields produce 400
+`VALIDATION_FAILED`; unknown enums and invalid service-level weights, totals, enabled sets
+or thresholds produce 400 `INVALID_INPUT`. Neither changes any saved setting. Valid supplied
+fractional weights are not rounded on
+save/read/scoring. Existing invalid-total legacy weights are rescaled only on read.
+
+`expectedVersion` is required, non-negative, and must equal the current persistent version.
+Concurrent or stale save/restore returns 409 `STALE_MATCHING_CONFIG`; the caller reloads before deciding whether to
+replace the newer settings. Each successful save/restore increments the revision even when
+the chosen values are equal. Until saved overrides exist, `app.matching.default-*` values
+apply and `usingDefaults` is true. Saving sets it false. Restore explicitly clears overrides,
+returns current external defaults, sets it true and preserves the increasing version. Saved
+overrides and version survive application restart; restart does not silently restore defaults.
+
+Configuration GET and match search read a repeatable database snapshot. A concurrent save
+may become visible on the next request; it cannot mix a new strategy, enabled set or threshold
+with previous weights/version inside one response. Configuration mutation is serialized in
+PostgreSQL, including the first save when no prior override rows exist.
+
+Balanced ranks by the total. Availability-first compares the availability score first,
+then total; Course-first compares course first, then total. A priority criterion can have an
+editable weight. Within an equal-priority tie, its weighted term is equal and cannot affect
+the secondary order. If the priority is disabled, its raw score is ignored and the strategy
+falls back to total. Disabled criteria never influence the strategy comparison through either route. Explicit
+student filters and alternative sorts remain available: disabling availability scoring does
+not remove a minimum-shared-hours filter or Most shared hours sort; disabling course scoring
+does not remove the required course-or-goal discovery context.
+
+The admin screen loads these fields, separates unsaved edits from the saved revision,
+validates near each input, confirms restore, and reloads the returned saved state. The same
+version is exposed to matching and future E1 consumers; a cached explanation must key by
+configuration version plus search and profile inputs, rather than reuse stale wording.
+
+## Match search (Team A)
+
+Student only. `GET /api/matches` requires a current `courseId` or `studyGoal` (or both).
+It excludes self, inactive/deleted accounts and existing active connections. Incoming and
+outgoing pending candidates remain visible with disabled duplicate-send actions. The
+Find buddies page (`/find-buddies`) and Home preview consume this same response.
+
+| Query parameter | Values | Meaning |
 | --- | --- | --- |
-| GET | `/api/matches` | Team A scoring/ranking: course or study-goal entry point, additional filters/strategy/threshold and per-criterion MatchScore |
-| GET | `/api/admin/matching-config` | Team A current weights/threshold/active strategy |
-| PUT | `/api/admin/matching-config` | Team A validation and persistence of matching settings |
+| `courseId` | positive known course ID | Candidate targets or takes this course; overrides caller's saved target for course scoring |
+| `studyGoal` | `CONCEPT_REVIEW`, `PROBLEM_SOLVING`, `EXAM_PREPARATION`, `PROJECT_DISCUSSION` | Candidate has this goal; overrides saved goals as the scoring focus |
+| `studyMode` | `IN_PERSON`, `ONLINE`, `EITHER`, optional | Same mode or candidate `EITHER`; `EITHER` filters nothing; missing candidate mode cannot satisfy a specific mode |
+| `groupSize` | `ONE_TO_ONE`, `SMALL_GROUP`, `EITHER`, optional | Candidate range overlaps 2-2 or 3-configured maximum; `EITHER` filters nothing; missing range cannot satisfy a specific category |
+| `minSharedHours` | positive integer, optional | At least this many unique shared hours from saved weekly availability |
+| `minQuality` | `FAIR`, `GOOD`, `STRONG`, optional | Hide lower quality; `FAIR` imposes no additional minimum |
+| `sort` | `BEST_MATCH`, `MOST_SHARED_HOURS`, `SAME_YEAR_FIRST`, optional | Defaults `BEST_MATCH`; alternative sorts use shared time or equality to caller's year first |
+| `limit` | positive integer, optional | Defaults `app.matching.default-result-limit` (20), cannot exceed `app.matching.max-result-limit` (50) |
 
-These are proposals, not implemented C endpoints. Reuse C profile privacy, active-student
-eligibility and structured match-request context when connecting the matching screen.
+All supplied filters combine with AND. Personal filters never change global settings.
+The global admin minimum total score and the optional minimum-quality filter both apply.
+Unknown course returns 404. Missing both course/goal, non-positive IDs/limits/hours, too large
+limit and unknown enum inputs return 400. Empty results are 200 with `matches:[]` and
+`totalMatches:0`; they are not an API failure.
+
+The full eligible filtered set is sorted before limiting. `totalMatches` counts that set
+before the limit; this endpoint is bounded top-results discovery, not offset pagination.
+`BEST_MATCH` uses active strategy, then case-insensitive name, then student ID. Alternative
+sorts apply descending unique shared minutes or same-year equality first, then the same
+strategy/name/ID chain. This makes duplicate names/tied scores deterministic. The frontend
+retains server order; quality badges do not regroup the cards.
+
+Response fields:
+
+```text
+MatchSearchResultDto {
+  strategy: BALANCED | AVAILABILITY_FIRST | COURSE_FIRST,
+  configurationVersion: non-negative integer,
+  sort: BEST_MATCH | MOST_SHARED_HOURS | SAME_YEAR_FIRST,
+  limit: positive integer,
+  totalMatches: non-negative integer,
+  matches: MatchResultDto[]
+}
+MatchResultDto {
+  studentId, name, school, programme, yearOfStudy,
+  studyMode: IN_PERSON | ONLINE | EITHER | null,
+  studyGoals: StudyGoal[],
+  relevantCourse: {id,code,name} | null,
+  totalScore: number in [0,1],
+  explanation: deterministic string,
+  quality: STRONG | GOOD | FAIR,
+  breakdown: {criterion,score:number in [0,1],enabled:boolean}[],
+  sharedHoursPerWeek: number,
+  sharedSlots: {dayOfWeek,startTime,endTime}[],
+  relationship: STRANGER | INCOMING_PENDING | OUTGOING_PENDING
+}
+```
+
+The response's strategy and configuration version belong to the same scoring snapshot.
+`totalScore` and criterion scores retain calculation precision; only display percentages
+are rounded. Percentages mean preference compatibility, never a success probability.
+Breakdown has all five criteria in declaration order; disabled entries have `enabled:false`
+and score 0. An enabled missing preference uses 0.5. Quality uses the configured Strong/Good
+cut-offs on the total, with Fair below Good. The deterministic explanation describes enabled
+criterion compatibility, unique shared hours and quality; it uses no AI or fabricated match.
+
+`relevantCourse` is the current search course if supplied. For a goal-only search it is the
+first common target/enrolled course ordered by course code then ID, or null when there is
+none. Current search intent, saved buddy target and courses taken are distinct; a search
+need not be an enrolled course to be valid.
+
+Weekly slots are campus-local SGT and Monday-first. Duplicate/overlapping/adjacent inputs
+are merged per day before intersection. Touching intervals share no minutes. The same unique
+minutes drive availability scoring, filters, sorting, shared hours and heatmap. Shared hours
+are derived from minutes rather than repeated pairwise overlaps.
+
+Discovery results never include contact number, email, password/token fields or raw entities.
+Profile navigation and optional-message requests use the existing Team C APIs. An existing
+connection is absent from discovery and remains available on Connections. The page only
+shows Send match request for `STRANGER`. The request service still checks eligibility on the
+POST, so a concurrent send/accept cannot bypass duplicate/connection rules. After a successful
+POST the card immediately shows outgoing pending while refreshing. Its post-send refresh or
+a later response supersedes that acknowledgement, including a decline/cancellation; a
+response started before confirmation cannot clear it.
+
+Both matching views handle first use/incomplete profile, loading, no eligible results,
+error/retry, filters/reset and requests without exposing private data. Home selects a saved
+target course or goal to form a valid search; if neither exists it links to preference setup
+instead of making an unqualified discovery call. It displays the same active strategy,
+configuration revision and result data as Find buddies. Home sends no hard-coded `limit=3`: it
+uses the configured default result limit and displays up to three students from that response.
 
 ## UI use of the existing contract
 
-The student home page (`/home`, Team B) adds no endpoint or DTO field. It only reads existing
+The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview
+uses the documented `/api/matches` response alongside the other sections. It reads these
 endpoints, each section independently so one failure does not hide the others:
 `GET /api/profile/me` (profile progress and weekly availability), `GET /api/students/me/summary` (activity counts),
 `GET /api/match-requests/incoming` (pending requests, preview only; accept/decline stays on

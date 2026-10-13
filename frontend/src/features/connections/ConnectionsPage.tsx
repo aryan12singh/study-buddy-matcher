@@ -26,7 +26,7 @@ export default function ConnectionsPage() {
   const requests = useResource(
     `requests-${tab}`,
     signal => getMatchRequests(tab === 'outgoing' ? 'outgoing' : 'incoming', signal),
-    tab !== 'connected'
+    tab === 'incoming' || tab === 'outgoing'
   )
   const connections = useResource('active-connections', getConnections, tab === 'connected')
 
