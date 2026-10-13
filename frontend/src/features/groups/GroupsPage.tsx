@@ -42,6 +42,9 @@ export default function GroupsPage() {
     tab !== 'applications'
   )
   const applications = useResource('my-group-applications', getMyApplications, tab === 'applications')
+  // Your groups keeps closed groups as history, collapsed below the ones still running
+  const openGroups = tab === 'mine' ? groups.data?.filter(group => group.active) : groups.data
+  const closedGroups = tab === 'mine' ? groups.data?.filter(group => !group.active) ?? [] : []
   const filters = [
     ...(courseId ? [{ key: 'courseId', label: `Course: ${courses.data?.find(course => String(course.id) === courseId)?.code || courseId}`, onRemove: () => updateSearch('courseId', '') }] : []),
     ...(studyGoal ? [{ key: 'studyGoal', label: `Goal: ${label(studyGoal)}`, onRemove: () => updateSearch('studyGoal', '') }] : []),
@@ -153,16 +156,22 @@ export default function GroupsPage() {
             loading={groups.loading && !groups.data}
             error={groups.error}
             onRetry={() => groups.reload()}
-            empty={groups.data?.length === 0}
-            emptyTitle={tab === 'mine' ? 'No groups joined yet' : 'No groups match these filters'}
+            empty={openGroups?.length === 0}
+            emptyTitle={tab === 'mine' ? (closedGroups.length > 0 ? 'No open groups' : 'No groups joined yet') : 'No groups match these filters'}
             emptyMessage={tab === 'mine' ?
-              'Groups you belong to or lead will appear here.'
+              (closedGroups.length > 0 ? 'Groups that have closed are under Closed groups below.' : 'Groups you belong to or lead will appear here.')
               :
               'Try changing the filters, or create a group for your course.'}
             emptyKind="groups"
             emptyAction={tab === 'mine' ? <Button onClick={() => updateSearch('view', '', false)}>Browse study groups</Button> : filters.length ? <Button onClick={clearFilters}>Show all groups</Button> : <Link className="retro-button primary" to="/groups/new">Start a study group</Link>}
           />
-          <div className="data-list">{groups.data?.map(group => <GroupCard key={group.id} group={group} />)}</div>
+          <div className="data-list">{openGroups?.map(group => <GroupCard key={group.id} group={group} />)}</div>
+          {closedGroups.length > 0 && (
+            <details className="notification-section">
+              <summary>Closed groups ({closedGroups.length})</summary>
+              <div className="data-list">{closedGroups.map(group => <GroupCard key={group.id} group={group} />)}</div>
+            </details>
+          )}
         </>
       )}
     </WindowPage>

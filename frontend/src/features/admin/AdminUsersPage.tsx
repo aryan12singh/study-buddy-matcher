@@ -133,8 +133,8 @@ export default function AdminUsersPage() {
                       <p className="row-meta">{user.email}</p>
                     )}
                   </td>
-                  <td role="cell" data-label="Role">{label(user.role)}</td>
-                  <td role="cell" data-label="Status">
+                  <td role="cell" data-label="Role" className="keep-words">{label(user.role)}</td>
+                  <td role="cell" data-label="Status" className="keep-words">
                     <Badge tone={user.active ? 'good' : 'neutral'}>{user.active ? 'Active' : 'Inactive'}</Badge>
                   </td>
                   <td role="cell" data-label="Last successful login">

@@ -114,6 +114,9 @@ class AccountHttpTest extends PostgresHttpTest {
         assertFalse(database.queryForObject("select active from study_groups where id=?", Boolean.class, led));
         assertTrue(database.queryForObject("select active from study_groups where id=?", Boolean.class, other));
         expect(call("GET", "/connections", t, null), 401);
+        assertEquals("ACCOUNT_DEACTIVATED", expect(attemptLogin("target@example.test", true), 403).path("code").asString());
+        // A wrong password reveals nothing about the account's state
+        assertEquals("INVALID_CREDENTIALS", expect(attemptLogin("target@example.test", false), 401).path("code").asString());
         expect(call("GET", "/students/" + target + "/profile", b, null), 404);
         expect(call("POST", "/admin/users", admin, studentDetails("TARGET@example.test", "Reserved email")), 409);
         expect(call("POST", "/admin/users/" + target + "/reactivate", admin, null), 200);

@@ -12,7 +12,7 @@ import Button from '../../shared/components/Button'
 import Badge from '../../shared/components/Badge'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
-import Avatar from '../../shared/components/Avatar'
+import PersonCard from '../../shared/components/PersonCard'
 import CopyButton from '../../shared/components/CopyButton'
 import CapacityMeter from '../../shared/components/CapacityMeter'
 
@@ -59,7 +59,7 @@ export default function GroupManagePage() {
       {group?.viewer.leader && (
         <>
           <CapacityMeter members={group.memberCount} capacity={group.maxGroupSize} active={group.active} />
-          <div className="actions">
+          <div className="actions page-actions">
             {group.active ? (
               <>
                 <Link className="retro-button primary" to={`/groups/${group.id}/edit`}>Edit group</Link>
@@ -105,35 +105,31 @@ export default function GroupManagePage() {
               )}
               <div className="data-list">
                 {applicants.data?.map(application => (
-                  <article className="data-row" key={application.id}>
-                    <div>
-                      <div className="person-heading"><Avatar name={application.studentName} /><h2>
-                        <Link to={`/students/${application.studentId}`}>{application.studentName}</Link>
-                      </h2></div>
-                      {application.message && (
-                        <p className="message-text">{application.message}</p>
-                      )}
-                      <p className="row-meta">Requested {formatTimestamp(application.createdAt)} (SGT)</p>
-                    </div>
-                    <div className="actions">
-                      <Link className="retro-button" to={`/students/${application.studentId}`}>View profile</Link>
-                      {group.active && (
-                        <>
-                          <Button
-                            variant="primary"
-                            disabled={action.pending || group.memberCount >= group.maxGroupSize}
-                            onClick={() => action.run(() => decideApplication(groupId, application.id, 'accept'), 'Application approved.')}
-                          >
-                            Approve application
-                          </Button>
-                          <Button
-                            disabled={action.pending}
-                            onClick={() => action.run(() => decideApplication(groupId, application.id, 'reject'), 'Application rejected.')}
-                          >Reject application</Button>
-                        </>
-                      )}
-                    </div>
-                  </article>
+                  <PersonCard
+                    key={application.id}
+                    studentId={application.studentId}
+                    name={application.studentName}
+                    actions={group.active && (
+                      <>
+                        <Button
+                          variant="primary"
+                          disabled={action.pending || group.memberCount >= group.maxGroupSize}
+                          onClick={() => action.run(() => decideApplication(groupId, application.id, 'accept'), 'Application approved.')}
+                        >
+                          Approve application
+                        </Button>
+                        <Button
+                          disabled={action.pending}
+                          onClick={() => action.run(() => decideApplication(groupId, application.id, 'reject'), 'Application rejected.')}
+                        >Reject application</Button>
+                      </>
+                    )}
+                  >
+                    {application.message && (
+                      <p className="message-text">{application.message}</p>
+                    )}
+                    <p className="row-meta">Requested {formatTimestamp(application.createdAt)} (SGT)</p>
+                  </PersonCard>
                 ))}
               </div>
             </>
@@ -142,32 +138,28 @@ export default function GroupManagePage() {
               <StatePanel empty={group.members.length === 0} emptyTitle="No accepted members" />
               <div className="data-list">
                 {group.members.map(member => (
-                  <article className="data-row" key={member.studentId}>
-                    <div>
-                      <div className="person-heading"><Avatar name={member.name} /><h2>
-                        <Link to={`/students/${member.studentId}`}>{member.name}</Link>
-                      </h2></div>
-                      {member.leader && (
-                        <Badge>Leader</Badge>
-                      )}
-                      <p className="row-meta">Joined {formatTimestamp(member.joinedAt)} (SGT)</p>
-                    </div>
-                    <div className="actions">
-                      <Link className="retro-button" to={`/students/${member.studentId}`}>View profile</Link>
-                      {group.active && !member.leader && (
-                        <Button
-                          variant="danger"
-                          disabled={action.pending}
-                          onClick={() => {
-                            action.clear()
-                            setRemoving(member)
-                          }}
-                        >
-                          Remove member
-                        </Button>
-                      )}
-                    </div>
-                  </article>
+                  <PersonCard
+                    key={member.studentId}
+                    studentId={member.studentId}
+                    name={member.name}
+                    actions={group.active && !member.leader && (
+                      <Button
+                        variant="danger"
+                        disabled={action.pending}
+                        onClick={() => {
+                          action.clear()
+                          setRemoving(member)
+                        }}
+                      >
+                        Remove member
+                      </Button>
+                    )}
+                  >
+                    {member.leader && (
+                      <Badge>Leader</Badge>
+                    )}
+                    <p className="row-meta">Joined {formatTimestamp(member.joinedAt)} (SGT)</p>
+                  </PersonCard>
                 ))}
               </div>
             </>

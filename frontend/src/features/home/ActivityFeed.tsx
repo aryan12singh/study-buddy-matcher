@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import PixelIcon from '../../shared/components/PixelIcon'
 import type { PixelIconKind } from '../../shared/components/PixelIcon'
 import StatePanel from '../../shared/components/StatePanel'
-import { notificationLink } from '../notifications/api'
+import { followNotification, notificationLink } from '../notifications/api'
 import type { Notification } from '../notifications/api'
 import { feedTime, isToday } from './homeTime'
 import type { Loaded } from './homeTypes'
@@ -53,7 +53,7 @@ export default function ActivityFeed({ notifications }: { notifications: Loaded<
                         <span className={`home-feed-type ${type.css}`}><PixelIcon kind={type.icon} /></span>
                         <p>{item.message}{!item.read && <span className="home-new-pill">New</span>}</p>
                         <span className="home-feed-time">{feedTime(item.createdAt)}</span>
-                        {link ? <Link to={link.to}>{link.label} ›</Link> : <span />}
+                        {link ? <Link to={link.to} onClick={() => followNotification(item)}>{link.label} ›</Link> : <span />}
                       </li>
                     )
                   })}

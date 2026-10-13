@@ -24,5 +24,7 @@ public record StudyGroupDetailDto(
         Instant createdAt,
         List<GroupAvailabilitySlotDto> availability,
         List<GroupMemberDto> members,
-        GroupViewerDto viewer) {
+        GroupViewerDto viewer,
+        /** Applications waiting for a decision; only the leader receives a number, everyone else null. */
+        Long pendingApplications) {
 }

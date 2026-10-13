@@ -41,13 +41,14 @@ describe('group browsing state', () => {
     expect(get).toHaveBeenCalledWith('/groups', expect.objectContaining({ params: {} }))
     expect(screen.queryByRole('group', { name: 'Active filters' })).not.toBeInTheDocument()
   })
-  it('renders truthful closed/full capacity and keeps leader controls based on the viewer DTO', () => {
+  it('renders truthful closed/full capacity and offers no management for a closed group', () => {
     const group = { id: 5, name: 'OOP crew', courseId: 3, courseCode: 'IS442', courseName: 'OOP', leaderId: 1, leaderName: 'Priya',
       preferredStudyMode: null, studyGoals: [], maxGroupSize: 2, memberCount: 2, active: false,
       viewer: { leader: true, member: true, requestId: null, requestStatus: null } } as const
     renderPage(<GroupCard group={{ ...group, studyGoals: [] }} />)
     expect(screen.getByRole('meter', { name: 'Group capacity' })).toHaveAttribute('aria-valuetext', '2 of 2 members, group closed')
-    expect(screen.getByRole('link', { name: 'Manage group' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Manage group' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'View group' })).toBeInTheDocument()
     expect(screen.queryByText('places available')).not.toBeInTheDocument()
   })
 })

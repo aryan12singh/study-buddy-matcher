@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { getNotifications, notificationLink, readAllNotifications, readNotification } from './api'
+import { followNotification, getNotifications, notificationLink, readAllNotifications, readNotification } from './api'
 import type { NotificationFilter } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -71,10 +71,12 @@ export default function NotificationsPage() {
                     className={`data-row ${notification.read ? '' : 'notification-unread'}`}
                   >
                     <div>
-                      <div className="notification-symbol"><PixelIcon kind={notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
-                      {!notification.read && (
-                        <Badge tone="pending">Unread</Badge>
-                      )}
+                      <div className="person-heading">
+                        <div className="notification-symbol"><PixelIcon kind={notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
+                        {!notification.read && (
+                          <Badge tone="pending">Unread</Badge>
+                        )}
+                      </div>
                       <p className="message-text">{notification.message}</p>
                       <p className="row-meta">{formatTimestamp(notification.createdAt)} (SGT)</p>
                       {!link && (
@@ -83,7 +85,7 @@ export default function NotificationsPage() {
                     </div>
                     <div className="actions">
                       {link && (
-                        <Link className="retro-button" to={link.to}>{link.label}</Link>
+                        <Link className="retro-button" to={link.to} onClick={() => followNotification(notification)}>{link.label}</Link>
                       )}
                       {!notification.read && (
                         <Button

@@ -88,7 +88,7 @@ class StudyGroupServiceTest {
     @BeforeEach
     void setUp() {
         service = new StudyGroupService(studyGroupRepository, groupMembershipRepository,
-                groupAvailabilitySlotRepository, courseRepository, new StudyGroupLookup(studyGroupRepository), new StudyGroupAssembler(),
+                groupAvailabilitySlotRepository, groupJoinRequestRepository, courseRepository, new StudyGroupLookup(studyGroupRepository), new StudyGroupAssembler(),
                 new GroupViewerAssembler(groupMembershipRepository, groupJoinRequestRepository),
                 new GroupClosure(groupJoinRequestRepository, groupMembershipRepository, notificationService), notificationService, access);
         alice = student(ALICE_ID, "Alice");
@@ -272,6 +272,16 @@ class StudyGroupServiceTest {
         assertTrue(dto.members().get(0).leader());
         assertFalse(dto.members().get(1).leader());
         assertEquals(List.of(MONDAY_EVENING), dto.availability());
+    }
+
+    @Test
+    void onlyTheLeaderSeesHowManyApplicationsArePending() {
+        givenGroupExists();
+        when(groupJoinRequestRepository.countByStudyGroupIdAndStatus(GROUP_ID, GroupJoinRequestStatus.PENDING)).thenReturn(2L);
+        org.mockito.Mockito.lenient().when(studentRepository.findById(BOB_ID)).thenReturn(Optional.of(bob));
+
+        assertEquals(2L, service.get(GROUP_ID, ALICE_ID).pendingApplications());
+        assertNull(service.get(GROUP_ID, BOB_ID).pendingApplications());
     }
 
     @Test
