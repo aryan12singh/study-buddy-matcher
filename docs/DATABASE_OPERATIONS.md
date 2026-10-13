@@ -1,8 +1,10 @@
 # Database operations
 
 The application uses backend JDBC with application JWTs. It does not use a browser Supabase
-SDK or Supabase Auth policies. SQL changes touch the 16 mapped public application tables,
-their sequences/default privileges and browser grants; provider-managed schemas are untouched.
+SDK or Supabase Auth policies. The current migration set defines 17 mapped public application
+tables, including `matching_enabled_criteria`, plus their sequences/default privileges and
+browser grants; provider-managed schemas are untouched. This describes the schema after
+applying the complete ordered migration set, not the current hosted deployment state.
 
 ## Ordered migrations
 
@@ -12,15 +14,63 @@ their sequences/default privileges and browser grants; provider-managed schemas 
 | `20261006170327_team_c_integrity.sql` | Preflight, normalized identity, JWT version/last login, request context, safe event metadata, description width, UTC conversion, checks/unique/query indexes |
 | `20261006170448_backend_only_database_access.sql` | RLS and deny browser table/sequence grants; future default privileges follow the same model |
 | `20261006172934_collection_goal_primary_keys.sql` | Natural owner/goal primary keys for the two set collections; preserve valid rows and reject legacy null goals |
+| `20261007220000_match_request_cancellation.sql` | Distinguishes lifecycle cancellation from decline in request and notification constraints |
+| `20261011090000_matching_weights_per_strategy.sql` | Matching weights belong to a strategy: adds `matching_configs.strategy` (existing rows become Balanced) and replaces one weight per criterion with one per strategy and criterion |
+| `20261013090000_complete_matching_configuration.sql` | Singleton matching settings, minimum score, persistent revision/override state and `matching_enabled_criteria`; preserves valid legacy overrides and denies browser access to the new table |
 
-These are versioned source files, generated using the existing Supabase CLI. The shared
+These are versioned source files. The historical shared
 MCP migration runner records its own deployment timestamps, so do not expect those history
 versions to equal local filename prefixes. Match history by migration name. Do not modify
 an applied file to change a deployed schema: add another migration.
 
 `scripts/migrate-database.sh` wraps all files in one transaction with ON_ERROR_STOP and the
 exclusive application advisory lock. It is intentionally repeatable, including existing-schema
-adoption. The shared hosted migrations are already applied as of 7 October 2026.
+adoption.
+
+### Deployment record and PR #54 rollout
+
+The 7 October 2026 hosted record below covers the Team C baseline/integrity/access work
+and seed verification at that time. It does not establish that subsequently added matching
+migrations have run on the shared project. The current 13 October verification used only
+disposable/local PostgreSQL and did not alter shared Supabase data.
+
+`20261013090000_complete_matching_configuration.sql` has not yet been applied to the shared
+Supabase project. Before starting the updated branch against that database, the operator
+must apply the complete ordered set using the documented migration runner, then verify the
+new settings columns, enabled-criteria table, constraints and grants. This is a normal rollout
+step for PR #54, not unfinished matching-feature implementation. Do not rely on Hibernate
+`update` to supply the singleton, access controls or revision adoption. Record the actual
+hosted deployment date/result separately when that rollout occurs.
+
+On 13 October, local verification passed fresh/repeated migrations, synthetic legacy
+upgrade, rejected-preflight rollback, mapping validation and browser-role denial tests.
+An actual Java process restart preserved saved weights, enabled criteria, minimum score,
+revision and matching output. Detailed application evidence is in
+[TEAM_A_TESTING.md](TEAM_A_TESTING.md#verification-record---13-october-2026).
+
+### Matching schema and adoption
+
+The 17 application tables are `courses`, `users`, `students`, `student_courses`,
+`student_study_goals`, `availability_slots`, `match_requests`, `connections`, `study_groups`,
+`study_group_goals`, `group_availability_slots`, `group_memberships`, `group_join_requests`,
+`notifications`, `matching_configs`, `matching_strategy_settings` and
+`matching_enabled_criteria`.
+
+`matching_strategy_settings` has one row with `id=1`; its current fields include
+`active_strategy`, `updated_at`, `min_score` (API `minScore`, 0-1), `config_version`
+(non-negative persistent revision), and `has_override` (stored values versus external
+startup defaults). `matching_enabled_criteria` stores the enabled criteria with natural
+primary key `(setting_id,criterion)`, a foreign key to that singleton and the five allowed
+criterion names. `matching_configs` remains unique per `(strategy,criterion)`.
+
+The new migration rejects multiple legacy settings rows instead of silently choosing one.
+A valid single legacy row is normalized to ID 1, retains its strategy/weights, starts at
+revision 1 and adopts all five enabled criteria. Fresh data with no override rows starts at
+revision 0 and uses external startup defaults. Existing weight-only overrides are retained.
+Repeated execution retains saved revisions, thresholds, override flags and explicit enabled
+choices; it does not reset them or re-enable a deliberately disabled criterion. Restore
+clears overrides through the application while preserving the increasing revision. The new
+table enables RLS and revokes `PUBLIC`/`anon`/`authenticated` access in the same migration.
 
 ## Before applying to a populated database
 
@@ -37,11 +87,12 @@ adoption. The shared hosted migrations are already applied as of 7 October 2026.
    is still timestamp-without-time-zone. Changing timezone assumptions needs a reviewed
    migration, not a runtime flag.
 5. Apply files in order and verify mappings, constraints and access. The app runs with
-   `ddl-auto: update`, which adds missing tables and columns but never creates constraints,
-   indexes or access rules, so the migrations are still required. Tests use `validate`.
+   `ddl-auto: update`, but schema update does not replace the project's migration preflight,
+   data adoption, partial indexes or browser access rules. Migrations remain required; tests
+   use `validate`.
 
-The shared upgrade preflight found the mapped database empty. An ignored private schema
-snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,
+The historical 7 October shared upgrade preflight found the mapped database empty. An
+ignored private schema snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,
 RLS, policies and counts before changes; there were no application rows to export. No shared
 table was reset, truncated or deleted. Destructive tests use disposable local PostgreSQL only;
 see [Testing](../README.md#testing).
@@ -84,13 +135,16 @@ Never paste it into a frontend env file, commit it or attach it to a PR.
 Verify counts and existing-data preservation through authorized SQL. Compare a checksum
 of identity/password/creation fields before/after repeat without printing hashes. App startup
 messages precede ApplicationRunner completion; wait for a seed count check before claiming
-the seed finished. The current shared run has 10 courses, 50 students, 51 users and passes a
-second startup without identity/password/creation changes.
+the seed finished. The historical 7 October shared run recorded 10 courses, 50 students,
+51 users and a second startup without identity/password/creation changes. These counts
+are historical evidence, not a fresh hosted count for the current branch.
 
 ## Privacy and access verification
 
-All 16 application tables have RLS enabled; PUBLIC/anon/authenticated grants are revoked,
-and there are no browser policies. The backend owner is intentionally not FORCE-RLS, so
+After the complete migration set, all 17 application tables have RLS enabled;
+PUBLIC/anon/authenticated grants are revoked and there are no browser policies. This
+boundary, including the new enabled-criteria table, passed the 13 October disposable tests;
+it must also be verified after the hosted rollout. The backend owner is intentionally not FORCE-RLS, so
 JDBC still works. Revocation of browser sequence and future default table/sequence/function
 privileges prevents an alternate direct API data path. Do not add a permissive policy to make
 the dashboard's advisor INFO notice disappear.
@@ -106,8 +160,9 @@ WHERE table_schema='public' AND grantee IN ('PUBLIC','anon','authenticated');
 The second query must return no rows for application tables. In an isolated authorized test
 session, SET ROLE anon/authenticated must make student/contact/user/notification reads and
 table writes fail with SQLSTATE 42501, while normal backend operations pass. These checks
-are in `DatabaseBoundaryTest`. Hosted advisor review found no security WARNING/ERROR;
-the remaining [RLS enabled/no policy INFO](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
+are in `DatabaseBoundaryTest`. The historical 7 October hosted advisor review found no
+security WARNING/ERROR; this does not claim a new advisor check after PR #54 rollout.
+The remaining [RLS enabled/no policy INFO](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
 is intentional denial of browser access. Newly created indexes can also appear as
 [unused-index INFO](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index)
 on a small fresh dataset; unique/foreign-key/query indexes are retained for their documented

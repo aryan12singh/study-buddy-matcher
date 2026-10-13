@@ -34,6 +34,8 @@ export default function AppShell() {
         <nav className="desktop-navigation" aria-label="Main navigation">
           {account?.role === 'STUDENT' ? (
             <>
+              <NavLink to="/home"><PixelIcon kind="home" /><span>Home</span></NavLink>
+              <NavLink to="/find-buddies"><PixelIcon kind="search" /><span>Find buddies</span></NavLink>
               <NavLink to="/connections"><PixelIcon kind="connections" /><span>Connections</span></NavLink>
               <NavLink to="/groups"><PixelIcon kind="groups" /><span>Study groups</span></NavLink>
               <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span>{notifications.data && notifications.data.count > 0 && (
@@ -45,7 +47,10 @@ export default function AppShell() {
               )}
             </>
           ) : (
-            <NavLink to="/admin/users"><PixelIcon kind="accounts" /><span>User accounts</span></NavLink>
+            <>
+              <NavLink to="/admin/users"><PixelIcon kind="accounts" /><span>User accounts</span></NavLink>
+              <NavLink to="/admin/matching"><PixelIcon kind="search" /><span>Matching settings</span></NavLink>
+            </>
           )}
         </nav>
         <main

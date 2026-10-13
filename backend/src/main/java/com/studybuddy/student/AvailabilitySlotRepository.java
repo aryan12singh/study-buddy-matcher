@@ -7,4 +7,6 @@ import java.util.List;
 public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySlot, Long> {
 
     List<AvailabilitySlot> findByStudentId(Long studentId);
+
+    void deleteByStudentId(Long studentId);
 }

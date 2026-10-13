@@ -14,6 +14,24 @@ afterEach(() => {
 })
 describe('profile privacy and relationship actions', () => {
   it.each([
+    { origin: 'matching', path: '/find-buddies?courseId=3&sort=MOST_SHARED_HOURS', label: 'Back to matching', state: { returnTo: { path: '/find-buddies?courseId=3&sort=MOST_SHARED_HOURS', label: 'Back to matching' } } },
+    { origin: 'a direct link', path: '/connections', label: 'Back to connections', state: undefined }
+  ])('preserves both unavailable-profile return actions from $origin', async ({ path, label, state }) => {
+    const config = { headers: new AxiosHeaders() }
+    vi.spyOn(api, 'get').mockRejectedValue(new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, undefined,
+      { status: 404, statusText: '', headers: {}, config, data: { message: 'Student 2 not found' } }))
+    const { router } = renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    if (state) await act(async () => { await router.navigate('/students/2', { state }) })
+    await screen.findByText('Profile unavailable')
+
+    const actions = screen.getAllByRole('link', { name: label })
+    expect(actions).toHaveLength(2)
+    for (const action of actions) expect(action).toHaveAttribute('href', path)
+    fireEvent.click(actions[1])
+    await screen.findByText('Destination page')
+    expect(router.state.location.pathname + router.state.location.search).toBe(path)
+  })
+  it.each([
     { status: 404, unavailable: true },
     { status: 500, unavailable: false }
   ])('shows a $status as unavailable: $unavailable', async ({ status, unavailable }) => {

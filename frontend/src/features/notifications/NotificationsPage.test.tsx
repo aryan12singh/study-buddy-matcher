@@ -54,8 +54,10 @@ describe('notifications', () => {
   ])('following the link of a notification with read=$read marks it read: $marks', async ({ read, marks }) => {
     vi.spyOn(api, 'get').mockResolvedValue(response([{ ...notification, read }]))
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...notification, read: true }))
-    renderPage(<NotificationsPage />)
+    const { router } = renderPage(<NotificationsPage />)
     fireEvent.click(await screen.findByRole('link', { name: 'View buddy requests' }))
+    await screen.findByText('Destination page')
+    expect(router.state.location.pathname + router.state.location.search).toBe('/connections?view=incoming')
     if (marks) expect(post).toHaveBeenCalledWith('/notifications/30/read')
     else expect(post).not.toHaveBeenCalled()
   })

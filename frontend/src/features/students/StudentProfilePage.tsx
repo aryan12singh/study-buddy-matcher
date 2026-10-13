@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { getStudentProfile } from './api'
 import { decideMatchRequest, endConnection } from '../connections/api'
 import { useResource } from '../../shared/api/useResource'
@@ -15,11 +15,13 @@ import SendRequestDialog from '../connections/SendRequestDialog'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import Avatar from '../../shared/components/Avatar'
 import CopyButton from '../../shared/components/CopyButton'
+import { returnToFrom } from '../../shared/navigation/returnTo'
 
 export default function StudentProfilePage() {
   const { id } = useParams(),
     studentId = Number(id)
   const validId = Number.isSafeInteger(studentId) && studentId > 0
+  const back = returnToFrom(useLocation(), { path: '/connections', label: 'Back to connections' })
   const profile = useResource(`student-${id}`, signal => getStudentProfile(studentId, signal), validId)
   const action = useAction()
   const [requestRecipient, setRequestRecipient] = useState<{ id: number; name: string } | null>(null)
@@ -36,7 +38,12 @@ export default function StudentProfilePage() {
     <WindowPage
       title={student?.name ? `${student.name}'s study profile` : 'Student profile'}
       description="Courses, goals and weekly availability."
-      actions={<Link className="retro-button" to="/connections">Back to connections</Link>}
+      actions={(
+        <>
+          {relationship?.state === 'SELF' && <Link className="retro-button primary" to={`/students/${studentId}/edit`}>Edit my profile</Link>}
+          <Link className="retro-button" to={back.path}>{back.label}</Link>
+        </>
+      )}
     >
       <StatePanel
         loading={profile.loading && !student}
@@ -46,7 +53,7 @@ export default function StudentProfilePage() {
         emptyTitle="Profile unavailable"
         emptyMessage="This student's profile can't be shown. Their account may have been deactivated or deleted."
         emptyKind="connections"
-        emptyAction={<Link className="retro-button" to="/connections">Back to connections</Link>}
+        emptyAction={<Link className="retro-button" to={back.path}>{back.label}</Link>}
       />
       <ActionNotice error={ending ? undefined : action.error} success={action.success} />
       {student && (

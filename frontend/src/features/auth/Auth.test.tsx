@@ -24,12 +24,14 @@ describe('auth and role boundaries', () => {
   it('logs in with normalized identity and stores only the session token', async () => {
     setAccessToken(null)
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ token: 'session-test-token', expiresAt: '2030-01-01T00:00:00Z', account: studentAccount }))
-    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: 0 } : []))
+    // Single-object endpoints stay unanswered here; this test is about login, not the home page's data.
+    vi.spyOn(api, 'get').mockImplementation(async path => path === '/profile/me' || path === '/students/me/summary'
+      ? new Promise(() => {}) : response(path === '/notifications/unread-count' ? { count: 0 } : []))
     renderAuthenticatedApp('/login')
     fireEvent.change(screen.getByLabelText('Email address'), { target: { value: '  STUDENT@example.test  ' } })
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'test-password' } })
     fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
-    expect(await screen.findByRole('heading', { name: 'Connections' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Welcome back, Priya' })).toBeInTheDocument()
     expect(post).toHaveBeenCalledWith('/auth/login', { email: 'student@example.test', password: 'test-password' })
     expect(sessionStorage.getItem(SESSION_TOKEN_KEY)).toBe('session-test-token')
     expect(sessionStorage.getItem('contactNumber')).toBeNull()

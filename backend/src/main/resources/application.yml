@@ -28,7 +28,39 @@ app:
     secret: ${jwt.secret}
     token-lifetime: ${jwt.expiration-ms}ms
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  profile:
+    group-size-max: ${PROFILE_GROUP_SIZE_MAX:5}
+    max-courses: ${PROFILE_MAX_COURSES:8}
+  matching:
+    default-strategy: BALANCED
+    default-enabled-criteria: [COURSE, AVAILABILITY, STUDY_MODE, STUDY_GOAL, GROUP_SIZE]
+    default-min-score: 0.0
+    default-result-limit: 20
+    max-result-limit: 50
+    # Every strategy has all five weights; omitted values are zero. Enabled weights add up to 1.
+    # Priority defaults are zero, but administrators can give them weight too.
+    default-weights:
+      balanced:
+        course: 0.30
+        availability: 0.30
+        study-mode: 0.20
+        study-goal: 0.10
+        group-size: 0.10
+      availability-first:
+        course: 0.40
+        study-mode: 0.30
+        study-goal: 0.15
+        group-size: 0.15
+      course-first:
+        availability: 0.40
+        study-mode: 0.30
+        study-goal: 0.15
+        group-size: 0.15
+    quality:
+      strong: 0.75
+      good: 0.50
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
     admin-password: ${DEMO_ADMIN_PASSWORD:}
+

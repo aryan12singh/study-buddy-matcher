@@ -25,6 +25,7 @@ if "$task_repo_root/scripts/migrate-database.sh" > "$task_failure_log" 2>&1; the
   exit 1
 fi
 if [[ "$(<"$task_failure_log")" != *"Duplicate normalised emails exist"* ]]; then
+  cat "$task_failure_log" >&2
   printf 'The migration failed for an unexpected reason.\n' >&2
   exit 1
 fi
