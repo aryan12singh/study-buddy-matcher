@@ -14,6 +14,7 @@ engine's criteria and weights, so the matching strategy can evolve without a
 code change.
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Tech Stack](#tech-stack)
 - [User Roles & Features](#user-roles--features)
@@ -23,6 +24,7 @@ code change.
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
 - [Running the App](#running-the-app)
+- [Browser and Layout](#browser-and-layout)
 - [Seed Data](#seed-data)
 - [Matching Engine](#matching-engine)
 - [Requests, Groups, Notifications and Admin](#requests-groups-notifications-and-admin)
@@ -33,6 +35,7 @@ code change.
 ## Overview
 
 Three roles use the system:
+
 - **Students** manage a profile + preferences and get matched with compatible peers.
 - **Study Group Leaders** (students who create a group) manage group membership.
 - **System Administrators** manage accounts and configure the matching engine.
@@ -54,6 +57,7 @@ until a match request is accepted — enforced by the backend, not the client.
 ## User Roles & Features
 
 **Student**
+
 - See a home page with their next step, activity counts, waiting buddy requests, weekly availability, their study groups and recent notifications.
 - Create/update profile (name, school, programme, year of study, contact number, courses taken) and study preferences (target course, study mode, weekly availability, group size preference, study goals).
 - Get a ranked list of compatible students; filter by course, availability, study mode, study goal, preferred group size, minimum match quality.
@@ -61,10 +65,12 @@ until a match request is accepted — enforced by the backend, not the client.
 - Send/accept/decline study-buddy requests; view and end active connections.
 
 **Study Group Leader** *(a Student who creates a group — not a separate account type)*
+
 - Create a study group (name, description, study goals, preferred mode, availability, max size).
 - View and accept/reject join requests; remove members.
 
 **System Administrator**
+
 - Create/update/delete user accounts; view account status and usage info.
 - Configure the matching engine's criteria, weights, and strategy.
 
@@ -73,14 +79,17 @@ until a match request is accepted — enforced by the backend, not the client.
 Backend follows a layered, package-by-feature structure:
 `Controller → Service → Repository → Entity`, with DTOs (Data Transfer Objects)
 at the controller boundary so persistence entities are never returned directly
-from the API. `Student` and
-`StudyGroupLeader` follow the class relationship in the design doc (a student
-becomes a group leader by creating a group, rather than a separate hierarchy).
+from the API. `Student` composes `User` through a shared `@MapsId` identity. A group's
+leader is an ordinary student referenced by that group; STUDENT and ADMIN are the only
+account roles.
 Matching criteria/weights are externalized (DB-configurable via the admin role),
 not hardcoded, so the matching strategy can change without a code deploy.
 
 Frontend follows a feature-folder structure (`features/auth`, `features/matching`,
-`features/studygroup`, etc.), with shared API client/hooks/components under `shared/`.
+`features/groups`, etc.), with shared API client/hooks/components under `shared/`.
+The [platform overview](docs/diagrams/PLATFORM.md) connects authentication, profiles,
+matching and Team C's request/group boundaries. Detailed diagrams remain in the
+[Team A](docs/diagrams/TEAM_A.md) and [Team C](docs/diagrams/TEAM_C.md) documents.
 
 ## Folder Structure
 
@@ -123,35 +132,44 @@ study-buddy-matcher/
 └── README.md
 ```
 
-This grows as each team builds their part — packages like `student/`, `matching/`,
-`studygroup/`, etc. get created when the code for them actually exists, not scaffolded
-ahead of time as empty folders.
+These folders describe the implemented compulsory application. Selected extras are tracked
+separately in the [coverage map](docs/REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
 
 ## Prerequisites
 
-- JDK 21
+- JDK 21 selected by `JAVA_HOME` and `java` (check `java -version`)
 - Node.js 22 LTS + npm (matches CI)
 - Git
-- For the full backend test suite only: Docker, `psql` and OpenSSL
+- `psql` for database migrations; OpenSSL to generate signing keys and test credentials
+- For the full backend test suite: Bash and a running Docker daemon with access to `postgres:17`
 - A Supabase project (ask a team member for an invite to the shared project — see [Environment Variables](#environment-variables))
 
 ## Getting Started
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/aryan12singh/study-buddy-matcher.git
 cd study-buddy-matcher
 
-# Backend
+# Backend development package
 cd backend
 # create src/main/resources/application-local.yml — see Environment Variables below
-./mvnw clean install
+./mvnw -DskipTests package
 
 # Frontend
 cd ../frontend
 cp .env.example .env
-# fill in real values in .env (gitignored, never commit it)
-npm install
+# set VITE_API_BASE_URL in .env if the backend is not on the example address
+npm ci
 ```
+
+This development package command skips tests. `application-local.yml` configures the running
+application; it does not provision the isolated test database. Run the
+[full backend harness](#testing) separately from the repository root.
+
+Before starting the backend, the target database must have the ordered migrations below.
+Coordinate the shared-project rollout with its operator using
+[DATABASE_OPERATIONS.md](docs/DATABASE_OPERATIONS.md); a successful local package or test
+run does not prove that the shared schema has been upgraded.
 
 ## Environment Variables
 
@@ -169,7 +187,8 @@ jwt:
   secret: <generate with: openssl rand -base64 48>
 ```
 `application.yml` defaults `spring.profiles.active` to `local`, so this file loads automatically
-— no export step, no `.env`, just `./mvnw spring-boot:run` and it works.
+when running `./mvnw spring-boot:run`. A reachable, migrated database and a valid signing key
+are still required. Keep this file private and ignored by Git.
 
 **Frontend — `frontend/.env`** (copy from `.env.example`):
 ```
@@ -214,13 +233,20 @@ reads the standard `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD`.
 
 The SQL files in `backend/src/main/resources/db/migrations/` define the full schema:
 tables, indexes, integrity constraints and database access rules. Apply them in filename
-order with `scripts/migrate-database.sh` (connection from the `PG*` variables above); it is
-safe to re-run. `spring.jpa.hibernate.ddl-auto` is `update`, so Hibernate also adds missing
-tables and columns on startup, but it never creates the constraints or access rules, so a
-fresh database still needs the migrations. PR #54 also adds versioned matching settings
-and enabled-criteria storage; apply the ordered migrations before running this branch
-against an existing database. The 13 October tests used disposable/local PostgreSQL; the
-new matching migration is still a hosted rollout step. See the
+order with `scripts/migrate-database.sh`; reviewed migrations are safe to re-run.
+Set `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD` privately to the same target
+as the backend datasource, then run from the repository root:
+
+```bash
+scripts/migrate-database.sh
+```
+
+`spring.jpa.hibernate.ddl-auto` is `update`, so Hibernate may add mapped tables, columns
+and some constraints. It does not replace our ordered SQL migrations, legacy-data adoption,
+partial/expression indexes, cross-row integrity choices or RLS/grants. Apply the complete
+migration set before startup on a fresh or existing database. Merged matching work adds
+versioned settings and enabled-criteria storage. The 13 October audit used disposable/local
+PostgreSQL; the shared database rollout remained a separate step at that snapshot. See the
 [deployment record](docs/DATABASE_OPERATIONS.md#deployment-record-and-pr-54-rollout).
 The test profile uses `validate` against a freshly migrated database.
 
@@ -233,6 +259,29 @@ cd backend && ./mvnw spring-boot:run
 # Terminal 2 — frontend, http://localhost:5173
 cd frontend && npm run dev
 ```
+
+### Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Java release/compiler error | Select JDK 21 in `JAVA_HOME` and verify `java -version` in this terminal |
+| `clean install` or context tests cannot connect to a database | Use the development package command above, or `scripts/test-backend.sh` for the isolated full suite; local application YAML is not the test profile |
+| Backend connection, schema validation or missing-column error | Check the private datasource values and the ordered migration/rollout record for the actual target |
+| Test harness cannot start or connect | Start Docker, ensure `psql` and OpenSSL are on `PATH`, and allow the PostgreSQL 17 image to download |
+| Browser cannot call the API | Check `VITE_API_BASE_URL`, backend startup and `CORS_ALLOWED_ORIGINS`; restart Vite after changing `.env` |
+| No demo students/courses | The seeder is opt-in and requires private passwords; use the seed procedure below on the approved target |
+
+## Browser and Layout
+
+The application uses decorative window chrome with ordinary routes, a side navigation on
+wide screens and wrapping navigation/forms on narrow screens. Shared styles adapt schedules
+and admin tables for narrower layouts. Tahoma/Verdana/system fonts keep body text conventional;
+pixel art comes from CSS drawings rather than a required pixel font.
+
+Local Chromium student/admin workflows, keyboard checks and a 390 px Home smoke check are
+recorded in the [Team A](docs/TEAM_A_TESTING.md) and [compulsory integration](docs/TEAM_C_TESTING.md)
+guides. These checks cover the stated scenarios. Latest-Figma comparison, complete browser/device
+coverage, accessibility review and physical-projector readability remain team acceptance work.
 
 ## Seed Data
 
@@ -356,7 +405,8 @@ Built by Team C on top of the platform foundation:
 
 See the [API contract](docs/API_CONTRACT.md), [design decisions](docs/DESIGN_DECISIONS.md),
 [requirement coverage](docs/REQUIREMENT_COVERAGE.md), [database operations](docs/DATABASE_OPERATIONS.md)
-and [diagrams](docs/diagrams/TEAM_C.md).
+and [diagrams](docs/diagrams/TEAM_C.md). The [Team C test and handoff guide](docs/TEAM_C_TESTING.md)
+maps compulsory workflows, regression checks and remaining acceptance steps.
 
 ## Testing
 
@@ -372,15 +422,17 @@ cd backend
 ```
 
 **Full backend suite**, including the context-load test and the HTTP/database tests in
-`integration/`, from the repository root (needs Docker, `psql` and OpenSSL):
+`integration/`, from the repository root (needs JDK 21, Bash, running Docker, `psql` and OpenSSL):
 
 ```bash
 scripts/test-backend.sh
 ```
 
 It starts a throwaway PostgreSQL 17 container with generated credentials, tests and
-applies the migrations, runs every Maven test, then removes the container. It never
-touches the shared Supabase project.
+applies fresh/repeated/legacy migrations in private databases, runs every Maven test, then
+removes the container. It sets the `STUDYBUDDY_TEST_*` connection/signing values itself.
+Integration fixtures clear test data, so use this harness rather than pointing the test
+profile at the shared Supabase project.
 
 **Frontend:**
 
@@ -392,7 +444,11 @@ npm run lint
 npm run build
 ```
 
-CI runs all of the above on every pull request into `main`.
+CI provisions PostgreSQL 17, applies and repeats migrations, runs the complete backend suite
+and the frontend test/lint/build checks on every pull request into `main`, including shared
+workflow/SQL/setup changes. The database-free unit-test command is a local shortcut.
+Exact dated results and runtime limits belong in [TEAM_A_TESTING.md](docs/TEAM_A_TESTING.md)
+and [TEAM_C_TESTING.md](docs/TEAM_C_TESTING.md).
 
 ## Libraries
 
@@ -423,18 +479,36 @@ Versions match the resolved Maven dependencies and the npm lockfile.
 Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing uses
 official PostgreSQL 17; no embedded database is used.
 
-Team C screens use CSS pixel patterns, Unicode glyphs and Tahoma/Verdana/system fonts;
-no icon or font files are bundled. Landing pages load Google Fonts Inter
-and Fraunces under SIL OFL 1.1 ([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
-[Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)).
-The source of `public/favicon.svg`, `public/icons.svg` and the landing page SVGs is not yet
-recorded.
+The shared retro shell and current landing screen use original CSS pixel drawings in
+`PixelIcon.tsx`, CSS shapes/patterns and Unicode glyphs. Tahoma/Verdana/system fonts are
+requested from the user's system; no font or external icon-set files are bundled.
+`index.css` still imports Google Fonts Inter and Fraunces under SIL OFL 1.1
+([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
+[Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt));
+network failure falls back to system fonts.
+
+| Asset / service | Origin and distribution record |
+| --- | --- |
+| `frontend/public/favicon.svg` | Original pixel-book SVG created in the 13 October completion pass; the earlier unverified image was replaced |
+| Shared/landing pixel icons, avatar initials and CSS patterns | Original project drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css`; no external icon set |
+| `frontend/public/icons.svg` | Unused sprite removed in the same cleanup; not shipped |
+| Google Fonts stylesheet | Existing Inter/Fraunces remote import; SIL OFL 1.1 sources linked above, with system fallback |
+| Supabase / PostgreSQL | Hosted database reached only by backend JDBC; local/CI tests use the official PostgreSQL 17 container |
+
+The current landing page has no separate inline SVG asset. No music/AI-provider service is
+shipped in the compulsory baseline; selected extras must add their actual service/asset
+records when merged. Development assistance is disclosed in `docs/AI_USAGE.md`.
 
 ## Team Workflow
 
 - One shared Supabase project for the whole team; don't spin up individual projects.
 - Own feature branch → open a Pull Request (PR) to `main` → get teammate review/approval → merge.
 - Read [AGENTS.md](AGENTS.md) before making changes.
+
+The team uses 24 October as the internal feature freeze and 25 October as the extras/integration
+delivery target. The 15 November 2026 23:59 SGT handoff target must be checked against the actual
+LMS deadline; the formal brief states Week 13. See the
+[schedule record](docs/DESIGN_DECISIONS.md#schedule-and-submission-record).
 
 | Team | Members | Owns |
 | --- | --- | --- |

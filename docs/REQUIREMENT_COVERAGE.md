@@ -1,10 +1,16 @@
 # Requirement coverage
 
-Where the Team A and Team C scoped requirements are implemented. Team A issues are
+Where the compulsory Team A, B and C requirements are implemented. This is a source and
+acceptance map, not a professor, deployment or submission sign-off. Team A issues are
 [#1](https://github.com/aryan12singh/study-buddy-matcher/issues/1),
 [#2](https://github.com/aryan12singh/study-buddy-matcher/issues/2),
 [#3](https://github.com/aryan12singh/study-buddy-matcher/issues/3) and
-[#4](https://github.com/aryan12singh/study-buddy-matcher/issues/4). Team C issues:
+[#4](https://github.com/aryan12singh/study-buddy-matcher/issues/4). Team B issues are
+[#5](https://github.com/aryan12singh/study-buddy-matcher/issues/5),
+[#6](https://github.com/aryan12singh/study-buddy-matcher/issues/6),
+[#7](https://github.com/aryan12singh/study-buddy-matcher/issues/7),
+[#8](https://github.com/aryan12singh/study-buddy-matcher/issues/8) and
+[#9](https://github.com/aryan12singh/study-buddy-matcher/issues/9). Team C issues:
 [#10](https://github.com/aryan12singh/study-buddy-matcher/issues/10),
 [#11](https://github.com/aryan12singh/study-buddy-matcher/issues/11),
 [#12](https://github.com/aryan12singh/study-buddy-matcher/issues/12),
@@ -14,6 +20,64 @@ Where the Team A and Team C scoped requirements are implemented. Team A issues a
 Backend classes are under `backend/src/main/java/com/studybuddy/`, screens under
 `frontend/src/features/`, and HTTP tests under `backend/src/test/java/com/studybuddy/integration/`.
 API paths are listed in [API_CONTRACT.md](API_CONTRACT.md).
+
+The 13 October 2026 merged-main audit at `b33f286887a090cd9b765886263c0590a13a6acf`
+confirmed the principal integrated workflows and identified setup, concurrency, schedule-draft
+and navigation/copy gaps. The completion work and exact later verification belong in
+[TEAM_C_TESTING.md](TEAM_C_TESTING.md). Issue open/closed state and a passing historical
+suite do not substitute for the behavior checklist or human acceptance.
+
+## Platform and repeatable setup (#5)
+
+| Requirement / acceptance | Implementation | Automated / runtime evidence |
+| --- | --- | --- |
+| Java 21/Spring Boot and React/Vite applications with fixed dependencies | `StudyBuddyApplication`, Maven wrapper, frontend entry/router, existing manifests/lockfile | `StudyBuddyApplicationTests`; frontend lint/build; CI |
+| Layered controllers/services/repositories with DTO assemblers | Feature packages; `AccountAssembler`, `MyProfileAssembler`, `CourseAssembler`, privacy/group/admin assemblers | Context/HTTP tests and reviewed source boundaries; platform diagrams |
+| Shared entities, enums, repositories and persistent PostgreSQL schema | `User`, `Student`, `Course`, `AvailabilitySlot`, preference enums; ordered SQL migrations | `DatabaseBoundaryTest`; fresh/repeated/legacy migration harness |
+| Minimum 10 courses and 50 synthetic students; repeat startup preserves existing data | Opt-in `DemoSeedService`, `DemoSeedProperties`, runtime passwords | 13 October real restart/reseed proof in the compulsory integration record; no destructive shared reset |
+| Complete development setup separated from isolated test provisioning | README development package, migrated datasource, `scripts/test-backend.sh` | Literal setup/package and full harness checks recorded with the final branch evidence |
+| Backend-only database access and environment-supplied secrets | RLS/revoked browser grants; private ignored config; shared HTTP client | `DatabaseBoundaryTest`; database operations guide |
+
+## Authentication and roles (#6)
+
+| Requirement / acceptance | Backend | Frontend / evidence |
+| --- | --- | --- |
+| Student registration and login; normalized unique email and encoded passwords | `AuthService`, `AccountCreation`, `InputRules`, `AccountAssembler`, database email index | Auth screens; `Auth.test.tsx`, `AccountCreationTest`, `AccountHttpTest` |
+| Public registration cannot select administrator role | Student-only registration contract | `AccountHttpTest`; admin creation is a separate guarded endpoint |
+| JWT validation, role guards, inactive/deleted/revoked account rejection | `JwtTokenService`, `JwtAuthenticationFilter`, `SecurityConfiguration`, `AccountAccess` | Auth context/route guards; `JwtTokenServiceTest`, `AccountHttpTest` |
+| Successful sign-in updates usage without lost concurrent account edits | Locked current identity in `AuthService` | `LoginConcurrencyTest`, `AccountHttpTest`; failed login preserves usage |
+| Invalid/duplicate credentials and safe loading/error feedback | Shared RFC 9457 problem boundary | Auth interaction tests and HTTP rejection cases |
+
+## Own profile and study preferences (#7)
+
+| Requirement / acceptance | Backend | Frontend / evidence |
+| --- | --- | --- |
+| Read/update own identity/profile fields with required values and field errors | `ProfileService`, `UpdateProfileRequest`, `MyProfileAssembler`, `ProfileProperties` | `EditProfilePage`, `ProfileEditor`, `AboutYouFields`; `ProfileServiceTest`, `EditProfilePage.test.tsx` |
+| Course catalogue/enrolments, optional independent buddy target, mode, goals and categorical group size | `CourseService`, `Student`, `GroupSizePreference`; numeric min/max storage | `StudyPreferencesFields`; profile/group-preference tests; API contract |
+| Course count/existence, mode/group-size and year limits | Typed profile config and service validation | `ProfileServiceTest`; form validation; empty/invalid states |
+| Whole-profile/course/goal replacements use the same student write boundary as weekly replacements | `ProfileService` and account locking | `ProfileConcurrencyTest`; final run in `TEAM_C_TESTING.md` |
+| Own contact is editable; another student's contact still follows the privacy assembler | `MyProfileDto` for self; public/connected DTO boundary for other profiles | Profile/HTTP privacy tests; #11 below |
+| Contact format and learning-style ambiguity remain visible | Required, nonblank contact text; five defined matching criteria | Recorded clarification gates in `DESIGN_DECISIONS.md`; no guessed phone regex or sixth criterion |
+
+## Weekly availability (#8)
+
+| Requirement / acceptance | Backend | Frontend / evidence |
+| --- | --- | --- |
+| Replace/clear a student's whole week; whole-minute, same-day start before end | `ProfileService.replaceAvailability`, `AvailabilityRules`, `AvailabilitySlot` | `WeeklySlotEditor`, `WeeklySchedule`; `AvailabilityRulesTest`, `ProfileServiceTest` |
+| Own student schedule rejects same-day overlap; group schedules may overlap | `AvailabilityRules` versus `StudyGroup` validation | Caller-specific editor validation; API/design contract distinction |
+| Concurrent replacements never commit a mixture of individually valid weeks | Account-row serialization for that student before replacement/read | `ProfileConcurrencyTest`; compulsory integration record |
+| Invalid/incomplete raw time text blocks save and triggers exit protection | Shared editor plus `weeklySlotDrafts`; drafts belong to profile/group forms | `WeeklySlotEditor.test.tsx`, `EditProfilePage.test.tsx`, `GroupFormDrafts.test.tsx`, `GroupFormNavigation.test.tsx` |
+| Recurring Asia/Singapore day/time survives reload; preview shows saved valid values | Slot DTO/assembler order; no browser-timezone conversion | Profile/editor tests and manual reload/clear checks |
+
+## Shared shell and Home (#9)
+
+| Requirement / acceptance | Implementation | Evidence |
+| --- | --- | --- |
+| Guarded navigation and reusable retro windows/forms/dialog/states | `AppShell`, `WindowPage`, shared primitives, `routes.tsx` | Auth/dialog/component tests; adopted choices in AGENTS |
+| Home uses actual profile, activity, request, group, notification and matching responses | `HomePage`, section-specific API reads, Team A matching preview | `HomePage.test.tsx`, activity/profile/next-step helper tests; real backend audit |
+| Active-connections and outgoing-request links select the correct view | Explicit `/connections?view=connected` and `/connections?view=outgoing` destinations | Home/profile rendered navigation regressions |
+| Saved target-course hint describes Home preview; current finder intent remains explicit | `StudyPreferencesFields`, Home preview and matching form | Source-aligned copy and matching/profile tests |
+| Empty/loading/error states, keyboard focus, wrapping narrow layouts | Shared `StatePanel`, labelled controls and `desktop.css` | Dated Chromium/keyboard checks; 390 px Home smoke check; complete Figma/projector/browser acceptance remains separate |
 
 ## Matching algorithm and scoring (#1)
 
@@ -70,15 +134,16 @@ checks belong in the PR's verified evidence, not a permanently fixed count here.
 | Fractional weights retain precision when saving, editing, reading and scoring | Exact valid weights; legacy-only invalid-total normalization | Precision-preserving form values | Config/property/HTTP tests, `matchingSettingsForm.test.ts`, `MatchingSettingsPage.test.tsx` |
 | Overrides survive restart and restore follows current defaults | Database-backed settings read by newly created config service | Reloaded saved state; defaults indicator | PostgreSQL integration plus actual Java-process restart; dated evidence and scenario 4 in test guide |
 
-## Shared completion and human gates
+## Matching completion and human gates
 
-Technical coverage above concerns issues #1-#4 on PR #54. The PR carries the exact local
-and hosted verification results for its final SHA. A source/test map does not by itself
-assert a merge, professor acceptance or that all team members can explain the implementation.
+Matching coverage concerns issues #1-#4, implemented in merged PR #54. The original PR and
+dated test guide carry their verification results; later merged-main work has its own record.
+A source/test map does not assert professor acceptance or that every team member can explain
+the implementation.
 
 Local Chromium workflows and keyboard/responsive checks are completed in the
 [dated verification record](TEAM_A_TESTING.md#verification-record---13-october-2026).
-Before merging, follow AGENTS.md's human cross-team review and author walkthrough. The
+Follow AGENTS.md's human cross-team review and author walkthrough for subsequent changes. The
 physical-projector demo remains a presentation check under the team's actual setup.
 The undefined learning-style wording remains a precise professor clarification under #41/#7;
 see [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md#undefined-learning-style-wording-417).
@@ -96,6 +161,7 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Accepting creates exactly one connection; declining creates none | `MatchRequestService`, `Connection` | `connections/ConnectionsPage` | `BuddyHttpTest` |
 | Either student can end a connection; history is kept | `ConnectionService` | Disconnect on profile and connections list | `BuddyHttpTest`, `ConnectionServiceTest` |
 | Empty, loading and error states | — | `shared/components/StatePanel` | Connections frontend tests |
+| Direct outgoing request action and event links open the correct view | Direction-aware notification DTO; explicit outgoing query | Profile request link; Incoming/Outgoing/Connected tabs | `StudentProfilePage.test.tsx`, `NotificationDirectionTest`, navigation tests |
 
 ## Profiles and contact privacy (#11)
 
@@ -118,6 +184,8 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Leader counts as a member; capacity cannot be exceeded | `StudyGroup`, `GroupMembership`, group row lock | `shared/components/CapacityMeter` | `GroupHttpTest`, `StudyGroupTest` |
 | Leader edits the group and removes members | `StudyGroupService` | `groups/GroupFormPage`, `groups/GroupManagePage` | `GroupHttpTest` |
 | Leader closes the group; pending applications are rejected | `GroupClosure` | `groups/GroupManagePage` | `GroupHttpTest` |
+| Invalid/incomplete time drafts cannot silently save a previous valid value; overlap remains permitted for group schedules | Same group slot DTO; backend validates complete valid times | Shared editor draft state participates in form save/exit validation | `WeeklySlotEditor.test.tsx`, `GroupFormDrafts.test.tsx`, `GroupFormNavigation.test.tsx` |
+| Empty/loading/error/full/closed/non-leader states are handled | Fresh group/viewer state and service authority checks | Groups, detail/manage and application dialog states | `GroupHttpTest`, group browsing/form/dialog tests |
 
 ## Notifications (#13)
 
@@ -141,3 +209,46 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Permanently delete an account and its dependent records | `StudentDeletion`, `GroupClosure` | Delete confirmation on `admin/AdminUserDetailPage` | `AccountHttpTest` |
 | Admins cannot remove themselves, so an active admin always remains | `AdminUserService` | Self controls disabled | `AccountHttpTest`, `AdminUserServiceTest` |
 | Deactivated or deleted accounts lose API access | `JwtTokenService`, account version check | Sign-out on 401 | `AccountHttpTest`, `JwtTokenServiceTest` |
+
+## Compulsory integrated acceptance map
+
+Use the repeatable scenarios and dated results in [TEAM_C_TESTING.md](TEAM_C_TESTING.md).
+These gates cover the compulsory application after the confirmed fixes; record the tested
+SHA and database target when accepting them.
+
+| Behavior to demonstrate | Source / automated coverage | Acceptance evidence to retain |
+| --- | --- | --- |
+| Register/login, edit own profile/preferences, replace and clear weekly availability | Auth/profile/availability services; unit, rendered and HTTP tests | Valid/invalid saves, reload, invalid-draft exit warning and concurrent complete-week result |
+| Search current course/goal, compare stable scores/shared time, change admin strategy/settings and reload | Team A map and `TEAM_A_TESTING.md` | Actual ranked DTO/UI result; settings revision/precision and persistence after restart |
+| Send contextual request, follow incoming notification, accept/decline and prevent duplicate decisions | Buddy/request/notification services and `BuddyHttpTest` | Two student identities; pending state, exactly one accepted connection, correct request tab |
+| Reveal contact only after acceptance; remove it after disconnect/deactivation | Privacy DTO assembler and HTTP tests | Network payload before/after each state, including stranger and group-only viewer |
+| Create/edit/browse/apply/approve/reject/remove/close a group without exceeding capacity | Group row lock/domain rules and `GroupHttpTest` | Leader and applicant roles, pending/full/closed states, complete valid schedule and group overlap policy |
+| List/read own notifications, follow correct destination and roll back failed event writes | Recipient scope/direction and transactional notifications | Recipient-only visibility, read/unread badge and rollback regression |
+| Admin create/edit/usage/deactivate/reactivate/delete; reject student authority and self removal | Admin/account lifecycle services and `AccountHttpTest` | Revoked JWT/login behavior, ended relations retained on reactivate, dependency cleanup and surviving admin |
+| Re-seed without duplicates or resets; install from documented commands | Migration/seed harness and README | 10 courses/50 student minimum, preserved passwords/profile/group data, clean setup result |
+
+Technical source coverage, local automated results, hosted CI, shared-database rollout and
+human acceptance must each be recorded separately. Reviewers still need the author walkthrough,
+latest-Figma/design check, agreed contact-format interpretation, professor learning-style
+clarification, physical-projector check and integrated demo rehearsal. The coverage file does
+not close or alter GitHub issues.
+
+## Selected extras and delivery
+
+The team has recorded both E1 and E2 as its selected required extras. They extend the
+compulsory baseline and remain separate work; this completion pass implements neither.
+
+| Tracked scope | Current baseline status | Remaining gate |
+| --- | --- | --- |
+| E1 AI match explanation (#15) | Pending on merged main; explanations are deterministic | Agreed provider/owner, privacy-safe inputs, fallback/cache/version/usage checks and actual API/UI/docs/demo evidence |
+| E2 collaborative study room/Pomodoro/music/calendar (#16) | Pending on merged main; PR #52 is a separate draft foundation | Room lease lifecycle fix and current-main integration; dated sessions/calendar exports, two-browser/audio/capacity/reconnect and calendar import acceptance |
+| README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
+| Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Professor/contact clarification, actual external service/audio inventory and human contribution verification |
+| AI disclosure (#43) and demo data/integrated acceptance (#44) | Known retained use recorded; repeatable core evidence exists | Every member confirms their retained use; final demo states and deployed/extras acceptance |
+| Presentation/slides (#45) and rehearsal/submission (#46) | Unverified in the inspected repository | Editable deck/PDF backup; timed 12-minute demo + 8-minute Q&A; actual hardware/network/audio, verified LMS deadline/receipt and private peer evaluations |
+
+The internal freeze is 24 October; extras/integration delivery targets 25 October, materials
+and rehearsal target 8 November, and final handoff targets 15 November 2026 23:59 SGT.
+The formal brief states Week 13; verify the actual LMS deadline. Source availability or a
+saved/exported document does not prove submission. See the
+[schedule record](DESIGN_DECISIONS.md#schedule-and-submission-record).

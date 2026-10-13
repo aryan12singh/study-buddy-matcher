@@ -31,22 +31,59 @@ adoption.
 
 The 7 October 2026 hosted record below covers the Team C baseline/integrity/access work
 and seed verification at that time. It does not establish that subsequently added matching
-migrations have run on the shared project. The current 13 October verification used only
-disposable/local PostgreSQL and did not alter shared Supabase data.
+migrations have run on the shared project. The original 13 October audit used only
+disposable/local PostgreSQL for application testing and did not alter shared Supabase data.
+The later compulsory rollout is recorded separately below.
 
-`20261013090000_complete_matching_configuration.sql` has not yet been applied to the shared
-Supabase project. Before starting the updated branch against that database, the operator
-must apply the complete ordered set using the documented migration runner, then verify the
-new settings columns, enabled-criteria table, constraints and grants. This is a normal rollout
-step for PR #54, not unfinished matching-feature implementation. Do not rely on Hibernate
-`update` to supply the singleton, access controls or revision adoption. Record the actual
-hosted deployment date/result separately when that rollout occurs.
+At the original 13 October merged-main audit, the complete matching configuration migration
+had not been applied to shared Supabase. The dated compulsory rollout below resolves that
+gate. Future fresh targets and upgrades still require the complete ordered set, verification
+of settings columns, enabled criteria, constraints and grants. Do not rely on Hibernate
+`update` to supply the singleton, access controls or revision adoption.
 
 On 13 October, local verification passed fresh/repeated migrations, synthetic legacy
 upgrade, rejected-preflight rollback, mapping validation and browser-role denial tests.
 An actual Java process restart preserved saved weights, enabled criteria, minimum score,
 revision and matching output. Detailed application evidence is in
 [TEAM_A_TESTING.md](TEAM_A_TESTING.md#verification-record---13-october-2026).
+
+### Compulsory rollout — 13 October 2026
+
+The shared project `tagmkcbjespzgljdafiv` was checked again before this completion pass.
+It had 10 courses, 52 student profiles and 53 accounts. A partial mapped update had created
+`matching_enabled_criteria`, but the settings columns and that table's RLS were still missing.
+Browser SELECT grants remained denied. The existing migration history alone did not describe
+this partial state, so schema metadata was checked directly.
+
+Before the rollout, a private PostgreSQL 17 custom-format backup of the public application
+schema/data was captured outside tracked source. It was restored into an isolated database,
+including the provider roles needed for ACL restoration. The complete ordered SQL set passed
+against that restored database, retaining identical account and student-profile data.
+
+The exact seven source migrations above were then applied transactionally through the hosted
+migration runner, with the exclusive application advisory lock and bounded lock/statement
+timeouts. History records the operation as `merged_main_compulsory_schema_rollout`.
+No application table was truncated, seeded or reset; no existing account was deleted.
+
+Post-rollout checks confirmed:
+
+- 10 courses, 52 student profiles and 53 accounts remained.
+- `matching_strategy_settings` includes `min_score`, `config_version` and `has_override`,
+  with one valid singleton row; five enabled criteria were present.
+- All 17 mapped public application tables have RLS enabled and deny browser-role SELECT.
+  The new enabled-criteria table follows the same backend-only access model.
+- Request/notification cancellation constraints and per-strategy matching constraints are
+  installed with the ordered set.
+- The packaged Java 21 application started against the actual shared database with
+  `ddl-auto=validate` and demo seeding disabled. This was a temporary schema/wiring check,
+  not a claim that the feature branch was deployed as a persistent hosted application.
+
+Security advisors report only the 17 informational no-policy notices expected for this
+backend-only architecture. The browser has no direct table grants; adding permissive policies
+is not required. See the [advisor explanation](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
+and [RLS/grants guidance](https://supabase.com/docs/guides/database/postgres/row-level-security).
+The private backup stays outside the repository. It must not be attached to a PR or committed.
+Reproducible application checks are in [TEAM_C_TESTING.md](TEAM_C_TESTING.md).
 
 ### Matching schema and adoption
 
@@ -172,9 +209,12 @@ after creation. Natural goal-set primary keys resolve the previous no-primary-ke
 ## Recovery and rollback
 
 Each migration invocation is transactional: a preflight/DDL error rolls back that invocation.
-The hosted runner applies each file separately, so inspect migration history after an interrupted
-deployment and resume the unapplied file; do not pretend the whole sequence was one hosted
-transaction. The local runner applies the sequence as one transaction.
+The historical 7 October hosted work applied files as individual invocations; an interruption
+between them requires inspecting history and resuming the unapplied work. The 13 October
+compulsory rollout bundled all seven source files into one hosted transaction and one history
+entry. Its failure would roll back that complete invocation. The local runner also applies
+the complete sequence in one transaction. Check the actual deployment record rather than
+assuming every hosted upgrade used the same invocation boundaries.
 
 For a serious populated-schema rollback, stop incompatible writers, restore a tested private
 backup to an isolated target first, verify data/sequence state and permissions, then use a
