@@ -4,276 +4,183 @@ import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.error.ForbiddenActionException;
 import com.studybuddy.matching.MatchingFixtures;
 import com.studybuddy.matching.scoring.MatchingCriterion;
-import com.studybuddy.matching.strategy.AvailabilityFirstStrategy;
-import com.studybuddy.matching.strategy.BalancedStrategy;
-import com.studybuddy.matching.strategy.CourseFirstStrategy;
-import com.studybuddy.matching.strategy.MatchingStrategy;
-import com.studybuddy.matching.strategy.MatchingStrategyType;
+import com.studybuddy.matching.strategy.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.studybuddy.matching.MatchingFixtures.evenWeights;
+import java.util.Set;
 import static com.studybuddy.matching.MatchingFixtures.strategyDefaults;
-import static com.studybuddy.matching.strategy.MatchingStrategyType.AVAILABILITY_FIRST;
-import static com.studybuddy.matching.strategy.MatchingStrategyType.BALANCED;
-import static com.studybuddy.matching.strategy.MatchingStrategyType.COURSE_FIRST;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.studybuddy.matching.strategy.MatchingStrategyType.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MatchingConfigServiceTest {
-
     private static final long ADMIN_ID = 1L;
-    private static final List<MatchingStrategy> STRATEGIES =
-            List.of(new BalancedStrategy(), new AvailabilityFirstStrategy(), new CourseFirstStrategy());
-
+    private static final Set<MatchingCriterion> ALL = EnumSet.allOf(MatchingCriterion.class);
+    private static final List<MatchingStrategy> STRATEGIES = List.of(new BalancedStrategy(), new AvailabilityFirstStrategy(), new CourseFirstStrategy());
     @Mock private MatchingConfigRepository weightRows;
     @Mock private MatchingStrategySettingRepository strategyRows;
     @Mock private AccountAccess access;
-
     private MatchingConfigService service;
 
-    @BeforeEach
-    void setUp() {
+    @BeforeEach void setUp() {
         service = new MatchingConfigService(weightRows, strategyRows, MatchingFixtures.properties(), STRATEGIES,
                 new MatchingConfigAssembler(), access);
     }
 
-    @Test
-    void usesTheConfiguredDefaultsWhenNothingIsSaved() {
-        when(weightRows.findAll()).thenReturn(List.of());
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
+    private UpdateMatchingConfigRequest request(Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights) {
+        return new UpdateMatchingConfigRequest(BALANCED, weights, ALL, 0.0, 0L);
+    }
+    private MatchingStrategySetting prepareSave() {
+        MatchingStrategySetting row = new MatchingStrategySetting(BALANCED);
+        when(strategyRows.lockSingleton()).thenReturn(Optional.of(row));
+        return row;
+    }
 
-        MatchingConfigDto config = service.get(ADMIN_ID);
-
-        assertEquals(BALANCED, config.activeStrategy());
+    @Test void readsAllFiveDefaultsAtVersionZeroWithoutWriting() {
+        var config = service.get(ADMIN_ID);
         assertEquals(strategyDefaults(), config.weights());
+        assertEquals(ALL, config.enabledCriteria());
+        assertTrue(config.usingDefaults());
+        assertEquals(0, config.version());
+        assertEquals(0, config.minScore());
         verify(access).requireAdmin(ADMIN_ID);
+        verify(strategyRows, never()).initialize(any());
     }
 
-    @Test
-    void eachStrategyShowsOnlyTheCriteriaItWeights() {
-        when(weightRows.findAll()).thenReturn(List.of());
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        MatchingConfigDto config = service.get(ADMIN_ID);
-
-        assertEquals(5, config.weights().get(BALANCED).size());
-        assertFalse(config.weights().get(AVAILABILITY_FIRST).containsKey(MatchingCriterion.AVAILABILITY));
-        assertFalse(config.weights().get(COURSE_FIRST).containsKey(MatchingCriterion.COURSE));
+    @Test void savesAllStrategyWeightsAndIncrementsVersion() {
+        MatchingStrategySetting row = prepareSave();
+        var saved = service.update(request(strategyDefaults()), ADMIN_ID);
+        assertEquals(1, saved.version());
+        assertFalse(saved.usingDefaults());
+        verify(weightRows, times(15)).save(any());
+        verify(strategyRows).initialize("BALANCED");
+        verify(strategyRows).save(row);
     }
 
-    @Test
-    void scoresWithTheActiveStrategysOwnSavedWeights() {
-        when(weightRows.findAll()).thenReturn(List.of(
-                new MatchingConfig(BALANCED, MatchingCriterion.COURSE, 0.9),
-                new MatchingConfig(COURSE_FIRST, MatchingCriterion.AVAILABILITY, 0.7),
-                new MatchingConfig(COURSE_FIRST, MatchingCriterion.STUDY_MODE, 0.1),
-                new MatchingConfig(COURSE_FIRST, MatchingCriterion.STUDY_GOAL, 0.1),
-                new MatchingConfig(COURSE_FIRST, MatchingCriterion.GROUP_SIZE, 0.1)));
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.of(new MatchingStrategySetting(COURSE_FIRST)));
-
-        assertEquals(0.7, service.currentWeights().weightOf(MatchingCriterion.AVAILABILITY), 1e-9);
-        assertEquals(0.0, service.currentWeights().weightOf(MatchingCriterion.COURSE));
-        assertInstanceOf(CourseFirstStrategy.class, service.activeStrategy());
+    @Test void preservesFractionalPrecisionOnSaveReadAndSearchSnapshot() {
+        MatchingStrategySetting row = prepareSave();
+        var weights = strategyDefaults();
+        weights.get(BALANCED).replaceAll((criterion, weight) -> 0.0);
+        weights.get(BALANCED).put(MatchingCriterion.COURSE, 0.004);
+        weights.get(BALANCED).put(MatchingCriterion.AVAILABILITY, 0.996);
+        List<MatchingConfig> rows = new ArrayList<>();
+        when(weightRows.save(any())).thenAnswer(call -> { rows.add(call.getArgument(0)); return call.getArgument(0); });
+        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.of(row));
+        when(weightRows.findAll()).thenReturn(rows);
+        var saved = service.update(request(weights), ADMIN_ID);
+        assertEquals(saved, service.get(ADMIN_ID));
+        assertEquals(weights.get(BALANCED), service.snapshot().weights().values());
+        assertEquals(1, service.snapshot().version());
     }
 
-    @Test
-    void rescalesWeightsSavedBeforeTheyHadToAddUpToOne() {
-        when(weightRows.findAll()).thenReturn(List.of(new MatchingConfig(BALANCED, MatchingCriterion.COURSE, 0.9)));
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        // 0.9 + 0.2 * 4 = 1.7: shares of 52.9 and 11.8 hundredths, kept to two decimal places.
-        assertEquals(0.53, service.currentWeights().weightOf(MatchingCriterion.COURSE));
-        assertEquals(0.12, service.currentWeights().weightOf(MatchingCriterion.AVAILABILITY));
-        assertEquals(0.11, service.currentWeights().weightOf(MatchingCriterion.GROUP_SIZE));
-    }
-
-    @Test
-    void preservesValidFractionalWeightsAfterSavingAndReading() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
-        Map<MatchingCriterion, Double> balanced = weights.get(BALANCED);
-        balanced.replaceAll((criterion, weight) -> 0.0);
-        balanced.put(MatchingCriterion.COURSE, 0.004);
-        balanced.put(MatchingCriterion.AVAILABILITY, 0.996);
-        List<MatchingConfig> savedRows = new ArrayList<>();
-        when(weightRows.findByStrategyAndCriterion(any(), any())).thenReturn(Optional.empty());
-        when(weightRows.save(any())).thenAnswer(invocation -> {
-            MatchingConfig row = invocation.getArgument(0);
-            savedRows.add(row);
-            return row;
-        });
-        when(weightRows.findAll()).thenReturn(savedRows);
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        MatchingConfigDto saved = service.update(new UpdateMatchingConfigRequest(BALANCED, weights), ADMIN_ID);
-
-        assertEquals(balanced, saved.weights().get(BALANCED));
-        assertEquals(saved.weights(), service.get(ADMIN_ID).weights());
-        assertEquals(balanced, service.currentWeights().values());
-    }
-
-    @Test
-    void preservesFractionalDefaultsBeforeAnAdminSaves() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> defaults = strategyDefaults();
-        Map<MatchingCriterion, Double> balanced = defaults.get(BALANCED);
-        balanced.replaceAll((criterion, weight) -> 0.0);
-        balanced.put(MatchingCriterion.COURSE, 1.0 / 3);
-        balanced.put(MatchingCriterion.AVAILABILITY, 1.0 / 3);
-        balanced.put(MatchingCriterion.STUDY_MODE, 1.0 / 3);
-        MatchingProperties properties = new MatchingProperties(BALANCED, defaults, MatchingFixtures.properties().quality());
-        service = new MatchingConfigService(weightRows, strategyRows, properties, STRATEGIES,
+    @Test void validFractionalDefaultsAndSumToleranceRemainUnrounded() {
+        var weights = strategyDefaults();
+        weights.get(BALANCED).put(MatchingCriterion.COURSE, 0.2001);
+        var defaults = MatchingFixtures.properties();
+        service = new MatchingConfigService(weightRows, strategyRows,
+                new MatchingProperties(BALANCED, weights, defaults.quality(), ALL, 0, 20, 50), STRATEGIES,
                 new MatchingConfigAssembler(), access);
-        when(weightRows.findAll()).thenReturn(List.of());
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        assertEquals(balanced, service.get(ADMIN_ID).weights().get(BALANCED));
-        assertEquals(balanced, service.currentWeights().values());
+        assertEquals(0.2001, service.snapshot().weights().weightOf(MatchingCriterion.COURSE));
     }
 
-    @Test
-    void preservesTheSameSumToleranceUsedWhenSaving() {
-        when(weightRows.findAll()).thenReturn(List.of(new MatchingConfig(BALANCED, MatchingCriterion.COURSE, 0.2001)));
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        assertEquals(0.2001, service.currentWeights().weightOf(MatchingCriterion.COURSE));
-        assertEquals(0.2001, service.get(ADMIN_ID).weights().get(BALANCED).get(MatchingCriterion.COURSE));
+    @Test void normalizesLegacyOverridesOnlyWhenTheirTotalsAreInvalid() {
+        MatchingStrategySetting row = new MatchingStrategySetting(BALANCED);
+        row.saveOverride(BALANCED, ALL, 0.0);
+        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.of(row));
+        when(weightRows.findAll()).thenReturn(List.of(new MatchingConfig(BALANCED, MatchingCriterion.COURSE, 0.9)));
+        assertEquals(0.53, service.snapshot().weights().weightOf(MatchingCriterion.COURSE));
+        assertEquals(0.11, service.snapshot().weights().weightOf(MatchingCriterion.GROUP_SIZE));
     }
 
-    @Test
-    void updateSavesEveryStrategysWeightsAndTheActiveStrategy() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
-        weights.get(AVAILABILITY_FIRST).put(MatchingCriterion.COURSE, 0.4);
-        weights.get(AVAILABILITY_FIRST).put(MatchingCriterion.GROUP_SIZE, 0.1);
-        when(weightRows.findByStrategyAndCriterion(any(), any())).thenReturn(Optional.empty());
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        MatchingConfigDto saved = service.update(new UpdateMatchingConfigRequest(AVAILABILITY_FIRST, weights), ADMIN_ID);
-
-        assertEquals(AVAILABILITY_FIRST, saved.activeStrategy());
-        assertEquals(0.4, saved.weights().get(AVAILABILITY_FIRST).get(MatchingCriterion.COURSE));
-        verify(access).lockAdmin(ADMIN_ID);
-        verify(weightRows, times(MatchingStrategyType.values().length * MatchingCriterion.values().length)).save(any());
-        ArgumentCaptor<MatchingStrategySetting> strategy = ArgumentCaptor.forClass(MatchingStrategySetting.class);
-        verify(strategyRows).save(strategy.capture());
-        assertEquals(AVAILABILITY_FIRST, strategy.getValue().getActiveStrategy());
+    @Test void priorityCriterionCanBeTheOnlyEnabledWeightedCriterion() {
+        prepareSave();
+        var weights = strategyDefaults();
+        weights.values().forEach(values -> values.replaceAll((criterion, weight) -> criterion == MatchingCriterion.COURSE ? 1.0 : 0.0));
+        var saved = service.update(new UpdateMatchingConfigRequest(COURSE_FIRST, weights, Set.of(MatchingCriterion.COURSE), 0.8, 0L), ADMIN_ID);
+        assertEquals(1.0, saved.weights().get(COURSE_FIRST).get(MatchingCriterion.COURSE));
+        assertEquals(0.8, saved.minScore());
     }
 
-    @Test
-    void updateChangesExistingRowsInsteadOfAddingNewOnes() {
-        MatchingConfig existing = new MatchingConfig(BALANCED, MatchingCriterion.COURSE, 0.1);
-        MatchingStrategySetting existingStrategy = new MatchingStrategySetting(BALANCED);
-        when(weightRows.findByStrategyAndCriterion(any(), any())).thenReturn(Optional.empty());
-        when(weightRows.findByStrategyAndCriterion(BALANCED, MatchingCriterion.COURSE)).thenReturn(Optional.of(existing));
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.of(existingStrategy));
-
-        service.update(new UpdateMatchingConfigRequest(COURSE_FIRST, strategyDefaults()), ADMIN_ID);
-
-        assertEquals(0.2, existing.getWeight());
-        assertEquals(COURSE_FIRST, existingStrategy.getActiveStrategy());
-        verify(weightRows).save(existing);
-        verify(strategyRows).save(existingStrategy);
-    }
-
-    @Test
-    void theCriterionAStrategyRanksByFirstIsSavedAsZero() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
-        weights.get(COURSE_FIRST).put(MatchingCriterion.COURSE, 0.0);
-        when(weightRows.findByStrategyAndCriterion(any(), any())).thenReturn(Optional.empty());
-        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-        ArgumentCaptor<MatchingConfig> rows = ArgumentCaptor.forClass(MatchingConfig.class);
-
-        service.update(new UpdateMatchingConfigRequest(BALANCED, weights), ADMIN_ID);
-
-        verify(weightRows, times(15)).save(rows.capture());
-        MatchingConfig courseFirstCourse = rows.getAllValues().stream()
-                .filter(row -> row.getStrategy() == COURSE_FIRST && row.getCriterion() == MatchingCriterion.COURSE)
-                .findFirst().orElseThrow();
-        assertEquals(0.0, courseFirstCourse.getWeight());
-    }
-
-    @Test
-    void rejectsAWeightOnTheCriterionAStrategyRanksByFirst() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
-        weights.get(COURSE_FIRST).put(MatchingCriterion.COURSE, 0.2);
-
-        InvalidMatchingConfigException error = assertThrows(InvalidMatchingConfigException.class,
-                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, weights), ADMIN_ID));
-        assertEquals("Course first already ranks by COURSE, so it cannot also weight it", error.getMessage());
+    @Test void disabledCriteriaCannotKeepWeightAndAtLeastOneMustRemainEnabled() {
+        assertThrows(InvalidMatchingConfigException.class,
+                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, strategyDefaults(), Set.of(), 0.0, 0L), ADMIN_ID));
+        assertThrows(InvalidMatchingConfigException.class,
+                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, strategyDefaults(), Set.of(MatchingCriterion.COURSE), 0.0, 0L), ADMIN_ID));
         verify(weightRows, never()).save(any());
     }
 
-    @Test
-    void rejectsWeightsThatDoNotAddUpToOneNamingTheStrategy() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
-        weights.get(AVAILABILITY_FIRST).put(MatchingCriterion.COURSE, 10.0);
+    @Test void negativeZeroTotalMissingAndInvalidSumWeightsAreRejectedBeforeWriting() {
+        for (Double value : new Double[]{-0.1, Double.NaN, Double.POSITIVE_INFINITY, 10.0, null}) {
+            var weights = strategyDefaults();
+            weights.get(BALANCED).put(MatchingCriterion.COURSE, value);
+            assertThrows(InvalidMatchingConfigException.class, () -> service.update(request(weights), ADMIN_ID));
+        }
+        var zero = strategyDefaults();
+        zero.get(BALANCED).replaceAll((criterion, weight) -> 0.0);
+        assertThrows(InvalidMatchingConfigException.class, () -> service.update(request(zero), ADMIN_ID));
+        var missing = strategyDefaults(); missing.remove(COURSE_FIRST);
+        assertThrows(InvalidMatchingConfigException.class, () -> service.update(request(missing), ADMIN_ID));
+        assertThrows(InvalidMatchingConfigException.class, () -> service.update(request(null), ADMIN_ID));
+        verify(weightRows, never()).save(any());
+        verify(strategyRows, never()).initialize(any());
+    }
 
-        InvalidMatchingConfigException error = assertThrows(InvalidMatchingConfigException.class,
-                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, weights), ADMIN_ID));
-        assertEquals("Availability first: The weights must add up to 1, but add up to 10.75", error.getMessage());
+    @Test void thresholdMustBeFiniteAndBetweenZeroAndOne() {
+        for (Double threshold : new Double[]{-0.1, 1.1, Double.NaN, Double.POSITIVE_INFINITY, null}) {
+            assertThrows(InvalidMatchingConfigException.class,
+                    () -> service.update(new UpdateMatchingConfigRequest(BALANCED, strategyDefaults(), ALL, threshold, 0L), ADMIN_ID));
+        }
+        verify(weightRows, never()).save(any());
+    }
+
+    @Test void staleVersionDoesNotWriteAnyWeights() {
+        MatchingStrategySetting row = prepareSave(); row.saveOverride(BALANCED, ALL, 0.0);
+        assertThrows(StaleMatchingConfigException.class, () -> service.update(request(strategyDefaults()), ADMIN_ID));
         verify(weightRows, never()).save(any());
         verify(strategyRows, never()).save(any());
     }
 
-    @Test
-    void rejectsAnUpdateMissingAStrategysWeights() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
-        weights.remove(COURSE_FIRST);
-
-        InvalidMatchingConfigException error = assertThrows(InvalidMatchingConfigException.class,
-                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, weights), ADMIN_ID));
-        assertEquals("Weights for Course first are required", error.getMessage());
-        assertThrows(InvalidMatchingConfigException.class,
-                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, null), ADMIN_ID));
+    @Test void restoresStartupDefaultsAtANewerVersionAndDeletesOverrides() {
+        MatchingStrategySetting row = prepareSave(); row.saveOverride(COURSE_FIRST, Set.of(MatchingCriterion.COURSE), 0.9);
+        var restored = service.restore(new RestoreMatchingDefaultsRequest(1L), ADMIN_ID);
+        assertTrue(restored.usingDefaults());
+        assertEquals(2, restored.version());
+        assertEquals(strategyDefaults(), restored.weights());
+        assertEquals(ALL, restored.enabledCriteria());
+        assertEquals(0.0, restored.minScore());
+        verify(weightRows).deleteAll();
+        verify(strategyRows).save(row);
     }
 
-    @Test
-    void rejectsAnUpdateWithNoStrategy() {
-        assertThrows(InvalidMatchingConfigException.class,
-                () -> service.update(new UpdateMatchingConfigRequest(null, strategyDefaults()), ADMIN_ID));
+    @Test void missingStrategyVersionOrEnabledListIsRejected() {
         assertThrows(InvalidMatchingConfigException.class, () -> service.update(null, ADMIN_ID));
+        assertThrows(InvalidMatchingConfigException.class, () -> service.update(new UpdateMatchingConfigRequest(null, strategyDefaults(), ALL, 0.0, 0L), ADMIN_ID));
+        assertThrows(InvalidMatchingConfigException.class, () -> service.update(new UpdateMatchingConfigRequest(BALANCED, strategyDefaults(), null, 0.0, 0L), ADMIN_ID));
+        assertThrows(InvalidMatchingConfigException.class, () -> service.update(new UpdateMatchingConfigRequest(BALANCED, strategyDefaults(), ALL, 0.0, null), ADMIN_ID));
+        assertThrows(InvalidMatchingConfigException.class, () -> service.restore(null, ADMIN_ID));
     }
 
-    @Test
-    void nonAdminCannotReadOrChangeTheSettings() {
+    @Test void nonAdminCannotReadSaveOrRestore() {
         when(access.requireAdmin(ADMIN_ID)).thenThrow(new ForbiddenActionException("An administrator account is required"));
-        when(access.lockAdmin(ADMIN_ID)).thenThrow(new ForbiddenActionException("An administrator account is required"));
-
+        doThrow(new ForbiddenActionException("An administrator account is required")).when(access).lockAdmin(ADMIN_ID);
         assertThrows(ForbiddenActionException.class, () -> service.get(ADMIN_ID));
-        assertThrows(ForbiddenActionException.class,
-                () -> service.update(new UpdateMatchingConfigRequest(BALANCED, strategyDefaults()), ADMIN_ID));
+        assertThrows(ForbiddenActionException.class, () -> service.update(request(strategyDefaults()), ADMIN_ID));
+        assertThrows(ForbiddenActionException.class, () -> service.restore(new RestoreMatchingDefaultsRequest(0L), ADMIN_ID));
         verify(weightRows, never()).save(any());
     }
 
-    @Test
-    void failsAtStartupIfAStrategyTypeHasNoImplementation() {
+    @Test void missingStrategyImplementationFailsAtStartup() {
         assertThrows(IllegalStateException.class, () -> new MatchingConfigService(weightRows, strategyRows,
                 MatchingFixtures.properties(), List.of(new BalancedStrategy()), new MatchingConfigAssembler(), access));
-    }
-
-    @Test
-    void failsAtStartupIfADefaultWeightsTheCriterionItsStrategyRanksByFirst() {
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> defaults = strategyDefaults();
-        defaults.put(COURSE_FIRST, evenWeights());
-        MatchingProperties properties = new MatchingProperties(BALANCED, defaults, MatchingFixtures.properties().quality());
-
-        assertThrows(IllegalStateException.class, () -> new MatchingConfigService(weightRows, strategyRows, properties,
-                STRATEGIES, new MatchingConfigAssembler(), access));
     }
 }

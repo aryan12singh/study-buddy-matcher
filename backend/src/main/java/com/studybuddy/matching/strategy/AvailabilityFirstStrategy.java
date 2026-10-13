@@ -5,10 +5,9 @@ import com.studybuddy.matching.scoring.MatchingCriterion;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.Set;
 
-/** Ranks by timetable overlap first, breaking ties with the weighted total of the other criteria. */
+/** Ranks by timetable overlap first, breaking ties with the configured weighted total. */
 @Component
 public class AvailabilityFirstStrategy implements MatchingStrategy {
 
@@ -24,9 +23,9 @@ public class AvailabilityFirstStrategy implements MatchingStrategy {
                 .reversed();
     }
 
-    /** Availability already decides the order, so it is not weighted again in the total. */
     @Override
-    public Set<MatchingCriterion> weightedCriteria() {
-        return EnumSet.complementOf(EnumSet.of(MatchingCriterion.AVAILABILITY));
+    public Comparator<MatchScore> ranking(Set<MatchingCriterion> enabled) {
+        return enabled.contains(MatchingCriterion.AVAILABILITY) ? ranking()
+                : Comparator.comparingDouble(MatchScore::total).reversed();
     }
 }

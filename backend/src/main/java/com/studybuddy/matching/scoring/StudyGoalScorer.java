@@ -17,7 +17,7 @@ public class StudyGoalScorer implements CriterionScorer {
 
     @Override
     public double score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
-        Set<StudyGoal> mine = searcher.student().getStudyGoals();
+        Set<StudyGoal> mine = search.studyGoal() == null ? searcher.student().getStudyGoals() : Set.of(search.studyGoal());
         Set<StudyGoal> theirs = candidate.student().getStudyGoals();
         if (mine.isEmpty() || theirs.isEmpty()) {
             return NEUTRAL_SCORE;

@@ -90,6 +90,20 @@ class TimeSlotTest {
     }
 
     @Test
+    void duplicateOverlappingAndAdjacentInputCountsEveryMinuteOnce() {
+        WeeklyAvailability mine = week(slot(MONDAY, "09:00", "11:00"), slot(MONDAY, "09:00", "11:00"),
+                slot(MONDAY, "10:00", "12:00"), slot(MONDAY, "12:00", "13:00"));
+        WeeklyAvailability theirs = week(slot(MONDAY, "10:00", "12:00"), slot(MONDAY, "11:00", "14:00"),
+                slot(MONDAY, "10:00", "12:00"), slot(TUESDAY, "09:00", "11:00"));
+        assertEquals(240, mine.totalMinutes());
+        assertEquals(360, theirs.totalMinutes());
+        assertEquals(180, mine.sharedMinutesWith(theirs));
+        assertEquals(180, theirs.sharedMinutesWith(mine));
+        assertEquals(List.of(slot(MONDAY, "10:00", "13:00")), mine.sharedSlotsWith(theirs));
+        assertEquals(List.of(slot(MONDAY, "09:00", "13:00")), mine.slots());
+    }
+
+    @Test
     void emptyWeekSharesNothing() {
         WeeklyAvailability empty = week();
 

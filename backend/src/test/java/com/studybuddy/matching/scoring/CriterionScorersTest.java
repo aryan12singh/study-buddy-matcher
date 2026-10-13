@@ -154,6 +154,14 @@ class CriterionScorersTest {
         }
     }
 
+    @Test
+    void explicitGoalScoresCurrentIntentInsteadOfSavedGoalPreferences() {
+        me.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
+        them.getStudyGoals().add(StudyGoal.CONCEPT_REVIEW);
+        assertEquals(1.0, new StudyGoalScorer().score(profile(me), profile(them),
+                new com.studybuddy.matching.MatchSearchCriteria(null, StudyGoal.CONCEPT_REVIEW, null, null, null, null)));
+    }
+
     @Nested
     class GroupSize {
         private final GroupSizeScorer scorer = new GroupSizeScorer();

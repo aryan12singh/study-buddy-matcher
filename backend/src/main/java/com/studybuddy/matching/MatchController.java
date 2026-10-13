@@ -27,7 +27,9 @@ public class MatchController {
             @RequestParam(required = false) StudyMode studyMode,
             @RequestParam(required = false) GroupSizePreference groupSize,
             @RequestParam(required = false) Integer minSharedHours,
-            @RequestParam(required = false) MatchQuality minQuality) {
-        return service.search(new MatchSearchCriteria(courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality), actor.id());
+            @RequestParam(required = false) MatchQuality minQuality,
+            @RequestParam(required = false) MatchSort sort,
+            @RequestParam(required = false) Integer limit) {
+        return service.search(new MatchSearchCriteria(courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality, sort, limit), actor.id());
     }
 }

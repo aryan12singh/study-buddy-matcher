@@ -8,6 +8,7 @@ import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.course.CourseRepository;
 import com.studybuddy.matching.config.MatchingConfigService;
 import com.studybuddy.matching.config.MatchingProperties;
+import com.studybuddy.matching.config.MatchingConfigSnapshot;
 import com.studybuddy.matching.scoring.AvailabilityOverlapScorer;
 import com.studybuddy.matching.scoring.CourseScorer;
 import com.studybuddy.matching.scoring.GroupSizeScorer;
@@ -42,6 +43,7 @@ import org.mockito.quality.Strictness;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.EnumSet;
 import java.util.stream.Collectors;
 
 import static com.studybuddy.matching.MatchingFixtures.course;
@@ -102,8 +104,8 @@ class MatchServiceTest {
                 new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
                 new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)),
                 new AvailabilitySlot(weak, MONDAY, LocalTime.of(10, 30), LocalTime.of(12, 0))));
-        when(config.currentWeights()).thenReturn(new MatchingWeights(evenWeights()));
-        when(config.activeStrategy()).thenReturn(new BalancedStrategy());
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new BalancedStrategy(),
+                new MatchingWeights(evenWeights()), EnumSet.allOf(MatchingCriterion.class), 0, 0));
     }
 
     private static MatchSearchCriteria courseSearch(MatchQuality minQuality) {
@@ -122,7 +124,8 @@ class MatchServiceTest {
 
     @Test
     void reportsTheAdminsActiveStrategy() {
-        when(config.activeStrategy()).thenReturn(new AvailabilityFirstStrategy());
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new AvailabilityFirstStrategy(),
+                new MatchingWeights(evenWeights()), EnumSet.allOf(MatchingCriterion.class), 0, 3));
 
         assertEquals(MatchingStrategyType.AVAILABILITY_FIRST, service.search(courseSearch(null), ME).strategy());
     }
@@ -131,6 +134,8 @@ class MatchServiceTest {
     void showsWhereTheSearcherAlreadyStandsWithEachStudent() {
         Student pending = student(4, "Sam");
         Student connected = student(5, "Kai");
+        pending.getCoursesTaken().add(course(4, "IS442"));
+        connected.getCoursesTaken().add(course(4, "IS442"));
         when(access.eligibleStudentIds()).thenReturn(List.of(1L, 2L, 3L, 4L, 5L));
         when(students.findAllById(List.of(1L, 2L, 3L, 4L, 5L))).thenReturn(List.of(weak, me, strong, pending, connected));
         when(requests.findBySenderIdAndStatus(ME, MatchRequestStatus.PENDING))
@@ -139,11 +144,11 @@ class MatchServiceTest {
                 .thenReturn(List.of(new MatchRequest(pending, me, null, MatchRequestOrigin.PROFILE, null, null)));
         when(connections.findActiveByStudentId(ME)).thenReturn(List.of(new Connection(connected, me)));
 
-        Map<Long, RelationshipState> states = service.search(new MatchSearchCriteria(null, null, null, null, null, null), ME)
+        Map<Long, RelationshipState> states = service.search(courseSearch(null), ME)
                 .matches().stream().collect(Collectors.toMap(MatchResultDto::studentId, MatchResultDto::relationship));
 
         assertEquals(Map.of(2L, RelationshipState.OUTGOING_PENDING, 3L, RelationshipState.STRANGER,
-                4L, RelationshipState.INCOMING_PENDING, 5L, RelationshipState.CONNECTED), states);
+                4L, RelationshipState.INCOMING_PENDING), states);
     }
 
     @Test
@@ -168,10 +173,9 @@ class MatchServiceTest {
     }
 
     @Test
-    void searchWithNoFiltersRanksEveryOtherStudent() {
-        List<MatchResultDto> results = service.search(new MatchSearchCriteria(null, null, null, null, null, null), ME).matches();
-
-        assertEquals(List.of(2L, 3L), results.stream().map(MatchResultDto::studentId).toList());
+    void searchWithoutCourseOrGoalIsRejected() {
+        assertThrows(InvalidMatchSearchException.class,
+                () -> service.search(new MatchSearchCriteria(null, null, null, null, null, null), ME));
     }
 
     @Test
@@ -194,6 +198,68 @@ class MatchServiceTest {
     @Test
     void rejectsAnUnknownCourse() {
         assertThrows(CourseNotFoundException.class, () -> service.search(new MatchSearchCriteria(99L, null, null, null, null, null), ME));
+    }
+
+    @Test
+    void limitAndConfigurationMetadataAgreeWithUnboundedCount() {
+        var result = service.search(new MatchSearchCriteria(4L, null, null, null, null, null, MatchSort.BEST_MATCH, 1), ME);
+        assertEquals(2, result.totalMatches());
+        assertEquals(1, result.limit());
+        assertEquals(1, result.matches().size());
+        assertEquals(MatchSort.BEST_MATCH, result.sort());
+        assertEquals(0, result.configurationVersion());
+        assertThrows(InvalidMatchSearchException.class, () -> service.search(new MatchSearchCriteria(4L, null, null, null, null, null, null, 0), ME));
+        assertThrows(InvalidMatchSearchException.class, () -> service.search(new MatchSearchCriteria(4L, null, null, null, null, null, null, 51), ME));
+    }
+
+    @Test
+    void alternativeSortsUseSharedHoursOrSameYearBeforeStrategy() {
+        Map<MatchingCriterion, Double> values = evenWeights();
+        values.replaceAll((criterion, value) -> criterion == MatchingCriterion.COURSE ? 1.0 : 0.0);
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new BalancedStrategy(), new MatchingWeights(values),
+                EnumSet.allOf(MatchingCriterion.class), 0, 4));
+        strong.setYearOfStudy(3);
+        weak.setYearOfStudy(2);
+        when(availabilitySlots.findAll()).thenReturn(List.of(
+                new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
+                new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(9, 30)),
+                new AvailabilitySlot(weak, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0))));
+        assertEquals(List.of(2L, 3L), service.search(courseSearch(null), ME).matches().stream().map(MatchResultDto::studentId).toList());
+        for (MatchSort sort : List.of(MatchSort.MOST_SHARED_HOURS, MatchSort.SAME_YEAR_FIRST)) {
+            assertEquals(List.of(3L, 2L), service.search(new MatchSearchCriteria(4L, null, null, null, null, null, sort, null), ME)
+                    .matches().stream().map(MatchResultDto::studentId).toList());
+        }
+    }
+
+    @Test
+    void totalExplanationAndDisabledBreakdownUseExactlyTheSameSettings() {
+        Map<MatchingCriterion, Double> values = evenWeights();
+        values.replaceAll((criterion, value) -> criterion == MatchingCriterion.COURSE ? 1.0 : 0.0);
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new BalancedStrategy(), new MatchingWeights(values),
+                java.util.Set.of(MatchingCriterion.COURSE), 0.75, 5));
+        var result = service.search(courseSearch(null), ME);
+        assertEquals(1, result.matches().size());
+        var card = result.matches().getFirst();
+        assertEquals(1.0, card.totalScore());
+        assertEquals(4L, card.relevantCourse().id());
+        assertTrue(card.explanation().contains("course 100.0%"));
+        assertTrue(card.explanation().contains("not a success probability"));
+        assertTrue(card.breakdown().getFirst().enabled());
+        assertEquals(0, card.breakdown().get(1).score());
+        assertTrue(!card.breakdown().get(1).enabled());
+    }
+
+    @Test
+    void equalScoresAndNamesTieOnStudentIdForEverySort() {
+        weak.setName(strong.getName().toUpperCase(java.util.Locale.ROOT));
+        weak.setTargetCourse(strong.getTargetCourse());
+        weak.setPreferredStudyMode(strong.getPreferredStudyMode());
+        weak.getStudyGoals().clear(); weak.getStudyGoals().addAll(strong.getStudyGoals());
+        when(availabilitySlots.findAll()).thenReturn(List.of());
+        for (MatchSort sort : MatchSort.values()) {
+            assertEquals(List.of(2L, 3L), service.search(new MatchSearchCriteria(4L, null, null, null, null, null, sort, null), ME)
+                    .matches().stream().map(MatchResultDto::studentId).toList());
+        }
     }
 
     @Test

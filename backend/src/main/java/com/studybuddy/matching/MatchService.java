@@ -7,9 +7,9 @@ import com.studybuddy.matching.availability.TimeSlot;
 import com.studybuddy.matching.availability.WeeklyAvailability;
 import com.studybuddy.matching.config.MatchingConfigService;
 import com.studybuddy.matching.config.MatchingProperties;
+import com.studybuddy.matching.config.MatchingConfigSnapshot;
 import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingProfile;
-import com.studybuddy.matching.scoring.MatchingWeights;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
 import com.studybuddy.matching.strategy.MatchingStrategy;
 import com.studybuddy.profile.RelationshipState;
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -67,30 +68,60 @@ public class MatchService {
         validate(search);
         Map<Long, WeeklyAvailability> availability = availabilityByStudent();
         MatchingProfile searcher = profileOf(self, availability);
-        MatchingWeights weights = config.currentWeights();
-        MatchingStrategy strategy = config.activeStrategy();
+        MatchingConfigSnapshot settings = config.snapshot();
+        MatchingStrategy strategy = settings.strategy();
         QualityThresholds thresholds = properties.quality();
         MatchQuality minimum = search.minQuality() == null ? MatchQuality.FAIR : search.minQuality();
         Map<Long, RelationshipState> standing = relationships.of(self.getId());
 
-        List<MatchResultDto> matches = students.findAllById(access.eligibleStudentIds()).stream()
+        MatchSort sort = search.sort() == null ? MatchSort.BEST_MATCH : search.sort();
+        int limit = search.limit() == null ? properties.defaultResultLimit() : search.limit();
+        List<ScoredCandidate> ranked = students.findAllById(access.eligibleStudentIds()).stream()
                 .filter(student -> !student.getId().equals(self.getId()))
+                .filter(student -> standing.get(student.getId()) != RelationshipState.CONNECTED)
                 .map(student -> profileOf(student, availability))
                 .filter(candidate -> filter.accepts(search, searcher, candidate))
-                .map(candidate -> new ScoredCandidate(candidate, scorer.score(searcher, candidate, search, weights)))
-                .filter(scored -> thresholds.classify(scored.score().total()).isAtLeast(minimum))
-                .sorted(Comparator.comparing(ScoredCandidate::score, strategy.ranking())
-                        .thenComparing(scored -> scored.profile().student().getName()))
-                .map(scored -> assembler.toDto(searcher, scored.profile(), scored.score(),
-                        thresholds.classify(scored.score().total()),
+                .map(candidate -> new ScoredCandidate(candidate, scorer.score(searcher, candidate, search, settings.weights(),
+                        settings.enabledCriteria(), thresholds)))
+                .filter(scored -> scored.score().total() >= settings.minScore())
+                .filter(scored -> scored.score().quality().isAtLeast(minimum))
+                .sorted(ordering(sort, searcher, settings))
+                .toList();
+        List<MatchResultDto> matches = ranked.stream().limit(limit)
+                .map(scored -> assembler.toDto(searcher, scored.profile(), scored.score(), search, settings.enabledCriteria(),
                         standing.getOrDefault(scored.profile().student().getId(), RelationshipState.STRANGER)))
                 .toList();
-        return new MatchSearchResultDto(strategy.type(), matches);
+        return new MatchSearchResultDto(strategy.type(), settings.version(), sort, limit, ranked.size(), matches);
+    }
+
+    private static Comparator<ScoredCandidate> ordering(MatchSort sort, MatchingProfile searcher,
+            MatchingConfigSnapshot settings) {
+        Comparator<ScoredCandidate> ranking = Comparator.comparing(ScoredCandidate::score,
+                settings.strategy().ranking(settings.enabledCriteria()));
+        if (sort == MatchSort.MOST_SHARED_HOURS) {
+            ranking = Comparator.comparingDouble((ScoredCandidate candidate) -> candidate.score().sharedHoursPerWeek())
+                    .reversed().thenComparing(ranking);
+        } else if (sort == MatchSort.SAME_YEAR_FIRST) {
+            ranking = Comparator.comparing((ScoredCandidate candidate) -> searcher.student().getYearOfStudy() != null
+                    && Objects.equals(searcher.student().getYearOfStudy(), candidate.profile().student().getYearOfStudy()))
+                    .reversed().thenComparing(ranking);
+        }
+        return ranking.thenComparing(candidate -> candidate.profile().student().getName(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(candidate -> candidate.profile().student().getId());
     }
 
     private void validate(MatchSearchCriteria search) {
+        if (search == null || (search.courseId() == null && search.studyGoal() == null)) {
+            throw new InvalidMatchSearchException("Choose a course or study goal before searching");
+        }
+        if (search.limit() != null && (search.limit() < 1 || search.limit() > properties.maxResultLimit())) {
+            throw new InvalidMatchSearchException("Result limit must be between 1 and " + properties.maxResultLimit());
+        }
         if (search.minSharedHours() != null && search.minSharedHours() < 1) {
             throw new InvalidMatchSearchException("Minimum shared hours must be at least 1");
+        }
+        if (search.courseId() != null && search.courseId() <= 0) {
+            throw new InvalidMatchSearchException("Course id must be positive");
         }
         if (search.courseId() != null && !courses.existsById(search.courseId())) {
             throw new CourseNotFoundException(search.courseId());

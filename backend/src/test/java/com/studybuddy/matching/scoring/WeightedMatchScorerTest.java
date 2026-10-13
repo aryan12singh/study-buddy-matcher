@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import com.studybuddy.matching.QualityThresholds;
 
 import static com.studybuddy.matching.MatchingFixtures.evenWeights;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +64,24 @@ class WeightedMatchScorerTest {
         WeightedMatchScorer scorer = new WeightedMatchScorer(allCriteriaScoring(1.0));
 
         assertEquals(1.0, scorer.score(SELF, CANDIDATE, SEARCH, new MatchingWeights(values)).total(), 1e-9);
+    }
+
+    @Test
+    void disabledScorersAreNotInvokedAndExplanationUsesEnabledCriteriaOnly() {
+        CriterionScorer disabled = new CriterionScorer() {
+            public MatchingCriterion criterion() { return MatchingCriterion.COURSE; }
+            public double score(MatchingProfile self, MatchingProfile peer, MatchSearchCriteria search) {
+                throw new AssertionError("Disabled criterion was evaluated");
+            }
+        };
+        var weights = evenWeights(); weights.replaceAll((criterion, value) -> criterion == MatchingCriterion.STUDY_GOAL ? 1.0 : 0.0);
+        WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(disabled, new FixedScorer(MatchingCriterion.STUDY_GOAL, 0.75)));
+        MatchScore score = scorer.score(SELF, CANDIDATE, SEARCH, new MatchingWeights(weights),
+                Set.of(MatchingCriterion.STUDY_GOAL), new QualityThresholds(0.75, 0.50));
+        assertEquals(0.75, score.total());
+        assertEquals(com.studybuddy.matching.MatchQuality.STRONG, score.quality());
+        assertEquals(0.0, score.scoreFor(MatchingCriterion.COURSE));
+        assertEquals("strong match: study goals 75.0%. Shared availability: 0.0 hours/week. Compatibility is not a success probability.", score.explanation());
     }
 
     @Test

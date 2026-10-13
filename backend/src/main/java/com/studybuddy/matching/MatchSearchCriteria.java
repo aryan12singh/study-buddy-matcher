@@ -3,15 +3,14 @@ package com.studybuddy.matching;
 import com.studybuddy.student.GroupSizePreference;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
-/**
- * What a student searched for. Every field is an optional filter and may be
- * null; a search with none set ranks every other active student.
- */
+
+/** A course or study goal is required. Other values narrow the current search only. */
 public record MatchSearchCriteria(
-        Long courseId,
-        StudyGoal studyGoal,
-        StudyMode studyMode,
-        GroupSizePreference groupSize,
-        Integer minSharedHours,
-        MatchQuality minQuality) {
+        Long courseId, StudyGoal studyGoal, StudyMode studyMode, GroupSizePreference groupSize,
+        Integer minSharedHours, MatchQuality minQuality, MatchSort sort, Integer limit) {
+
+    public MatchSearchCriteria(Long courseId, StudyGoal studyGoal, StudyMode studyMode,
+            GroupSizePreference groupSize, Integer minSharedHours, MatchQuality minQuality) {
+        this(courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality, null, null);
+    }
 }

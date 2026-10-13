@@ -7,9 +7,7 @@ import com.studybuddy.student.StudyMode;
 import java.util.List;
 
 /**
- * One student in a match search's results. Carries a plain-language quality
- * label and a per-criterion breakdown rather than the weighted total, where the
- * searcher already stands with them, and never a contact number.
+ * Privacy-safe display data and the immutable scoring result for one candidate.
  */
 public record MatchResultDto(
         Long studentId,
@@ -20,6 +18,9 @@ public record MatchResultDto(
         StudyMode studyMode,
         List<StudyGoal> studyGoals,
         MatchQuality quality,
+        double totalScore,
+        String explanation,
+        RelevantCourseDto relevantCourse,
         List<CriterionScoreDto> breakdown,
         double sharedHoursPerWeek,
         List<SharedSlotDto> sharedSlots,

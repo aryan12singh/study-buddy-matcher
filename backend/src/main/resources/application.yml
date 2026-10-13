@@ -33,8 +33,12 @@ app:
     max-courses: ${PROFILE_MAX_COURSES:8}
   matching:
     default-strategy: BALANCED
-    # Each strategy's weights add up to 1. A strategy that ranks by a criterion first
-    # does not weight it again, so that criterion is left out.
+    default-enabled-criteria: [COURSE, AVAILABILITY, STUDY_MODE, STUDY_GOAL, GROUP_SIZE]
+    default-min-score: 0.0
+    default-result-limit: 20
+    max-result-limit: 50
+    # Every strategy has all five weights; omitted values are zero. Enabled weights add up to 1.
+    # Priority defaults are zero, but administrators can give them weight too.
     default-weights:
       balanced:
         course: 0.30

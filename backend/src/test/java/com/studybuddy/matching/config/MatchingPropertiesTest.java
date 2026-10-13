@@ -19,6 +19,10 @@ class MatchingPropertiesTest {
     private static Map<String, String> validSettings() {
         Map<String, String> settings = new HashMap<>();
         settings.put("app.matching.default-strategy", "COURSE_FIRST");
+        settings.put("app.matching.default-enabled-criteria", "COURSE,AVAILABILITY,STUDY_MODE,STUDY_GOAL,GROUP_SIZE");
+        settings.put("app.matching.default-min-score", "0");
+        settings.put("app.matching.default-result-limit", "20");
+        settings.put("app.matching.max-result-limit", "50");
         settings.put("app.matching.default-weights.balanced.course", "0.3");
         settings.put("app.matching.default-weights.balanced.availability", "0.3");
         settings.put("app.matching.default-weights.balanced.study-mode", "0.2");

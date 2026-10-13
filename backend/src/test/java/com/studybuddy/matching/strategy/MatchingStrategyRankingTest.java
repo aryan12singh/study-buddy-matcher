@@ -53,12 +53,11 @@ class MatchingStrategyRankingTest {
     }
 
     @Test
-    void aStrategyDoesNotWeightTheCriterionItRanksByFirst() {
-        assertEquals(EnumSet.allOf(MatchingCriterion.class), new BalancedStrategy().weightedCriteria());
-        assertFalse(new AvailabilityFirstStrategy().weightedCriteria().contains(MatchingCriterion.AVAILABILITY));
-        assertEquals(4, new AvailabilityFirstStrategy().weightedCriteria().size());
-        assertFalse(new CourseFirstStrategy().weightedCriteria().contains(MatchingCriterion.COURSE));
-        assertEquals(4, new CourseFirstStrategy().weightedCriteria().size());
+    void disabledPriorityFallsBackToTotal() {
+        assertEquals(List.of(BEST_OVERALL, STRONG_AVAILABILITY, STRONG_COURSE, WEAK), UNSORTED.stream()
+                .sorted(new AvailabilityFirstStrategy().ranking(EnumSet.of(MatchingCriterion.COURSE))).toList());
+        assertEquals(List.of(BEST_OVERALL, STRONG_AVAILABILITY, STRONG_COURSE, WEAK), UNSORTED.stream()
+                .sorted(new CourseFirstStrategy().ranking(EnumSet.of(MatchingCriterion.AVAILABILITY))).toList());
     }
 
     @Test

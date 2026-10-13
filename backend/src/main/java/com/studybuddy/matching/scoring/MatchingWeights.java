@@ -20,6 +20,9 @@ public record MatchingWeights(Map<MatchingCriterion, Double> values) {
     public MatchingWeights {
         requireEveryWeight(values);
         values = Map.copyOf(values);
+        if (values.values().stream().anyMatch(weight -> weight > 1.0)) {
+            throw new IllegalArgumentException("Every normalized weight must be between 0 and 1");
+        }
         double sum = sum(values);
         if (Math.abs(sum - 1.0) > SUM_TOLERANCE) {
             throw new IllegalArgumentException("The weights must add up to 1, but add up to " + Math.round(sum * 1000) / 1000.0);
@@ -70,7 +73,7 @@ public record MatchingWeights(Map<MatchingCriterion, Double> values) {
                 throw new IllegalArgumentException("A weight for " + criterion + " is required");
             }
             if (!Double.isFinite(weight) || weight < 0.0) {
-                throw new IllegalArgumentException("The weight for " + criterion + " must be zero or more");
+                throw new IllegalArgumentException("The weight for " + criterion + " must be between 0 and 1");
             }
         }
     }

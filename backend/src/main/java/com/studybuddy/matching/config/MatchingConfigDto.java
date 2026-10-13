@@ -2,15 +2,16 @@ package com.studybuddy.matching.config;
 
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.strategy.MatchingStrategyType;
-
 import java.util.Map;
+import java.util.Set;
+import java.util.Collections;
+import java.util.EnumSet;
 
-/**
- * The matching settings currently in force, as shown to an admin: the active
- * strategy and each strategy's weights. A strategy's weights list only the
- * criteria it weights, so the criterion it ranks by first is absent.
- */
-public record MatchingConfigDto(
-        MatchingStrategyType activeStrategy,
-        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights) {
+/** Effective settings; version changes on every successful save or explicit restore. */
+public record MatchingConfigDto(MatchingStrategyType activeStrategy,
+        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights,
+        Set<MatchingCriterion> enabledCriteria, double minScore, long version, boolean usingDefaults) {
+    public MatchingConfigDto {
+        enabledCriteria = Collections.unmodifiableSet(EnumSet.copyOf(enabledCriteria));
+    }
 }

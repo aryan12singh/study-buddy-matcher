@@ -10,10 +10,11 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The matching settings used until an admin saves their own, plus the quality
- * label cut-offs, bound from {@code app.matching.*}. Each strategy has its own
+ * label cut-offs, enabled criteria, minimum score and result bounds, bound from {@code app.matching.*}. Each strategy has its own
  * default weights; a criterion left out of a strategy's weights counts as 0.
  * Invalid values stop the application starting.
  */
@@ -22,12 +23,29 @@ import java.util.Map;
 public record MatchingProperties(
         @NotNull MatchingStrategyType defaultStrategy,
         Map<MatchingStrategyType, Map<MatchingCriterion, Double>> defaultWeights,
-        @NotNull QualityThresholds quality) {
+        @NotNull QualityThresholds quality,
+        Set<MatchingCriterion> defaultEnabledCriteria,
+        double defaultMinScore, int defaultResultLimit, int maxResultLimit) {
 
     public MatchingProperties {
+        if (defaultEnabledCriteria == null || defaultEnabledCriteria.isEmpty()) {
+            throw new IllegalArgumentException("At least one default criterion must be enabled");
+        }
+        defaultEnabledCriteria = Set.copyOf(defaultEnabledCriteria);
+        if (!Double.isFinite(defaultMinScore) || defaultMinScore < 0 || defaultMinScore > 1) {
+            throw new IllegalArgumentException("Default minimum score must be between 0 and 1");
+        }
+        if (defaultResultLimit < 1 || maxResultLimit < defaultResultLimit) {
+            throw new IllegalArgumentException("Result limits need 1 <= default <= maximum");
+        }
         // Constructing each strategy's weights validates them, so a bad default fails at startup.
         for (MatchingStrategyType type : MatchingStrategyType.values()) {
-            toWeights(type, defaultWeights);
+            MatchingWeights weights = toWeights(type, defaultWeights);
+            for (MatchingCriterion criterion : MatchingCriterion.values()) {
+                if (!defaultEnabledCriteria.contains(criterion) && weights.weightOf(criterion) != 0.0) {
+                    throw new IllegalArgumentException("A disabled default criterion must have zero weight");
+                }
+            }
         }
     }
 

@@ -8,20 +8,15 @@ import com.studybuddy.matching.strategy.MatchingStrategyType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/**
- * Reads and saves the admin-configured matching settings: the active strategy
- * and each strategy's own weights. Anything an admin has not saved yet falls
- * back to the defaults in {@code app.matching.*}.
- */
+/** Persisted overrides, startup defaults and one versioned settings snapshot for each search. */
 @Service
 @Transactional
 public class MatchingConfigService {
-
     private final MatchingConfigRepository weightRows;
     private final MatchingStrategySettingRepository strategyRows;
     private final MatchingProperties defaults;
@@ -30,21 +25,19 @@ public class MatchingConfigService {
     private final AccountAccess access;
 
     public MatchingConfigService(MatchingConfigRepository weightRows, MatchingStrategySettingRepository strategyRows,
-            MatchingProperties defaults, List<MatchingStrategy> strategies, MatchingConfigAssembler assembler,
-            AccountAccess access) {
+            MatchingProperties defaults, List<MatchingStrategy> strategies, MatchingConfigAssembler assembler, AccountAccess access) {
         this.weightRows = weightRows;
         this.strategyRows = strategyRows;
         this.defaults = defaults;
         this.strategies = byType(strategies);
         this.assembler = assembler;
         this.access = access;
-        requireDefaultsSkipRankedFirstCriteria();
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public MatchingConfigDto get(Long actorId) {
         access.requireAdmin(actorId);
-        return assembler.toDto(activeStrategyType(), allWeights(), strategies);
+        return effectiveConfiguration();
     }
 
     public MatchingConfigDto update(UpdateMatchingConfigRequest request, Long actorId) {
@@ -52,90 +45,105 @@ public class MatchingConfigService {
         if (request == null || request.activeStrategy() == null) {
             throw new InvalidMatchingConfigException("An active strategy is required");
         }
-        Map<MatchingStrategyType, MatchingWeights> weights = validWeights(request.weights());
+        Set<MatchingCriterion> enabled = validEnabled(request.enabledCriteria());
+        double minScore = validThreshold(request.minScore());
+        Map<MatchingStrategyType, MatchingWeights> weights = validWeights(request.weights(), enabled);
+        MatchingStrategySetting setting = lockSettings(request.expectedVersion());
         weights.forEach(this::saveWeights);
-        saveActiveStrategy(request.activeStrategy());
-        return assembler.toDto(request.activeStrategy(), weights, strategies);
+        setting.saveOverride(request.activeStrategy(), enabled, minScore);
+        strategyRows.save(setting);
+        return assembler.toDto(request.activeStrategy(), weights, enabled, minScore, setting.getConfigVersion(), false);
     }
 
-    /** The weights the matching engine scores with: the active strategy's. */
-    @Transactional(readOnly = true)
-    public MatchingWeights currentWeights() {
-        return savedWeights(activeStrategyType(), weightRows.findAll());
+    public MatchingConfigDto restore(RestoreMatchingDefaultsRequest request, Long actorId) {
+        access.lockAdmin(actorId);
+        MatchingStrategySetting setting = lockSettings(request == null ? null : request.expectedVersion());
+        weightRows.deleteAll();
+        setting.restoreDefaults();
+        strategyRows.save(setting);
+        return defaultsDto(setting.getConfigVersion());
     }
 
-    /** The strategy the matching engine ranks with. */
-    @Transactional(readOnly = true)
-    public MatchingStrategy activeStrategy() {
-        return strategies.get(activeStrategyType());
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public MatchingConfigSnapshot snapshot() {
+        MatchingConfigDto settings = effectiveConfiguration();
+        return new MatchingConfigSnapshot(strategies.get(settings.activeStrategy()),
+                new MatchingWeights(settings.weights().get(settings.activeStrategy())), settings.enabledCriteria(),
+                settings.minScore(), settings.version());
     }
 
-    private MatchingStrategyType activeStrategyType() {
-        return strategyRows.findFirstByOrderByIdAsc()
-                .map(MatchingStrategySetting::getActiveStrategy)
-                .orElse(defaults.defaultStrategy());
+    private MatchingConfigDto effectiveConfiguration() {
+        MatchingStrategySetting setting = strategyRows.findFirstByOrderByIdAsc().orElse(null);
+        if (setting == null || !setting.hasOverride()) {
+            return defaultsDto(setting == null ? 0 : setting.getConfigVersion());
+        }
+        return assembler.toDto(setting.getActiveStrategy(), allWeights(), setting.getEnabledCriteria(),
+                setting.getMinScore(), setting.getConfigVersion(), false);
+    }
+
+    private MatchingConfigDto defaultsDto(long version) {
+        Map<MatchingStrategyType, MatchingWeights> weights = new EnumMap<>(MatchingStrategyType.class);
+        for (MatchingStrategyType type : MatchingStrategyType.values()) { weights.put(type, defaults.weightsFor(type)); }
+        return assembler.toDto(defaults.defaultStrategy(), weights, defaults.defaultEnabledCriteria(),
+                defaults.defaultMinScore(), version, true);
+    }
+
+    private MatchingStrategySetting lockSettings(Long expectedVersion) {
+        if (expectedVersion == null || expectedVersion < 0) {
+            throw new InvalidMatchingConfigException("A non-negative expected version is required");
+        }
+        strategyRows.initialize(defaults.defaultStrategy().name());
+        MatchingStrategySetting setting = strategyRows.lockSingleton().orElseThrow();
+        if (setting.getConfigVersion() != expectedVersion) { throw new StaleMatchingConfigException(); }
+        return setting;
     }
 
     private Map<MatchingStrategyType, MatchingWeights> allWeights() {
         List<MatchingConfig> rows = weightRows.findAll();
         Map<MatchingStrategyType, MatchingWeights> weights = new EnumMap<>(MatchingStrategyType.class);
         for (MatchingStrategyType type : MatchingStrategyType.values()) {
-            weights.put(type, savedWeights(type, rows));
+            Map<MatchingCriterion, Double> values = new EnumMap<>(defaults.weightsFor(type).values());
+            rows.stream().filter(row -> row.getStrategy() == type)
+                    .forEach(row -> values.put(row.getCriterion(), row.getWeight()));
+            double sum = values.values().stream().mapToDouble(Double::doubleValue).sum();
+            weights.put(type, Math.abs(sum - 1.0) <= MatchingWeights.SUM_TOLERANCE
+                    ? new MatchingWeights(values) : MatchingWeights.rescaledToOne(values));
         }
         return weights;
     }
 
-    /**
-     * A strategy's saved weights over its defaults. The criterion it ranks by first is
-     * always 0, and weights saved before they had to add up to 1 are rescaled.
-     */
-    private MatchingWeights savedWeights(MatchingStrategyType type, List<MatchingConfig> rows) {
-        Map<MatchingCriterion, Double> values = new EnumMap<>(defaults.weightsFor(type).values());
-        rows.stream()
-                .filter(row -> row.getStrategy() == type)
-                .forEach(row -> values.put(row.getCriterion(), row.getWeight()));
-        unweightedCriteria(type).forEach(criterion -> values.put(criterion, 0.0));
-        // Weights already accepted by the update contract keep their original precision.
-        double sum = values.values().stream().mapToDouble(Double::doubleValue).sum();
-        if (Math.abs(sum - 1.0) <= MatchingWeights.SUM_TOLERANCE) {
-            return new MatchingWeights(values);
+    private static Set<MatchingCriterion> validEnabled(Set<MatchingCriterion> enabled) {
+        if (enabled == null || enabled.isEmpty() || enabled.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new InvalidMatchingConfigException("At least one criterion must be enabled");
         }
-        return MatchingWeights.rescaledToOne(values);
+        return Set.copyOf(enabled);
+    }
+
+    private static double validThreshold(Double threshold) {
+        if (threshold == null || !Double.isFinite(threshold) || threshold < 0 || threshold > 1) {
+            throw new InvalidMatchingConfigException("Minimum score must be between 0 and 1");
+        }
+        return threshold;
     }
 
     private Map<MatchingStrategyType, MatchingWeights> validWeights(
-            Map<MatchingStrategyType, Map<MatchingCriterion, Double>> requested) {
-        if (requested == null) {
-            throw new InvalidMatchingConfigException("Weights for every strategy are required");
-        }
+            Map<MatchingStrategyType, Map<MatchingCriterion, Double>> requested, Set<MatchingCriterion> enabled) {
+        if (requested == null) { throw new InvalidMatchingConfigException("Weights for every strategy are required"); }
         Map<MatchingStrategyType, MatchingWeights> weights = new EnumMap<>(MatchingStrategyType.class);
         for (MatchingStrategyType type : MatchingStrategyType.values()) {
-            weights.put(type, validWeights(type, requested.get(type)));
+            Map<MatchingCriterion, Double> values = requested.get(type);
+            if (values == null) { throw new InvalidMatchingConfigException("Weights for " + type.label() + " are required"); }
+            for (MatchingCriterion criterion : MatchingCriterion.values()) {
+                if (!enabled.contains(criterion) && values.get(criterion) != null && values.get(criterion) != 0.0) {
+                    throw new InvalidMatchingConfigException("Disabled criterion " + criterion + " must have zero weight");
+                }
+            }
+            try { weights.put(type, new MatchingWeights(values)); }
+            catch (IllegalArgumentException invalid) {
+                throw new InvalidMatchingConfigException(type.label() + ": " + invalid.getMessage());
+            }
         }
         return weights;
-    }
-
-    private MatchingWeights validWeights(MatchingStrategyType type, Map<MatchingCriterion, Double> requested) {
-        if (requested == null) {
-            throw new InvalidMatchingConfigException("Weights for " + type.label() + " are required");
-        }
-        Map<MatchingCriterion, Double> values = new EnumMap<>(MatchingCriterion.class);
-        for (MatchingCriterion criterion : MatchingCriterion.values()) {
-            values.put(criterion, requested.get(criterion));
-        }
-        for (MatchingCriterion criterion : unweightedCriteria(type)) {
-            Double weight = values.get(criterion);
-            if (weight != null && weight != 0.0) {
-                throw new InvalidMatchingConfigException(type.label() + " already ranks by " + criterion
-                        + ", so it cannot also weight it");
-            }
-            values.put(criterion, 0.0);
-        }
-        try {
-            return new MatchingWeights(values);
-        } catch (IllegalArgumentException invalid) {
-            throw new InvalidMatchingConfigException(type.label() + ": " + invalid.getMessage());
-        }
     }
 
     private void saveWeights(MatchingStrategyType type, MatchingWeights weights) {
@@ -148,39 +156,12 @@ public class MatchingConfigService {
         }
     }
 
-    private void saveActiveStrategy(MatchingStrategyType type) {
-        MatchingStrategySetting row = strategyRows.findFirstByOrderByIdAsc()
-                .orElseGet(() -> new MatchingStrategySetting(type));
-        row.setActiveStrategy(type);
-        strategyRows.save(row);
-    }
-
-    private List<MatchingCriterion> unweightedCriteria(MatchingStrategyType type) {
-        var weighted = strategies.get(type).weightedCriteria();
-        return List.of(MatchingCriterion.values()).stream().filter(criterion -> !weighted.contains(criterion)).toList();
-    }
-
-    /** A default weight on a criterion the strategy ranks by first would be silently ignored, so refuse to start. */
-    private void requireDefaultsSkipRankedFirstCriteria() {
+    private static Map<MatchingStrategyType, MatchingStrategy> byType(List<MatchingStrategy> implementations) {
+        Map<MatchingStrategyType, MatchingStrategy> indexed = new EnumMap<>(MatchingStrategyType.class);
+        implementations.forEach(strategy -> indexed.put(strategy.type(), strategy));
         for (MatchingStrategyType type : MatchingStrategyType.values()) {
-            MatchingWeights defaultWeights = defaults.weightsFor(type);
-            for (MatchingCriterion criterion : unweightedCriteria(type)) {
-                if (defaultWeights.weightOf(criterion) != 0.0) {
-                    throw new IllegalStateException("The default weights for " + type + " must leave out " + criterion);
-                }
-            }
+            if (!indexed.containsKey(type)) { throw new IllegalStateException("No MatchingStrategy implementation for " + type); }
         }
-    }
-
-    /** Indexes the strategies by type, failing at startup if any type has no implementation. */
-    private static Map<MatchingStrategyType, MatchingStrategy> byType(List<MatchingStrategy> strategies) {
-        Map<MatchingStrategyType, MatchingStrategy> byType = new EnumMap<>(MatchingStrategyType.class);
-        strategies.forEach(strategy -> byType.put(strategy.type(), strategy));
-        for (MatchingStrategyType type : MatchingStrategyType.values()) {
-            if (!byType.containsKey(type)) {
-                throw new IllegalStateException("No MatchingStrategy implementation for " + type);
-            }
-        }
-        return byType;
+        return indexed;
     }
 }

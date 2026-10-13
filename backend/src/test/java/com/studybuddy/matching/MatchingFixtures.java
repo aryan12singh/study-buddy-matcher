@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.EnumSet;
 
 /**
  * Builds students, courses and profiles for matching tests. Ids are assigned by
@@ -23,7 +24,7 @@ import java.util.Map;
  */
 public final class MatchingFixtures {
 
-    public static final MatchSearchCriteria NO_FILTERS = new MatchSearchCriteria(null, StudyGoal.EXAM_PREPARATION, null, null, null, null);
+    public static final MatchSearchCriteria NO_FILTERS = new MatchSearchCriteria(null, null, null, null, null, null);
 
     private MatchingFixtures() {
     }
@@ -60,14 +61,16 @@ public final class MatchingFixtures {
         return weights;
     }
 
-    /** Default weights per strategy, each leaving out the criterion the strategy ranks by first. */
+    /** Default weights per strategy, with zero priority weight until an administrator changes it. */
     public static Map<MatchingStrategyType, Map<MatchingCriterion, Double>> strategyDefaults() {
         Map<MatchingCriterion, Double> withoutAvailability = evenWeights();
         withoutAvailability.remove(MatchingCriterion.AVAILABILITY);
         withoutAvailability.replaceAll((criterion, weight) -> 0.25);
+        withoutAvailability.put(MatchingCriterion.AVAILABILITY, 0.0);
         Map<MatchingCriterion, Double> withoutCourse = evenWeights();
         withoutCourse.remove(MatchingCriterion.COURSE);
         withoutCourse.replaceAll((criterion, weight) -> 0.25);
+        withoutCourse.put(MatchingCriterion.COURSE, 0.0);
         Map<MatchingStrategyType, Map<MatchingCriterion, Double>> defaults = new EnumMap<>(MatchingStrategyType.class);
         defaults.put(MatchingStrategyType.BALANCED, evenWeights());
         defaults.put(MatchingStrategyType.AVAILABILITY_FIRST, withoutAvailability);
@@ -76,7 +79,8 @@ public final class MatchingFixtures {
     }
 
     public static MatchingProperties properties() {
-        return new MatchingProperties(MatchingStrategyType.BALANCED, strategyDefaults(), new QualityThresholds(0.75, 0.5));
+        return new MatchingProperties(MatchingStrategyType.BALANCED, strategyDefaults(), new QualityThresholds(0.75, 0.5),
+                EnumSet.allOf(MatchingCriterion.class), 0.0, 20, 50);
     }
 
     public static MatchSearchCriteria searchForCourse(long courseId) {

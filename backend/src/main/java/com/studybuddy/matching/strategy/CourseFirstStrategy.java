@@ -5,10 +5,9 @@ import com.studybuddy.matching.scoring.MatchingCriterion;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.Set;
 
-/** Ranks by course match first, then by the weighted total of the remaining preferences. */
+/** Ranks by course match first, then by the configured weighted total. */
 @Component
 public class CourseFirstStrategy implements MatchingStrategy {
 
@@ -24,9 +23,9 @@ public class CourseFirstStrategy implements MatchingStrategy {
                 .reversed();
     }
 
-    /** Course already decides the order, so it is not weighted again in the total. */
     @Override
-    public Set<MatchingCriterion> weightedCriteria() {
-        return EnumSet.complementOf(EnumSet.of(MatchingCriterion.COURSE));
+    public Comparator<MatchScore> ranking(Set<MatchingCriterion> enabled) {
+        return enabled.contains(MatchingCriterion.COURSE) ? ranking()
+                : Comparator.comparingDouble(MatchScore::total).reversed();
     }
 }

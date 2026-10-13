@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,5 +29,10 @@ public class AdminMatchingConfigController {
     public MatchingConfigDto update(@AuthenticationPrincipal AccountPrincipal actor,
             @Valid @RequestBody UpdateMatchingConfigRequest request) {
         return service.update(request, actor.id());
+    }
+    @PostMapping("/restore-defaults")
+    public MatchingConfigDto restore(@AuthenticationPrincipal AccountPrincipal actor,
+            @Valid @RequestBody RestoreMatchingDefaultsRequest request) {
+        return service.restore(request, actor.id());
     }
 }

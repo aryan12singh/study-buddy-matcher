@@ -4,13 +4,11 @@ import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Decides the order matches are shown in and which criteria count towards the
- * total score. Each strategy has its own admin-configured weights. Each strategy
- * is its own implementation, so choosing one never needs a switch on its type.
+ * Orders scored matches. Each implementation uses its own administrator-configured
+ * weighted total and applies its priority only while that criterion is enabled.
  */
 public interface MatchingStrategy {
 
@@ -19,11 +17,9 @@ public interface MatchingStrategy {
     /** Orders scores best match first. */
     Comparator<MatchScore> ranking();
 
-    /**
-     * The criteria this strategy weights in the total score. A strategy that
-     * already ranks by a criterion leaves it out, so it is not counted twice.
-     */
-    default Set<MatchingCriterion> weightedCriteria() {
-        return EnumSet.allOf(MatchingCriterion.class);
+    /** Disabled priority criteria do not influence ranking. */
+    default Comparator<MatchScore> ranking(Set<MatchingCriterion> enabled) {
+        return ranking();
     }
+
 }

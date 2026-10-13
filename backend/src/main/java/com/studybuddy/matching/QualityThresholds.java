@@ -7,7 +7,7 @@ package com.studybuddy.matching;
 public record QualityThresholds(double strong, double good) {
 
     public QualityThresholds {
-        if (good < 0.0 || strong > 1.0 || good > strong) {
+        if (!Double.isFinite(good) || !Double.isFinite(strong) || good < 0.0 || strong > 1.0 || good > strong) {
             throw new IllegalArgumentException("Quality thresholds need 0 <= good <= strong <= 1");
         }
     }
