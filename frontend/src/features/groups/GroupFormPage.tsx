@@ -13,10 +13,18 @@ import Button from '../../shared/components/Button'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import WeeklySlotEditor from '../../shared/components/WeeklySlotEditor'
+import { finishSlotDrafts } from '../../shared/components/weeklySlotDrafts'
+import type { WeeklySlotDrafts } from '../../shared/components/weeklySlotDrafts'
 import { validateGroupForm } from './validation'
 import type { GroupForm } from './validation'
 import FormActions from '../../shared/components/FormActions'
 import { useFormExit } from '../../shared/components/useFormExit'
+
+function emptyGroupForm(): GroupForm {
+  return {
+    name: '', description: '', courseId: '', preferredStudyMode: '', maxGroupSize: '4', studyGoals: [], availability: []
+  }
+}
 
 export default function GroupFormPage() {
   const { id } = useParams(),
@@ -27,19 +35,21 @@ export default function GroupFormPage() {
   const group = useResource(`edit-group-${id}`, signal => getGroup(groupId!, signal), Boolean(id) && validId, false)
   const courses = useResource('form-courses', getCourses, true, false)
   const initialised = useRef<string | null>(null)
-  const [form, setForm] = useState<GroupForm>({
-    name: '',
-    description: '',
-    courseId: '',
-    preferredStudyMode: '',
-    maxGroupSize: '4',
-    studyGoals: [],
-    availability: []
-  })
+  const [form, setForm] = useState<GroupForm>(emptyGroupForm)
   const [baseline, setBaseline] = useState(JSON.stringify(form))
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [slotDrafts, setSlotDrafts] = useState<WeeklySlotDrafts>({})
   useEffect(
     () => {
+      if (!id && initialised.current !== null) {
+        const empty = emptyGroupForm()
+        setBaseline(JSON.stringify(empty))
+        setForm(empty)
+        setSlotDrafts({})
+        setErrors({})
+        action.clear()
+        initialised.current = null
+      }
       if (group.data && initialised.current !== id) {
         const data = group.data
         const savedForm: GroupForm = {
@@ -53,24 +63,32 @@ export default function GroupFormPage() {
         }
         setBaseline(JSON.stringify(savedForm))
         setForm(savedForm)
+        setSlotDrafts({})
+        setErrors({})
+        action.clear()
         initialised.current = id || null
       }
     },
-    [group.data, id]
+    [group.data, id, action]
   )
   const denied = Boolean(group.data && (!group.data.viewer.leader || !group.data.active))
-  const dirty = JSON.stringify(form) !== baseline
+  const dirty = Object.keys(slotDrafts).length > 0 || JSON.stringify(form) !== baseline
   const exit = useFormExit(dirty, action.pending)
 
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    const invalid = validateGroupForm(form, group.data?.memberCount || 1)
+    const finished = finishSlotDrafts(form.availability, slotDrafts)
+    const completedForm = { ...form, availability: finished.slots }
+    setForm(completedForm)
+    setSlotDrafts(finished.drafts)
+    const invalid = validateGroupForm(completedForm, group.data?.memberCount || 1)
+    if (Object.keys(finished.drafts).length) invalid.availability = 'Correct the highlighted weekly times before saving.'
     setErrors(invalid)
     if (Object.keys(invalid).length || denied) return
     const result = await action.run(
       () => saveGroup(
         {
-          ...form,
+          ...completedForm,
           name: form.name.trim(),
           description: form.description.trim() || null,
           courseId: Number(form.courseId),
@@ -210,7 +228,18 @@ export default function GroupFormPage() {
             </div>
           </fieldset>
           <WeeklySlotEditor
+            key={id || 'new'}
             value={form.availability}
+            drafts={slotDrafts}
+            onDraftsChange={next => {
+              setSlotDrafts(next)
+              setErrors(previous => {
+                const remaining = { ...previous }
+                delete remaining.availability
+                return remaining
+              })
+            }}
+            allowOverlaps
             onChange={availability => setForm({ ...form, availability })}
             error={fieldError('availability')}
             disabled={action.pending}

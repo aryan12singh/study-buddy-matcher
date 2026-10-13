@@ -13,7 +13,7 @@ export default function ActivityStrip() {
   }
   const stats: { value: number; label: string; to: string; icon: PixelIconKind }[] = [
     { value: summary.data.pendingIncoming, label: 'Requests waiting for you', to: '/connections?view=incoming', icon: 'connections' },
-    { value: summary.data.activeConnections, label: 'Active connections', to: '/connections', icon: 'profile' },
+    { value: summary.data.activeConnections, label: 'Active connections', to: '/connections?view=connected', icon: 'profile' },
     { value: summary.data.pendingOutgoing, label: 'Requests you sent', to: '/connections?view=outgoing', icon: 'send' },
     { value: summary.data.acceptedGroups, label: 'Study groups', to: '/groups?view=mine', icon: 'groups' }
   ]

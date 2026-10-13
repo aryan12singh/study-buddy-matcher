@@ -102,7 +102,7 @@ export default function StudentProfilePage() {
                 <>
                   <Badge tone="pending">Request sent</Badge>
                   <p>Waiting for {student.name} to respond.</p>
-                  <Link to="/connections">View your requests</Link>
+                  <Link to="/connections?view=outgoing">View your requests</Link>
                 </>
               )}
               {relationship?.state === 'INCOMING_PENDING' && (

@@ -56,6 +56,8 @@ describe('student home', () => {
     expect(screen.getByRole('link', { name: 'Edit my profile' })).toHaveAttribute('href', '/students/1/edit')
     const stats = await screen.findByRole('navigation', { name: 'Your activity' })
     expect(within(stats).getByRole('link', { name: '1 Requests waiting for you' })).toHaveAttribute('href', '/connections?view=incoming')
+    expect(within(stats).getByRole('link', { name: '3 Active connections' })).toHaveAttribute('href', '/connections?view=connected')
+    expect(within(stats).getByRole('link', { name: '1 Requests you sent' })).toHaveAttribute('href', '/connections?view=outgoing')
     expect(within(stats).getByRole('link', { name: '1 Study groups' })).toHaveAttribute('href', '/groups?view=mine')
     expect(await screen.findByRole('link', { name: 'OOP study crew' })).toHaveAttribute('href', '/groups/5')
     expect(screen.getByRole('link', { name: 'All my groups ›' })).toHaveAttribute('href', '/groups?view=mine')
