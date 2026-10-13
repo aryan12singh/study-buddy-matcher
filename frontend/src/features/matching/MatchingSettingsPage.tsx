@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getMatchingConfig, updateMatchingConfig } from './api'
 import type { MatchingCriterion } from './api'
-import { addsUpToOne, formatTotal, rankedFirstCriteria, rebalance, STRATEGIES, toConfig, toForm, validateWeights, weightedCriteria, weightTotal } from './matchingSettingsForm'
+import { addsUpToOne, formatPercentage, formatTotal, rankedFirstCriteria, rebalance, STRATEGIES, toConfig, toForm, validateWeights, weightedCriteria, weightTotal } from './matchingSettingsForm'
 import type { MatchingSettingsForm } from './matchingSettingsForm'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -109,14 +109,14 @@ export default function MatchingSettingsPage() {
                 id={`weight-${key}`}
                 label={label}
                 error={errors[`weight-${key}`]}
-                hint={total !== null ? `${Math.round(Number(shown?.[key]) * 100)}% of the total score` : undefined}
+                hint={total !== null ? `${formatPercentage(shown?.[key])} of the total score` : undefined}
               >
                 <input
                   id={`weight-${key}`}
                   type="number"
                   min="0"
                   max="1"
-                  step="0.05"
+                  step="any"
                   inputMode="decimal"
                   value={shown?.[key]}
                   onChange={event => changeWeight(key, event.target.value)}

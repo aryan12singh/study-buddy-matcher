@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,6 +103,57 @@ class MatchingConfigServiceTest {
         assertEquals(0.53, service.currentWeights().weightOf(MatchingCriterion.COURSE));
         assertEquals(0.12, service.currentWeights().weightOf(MatchingCriterion.AVAILABILITY));
         assertEquals(0.11, service.currentWeights().weightOf(MatchingCriterion.GROUP_SIZE));
+    }
+
+    @Test
+    void preservesValidFractionalWeightsAfterSavingAndReading() {
+        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> weights = strategyDefaults();
+        Map<MatchingCriterion, Double> balanced = weights.get(BALANCED);
+        balanced.replaceAll((criterion, weight) -> 0.0);
+        balanced.put(MatchingCriterion.COURSE, 0.004);
+        balanced.put(MatchingCriterion.AVAILABILITY, 0.996);
+        List<MatchingConfig> savedRows = new ArrayList<>();
+        when(weightRows.findByStrategyAndCriterion(any(), any())).thenReturn(Optional.empty());
+        when(weightRows.save(any())).thenAnswer(invocation -> {
+            MatchingConfig row = invocation.getArgument(0);
+            savedRows.add(row);
+            return row;
+        });
+        when(weightRows.findAll()).thenReturn(savedRows);
+        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
+
+        MatchingConfigDto saved = service.update(new UpdateMatchingConfigRequest(BALANCED, weights), ADMIN_ID);
+
+        assertEquals(balanced, saved.weights().get(BALANCED));
+        assertEquals(saved.weights(), service.get(ADMIN_ID).weights());
+        assertEquals(balanced, service.currentWeights().values());
+    }
+
+    @Test
+    void preservesFractionalDefaultsBeforeAnAdminSaves() {
+        Map<MatchingStrategyType, Map<MatchingCriterion, Double>> defaults = strategyDefaults();
+        Map<MatchingCriterion, Double> balanced = defaults.get(BALANCED);
+        balanced.replaceAll((criterion, weight) -> 0.0);
+        balanced.put(MatchingCriterion.COURSE, 1.0 / 3);
+        balanced.put(MatchingCriterion.AVAILABILITY, 1.0 / 3);
+        balanced.put(MatchingCriterion.STUDY_MODE, 1.0 / 3);
+        MatchingProperties properties = new MatchingProperties(BALANCED, defaults, MatchingFixtures.properties().quality());
+        service = new MatchingConfigService(weightRows, strategyRows, properties, STRATEGIES,
+                new MatchingConfigAssembler(), access);
+        when(weightRows.findAll()).thenReturn(List.of());
+        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
+
+        assertEquals(balanced, service.get(ADMIN_ID).weights().get(BALANCED));
+        assertEquals(balanced, service.currentWeights().values());
+    }
+
+    @Test
+    void preservesTheSameSumToleranceUsedWhenSaving() {
+        when(weightRows.findAll()).thenReturn(List.of(new MatchingConfig(BALANCED, MatchingCriterion.COURSE, 0.2001)));
+        when(strategyRows.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
+
+        assertEquals(0.2001, service.currentWeights().weightOf(MatchingCriterion.COURSE));
+        assertEquals(0.2001, service.get(ADMIN_ID).weights().get(BALANCED).get(MatchingCriterion.COURSE));
     }
 
     @Test

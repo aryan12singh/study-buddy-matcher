@@ -25,8 +25,7 @@ export function toForm(config: MatchingConfig): MatchingSettingsForm {
   const weights = {} as Record<MatchingStrategyType, StrategyWeights>
   STRATEGIES.forEach(({ value }) => {
     weights[value] = {}
-    // Shown to two decimal places, a whole percentage, however precisely the server stored it.
-    weightedCriteria(config.weights[value]).forEach(({ key }) => { weights[value][key] = String(Math.round((config.weights[value][key] ?? 0) * 100) / 100) })
+    weightedCriteria(config.weights[value]).forEach(({ key }) => { weights[value][key] = String(config.weights[value][key] ?? 0) })
   })
   return { activeStrategy: config.activeStrategy, weights }
 }
@@ -56,6 +55,12 @@ function parsedWeight(text: string | undefined) {
 
 /** The same allowance for rounding in typed decimals as the backend's MatchingWeights.SUM_TOLERANCE. */
 const SUM_TOLERANCE = 0.001
+const percentageFormat = new Intl.NumberFormat('en', { style: 'percent', maximumSignificantDigits: 3 })
+
+/** A readable share for the hint; the input and saved weight retain their precision. */
+export function formatPercentage(weight: string | undefined) {
+  return percentageFormat.format(Number(weight))
+}
 
 function isValidWeight(weight: number) {
   return Number.isFinite(weight) && weight >= 0 && weight <= 1
@@ -86,7 +91,6 @@ export function validateWeights(weights: StrategyWeights): Record<string, string
 
 /**
  * Sets one weight and scales the strategy's other weights to fill what is left,
- * to two decimal places (a whole percentage),
  * keeping their proportions to each other, so they always add up to 1. If the
  * others are all zero, the remainder is shared equally. A value that is not yet
  * a number from 0 to 1, such as a half-typed "0.", is kept as typed and nothing
@@ -100,20 +104,15 @@ export function rebalance(weights: StrategyWeights, changed: MatchingCriterion, 
   if (!others.length) return next
   const current = others.map(key => { const weight = parsedWeight(weights[key]); return isValidWeight(weight) ? weight : 0 })
   const othersTotal = current.reduce((sum, weight) => sum + weight, 0)
-  // Work in whole hundredths: round each share down, then hand the hundredths left over
-  // to the shares that lost the most in rounding, so the total is exactly 1.
-  const remainder = Math.round((1 - value) * 100)
-  const exact = current.map(weight => othersTotal > 0 ? weight / othersTotal * remainder : remainder / others.length)
-  const hundredths = exact.map(Math.floor)
-  const leftOver = remainder - hundredths.reduce((sum, share) => sum + share, 0)
-  exact.map((share, index) => ({ index, lost: share - hundredths[index] }))
-    .sort((left, right) => right.lost - left.lost)
-    .slice(0, leftOver)
-    .forEach(({ index }) => { hundredths[index] += 1 })
-  others.forEach((key, index) => { next[key] = String(hundredths[index] / 100) })
+  const remainder = 1 - value
+  others.forEach((key, index) => {
+    next[key] = String(othersTotal > 0 ? current[index] / othersTotal * remainder : remainder / others.length)
+  })
   return next
 }
 
 export function formatTotal(total: number) {
-  return String(Math.round(total * 100) / 100)
+  // Totals display through the validation tolerance without floating-point
+  // noise. This does not change the precision of individual weights.
+  return addsUpToOne(total) ? '1' : String(Number(total.toFixed(-Math.log10(SUM_TOLERANCE))))
 }

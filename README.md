@@ -252,7 +252,8 @@ criteria weights are admin-configurable (not hardcoded), supporting at least:
 Students search from the **Find buddies** page in the sidebar. It lists every other active
 student best match first, narrowed by optional filters for course, study goal, study mode,
 preferred group size, shared free time and minimum match quality. The admin's strategy decides
-the order, and the page names it and shows strong, then good, then fair matches in that order. Each result shows a per-criterion score breakdown and a heatmap
+the order, and the page names it and preserves that order across all match qualities. Each
+result shows its quality badge, a per-criterion score breakdown and a heatmap
 of the weekly time both students are free. Administrators choose the active strategy and its weights under
 **Matching settings**.
 
@@ -264,6 +265,12 @@ criterion's share of the total score. A strategy does not weight the criterion i
 first, so it is never counted twice. Each criterion scores 0 to 1; if either student has left a
 preference blank, that criterion scores a neutral 0.5 so an incomplete profile is neither
 rewarded nor punished.
+
+Valid fractional weights retain their precision when saved, read and edited. Only legacy
+weights with an invalid total are rescaled on read. A search reads one consistent database
+snapshot, so a concurrent administrator save cannot combine a new strategy with old weights.
+After a successful match request, its card immediately shows the pending state while results
+refresh; its post-send refresh or a later response replaces that temporary state.
 
 | Criterion | Score |
 | --- | --- |

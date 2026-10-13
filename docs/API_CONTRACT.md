@@ -446,15 +446,21 @@ availability score, then the total; Course-first by the course score, then the t
 does not weight the criterion it ranks by first: it is absent from that strategy's weights in
 responses, and in a PUT it may be left out or set to 0 (any other value is a 400). Each listed
 weight is from 0 to 1 and a strategy's weights must add up to 1 (within 0.001 for rounding), so
-each is that criterion's share of the total score. Weights saved before this rule are rescaled to
-add up to 1 when read, keeping each share. Invalid input returns 400 `INVALID_INPUT`, naming
+each is that criterion's share of the total score. Valid weights retain their supplied precision
+across PUT, GET and scoring. Legacy weights whose total is outside the accepted tolerance are
+rescaled to add up to 1 when read. Invalid input returns 400 `INVALID_INPUT`, naming
 the strategy. Until an admin saves, the defaults from `app.matching.*` apply.
+
+Configuration GET and match searches use a repeatable database snapshot. A concurrent save
+may become visible on the next request; it cannot mix a new strategy with the previous weights
+within one response.
 
 ## Match search (Team A)
 
 Student only. `GET /api/matches` returns other active students ranked best match first by the
-admin's active strategy and its weights, together with that strategy's name. The page groups them
-into strong, good and fair sections, keeping this order within each. The Find buddies page (`/find-buddies`, in the student sidebar under Home)
+admin's active strategy and its weights, together with that strategy's name. The page preserves
+the returned order and shows a quality badge on each card. The Find buddies page
+(`/find-buddies`, in the student sidebar under Home)
 calls it.
 
 | Query parameter | Values | Meaning |
@@ -499,7 +505,11 @@ unset. `sharedSlots` are the weekly blocks both students are free, Monday first,
 using the profile page's `RelationshipState`: `CONNECTED`, `OUTGOING_PENDING` (the searcher sent a
 request still awaiting a reply), `INCOMING_PENDING` (the student sent the searcher one) or
 `STRANGER` (nothing active; a declined or cancelled request leaves this). The page only offers
-"Send match request" to strangers, matching the rules `POST /api/match-requests` already enforces. The cut-offs are configuration, not constants. Results carry no contact
+"Send match request" to strangers, matching the rules `POST /api/match-requests` already enforces.
+After a successful POST, the recipient's card immediately shows `OUTGOING_PENDING` while its
+current results refresh. Its post-send refresh or a later response supersedes that local
+acknowledgement, including when the request has since been declined or cancelled. Responses
+started before confirmation cannot clear it. The cut-offs are configuration, not constants. Results carry no contact
 number; the profile link and match-request flow keep Team C's privacy rules.
 
 ## UI use of the existing contract

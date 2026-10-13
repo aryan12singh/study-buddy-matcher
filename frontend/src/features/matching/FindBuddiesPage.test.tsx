@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { api } from '../../shared/api/client'
-import { renderPage, response } from '../../test/renderApp'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { api, refreshResources } from '../../shared/api/client'
+import { deferred, renderPage, response } from '../../test/renderApp'
 import FindBuddiesPage from './FindBuddiesPage'
 
 const is442 = { id: 4, code: 'IS442', name: 'Object Oriented Programming' }
@@ -46,6 +46,20 @@ async function openFilters() {
   await screen.findByRole('option', { name: 'IS216 Web Application Development' })
 }
 
+async function card(name: string) {
+  return (await screen.findByRole('link', { name })).closest('article') as HTMLElement
+}
+
+async function sendRequest(name: string) {
+  const row = await card(name)
+  fireEvent.click(within(row).getByRole('button', { name: 'Send match request' }))
+  const dialog = await screen.findByRole('dialog', { name: `Send match request to ${name}` })
+  await within(dialog).findByRole('option', { name: /IS442/ })
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Send match request' }))
+  await screen.findByText(`Match request sent to ${name}. Track it under Outgoing requests on Connections.`)
+  return row
+}
+
 describe('Find buddies page', () => {
   it('lists every student best match first without any filters', async () => {
     const get = mockApi()
@@ -64,16 +78,19 @@ describe('Find buddies page', () => {
     expect(await screen.findByText(/Ranked by Availability first matching\. Ranks by shared free time/)).toBeInTheDocument()
   })
 
-  it('shows strong, then good, then fair matches, keeping the strategy order within each', async () => {
-    const fairFirst = { ...alex, studentId: 8, name: 'Fran Lim' }
+  it.each(['AVAILABILITY_FIRST', 'COURSE_FIRST', 'BALANCED'])('preserves the %s response order across match qualities', async strategy => {
+    const fairFirst = { ...alex, studentId: 8, name: 'Fran Lim', sharedHoursPerWeek: 8, breakdown: breakdown(1, 1) }
     const good = { ...alex, studentId: 9, name: 'Gus Koh', quality: 'GOOD' }
-    mockApi(() => Promise.resolve(response(ranked([fairFirst, jamie, good, alex], 'AVAILABILITY_FIRST'))))
+    const strong = strategy === 'COURSE_FIRST' ? { ...jamie, breakdown: breakdown(0, 0.5) } : jamie
+    const backendOrder = strategy === 'BALANCED' ? [strong, good, fairFirst, alex] : [fairFirst, strong, good, alex]
+    mockApi(() => Promise.resolve(response(ranked(backendOrder, strategy))))
     openPage()
     await screen.findByRole('link', { name: 'Jamie Lee' })
     const list = screen.getByLabelText('Matching students')
-    expect(within(list).getAllByRole('heading', { level: 2 }).map(heading => heading.textContent))
-      .toEqual(['Strong matches (1)', 'Good matches (1)', 'Fair matches (2)'])
-    expect(names()).toEqual(['Jamie Lee Year 2', 'Gus Koh Year 1', 'Fran Lim Year 1', 'Alex Tan Year 1'])
+    expect(names()).toEqual(backendOrder.map(match => `${match.name} Year ${match.yearOfStudy}`))
+    expect(within(list).getByText('Strong match')).toBeInTheDocument()
+    expect(within(list).getByText('Good match')).toBeInTheDocument()
+    expect(within(list).getAllByText('Fair match')).toHaveLength(2)
   })
 
   it('shows the score breakdown, shared hours heatmap and preferences', async () => {
@@ -181,5 +198,199 @@ describe('Find buddies page', () => {
       { receiverId: 2, message: null, context: { origin: 'MATCHING', courseId: 4, studyGoal: 'EXAM_PREPARATION' } }))
     expect(await screen.findByText(/Match request sent to Jamie Lee/)).toBeInTheDocument()
     expect(await within(jamieRow).findByRole('button', { name: 'Match requested' })).toBeDisabled()
+  })
+
+  it('marks a confirmed recipient pending while the refreshed search is delayed', async () => {
+    const refresh = deferred<never>()
+    let loads = 0
+    mockApi(() => ++loads === 1 ? Promise.resolve(response(ranked([jamie, alex]))) : refresh.promise)
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    const row = await sendRequest('Jamie Lee')
+    await waitFor(() => expect(loads).toBe(2))
+    expect(within(row).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    expect(within(row).queryByRole('button', { name: 'Send match request' })).not.toBeInTheDocument()
+    expect(within(await card('Alex Tan')).getByRole('button', { name: 'Send match request' })).toBeEnabled()
+    expect(post).toHaveBeenCalledTimes(1)
+  })
+
+  it('handles send confirmation while the current search response is unavailable', async () => {
+    const post = deferred<never>(), oldRefresh = deferred<never>(), refreshed = deferred<never>()
+    let loads = 0
+    mockApi(() => {
+      loads++
+      if (loads === 1) return Promise.resolve(response(ranked([jamie])))
+      return loads === 2 ? oldRefresh.promise : refreshed.promise
+    })
+    vi.spyOn(api, 'post').mockReturnValue(post.promise)
+    openPage()
+    const row = await card('Jamie Lee')
+    fireEvent.click(within(row).getByRole('button', { name: 'Send match request' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Send match request to Jamie Lee' })
+    await within(dialog).findByRole('option', { name: /IS442/ })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send match request' }))
+    // Another resource change can purge the cards while this POST is in flight.
+    act(() => { refreshResources(true) })
+    expect(screen.queryByRole('link', { name: 'Jamie Lee' })).not.toBeInTheDocument()
+    await act(async () => { post.resolve(response({ id: 9 })) })
+    expect(await screen.findByText(/Match request sent to Jamie Lee/)).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(loads).toBe(3))
+    await act(async () => { refreshed.resolve(response(ranked([{ ...jamie, relationship: 'OUTGOING_PENDING' }]))) })
+    expect(within(await card('Jamie Lee')).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+  })
+
+  it('keeps repeat sending unavailable through a failed refresh and retry', async () => {
+    const retry = deferred<never>()
+    let loads = 0
+    mockApi(() => {
+      loads++
+      if (loads === 1) return Promise.resolve(response(ranked([jamie])))
+      return loads === 2 ? Promise.reject(new Error('Refresh failed')) : retry.promise
+    })
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    await sendRequest('Jamie Lee')
+    expect(await screen.findByText('Refresh failed')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send match request' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await waitFor(() => expect(loads).toBe(3))
+    expect(screen.queryByRole('button', { name: 'Send match request' })).not.toBeInTheDocument()
+    await act(async () => { retry.resolve(response(ranked([{ ...jamie, relationship: 'OUTGOING_PENDING' }]))) })
+    expect(within(await card('Jamie Lee')).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+  })
+
+  it.each(['cancelled', 'declined'])('allows another request when fresh data says the previous request was %s', async () => {
+    const refresh = deferred<never>()
+    let loads = 0
+    mockApi(() => ++loads === 1 ? Promise.resolve(response(ranked([jamie]))) : refresh.promise)
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    const row = await sendRequest('Jamie Lee')
+    expect(within(row).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    await act(async () => { refresh.resolve(response(ranked([{ ...jamie, relationship: 'STRANGER' }]))) })
+    expect(within(row).getByRole('button', { name: 'Send match request' })).toBeEnabled()
+    expect(within(row).queryByRole('button', { name: 'Match requested' })).not.toBeInTheDocument()
+  })
+
+  it.each(['INCOMING_PENDING', 'CONNECTED'])('reconciles the local pending state with authoritative %s data', async relationship => {
+    const refresh = deferred<never>()
+    let loads = 0
+    mockApi(() => ++loads === 1 ? Promise.resolve(response(ranked([jamie]))) : refresh.promise)
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    const row = await sendRequest('Jamie Lee')
+    expect(within(row).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    await act(async () => { refresh.resolve(response(ranked([{ ...jamie, relationship }]))) })
+    if (relationship === 'CONNECTED') expect(within(row).getByText('Connected')).toBeInTheDocument()
+    else expect(within(row).getByRole('link', { name: 'Respond to their request' })).toBeInTheDocument()
+    expect(within(row).queryByRole('button', { name: 'Match requested' })).not.toBeInTheDocument()
+  })
+
+  it('does not mark the recipient pending when sending fails', async () => {
+    const get = mockApi()
+    vi.spyOn(api, 'post').mockRejectedValue(new Error('Send failed'))
+    openPage()
+    const row = await card('Jamie Lee')
+    fireEvent.click(within(row).getByRole('button', { name: 'Send match request' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Send match request to Jamie Lee' })
+    await within(dialog).findByRole('option', { name: /IS442/ })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send match request' }))
+    expect(await within(dialog).findByText('Send failed')).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(within(row).getByRole('button', { name: 'Send match request' })).toBeEnabled()
+    expect(within(row).queryByRole('button', { name: 'Match requested' })).not.toBeInTheDocument()
+    expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(1)
+  })
+
+  it('tracks multiple confirmed recipients until a fresh response arrives', async () => {
+    const firstRefresh = deferred<never>(), secondRefresh = deferred<never>()
+    let loads = 0
+    mockApi(() => {
+      loads++
+      if (loads === 1) return Promise.resolve(response(ranked([jamie, alex])))
+      return loads === 2 ? firstRefresh.promise : secondRefresh.promise
+    })
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    const jamieRow = await sendRequest('Jamie Lee')
+    const alexRow = await sendRequest('Alex Tan')
+    expect(within(jamieRow).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    expect(within(alexRow).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    await act(async () => {
+      secondRefresh.resolve(response(ranked([{ ...jamie, relationship: 'CONNECTED' }, { ...alex, relationship: 'OUTGOING_PENDING' }])))
+    })
+    expect(within(jamieRow).getByText('Connected')).toBeInTheDocument()
+    expect(within(alexRow).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    await act(async () => { firstRefresh.resolve(response(ranked([jamie, alex]))) })
+    expect(within(jamieRow).getByText('Connected')).toBeInTheDocument()
+    expect(within(alexRow).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+  })
+
+  it.each(['before confirmation', 'in the same batch as confirmation'])('keeps a second confirmed recipient pending when the first refresh arrives %s', async timing => {
+    const firstRefresh = deferred<never>(), secondPost = deferred<never>(), secondRefresh = deferred<never>()
+    let loads = 0
+    mockApi(() => {
+      loads++
+      if (loads === 1) return Promise.resolve(response(ranked([jamie, alex])))
+      return loads === 2 ? firstRefresh.promise : secondRefresh.promise
+    })
+    const post = vi.spyOn(api, 'post').mockResolvedValueOnce(response({ id: 9 })).mockReturnValueOnce(secondPost.promise)
+    openPage()
+    await sendRequest('Jamie Lee')
+    const alexRow = await card('Alex Tan')
+    fireEvent.click(within(alexRow).getByRole('button', { name: 'Send match request' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Send match request to Alex Tan' })
+    await within(dialog).findByRole('option', { name: /IS442/ })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send match request' }))
+    expect(post).toHaveBeenCalledTimes(2)
+    const beforeSecondSend = response(ranked([{ ...jamie, relationship: 'OUTGOING_PENDING' }, alex]))
+    if (timing === 'before confirmation') {
+      await act(async () => { firstRefresh.resolve(beforeSecondSend) })
+      await act(async () => { secondPost.resolve(response({ id: 10 })) })
+    } else {
+      await act(async () => {
+        firstRefresh.resolve(beforeSecondSend)
+        // Queue the first GET's update without ending this React batch.
+        await Promise.resolve()
+        await Promise.resolve()
+        secondPost.resolve(response({ id: 10 }))
+      })
+    }
+    expect(await screen.findByText(/Match request sent to Alex Tan/)).toBeInTheDocument()
+    await waitFor(() => expect(loads).toBe(3))
+    expect(within(alexRow).getByRole('button', { name: 'Match requested' })).toBeDisabled()
+    expect(within(alexRow).queryByRole('button', { name: 'Send match request' })).not.toBeInTheDocument()
+    // The second send's own refresh remains authoritative if that request ended.
+    await act(async () => {
+      secondRefresh.resolve(response(ranked([{ ...jamie, relationship: 'OUTGOING_PENDING' }, { ...alex, relationship: 'STRANGER' }])))
+    })
+    expect(within(alexRow).getByRole('button', { name: 'Send match request' })).toBeEnabled()
+  })
+
+  it('uses fresh filtered relationships and ignores a delayed response for the old filters', async () => {
+    const oldRefresh = deferred<never>(), filtered = deferred<never>()
+    let loads = 0
+    mockApi(() => {
+      loads++
+      if (loads === 1) return Promise.resolve(response(ranked([jamie])))
+      return loads === 2 ? oldRefresh.promise : filtered.promise
+    })
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    await sendRequest('Jamie Lee')
+    await openFilters()
+    fireEvent.change(screen.getByLabelText('Study mode'), { target: { value: 'ONLINE' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+    await waitFor(() => expect(loads).toBe(3))
+    await act(async () => { filtered.resolve(response(ranked([{ ...jamie, relationship: 'INCOMING_PENDING' }]))) })
+    const row = await card('Jamie Lee')
+    expect(within(row).getByRole('link', { name: 'Respond to their request' })).toBeInTheDocument()
+    await act(async () => { oldRefresh.resolve(response(ranked([{ ...jamie, relationship: 'OUTGOING_PENDING' }]))) })
+    expect(within(row).getByRole('link', { name: 'Respond to their request' })).toBeInTheDocument()
+    // A later authoritative STRANGER response supersedes every local confirmation.
+    mockApi(() => Promise.resolve(response(ranked([jamie]))))
+    act(() => { refreshResources() })
+    expect(await within(row).findByRole('button', { name: 'Send match request' })).toBeEnabled()
   })
 })

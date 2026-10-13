@@ -1,15 +1,47 @@
 import { describe, expect, it } from 'vitest'
-import type { MatchingCriterion } from './api'
-import { rebalance, validateWeights, weightTotal } from './matchingSettingsForm'
+import type { MatchingConfig, MatchingCriterion } from './api'
+import { formatPercentage, formatTotal, rebalance, toConfig, toForm, validateWeights, weightTotal } from './matchingSettingsForm'
 
 const saved: Record<MatchingCriterion, string> = { COURSE: '0.3', AVAILABILITY: '0.3', STUDY_MODE: '0.2', STUDY_GOAL: '0.1', GROUP_SIZE: '0.1' }
+
+describe('matching settings form precision', () => {
+  const config: MatchingConfig = {
+    activeStrategy: 'BALANCED',
+    weights: {
+      BALANCED: { COURSE: 0.004, AVAILABILITY: 0.996, STUDY_MODE: 0, STUDY_GOAL: 0, GROUP_SIZE: 0 },
+      AVAILABILITY_FIRST: { COURSE: 1 / 3, STUDY_MODE: 1 / 3, STUDY_GOAL: 1 / 3, GROUP_SIZE: 0 },
+      COURSE_FIRST: { AVAILABILITY: 0.25, STUDY_MODE: 0.25, STUDY_GOAL: 0.25, GROUP_SIZE: 0.25 }
+    }
+  }
+
+  it('round trips saved fractional weights without changing them', () => {
+    const form = toForm(config)
+    expect(form.weights.BALANCED.COURSE).toBe('0.004')
+    expect(form.weights.BALANCED.AVAILABILITY).toBe('0.996')
+    expect(form.weights.AVAILABILITY_FIRST.COURSE).toBe(String(1 / 3))
+    expect(toConfig(form)).toEqual(config)
+    Object.values(form.weights).forEach(weights => { expect(validateWeights(weights)).toEqual({}) })
+  })
+
+  it('shows the actual invalid total even when the difference is less than one hundredth', () => {
+    expect(formatTotal(1.004)).toBe('1.004')
+  })
+
+  it('keeps fractional percentage hints readable without changing the weight', () => {
+    expect(formatPercentage('0.004')).toBe('0.4%')
+    expect(formatPercentage(String(1 / 3))).toBe('33.3%')
+    expect(formatPercentage('0.000004')).toBe('0.0004%')
+  })
+})
 
 describe('rebalancing matching weights', () => {
   it('keeps the total at 1 and the other weights in proportion', () => {
     const next = rebalance(saved, 'STUDY_GOAL', '0.5')
-    // 0.5 left for 3 : 3 : 2 : 1 is exactly 16.7, 16.7, 11.1 and 5.6 hundredths; rounded down that is 0.48,
-    // and the two hundredths left go to the shares that lost the most, keeping the equal ones equal.
-    expect(next).toEqual({ COURSE: '0.17', AVAILABILITY: '0.17', STUDY_MODE: '0.11', STUDY_GOAL: '0.5', GROUP_SIZE: '0.05' })
+    expect(next.STUDY_GOAL).toBe('0.5')
+    expect(Number(next.COURSE)).toBeCloseTo(1 / 6)
+    expect(Number(next.AVAILABILITY)).toBeCloseTo(1 / 6)
+    expect(Number(next.STUDY_MODE)).toBeCloseTo(1 / 9)
+    expect(Number(next.GROUP_SIZE)).toBeCloseTo(1 / 18)
     expect(weightTotal(next)).toBeCloseTo(1)
   })
 
@@ -24,8 +56,37 @@ describe('rebalancing matching weights', () => {
     expect(rebalance(saved, 'COURSE', '1').AVAILABILITY).toBe('0')
   })
 
+  it('preserves a fine-grained edit and scales the remainder without whole-percent rounding', () => {
+    const next = rebalance(saved, 'COURSE', '0.004')
+    expect(next.COURSE).toBe('0.004')
+    expect(Number(next.AVAILABILITY)).toBeCloseTo(0.996 * 3 / 7, 14)
+    expect(Number(next.STUDY_MODE)).toBeCloseTo(0.996 * 2 / 7, 14)
+    expect(Number(next.STUDY_GOAL)).toBeCloseTo(0.996 / 7, 14)
+    expect(Number(next.GROUP_SIZE)).toBeCloseTo(0.996 / 7, 14)
+    expect(weightTotal(next)).toBeCloseTo(1, 14)
+    expect(validateWeights(next)).toEqual({})
+  })
+
+  it('retains a small existing criterion when another weight changes', () => {
+    const next = rebalance({ ...saved, COURSE: '0.004', AVAILABILITY: '0.996', STUDY_MODE: '0', STUDY_GOAL: '0', GROUP_SIZE: '0' }, 'AVAILABILITY', '0.995')
+    expect(next.AVAILABILITY).toBe('0.995')
+    expect(Number(next.COURSE)).toBeCloseTo(0.005, 14)
+    expect(Number(next.COURSE)).toBeGreaterThan(0)
+    expect(weightTotal(next)).toBeCloseTo(1, 14)
+    expect(validateWeights(next)).toEqual({})
+  })
+
+  it('shares a fractional remainder equally when the other criteria are zero', () => {
+    const next = rebalance({ COURSE: '1', AVAILABILITY: '0', STUDY_MODE: '0', STUDY_GOAL: '0' }, 'COURSE', '0.004')
+    expect(next.COURSE).toBe('0.004')
+    expect(Number(next.AVAILABILITY)).toBeCloseTo(0.332, 14)
+    expect(next.STUDY_MODE).toBe(next.AVAILABILITY)
+    expect(next.STUDY_GOAL).toBe(next.AVAILABILITY)
+    expect(validateWeights(next)).toEqual({})
+  })
+
   it('leaves the others alone while a value is half typed or invalid', () => {
-    for (const text of ['', '0.', '-1', '10', 'abc']) {
+    for (const text of ['', '0.', '0.004.', '1e', '-1', '10', 'abc', 'Infinity']) {
       expect(rebalance(saved, 'COURSE', text)).toEqual({ ...saved, COURSE: text })
     }
   })

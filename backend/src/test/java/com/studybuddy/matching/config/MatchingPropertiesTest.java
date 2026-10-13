@@ -62,6 +62,23 @@ class MatchingPropertiesTest {
     }
 
     @Test
+    void bindsFractionalDefaultsWithoutRoundingThem() {
+        Map<String, String> settings = validSettings();
+        String third = Double.toString(1.0 / 3);
+        settings.put("app.matching.default-weights.balanced.course", third);
+        settings.put("app.matching.default-weights.balanced.availability", third);
+        settings.put("app.matching.default-weights.balanced.study-mode", third);
+        settings.put("app.matching.default-weights.balanced.study-goal", "0");
+        settings.put("app.matching.default-weights.balanced.group-size", "0");
+
+        MatchingProperties properties = bind(settings);
+
+        assertEquals(1.0 / 3, properties.weightsFor(MatchingStrategyType.BALANCED).weightOf(MatchingCriterion.COURSE));
+        assertEquals(1.0 / 3, properties.weightsFor(MatchingStrategyType.BALANCED).weightOf(MatchingCriterion.AVAILABILITY));
+        assertEquals(1.0 / 3, properties.weightsFor(MatchingStrategyType.BALANCED).weightOf(MatchingCriterion.STUDY_MODE));
+    }
+
+    @Test
     void defaultsThatDoNotAddUpToOneFailToBind() {
         Map<String, String> settings = validSettings();
         settings.remove("app.matching.default-weights.balanced.study-goal");

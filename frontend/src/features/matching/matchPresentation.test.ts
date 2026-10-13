@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { criterionVerdict, groupByQuality, heatLevel, sharedMinutesByDayPart } from './matchPresentation'
-import type { MatchResult } from './api'
+import { criterionVerdict, heatLevel, sharedMinutesByDayPart } from './matchPresentation'
 
 describe('sharedMinutesByDayPart', () => {
   it('splits a slot across the parts of the day it spans', () => {
@@ -27,15 +26,5 @@ describe('criterionVerdict', () => {
     expect(criterionVerdict('STUDY_GOAL', 0.5, 0)).toBe('Partly')
     expect(criterionVerdict('GROUP_SIZE', 0, 0)).toBe('Differs')
     expect(criterionVerdict('AVAILABILITY', 0.2, 3.5)).toBe('3.5 h')
-  })
-})
-
-describe('groupByQuality', () => {
-  const match = (studentId: number, quality: string) => ({ studentId, quality }) as MatchResult
-
-  it('orders strong, good, then fair, keeps the ranking within each and drops empty groups', () => {
-    const groups = groupByQuality([match(1, 'FAIR'), match(2, 'STRONG'), match(3, 'FAIR'), match(4, 'STRONG')])
-    expect(groups.map(group => [group.quality, group.matches.map(result => result.studentId)]))
-      .toEqual([['STRONG', [2, 4]], ['FAIR', [1, 3]]])
   })
 })

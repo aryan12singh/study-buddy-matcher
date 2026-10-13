@@ -1,6 +1,6 @@
 import type { DayOfWeek, WeeklySlot } from '../../shared/api/types'
 import { WEEK_DAYS } from '../../shared/api/types'
-import type { MatchingCriterion, MatchQuality, MatchResult } from './api'
+import type { MatchingCriterion } from './api'
 
 export const CRITERION_LABELS: Record<MatchingCriterion, string> = {
   COURSE: 'Course', AVAILABILITY: 'Availability', STUDY_MODE: 'Study mode', STUDY_GOAL: 'Study goal', GROUP_SIZE: 'Group size'
@@ -45,18 +45,4 @@ export function sharedMinutesByDayPart(slots: WeeklySlot[]): Record<DayOfWeek, n
 export function heatLevel(minutes: number) {
   if (minutes <= 0) return 0
   return minutes < 60 ? 1 : minutes < 120 ? 2 : 3
-}
-
-const QUALITY_ORDER: MatchQuality[] = ['STRONG', 'GOOD', 'FAIR']
-
-export const QUALITY_GROUP_LABELS: Record<MatchQuality, string> = { STRONG: 'Strong matches', GOOD: 'Good matches', FAIR: 'Fair matches' }
-
-/**
- * Splits ranked matches into strong, good and fair groups, leaving out empty ones.
- * Each group keeps the order the admin's strategy gave it.
- */
-export function groupByQuality(matches: MatchResult[]) {
-  return QUALITY_ORDER
-    .map(quality => ({ quality, matches: matches.filter(match => match.quality === quality) }))
-    .filter(group => group.matches.length > 0)
 }

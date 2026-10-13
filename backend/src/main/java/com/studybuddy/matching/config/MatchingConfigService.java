@@ -6,6 +6,7 @@ import com.studybuddy.matching.scoring.MatchingWeights;
 import com.studybuddy.matching.strategy.MatchingStrategy;
 import com.studybuddy.matching.strategy.MatchingStrategyType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.EnumMap;
@@ -40,7 +41,7 @@ public class MatchingConfigService {
         requireDefaultsSkipRankedFirstCriteria();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public MatchingConfigDto get(Long actorId) {
         access.requireAdmin(actorId);
         return assembler.toDto(activeStrategyType(), allWeights(), strategies);
@@ -94,6 +95,11 @@ public class MatchingConfigService {
                 .filter(row -> row.getStrategy() == type)
                 .forEach(row -> values.put(row.getCriterion(), row.getWeight()));
         unweightedCriteria(type).forEach(criterion -> values.put(criterion, 0.0));
+        // Weights already accepted by the update contract keep their original precision.
+        double sum = values.values().stream().mapToDouble(Double::doubleValue).sum();
+        if (Math.abs(sum - 1.0) <= MatchingWeights.SUM_TOLERANCE) {
+            return new MatchingWeights(values);
+        }
         return MatchingWeights.rescaledToOne(values);
     }
 

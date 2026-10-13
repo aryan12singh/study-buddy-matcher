@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { searchMatches } from './api'
 import type { MatchResult, MatchSearch } from './api'
 import {
@@ -18,13 +18,12 @@ import FilterSummary from '../../shared/components/FilterSummary'
 import SendRequestDialog from '../connections/SendRequestDialog'
 import MatchCard from './MatchCard'
 import MatchFilters from './MatchFilters'
-import { groupByQuality, QUALITY_GROUP_LABELS } from './matchPresentation'
 
 const FILTERS_ID = 'match-filters'
 
 /**
  * The matching search: everyone ranked by the admin's strategy, narrowed by
- * optional filters, and shown in strong, good and fair groups.
+ * optional filters, keeping the order returned by the strategy.
  */
 export default function FindBuddiesPanel() {
   const { account } = useAuth()
@@ -34,9 +33,18 @@ export default function FindBuddiesPanel() {
     [filtersOpen, setFiltersOpen] = useState(false)
   const [sendingTo, setSendingTo] = useState<MatchResult | null>(null),
     [notice, setNotice] = useState<string>()
-  const results = useResource(`match-search-${JSON.stringify(search)}`, signal => searchMatches(search, signal), true, false)
+  const [pendingRequests, setPendingRequests] = useState<{ studentId: number; refreshSequence: number }[]>([])
+  const searchSequence = useRef(0)
+  const results = useResource(`match-search-${JSON.stringify(search)}`, async signal => {
+    const loadSequence = ++searchSequence.current
+    return { ...await searchMatches(search, signal), loadSequence }
+  }, true, false)
   const myCourses = profile.data ? searchableCourses(profile.data.coursesTaken, profile.data.targetCourse) : undefined
-  const matches = results.data?.matches
+  // Only the post-send refresh or a later search may clear a confirmed request;
+  // an older response can arrive while another student's POST is still pending.
+  const matches = results.data?.matches.map(match => match.relationship === 'STRANGER'
+    && pendingRequests.some(request => request.studentId === match.studentId && request.refreshSequence > (results.data?.loadSequence ?? 0))
+    ? { ...match, relationship: 'OUTGOING_PENDING' as const } : match)
   const strategy = STRATEGIES.find(({ value }) => value === results.data?.strategy)
   const filterCount = Object.keys(search).length
 
@@ -96,16 +104,9 @@ export default function FindBuddiesPanel() {
           : 'Matches appear here once other students have set up their study profiles.'}
         emptyKind="search"
       />
-      <div aria-label="Matching students">
-        {matches && groupByQuality(matches).map(group => (
-          <section key={group.quality} className="match-group" aria-labelledby={`match-group-${group.quality}`}>
-            <h2 id={`match-group-${group.quality}`}>{QUALITY_GROUP_LABELS[group.quality]} <span className="row-meta">({group.matches.length})</span></h2>
-            <div className="data-list">
-              {group.matches.map(match => (
-                <MatchCard key={match.studentId} match={match} onSendRequest={() => { setNotice(undefined); setSendingTo(match) }} />
-              ))}
-            </div>
-          </section>
+      <div className="data-list" aria-label="Matching students">
+        {matches?.map(match => (
+          <MatchCard key={match.studentId} match={match} onSendRequest={() => { setNotice(undefined); setSendingTo(match) }} />
         ))}
       </div>
       {sendingTo && (
@@ -114,7 +115,16 @@ export default function FindBuddiesPanel() {
           receiverName={sendingTo.name}
           context={{ origin: 'MATCHING', courseId: search.courseId, studyGoal: search.studyGoal }}
           onClose={() => setSendingTo(null)}
-          onSent={() => setNotice(`Match request sent to ${sendingTo.name}. Track it under Outgoing requests on Connections.`)}
+          onSent={() => {
+            // useAction starts the post-send refresh before calling onSent.
+            // Read the ref now: the dialog may retain an older callback while sending.
+            const refreshSequence = searchSequence.current
+            setPendingRequests(previous => [
+              ...previous.filter(request => request.studentId !== sendingTo.studentId),
+              { studentId: sendingTo.studentId, refreshSequence }
+            ])
+            setNotice(`Match request sent to ${sendingTo.name}. Track it under Outgoing requests on Connections.`)
+          }}
         />
       )}
     </>

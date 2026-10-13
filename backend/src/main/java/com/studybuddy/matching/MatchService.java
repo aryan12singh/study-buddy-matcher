@@ -17,6 +17,7 @@ import com.studybuddy.student.AvailabilitySlotRepository;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
@@ -27,10 +28,11 @@ import java.util.stream.Collectors;
 /**
  * Finds and ranks study buddies for a student: filters the other active
  * students, scores each with the admin's weights, labels the quality, and orders
- * them with the admin's active strategy.
+ * them with the admin's active strategy. One database snapshot keeps the strategy
+ * and its weights together even when an administrator saves during a search.
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class MatchService {
 
     private final AccountAccess access;

@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { api } from '../../shared/api/client'
 import { adminAccount, renderPage, response } from '../../test/renderApp'
 import MatchingSettingsPage from './MatchingSettingsPage'
+import type { MatchingConfig } from './api'
 
 const balanced = { COURSE: 0.3, AVAILABILITY: 0.3, STUDY_MODE: 0.2, STUDY_GOAL: 0.1, GROUP_SIZE: 0.1 }
 const availabilityFirst = { COURSE: 0.4, STUDY_MODE: 0.3, STUDY_GOAL: 0.15, GROUP_SIZE: 0.15 }
@@ -19,6 +20,10 @@ function renderSettings() {
   return renderPage(<MatchingSettingsPage />, '/admin/matching', '/admin/matching', adminAccount)
 }
 
+function weightValue(label: string) {
+  return Number((screen.getByLabelText(label) as HTMLInputElement).value)
+}
+
 describe('admin matching settings', () => {
   it('shows the saved strategy, weights and each weight\'s share', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(saved))
@@ -33,7 +38,7 @@ describe('admin matching settings', () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(saved))
     // Course 0.4 leaves 0.6 for the others, shared in their saved 3 : 2 : 1 : 1 proportions.
     const updated = { activeStrategy: 'COURSE_FIRST', weights: {
-      BALANCED: { COURSE: 0.4, AVAILABILITY: 0.26, STUDY_MODE: 0.17, STUDY_GOAL: 0.09, GROUP_SIZE: 0.08 },
+      BALANCED: { COURSE: 0.4, AVAILABILITY: 9 / 35, STUDY_MODE: 6 / 35, STUDY_GOAL: 3 / 35, GROUP_SIZE: 3 / 35 },
       AVAILABILITY_FIRST: availabilityFirst,
       COURSE_FIRST: courseFirst
     } }
@@ -43,7 +48,13 @@ describe('admin matching settings', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Course first/ }))
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Save matching settings' }))
-    await waitFor(() => expect(put).toHaveBeenCalledWith('/admin/matching-config', updated))
+    await waitFor(() => expect(put).toHaveBeenCalledWith('/admin/matching-config', {
+      ...updated,
+      weights: { ...updated.weights, BALANCED: {
+        COURSE: 0.4, AVAILABILITY: expect.closeTo(9 / 35, 14), STUDY_MODE: expect.closeTo(6 / 35, 14),
+        STUDY_GOAL: expect.closeTo(3 / 35, 14), GROUP_SIZE: expect.closeTo(3 / 35, 14)
+      } }
+    }))
     expect(await screen.findByText(/Matching settings saved/)).toBeInTheDocument()
     expect(screen.getByText('Ready to save')).toBeInTheDocument()
   })
@@ -82,9 +93,9 @@ describe('admin matching settings', () => {
     fireEvent.click(await screen.findByRole('radio', { name: /Availability first/ }))
     fireEvent.change(screen.getByLabelText('Course'), { target: { value: '0.7' } })
     // The other three keep their 2 : 1 : 1 proportions of the remaining 0.3.
-    expect(screen.getByLabelText('Study mode')).toHaveValue(0.15)
-    expect(screen.getByLabelText('Study goals')).toHaveValue(0.08)
-    expect(screen.getByLabelText('Group size')).toHaveValue(0.07)
+    expect(weightValue('Study mode')).toBeCloseTo(0.15, 14)
+    expect(weightValue('Study goals')).toBeCloseTo(0.075, 14)
+    expect(weightValue('Group size')).toBeCloseTo(0.075, 14)
     fireEvent.click(screen.getByRole('radio', { name: /Balanced/ }))
     expect(screen.getByLabelText('Course')).toHaveValue(0.3)
   })
@@ -94,10 +105,10 @@ describe('admin matching settings', () => {
     renderSettings()
     fireEvent.change(await screen.findByLabelText('Course'), { target: { value: '0.7' } })
     // The remaining 0.3 keeps the others' 3 : 2 : 1 : 1 proportions.
-    expect(screen.getByLabelText('Availability overlap')).toHaveValue(0.13)
-    expect(screen.getByLabelText('Study mode')).toHaveValue(0.09)
-    expect(screen.getByLabelText('Study goals')).toHaveValue(0.04)
-    expect(screen.getByLabelText('Group size')).toHaveValue(0.04)
+    expect(weightValue('Availability overlap')).toBeCloseTo(9 / 70, 14)
+    expect(weightValue('Study mode')).toBeCloseTo(3 / 35, 14)
+    expect(weightValue('Study goals')).toBeCloseTo(3 / 70, 14)
+    expect(weightValue('Group size')).toBeCloseTo(3 / 70, 14)
     expect(screen.getByText(totalLine('Total: 1 (adds up to 1)'))).toBeInTheDocument()
   })
 
@@ -130,5 +141,45 @@ describe('admin matching settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByLabelText('Course')).toHaveValue(0.3)
     expect(get).toHaveBeenCalledTimes(2)
+  })
+
+  it.each([
+    { name: 'fine-grained weights', weights: { COURSE: 0.004, AVAILABILITY: 0.996, STUDY_MODE: 0, STUDY_GOAL: 0, GROUP_SIZE: 0 } },
+    { name: 'equal thirds', weights: { COURSE: 1 / 3, AVAILABILITY: 1 / 3, STUDY_MODE: 1 / 3, STUDY_GOAL: 0, GROUP_SIZE: 0 } }
+  ])('saves fetched $name unchanged without editing', async ({ weights }) => {
+    const precise = { ...saved, weights: { ...saved.weights, BALANCED: weights } }
+    vi.spyOn(api, 'get').mockResolvedValue(response(precise))
+    const put = vi.spyOn(api, 'put').mockResolvedValue(response(precise))
+    renderSettings()
+    expect(await screen.findByLabelText('Course')).toHaveValue(weights.COURSE)
+    expect(screen.getByLabelText('Availability overlap')).toHaveValue(weights.AVAILABILITY)
+    expect(screen.getByText(totalLine('Total: 1 (adds up to 1)'))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Save matching settings' }))
+    await waitFor(() => expect(put).toHaveBeenCalledWith('/admin/matching-config', precise))
+    expect(await screen.findByText(/Matching settings saved/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Course')).toHaveValue(weights.COURSE)
+    expect(screen.getByText('Ready to save')).toBeInTheDocument()
+  })
+
+  it('saves a fine-grained edit and its normalized proportional weights', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response(saved))
+    const put = vi.spyOn(api, 'put').mockImplementation((_url, config) => Promise.resolve(response(config)))
+    renderSettings()
+    fireEvent.change(await screen.findByLabelText('Course'), { target: { value: '0.004' } })
+    expect(screen.getByLabelText('Course')).toHaveValue(0.004)
+    expect(screen.getByLabelText('Course')).toHaveAttribute('step', 'any')
+    expect(screen.getByText('0.4% of the total score')).toBeInTheDocument()
+    expect(weightValue('Availability overlap')).toBeCloseTo(0.996 * 3 / 7, 14)
+    expect(weightValue('Study mode')).toBeCloseTo(0.996 * 2 / 7, 14)
+    expect(screen.getByText(totalLine('Total: 1 (adds up to 1)'))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Save matching settings' }))
+    await waitFor(() => expect(put).toHaveBeenCalledTimes(1))
+    const posted = put.mock.calls[0][1] as MatchingConfig
+    expect(posted.weights.BALANCED.COURSE).toBe(0.004)
+    expect(Object.values(posted.weights.BALANCED).reduce((sum, value) => sum + value, 0)).toBeCloseTo(1, 14)
+    expect(posted.weights.AVAILABILITY_FIRST).toEqual(availabilityFirst)
+    expect(posted.weights.COURSE_FIRST).toEqual(courseFirst)
+    expect(await screen.findByText(/Matching settings saved/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Course')).toHaveValue(0.004)
   })
 })
