@@ -45,6 +45,7 @@ public class ProfileService {
 
     public MyProfileDto updateMine(Long actorId, UpdateProfileRequest request) {
         mutationLock.shared();
+        access.lockAccounts(actorId, actorId);
         Student student = access.requireStudent(actorId);
         if (request == null) {
             throw new InvalidInputException("Profile details are required");
@@ -78,6 +79,7 @@ public class ProfileService {
 
     public List<AvailabilitySlotDto> replaceAvailability(Long actorId, ReplaceAvailabilityRequest request) {
         mutationLock.shared();
+        access.lockAccounts(actorId, actorId);
         Student student = access.requireStudent(actorId);
         List<AvailabilitySlotDto> slots = request == null ? null : request.slots();
         availabilityRules.validate(slots);

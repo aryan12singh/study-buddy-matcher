@@ -79,6 +79,10 @@ class ProfileServiceTest {
             request(List.of(2L, 1L, 2L), 3L, StudyMode.ONLINE, GroupSizePreference.SMALL_GROUP));
 
         verify(mutationLock).shared();
+        var order = inOrder(access, courses);
+        order.verify(access).lockAccounts(STUDENT_ID, STUDENT_ID);
+        order.verify(access).requireStudent(STUDENT_ID);
+        order.verify(courses).findAllById(List.of(2L, 1L));
         assertEquals("Demo Student 4", student.getName());
         assertEquals("Synthetic contact 4", student.getContactNumber());
         assertEquals(2, student.getYearOfStudy());
@@ -162,8 +166,11 @@ class ProfileServiceTest {
 
         var saved = service.replaceAvailability(STUDENT_ID, new ReplaceAvailabilityRequest(slots));
 
-        var order = inOrder(availability);
+        var order = inOrder(access, availability);
+        order.verify(access).lockAccounts(STUDENT_ID, STUDENT_ID);
+        order.verify(access).requireStudent(STUDENT_ID);
         order.verify(availability).deleteByStudentId(STUDENT_ID);
+        order.verify(availability).flush();
         order.verify(availability).saveAll(anyList());
         assertEquals(List.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY), saved.stream().map(AvailabilitySlotDto::dayOfWeek).toList());
     }
