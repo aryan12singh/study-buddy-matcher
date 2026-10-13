@@ -98,6 +98,7 @@ study-buddy-matcher/
 │       │   ├── matchrequest/ connection/ # buddy requests and connections
 │       │   ├── profile/ notification/   # profile privacy and notifications
 │       │   ├── studygroup/ admin/       # study groups and admin accounts
+│       │   ├── matching/               # search, scorers, strategies and config
 │       │   └── seed/                    # opt-in demo data
 │       ├── main/resources/
 │       │   ├── application.yml          # committed, reads env vars, no secrets
@@ -116,7 +117,7 @@ study-buddy-matcher/
 │       └── features/
 │           ├── landing/LandingPage.tsx
 │           ├── auth/LoginPage.tsx, RegisterPage.tsx
-│           └── connections/ students/ groups/ notifications/ admin/
+│           └── connections/ students/ groups/ notifications/ admin/ matching/ home/
 ├── scripts/                              # migration runner and isolated backend tests
 ├── docs/                                 # API contract, decisions, coverage, diagrams
 └── README.md
@@ -193,7 +194,10 @@ in `application-local.yml` or the process environment.
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (min `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list as currently taken |
 | `app.matching.default-strategy` | `BALANCED` | Strategy used until an admin chooses one (`BALANCED`, `AVAILABILITY_FIRST`, `COURSE_FIRST`) |
-| `app.matching.default-weights.<strategy>.*` | balanced: course `0.30`, availability `0.30`, study-mode `0.20`, study-goal `0.10`, group-size `0.10`; availability-first: course `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15`; course-first: availability `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15` | Each strategy's criterion weights until an admin saves their own; each from 0 to 1, adding up to 1. A strategy leaves out the criterion it ranks by first |
+| `app.matching.default-weights.<strategy>.*` | balanced: course `0.30`, availability `0.30`, study-mode `0.20`, study-goal `0.10`, group-size `0.10`; availability-first: availability `0`, course `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15`; course-first: course `0`, availability `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15` | Every strategy has all five weights, each from 0 to 1. Enabled weights add up to 1; disabled weights must be 0. The priority criterion is editable, including 0 |
+| `app.matching.default-enabled-criteria` | All five criteria | Global startup enabled criteria; disabled criteria must have zero weights |
+| `app.matching.default-min-score` | `0` | Minimum total compatibility returned, before a student's additional quality filter |
+| `app.matching.default-result-limit` / `app.matching.max-result-limit` | `20` / `50` | Default and largest search result count, applied after filtering and sorting |
 | `app.matching.quality.strong` / `app.matching.quality.good` | `0.75` / `0.50` | Weighted-total cut-offs for the Strong and Good match labels; anything lower is Fair |
 | `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
 | `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
@@ -213,8 +217,12 @@ tables, indexes, integrity constraints and database access rules. Apply them in 
 order with `scripts/migrate-database.sh` (connection from the `PG*` variables above); it is
 safe to re-run. `spring.jpa.hibernate.ddl-auto` is `update`, so Hibernate also adds missing
 tables and columns on startup, but it never creates the constraints or access rules, so a
-fresh database still needs the migrations. The test profile uses `validate` against a
-freshly migrated database.
+fresh database still needs the migrations. PR #54 also adds versioned matching settings
+and enabled-criteria storage; apply the ordered migrations before running this branch
+against an existing database. The 13 October tests used disposable/local PostgreSQL; the
+new matching migration is still a hosted rollout step. See the
+[deployment record](docs/DATABASE_OPERATIONS.md#deployment-record-and-pr-54-rollout).
+The test profile uses `validate` against a freshly migrated database.
 
 ## Running the App
 
@@ -242,47 +250,94 @@ passwords.
 
 ## Matching Engine
 
-Students are matched on course, availability overlap, and study mode, with
-study goal and group size as secondary criteria. The matching strategy and
-criteria weights are admin-configurable (not hardcoded), supporting at least:
-- **Balanced Matching** — ranks by the weighted total of all criteria.
-- **Availability-First Matching** — ranks by shared free time, then by the weighted total of the other criteria.
-- **Course-First Matching** — ranks by course match, then by the weighted total of the remaining preferences.
+Team A owns the five scorers, interval maths, search, three strategies and admin matching
+settings ([issues #1-#4](https://github.com/aryan12singh/study-buddy-matcher/issues/1)).
+The **Find buddies** page and the matching preview on **Home** both call `GET /api/matches`.
+Home uses the configured default result limit and displays up to three returned students;
+it does not impose a hard-coded three-result API limit.
+A search requires a selected course or study goal; optional filters narrow the same results.
+It excludes the caller, inactive/deleted accounts and existing active connections. Pending
+requests remain visible with their state so a second request cannot be sent.
 
-Students search from the **Find buddies** page in the sidebar. It lists every other active
-student best match first, narrowed by optional filters for course, study goal, study mode,
-preferred group size, shared free time and minimum match quality. The admin's strategy decides
-the order, and the page names it and preserves that order across all match qualities. Each
-result shows its quality badge, a per-criterion score breakdown and a heatmap
-of the weekly time both students are free. Administrators choose the active strategy and its weights under
-**Matching settings**.
-
-Match quality is shown to users in plain language ("Strong match", "Good match", "Fair match"),
-not a raw total score. The cut-offs are configuration (`app.matching.quality.*`).
-
-Each strategy keeps its own weights, from 0 to 1 and adding up to 1, so each weight is that
-criterion's share of the total score. A strategy does not weight the criterion it ranks by
-first, so it is never counted twice. Each criterion scores 0 to 1; if either student has left a
-preference blank, that criterion scores a neutral 0.5 so an incomplete profile is neither
-rewarded nor punished.
-
-Valid fractional weights retain their precision when saved, read and edited. Only legacy
-weights with an invalid total are rescaled on read. A search reads one consistent database
-snapshot, so a concurrent administrator save cannot combine a new strategy with old weights.
-After a successful match request, its card immediately shows the pending state while results
-refresh; its post-send refresh or a later response replaces that temporary state.
+Each criterion returns compatibility from 0 to 1. The total is the sum of each enabled
+criterion's score multiplied by its active strategy weight; disabled criteria contribute 0.
+These percentages describe preference compatibility, not a probability that a partnership
+will succeed. A missing preference scores a neutral 0.5 for an enabled criterion; explicit
+filters still require a candidate to meet the selected preference.
 
 | Criterion | Score |
 | --- | --- |
-| Course | 1 if the candidate's target course is the course in focus (the searched course, else the searcher's target course); 0.5 if they only take it; 0 otherwise |
-| Availability | Shared weekly free time ÷ the searcher's total free time |
-| Study mode | 1 if the same or either chose "either"; 0 if one is in person and the other online |
-| Study goals | Goals in common ÷ the searcher's goals |
-| Group size | 1 if the two preferred size ranges overlap; 0 otherwise |
+| Course | 1 if the candidate targets the course in focus, 0.5 if they only take it, 0 otherwise. The current search course takes precedence over the caller's saved target; no course in focus gives 0.5 |
+| Availability | Unique shared weekly minutes divided by the caller's unique free minutes; 0.5 if either has no availability |
+| Study mode | 1 for the same mode or either person's `EITHER`; 0 for `IN_PERSON` versus `ONLINE`; 0.5 for a missing mode |
+| Study goals | The selected search goal is the focus if supplied; otherwise use the caller's saved goals. Shared focus goals divided by focus goals; 0.5 if the focus or candidate goal set is empty |
+| Group size | 1 when the two preferred numeric ranges overlap, 0 when disjoint, 0.5 when either range is missing |
 
-The code lives in `backend/.../matching/`: the search (`MatchService`, `MatchSearchFilter`) at the
-top, with `scoring/` (one `CriterionScorer` per criterion), `strategy/` (one `MatchingStrategy`
-per strategy), `availability/` (`TimeSlot` overlap maths) and `config/` (admin settings).
+`TimeSlot` is an immutable same-day interval. Overlap uses half-open boundaries: touching
+end/start times share no minutes. `WeeklyAvailability` merges duplicate, overlapping and
+adjacent blocks on each day before calculating durations or intersections, so shared time
+and the heatmap count each minute once. Weekly schedules use campus-local SGT; they are
+recurring day/time preferences, not dated events or timezone-converted instants.
+
+Students choose group size categorically, while profiles store a numeric range:
+`ONE_TO_ONE` maps to 2-2 people, `SMALL_GROUP` to 3-`app.profile.group-size-max`, and `EITHER`
+to 2-maximum. Scoring checks range overlap; the corresponding search filter checks overlap
+with the selected category. An `EITHER` filter imposes no restriction.
+
+Disabling a scoring criterion does not remove a student's explicit discovery filters or
+sort choices: a course/goal context is still required, mode/time filters still narrow results,
+and Most shared hours can still order by actual overlap. Those choices never alter weights.
+
+The active strategy determines **Best match** order:
+
+- **Balanced:** weighted total descending.
+- **Availability first:** availability score descending, then weighted total. If availability
+  is disabled, use weighted total alone.
+- **Course first:** course score descending, then weighted total. If course is disabled, use
+  weighted total alone.
+
+The priority criterion may have a weight too. Its equal score within a priority tie adds
+an equal term to all tied candidates, so it cannot change their secondary order. Final ties
+use case-insensitive name then student ID. **Most shared hours** and **Same year first** apply
+that selected comparison first, followed by the strategy order and the same final ties.
+The server sorts the complete eligible result set before applying the result limit; it
+returns the pre-limit count. The UI preserves this order across quality badges.
+
+Cards show relevant course/goals, programme/year, a total compatibility percentage, a
+plain-language quality label, deterministic explanation, criterion bars and unique shared
+hours/heatmap. `Strong`, `Good` and `Fair` use the externalised quality cut-offs. The admin's
+minimum total score applies to all searches; the student's minimum-quality filter can only
+narrow it. Discovery payloads contain no contact number, email, credentials or persistence
+entities. Profile viewing and optional-message requests reuse Team C's authorized APIs.
+After a successful request the card becomes pending immediately; only its post-send refresh
+or a later server response replaces that acknowledgement.
+
+Administrators choose the active strategy, enable/disable criteria globally, edit all three
+weight sets and set a minimum score. At least one criterion must remain enabled. Each
+strategy's enabled weights must total 1 within the documented decimal tolerance; disabled
+weights are 0. Valid fractional weights keep their precision across save, read, editing and
+scoring. Invalid saves preserve the last valid state. **Restore defaults** explicitly clears
+stored overrides and returns the current `app.matching.*` defaults.
+
+A persistent configuration version increases on every successful save or restore. Updates
+supply the version they loaded; stale edits return a conflict instead of overwriting another
+administrator's changes. A search reads one consistent configuration/database snapshot,
+including the version in its response, so a concurrent save cannot mix old weights with a
+new strategy. Stored overrides survive application restart. A future explanation cache must
+include this version together with the student/search inputs.
+
+The code lives in `backend/.../matching/`: `MatchService` and `MatchSearchFilter` coordinate
+search, `scoring/` contains the `CriterionScorer` implementations and immutable `MatchScore`,
+`strategy/` contains `MatchingStrategy` implementations, `availability/` contains interval
+value objects, and `config/` owns admin settings. No scorer queries a repository and no
+controller queries one directly.
+
+See the [API contract](docs/API_CONTRACT.md#matching-configuration-team-a),
+[matching decisions](docs/DESIGN_DECISIONS.md#matching-decisions-team-a),
+[coverage map](docs/REQUIREMENT_COVERAGE.md#matching-algorithm-and-scoring-1),
+[Team A diagrams](docs/diagrams/TEAM_A.md) and [test/demo guide](docs/TEAM_A_TESTING.md).
+The objective's undefined "preferred learning style" remains a professor clarification
+under #41/#7; no extra field or category is invented by this implementation.
 
 ## Requests, Groups, Notifications and Admin
 

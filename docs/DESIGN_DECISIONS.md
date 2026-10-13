@@ -1,6 +1,6 @@
 # Design decisions
 
-Team C decisions, agreed on 7 October 2026. Sources: the IS442 brief, the `oop.pdf`
+The Team C decisions below were agreed on 7 October 2026. Sources: the IS442 brief, the `oop.pdf`
 discussion and issues #10-14. The brief requires admin deletion without saying hard or soft;
 issue #14 asks for separate Delete and Deactivate actions. These are our design choices,
 not rules from the brief.
@@ -52,8 +52,9 @@ Team A retains group-size preference interpretation, scoring/thresholds/search a
 configuration. Current shared fields store a numeric min/max interval; C displays that
 existing representation without deciding its scoring semantics. The objective mentions
 learning style without a defined field/scorer: the professor clarification remains a shared
-#41 item, rather than a new C field. Team B retains the full own-profile/preferences/
-availability editor and dashboard. Their absence is not a remaining C screen.
+#41 item, rather than a new C field. Team B retains the own-profile/preferences/availability editor and dashboard. Team A's
+matching preview is a narrow integration in that dashboard, described below; Team C does
+not own those profile editors.
 
 Global online status, group-score recommendations, richer notes/task boards and dated/live
 room features remain proposals/later scope. Agenda displays the actual recurring schedule
@@ -79,3 +80,47 @@ and 15 November 2026 11:59 pm SGT final handoff. README and AGENTS use these tea
 | Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No made-up percentage or online indicator |
 | Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
 | Nested dialogs | Scroll remains locked until the last modal closes, even when a route exit removes dialogs out of order; each dialog retains its keyboard focus/Escape handling |
+
+## Matching decisions (Team A)
+
+Implementation choices for [#1](https://github.com/aryan12singh/study-buddy-matcher/issues/1),
+[#2](https://github.com/aryan12singh/study-buddy-matcher/issues/2),
+[#3](https://github.com/aryan12singh/study-buddy-matcher/issues/3) and
+[#4](https://github.com/aryan12singh/study-buddy-matcher/issues/4), recorded 13 October 2026.
+The brief's Appendix A permits each group to choose formulas and weights. These choices
+complete the current issue scope; this entry does not assert professor or product acceptance.
+
+| Question | Implemented choice and reason | Alternative / affected work |
+| --- | --- | --- |
+| Which criteria? | Five independent `CriterionScorer` implementations: course, availability, meeting mode, goals and group size; reuse a common 0-1 contract | Monolithic conditional scoring makes strategies harder to explain; #1 |
+| Missing preferences | Enabled missing criterion scores 0.5 as neutral compatibility; explicit filters exclude unconfirmed preferences | Treating every missing field as a perfect match or incompatible silently rewards/punishes unfinished profiles; #1/#3 |
+| Course in focus | Explicit search course, otherwise caller's saved target. Candidate target gives 1, enrolment-only gives 0.5, no alignment 0; no focus gives 0.5 | Saved target cannot silently replace the user's current course selection. Enrolment and buddy target remain separate concepts; #1/#2/#7 |
+| Goals | Explicit search goal is the singleton focus; otherwise shared saved goals / caller goal count. Candidate must also satisfy a selected goal filter | Current search intent takes precedence over saved preferences; symmetric Jaccard answers a different coverage question; #1/#2 |
+| Group preference | Categorical UI maps to inclusive numeric intervals (2-2, 3-maximum, 2-maximum); scorer/filter use overlap | Brief repeats the label "preferred study mode" for group size, while Appendix A gives intervals; this reconciles both examples; #1/#2/#7 |
+| Availability | Merge per-day duplicate/overlapping/adjacent slots, then intersect unions. Shared unique minutes / caller unique minutes. Same-day half-open intervals | Pairwise summation alone double-counts duplicate legacy inputs; #1/#8 |
+| Weekly timezone | Recurring schedules mean Asia/Singapore campus-local day/time; no conversion by browser timezone or DST | UTC is used for event timestamps, not weekly preference slots; #1/#8 |
+| Disabled criteria | Global enable flags remove scoring and priority influence. Every strategy stores all five weights, disabled weights 0 and enabled sum 1; at least one enabled | Weight 0 alone cannot disable a lexicographic priority; #1/#4 |
+| Strategy priority | Balanced uses total; enabled availability/course priority sorts first then total; disabling that priority falls back to total | Priority weights remain editable. At equal priority the weighted term is equal, so it cannot disturb the remaining-preference tie-break; #1/#4 |
+| Stable ordering | Strategy order, case-insensitive name, then ID. Alternative sorts start with shared hours or caller-year equality, then reuse that chain | Database/insertion order and quality grouping are not deterministic ranking rules; #2/#3 |
+| Search entry | Require a current course or goal. Additional filters combine with AND; personal filters/sorts remain usable when the corresponding scoring criterion is disabled and never mutate admin config | Returning all profiles for an unqualified search contradicts the current issue requirement; #2/#3 |
+| Candidate eligibility | Exclude self, inactive/deleted accounts and active connections; retain pending candidates with incoming/outgoing state | Existing buddies belong on Connections; a pending request is still visible but cannot be resent; #2/#10 |
+| Results bound | Default 20, maximum 50, configured in YAML. Count eligible filtered results before limiting, sort before truncation | Full pagination is unnecessary for the bounded demonstration dataset; #2 |
+| Quality and threshold | Quality cut-offs remain YAML defaults; admin minimum total score and student minimum quality both apply | A user filter can narrow, never override a global threshold; #1/#2/#4 |
+| Explainability | Immutable score value includes bounded total, criterion breakdown, unique shared hours, deterministic explanation and quality. DTOs add enabled metadata from the same settings snapshot, relevant course and public profile data | Percent compatibility is not a success probability; AI wording never determines ranking; #1/#2/#15 |
+| Default/override precedence | External startup defaults apply until saved overrides exist. Explicit restore clears overrides and reuses current external defaults; overrides persist across restarts | Silent reset on each startup loses admin settings; #4 |
+| Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
+| Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
+
+### Undefined learning-style wording (#41/#7)
+
+The official brief's objective names "preferred learning style". Its functional preference
+list and Appendix A define no separate learning-style field, permitted values, compatibility
+formula or relationship to study mode/goals. The latest discussion likewise supplies no
+settled extra taxonomy. [#41](https://github.com/aryan12singh/study-buddy-matcher/issues/41)
+explicitly asks for professor clarification and forbids inventing categories.
+
+The five defined criteria implement the scoped matching issues. A sixth scorer or an assumed
+mapping from learning style to mode/goals is not introduced. The team still needs the
+professor's agreed interpretation, then must record it here and in #1/#7/#41; if a distinct
+field is required, Team B's profile contract and Team A's scorer/config/UI must change
+together. No professor response is claimed in this record.
