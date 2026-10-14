@@ -4,18 +4,17 @@ import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.QualityThresholds;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-/** Scores enabled criteria only; immutable results explain the exact weighted compatibility. */
+/** Scores enabled criteria only and combines them into the weighted total and quality label. */
 @Component
 public class WeightedMatchScorer {
+
+    private static final double MINUTES_PER_HOUR = 60.0;
 
     private final List<CriterionScorer> scorers;
     private final QualityThresholds thresholds;
@@ -40,16 +39,8 @@ public class WeightedMatchScorer {
             }
         }
         double total = total(breakdown, weights);
-        double hours = searcher.availability().sessionMinutesWith(candidate.availability(), rules.minSessionMinutes()) / 60.0;
-        var quality = thresholds.classify(total);
-        String criteria = Arrays.stream(MatchingCriterion.values()).filter(enabled::contains)
-                .map(criterion -> criterion.label() + " " + (unknown.contains(criterion) ? "not shared"
-                        : String.format(Locale.ROOT, "%.1f%%", breakdown.get(criterion) * 100)))
-                .collect(Collectors.joining("; "));
-        String explanation = quality.name().toLowerCase(Locale.ROOT) + " match: " + criteria
-                + String.format(Locale.ROOT, ". Shared availability: %.1f hours/week. ", hours)
-                + "Compatibility is not a success probability.";
-        return new MatchScore(breakdown, total, hours, explanation, quality, unknown);
+        double hours = searcher.availability().sessionMinutesWith(candidate.availability(), rules.minSessionMinutes()) / MINUTES_PER_HOUR;
+        return new MatchScore(breakdown, total, hours, thresholds.classify(total), unknown);
     }
 
     private static double total(Map<MatchingCriterion, Double> breakdown, MatchingWeights weights) {

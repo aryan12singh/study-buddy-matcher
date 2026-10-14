@@ -82,7 +82,7 @@ class MatchServiceTest {
                 new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()), properties.quality(), properties.scoring());
         service = new MatchService(access, students, availabilitySlots, courses, config, properties,
                 new MatchSearchFilter(new ProfileProperties(5, 8), properties.scoring()), scorer,
-                new MatchResultAssembler(properties.scoring()),
+                new MatchResultAssembler(properties.scoring(), new TemplateMatchExplainer()),
                 new MatchRelationships(connections, requests));
 
         me = student(ME, "Priya");

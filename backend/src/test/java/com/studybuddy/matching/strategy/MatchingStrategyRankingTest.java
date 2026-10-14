@@ -5,6 +5,7 @@ import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import org.junit.jupiter.api.Test;
 
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +20,16 @@ class MatchingStrategyRankingTest {
     private final AvailabilityFirstStrategy availabilityFirst = new AvailabilityFirstStrategy(tiers());
     private final CourseFirstStrategy courseFirst = new CourseFirstStrategy(tiers());
 
-    private static MatchScore score(String name, double course, double sharedHours, double total) {
-        return new MatchScore(Map.of(MatchingCriterion.COURSE, course), total, sharedHours, name, MatchQuality.FAIR, Set.of());
+    /** A score with a name, so a ranking can be read as a list of names. */
+    private record Named(String name, MatchScore score) {
     }
 
-    private static List<String> rank(MatchingStrategy strategy, Set<MatchingCriterion> enabled, MatchScore... scores) {
-        return List.of(scores).stream().sorted(strategy.ranking(enabled)).map(MatchScore::explanation).toList();
+    private static Named score(String name, double course, double sharedHours, double total) {
+        return new Named(name, new MatchScore(Map.of(MatchingCriterion.COURSE, course), total, sharedHours, MatchQuality.FAIR, Set.of()));
+    }
+
+    private static List<String> rank(MatchingStrategy strategy, Set<MatchingCriterion> enabled, Named... scores) {
+        return List.of(scores).stream().sorted(Comparator.comparing(Named::score, strategy.ranking(enabled))).map(Named::name).toList();
     }
 
     @Test
@@ -49,9 +54,9 @@ class MatchingStrategyRankingTest {
 
     @Test
     void bandBoundariesAreInclusive() {
-        assertEquals(2, availabilityFirst.tierOf(score("exactly 3h", 0, 3.0, 0)));
-        assertEquals(1, availabilityFirst.tierOf(score("exactly 1h", 0, 1.0, 0)));
-        assertEquals(0, availabilityFirst.tierOf(score("just under 1h", 0, 0.99, 0)));
+        assertEquals(2, availabilityFirst.tierOf(score("exactly 3h", 0, 3.0, 0).score()));
+        assertEquals(1, availabilityFirst.tierOf(score("exactly 1h", 0, 1.0, 0).score()));
+        assertEquals(0, availabilityFirst.tierOf(score("just under 1h", 0, 0.99, 0).score()));
     }
 
     @Test
@@ -63,14 +68,14 @@ class MatchingStrategyRankingTest {
     @Test
     void withinABandTheDisplayedScoreNeverIncreasesDownTheList() {
         List<MatchScore> ranked = List.of(score("a", 0, 1.5, 0.7), score("b", 0, 2.5, 0.9), score("c", 0, 1.0, 0.8))
-                .stream().sorted(availabilityFirst.ranking(ALL)).toList();
+                .stream().map(Named::score).sorted(availabilityFirst.ranking(ALL)).toList();
 
         assertEquals(List.of(0.9, 0.8, 0.7), ranked.stream().map(MatchScore::total).toList());
     }
 
     @Test
     void disabledPriorityFallsBackToTotal() {
-        MatchScore[] scores = {score("low", 1.0, 5, 0.2), score("high", 0, 0, 0.8)};
+        Named[] scores = {score("low", 1.0, 5, 0.2), score("high", 0, 0, 0.8)};
 
         assertEquals(List.of("high", "low"), rank(availabilityFirst, EnumSet.of(MatchingCriterion.COURSE), scores));
         assertEquals(List.of("high", "low"), rank(courseFirst, EnumSet.of(MatchingCriterion.AVAILABILITY), scores));

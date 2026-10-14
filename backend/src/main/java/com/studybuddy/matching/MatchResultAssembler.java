@@ -19,9 +19,11 @@ import java.util.stream.Stream;
 public class MatchResultAssembler {
 
     private final ScoringRules rules;
+    private final MatchExplainer explainer;
 
-    public MatchResultAssembler(ScoringRules rules) {
+    public MatchResultAssembler(ScoringRules rules, MatchExplainer explainer) {
         this.rules = rules;
+        this.explainer = explainer;
     }
 
     public MatchResultDto toDto(MatchingProfile searcher, MatchingProfile candidate, MatchScore score,
@@ -30,7 +32,7 @@ public class MatchResultAssembler {
         List<TimeSlot> shared = searcher.availability().sharedSessionsWith(candidate.availability(), rules.minSessionMinutes());
         return new MatchResultDto(student.getId(), student.getName(), student.getSchool(), student.getProgramme(),
                 student.getYearOfStudy(), student.getPreferredStudyMode(), student.getStudyGoals().stream().sorted().toList(),
-                score.quality(), score.total(), score.explanation(), relevantCourse(searcher.student(), student, search),
+                score.quality(), score.total(), explainer.explain(score, enabled), relevantCourse(searcher.student(), student, search),
                 breakdownOf(score, enabled), score.sharedHoursPerWeek(), shared.stream().map(MatchResultAssembler::toDto).toList(),
                 relationship);
     }

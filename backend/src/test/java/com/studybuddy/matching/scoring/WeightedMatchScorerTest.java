@@ -89,7 +89,7 @@ class WeightedMatchScorerTest {
     }
 
     @Test
-    void disabledScorersAreNotInvokedAndExplanationUsesEnabledCriteriaOnly() {
+    void disabledScorersAreNotInvoked() {
         CriterionScorer disabled = new CriterionScorer() {
             public MatchingCriterion criterion() { return MatchingCriterion.COURSE; }
             public CriterionResult score(MatchingProfile self, MatchingProfile peer, MatchSearchCriteria search) {
@@ -104,7 +104,6 @@ class WeightedMatchScorerTest {
         assertEquals(0.75, score.total());
         assertEquals(MatchQuality.STRONG, score.quality());
         assertEquals(0.0, score.scoreFor(MatchingCriterion.COURSE));
-        assertEquals("strong match: study goals 75.0%. Shared availability: 0.0 hours/week. Compatibility is not a success probability.", score.explanation());
     }
 
     @Test
@@ -129,7 +128,6 @@ class WeightedMatchScorerTest {
         assertEquals(0.5, half.scoreFor(MatchingCriterion.AVAILABILITY));
         assertFalse(zero.isKnown(MatchingCriterion.AVAILABILITY));
         assertTrue(zero.isKnown(MatchingCriterion.COURSE));
-        assertTrue(zero.explanation().contains("availability not shared"), zero.explanation());
     }
 
     @Test
