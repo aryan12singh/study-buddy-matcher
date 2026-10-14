@@ -124,7 +124,7 @@ class MatchServiceTest {
 
     @Test
     void reportsTheAdminsActiveStrategy() {
-        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new AvailabilityFirstStrategy(),
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new AvailabilityFirstStrategy(MatchingFixtures.tiers()),
                 new MatchingWeights(evenWeights()), EnumSet.allOf(MatchingCriterion.class), 0, 3));
 
         assertEquals(MatchingStrategyType.AVAILABILITY_FIRST, service.search(courseSearch(null), ME).strategy());

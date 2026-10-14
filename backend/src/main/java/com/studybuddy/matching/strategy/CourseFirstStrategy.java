@@ -4,12 +4,16 @@ import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
-import java.util.Set;
-
-/** Ranks by course match first, then by the configured weighted total. */
+/**
+ * Ranks by bands of course alignment first (by default: wants a buddy for the same
+ * course, takes it, neither), then by the weighted total.
+ */
 @Component
-public class CourseFirstStrategy implements MatchingStrategy {
+public class CourseFirstStrategy extends PriorityTierStrategy {
+
+    public CourseFirstStrategy(PriorityTiers tiers) {
+        super(tiers.courseScore());
+    }
 
     @Override
     public MatchingStrategyType type() {
@@ -17,15 +21,12 @@ public class CourseFirstStrategy implements MatchingStrategy {
     }
 
     @Override
-    public Comparator<MatchScore> ranking() {
-        return Comparator.comparingDouble((MatchScore score) -> score.scoreFor(MatchingCriterion.COURSE))
-                .thenComparingDouble(MatchScore::total)
-                .reversed();
+    protected MatchingCriterion priority() {
+        return MatchingCriterion.COURSE;
     }
 
     @Override
-    public Comparator<MatchScore> ranking(Set<MatchingCriterion> enabled) {
-        return enabled.contains(MatchingCriterion.COURSE) ? ranking()
-                : Comparator.comparingDouble(MatchScore::total).reversed();
+    protected double priorityValue(MatchScore score) {
+        return score.scoreFor(MatchingCriterion.COURSE);
     }
 }

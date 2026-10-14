@@ -75,7 +75,7 @@ describe('Find buddies page', () => {
   it('names the ranking strategy the admin chose', async () => {
     mockApi(() => Promise.resolve(response(ranked([jamie], 'AVAILABILITY_FIRST'))))
     openPage()
-    expect(await screen.findByText(/Ranked by Availability first matching\. Ranks by availability overlap/)).toBeInTheDocument()
+    expect(await screen.findByText(/Ranked by Availability first matching\. Groups students by shared time each week/)).toBeInTheDocument()
   })
 
   it.each(['AVAILABILITY_FIRST', 'COURSE_FIRST', 'BALANCED'])('preserves the %s response order across match qualities', async strategy => {

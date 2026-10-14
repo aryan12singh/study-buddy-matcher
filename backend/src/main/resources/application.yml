@@ -38,7 +38,8 @@ app:
     default-result-limit: 20
     max-result-limit: 50
     # Every strategy has all five weights; omitted values are zero. Enabled weights add up to 1.
-    # Priority defaults are zero, but administrators can give them weight too.
+    # A priority strategy gives its own criterion the largest share, so the score and label
+    # on a card always reflect what the list is ranked by.
     default-weights:
       balanced:
         course: 0.30
@@ -47,15 +48,24 @@ app:
         study-goal: 0.10
         group-size: 0.10
       availability-first:
-        course: 0.40
-        study-mode: 0.30
-        study-goal: 0.15
-        group-size: 0.15
-      course-first:
+        course: 0.25
         availability: 0.40
-        study-mode: 0.30
-        study-goal: 0.15
-        group-size: 0.15
+        study-mode: 0.15
+        study-goal: 0.10
+        group-size: 0.10
+      course-first:
+        course: 0.40
+        availability: 0.25
+        study-mode: 0.15
+        study-goal: 0.10
+        group-size: 0.10
+    # Priority strategies rank by bands of their criterion first, then by score within a band.
+    # Each list is the lower bound of every band but the last, best first.
+    priority-tiers:
+      # 3 h or more, 1 to 3 h, under 1 h of shared time per week.
+      availability-hours: [3.0, 1.0]
+      # Wants a buddy for the course (1.0), takes it (0.5), neither.
+      course-score: [1.0, 0.5]
     quality:
       strong: 0.75
       good: 0.50

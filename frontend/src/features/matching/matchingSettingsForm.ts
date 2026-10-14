@@ -10,8 +10,8 @@ export const CRITERIA: { key: MatchingCriterion; label: string }[] = [
 
 export const STRATEGIES: { value: MatchingStrategyType; label: string; description: string }[] = [
   { value: 'BALANCED', label: 'Balanced', description: 'Ranks by the weighted total of enabled criteria.' },
-  { value: 'AVAILABILITY_FIRST', label: 'Availability first', description: 'Ranks by availability overlap, then by the weighted total. Falls back to the total if availability is disabled.' },
-  { value: 'COURSE_FIRST', label: 'Course first', description: 'Ranks by course match, then by the weighted total. Falls back to the total if course is disabled.' }
+  { value: 'AVAILABILITY_FIRST', label: 'Availability first', description: 'Groups students by shared time each week (3 h or more, then 1 to 3 h, then under 1 h) and ranks by overall score within each group. Falls back to the overall score if availability is disabled.' },
+  { value: 'COURSE_FIRST', label: 'Course first', description: 'Groups students by course match (wants a buddy for the same course, then takes it, then neither) and ranks by overall score within each group. Falls back to the overall score if course is disabled.' }
 ]
 
 /**
