@@ -251,6 +251,22 @@ class MatchServiceTest {
     }
 
     @Test
+    void equalScoresTieOnMoreSharedHoursBeforeName() {
+        // Both want a buddy for IS442 and only course is enabled, so their scores are equal.
+        weak.setTargetCourse(strong.getTargetCourse());
+        Map<MatchingCriterion, Double> courseOnly = evenWeights();
+        courseOnly.replaceAll((criterion, weight) -> criterion == MatchingCriterion.COURSE ? 1.0 : 0.0);
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new BalancedStrategy(), new MatchingWeights(courseOnly),
+                EnumSet.of(MatchingCriterion.COURSE), 0, 0));
+
+        List<MatchResultDto> results = service.search(courseSearch(null), ME).matches();
+
+        // Jamie shares 2 hours and Alex 1, so Jamie comes first although Alex sorts first by name.
+        assertEquals(List.of(2L, 3L), results.stream().map(MatchResultDto::studentId).toList());
+        assertEquals(results.get(0).totalScore(), results.get(1).totalScore());
+    }
+
+    @Test
     void equalScoresAndNamesTieOnStudentIdForEverySort() {
         weak.setName(strong.getName().toUpperCase(java.util.Locale.ROOT));
         weak.setTargetCourse(strong.getTargetCourse());

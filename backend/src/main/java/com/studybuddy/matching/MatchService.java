@@ -8,7 +8,6 @@ import com.studybuddy.matching.availability.WeeklyAvailability;
 import com.studybuddy.matching.config.MatchingConfigService;
 import com.studybuddy.matching.config.MatchingProperties;
 import com.studybuddy.matching.config.MatchingConfigSnapshot;
-import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingProfile;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
 import com.studybuddy.matching.strategy.MatchingStrategy;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -93,19 +91,16 @@ public class MatchService {
         return new MatchSearchResultDto(strategy.type(), settings.version(), sort, limit, ranked.size(), matches);
     }
 
+    /**
+     * The student's sort first, then the strategy, then more shared hours, then name and id
+     * so that equal matches always appear in the same order.
+     */
     private static Comparator<ScoredCandidate> ordering(MatchSort sort, MatchingProfile searcher,
             MatchingConfigSnapshot settings) {
-        Comparator<ScoredCandidate> ranking = Comparator.comparing(ScoredCandidate::score,
-                settings.strategy().ranking(settings.enabledCriteria()));
-        if (sort == MatchSort.MOST_SHARED_HOURS) {
-            ranking = Comparator.comparingDouble((ScoredCandidate candidate) -> candidate.score().sharedHoursPerWeek())
-                    .reversed().thenComparing(ranking);
-        } else if (sort == MatchSort.SAME_YEAR_FIRST) {
-            ranking = Comparator.comparing((ScoredCandidate candidate) -> searcher.student().getYearOfStudy() != null
-                    && Objects.equals(searcher.student().getYearOfStudy(), candidate.profile().student().getYearOfStudy()))
-                    .reversed().thenComparing(ranking);
-        }
-        return ranking.thenComparing(candidate -> candidate.profile().student().getName(), String.CASE_INSENSITIVE_ORDER)
+        return sort.before(searcher)
+                .thenComparing(ScoredCandidate::score, settings.strategy().ranking(settings.enabledCriteria()))
+                .thenComparing(Comparator.comparingDouble((ScoredCandidate candidate) -> candidate.score().sharedHoursPerWeek()).reversed())
+                .thenComparing(candidate -> candidate.profile().student().getName(), String.CASE_INSENSITIVE_ORDER)
                 .thenComparing(candidate -> candidate.profile().student().getId());
     }
 
@@ -136,8 +131,5 @@ public class MatchService {
 
     private static MatchingProfile profileOf(Student student, Map<Long, WeeklyAvailability> availability) {
         return new MatchingProfile(student, availability.getOrDefault(student.getId(), new WeeklyAvailability(List.<TimeSlot>of())));
-    }
-
-    private record ScoredCandidate(MatchingProfile profile, MatchScore score) {
     }
 }
