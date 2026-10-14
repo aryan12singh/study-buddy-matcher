@@ -24,6 +24,10 @@ jwt:
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 app:
+  study-session:
+    maximum-occurrences: ${SESSION_MAXIMUM_OCCURRENCES:52}
+    maximum-duration-hours: ${SESSION_MAXIMUM_DURATION_HOURS:24}
+    availability-time-zone: Asia/Singapore
   study-room:
     default-focus-minutes: ${ROOM_DEFAULT_FOCUS_MINUTES:25}
     default-break-minutes: ${ROOM_DEFAULT_BREAK_MINUTES:5}

@@ -12,6 +12,9 @@ public interface RoomPresenceRepository extends JpaRepository<RoomPresence, Long
     Optional<RoomPresence> findByStudyRoomIdAndStudentIdAndClientId(Long roomId, Long studentId, UUID clientId);
     void deleteByStudyRoomIdAndStudentIdAndClientId(Long roomId, Long studentId, UUID clientId);
     void deleteByStudyRoomIdAndExpiresAtLessThanEqual(Long roomId, Instant now);
+    void deleteByStudyRoomStudyGroupIdAndStudentId(Long groupId, Long studentId);
+    void deleteByStudyRoomStudyGroupId(Long groupId);
+    void deleteByStudentId(Long studentId);
 
     @Query("""
         select p from RoomPresence p where p.studyRoom.id = :roomId and p.expiresAt > :now

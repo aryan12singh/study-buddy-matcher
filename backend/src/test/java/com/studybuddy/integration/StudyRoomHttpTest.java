@@ -9,7 +9,7 @@ import tools.jackson.databind.JsonNode;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Real PostgreSQL, JWT and HTTP coverage of the private room foundation. */
+/** Real PostgreSQL, JWT and HTTP coverage of private room controls and access lifecycle. */
 class StudyRoomHttpTest extends PostgresHttpTest {
     private long leaderId;
     private long memberId;
@@ -105,7 +105,7 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         join(member, tab);
         assertTrue(state(member).path("canControl").asBoolean());
         var started = expect(command(member, "START", version), 200);
-        expect(call("PUT", path() + "/settings", member, configuration(started.path("version").asLong(), 25, 4, memberId, otherId)), 403);
+        expect(call("PUT", path() + "/settings", member, configuration(started.path("version").asLong(), 25, 4, leaderId, otherId)), 403);
         join(other, UUID.randomUUID());
         expect(command(other, "PAUSE", started.path("version").asLong()), 200);
         expect(call("PUT", path() + "/presence", member, Map.of("clientId", tab, "presence", "FOCUS")), 200);
@@ -157,22 +157,58 @@ class StudyRoomHttpTest extends PostgresHttpTest {
     }
 
     @Test
+    void presentHostsCanChangeDurationsAndCapacityWithoutAssigningRoles() {
+        var room = configure(0, 25, 4, memberId, otherId);
+        long version = room.path("version").asLong();
+        expect(call("PUT", path() + "/settings", member, configuration(version, 30, 2, memberId, otherId)), 403);
+        UUID hostTab = UUID.randomUUID();
+        join(member, hostTab);
+        var changed = expect(call("PUT", path() + "/settings", member, configuration(version, 30, 2, memberId, otherId)), 200);
+        assertEquals(30, changed.path("focusMinutes").asInt());
+        assertEquals(2, changed.path("participantLimit").asInt());
+        version = changed.path("version").asLong();
+        expect(call("PUT", path() + "/settings", member, configuration(version, 30, 2, otherId, memberId)), 403);
+        expect(call("PUT", path() + "/settings", member, configuration(version - 1, 30, 2, memberId, otherId)), 409);
+        join(other, UUID.randomUUID());
+        var coHostSaved = expect(call("PUT", path() + "/settings", other, configuration(version, 30, 3, memberId, otherId)), 200);
+        assertEquals(3, coHostSaved.path("participantLimit").asInt());
+        expect(call("DELETE", path() + "/presence/" + hostTab, member, null), 204);
+        expect(call("PUT", path() + "/settings", member,
+            configuration(coHostSaved.path("version").asLong(), 35, 3, memberId, otherId)), 403);
+    }
+
+    @Test
     void concurrentControlsRejectAStaleCommandInsteadOfOverwriting() throws Exception {
         join(leader, UUID.randomUUID());
         statuses(race(() -> command(leader, "START", 0),
-            () -> call("PUT", path() + "/audio", leader, Map.of("preset", "RAIN", "playing", true, "expectedVersion", 0))), 200, 409);
+            () -> call("PUT", path() + "/audio", leader, audio(0, null, false, "RAIN", true))), 200, 409);
         assertEquals(1, state(leader).path("version").asLong());
     }
 
     @Test
     void sharedAudioValidatesRolesAndNeverStoresLocalVolume() {
         join(member, UUID.randomUUID());
-        expect(call("PUT", path() + "/audio", member, Map.of("preset", "RAIN", "playing", true, "expectedVersion", 0)), 403);
-        var room = expect(call("PUT", path() + "/audio", leader, Map.of("preset", "RAIN", "playing", true, "expectedVersion", 0)), 200);
-        assertEquals("RAIN", room.path("audio").path("preset").asString());
-        assertTrue(state(member).path("audio").path("playing").asBoolean());
-        assertEquals(2, room.path("audio").size());
-        expect(call("PUT", path() + "/audio", leader, Map.of("preset", "UNKNOWN", "playing", true, "expectedVersion", 1)), 400);
+        expect(call("PUT", path() + "/audio", member, audio(0, "CALM_MUSIC", true, "RAIN", true)), 403);
+        var room = expect(call("PUT", path() + "/audio", leader, audio(0, "CALM_MUSIC", true, "RAIN", true)), 200);
+        assertEquals("CALM_MUSIC", room.path("audio").path("musicPreset").asString());
+        assertEquals("RAIN", room.path("audio").path("ambientPreset").asString());
+        assertTrue(state(member).path("audio").path("musicPlaying").asBoolean());
+        assertTrue(state(member).path("audio").path("ambientPlaying").asBoolean());
+        assertEquals(4, room.path("audio").size(), "Only shared selections/playback are persisted; volumes stay local");
+        long version = room.path("version").asLong();
+        expect(call("PUT", path() + "/audio", leader, audio(version, "UNKNOWN", true, null, false)), 400);
+        expect(call("PUT", path() + "/audio", leader, audio(version, "RAIN", true, null, false)), 400);
+        expect(call("PUT", path() + "/audio", leader, audio(version, null, false, "CALM_MUSIC", true)), 400);
+        expect(call("PUT", path() + "/audio", leader, audio(version, null, true, "RAIN", true)), 400);
+        expect(call("PUT", path() + "/audio", leader, audio(version, "CALM_MUSIC", true, null, true)), 400);
+        assertEquals(room.path("audio"), state(member).path("audio"), "Rejected selections never partially update a layer");
+        var musicOnly = expect(call("PUT", path() + "/audio", leader, audio(version, "CALM_MUSIC", true, null, false)), 200);
+        assertTrue(musicOnly.path("audio").path("musicPlaying").asBoolean());
+        assertTrue(musicOnly.path("audio").path("ambientPreset").isNull());
+        var silent = expect(call("PUT", path() + "/audio", leader,
+            audio(musicOnly.path("version").asLong(), null, false, null, false)), 200);
+        assertFalse(silent.path("audio").path("musicPlaying").asBoolean());
+        assertFalse(silent.path("audio").path("ambientPlaying").asBoolean());
     }
 
     @Test
@@ -180,6 +216,7 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         configure(0, 25, 4, memberId, otherId);
         join(member, UUID.randomUUID()); join(other, UUID.randomUUID());
         expect(call("DELETE", "/groups/" + groupId + "/members/" + memberId, leader, null), 204);
+        assertEquals(0, count("select count(*) from room_presences where student_id=?", memberId));
         expect(call("GET", path(), member, null), 403);
         var remaining = state(leader);
         assertEquals(leaderId, remaining.path("hostId").asLong());
@@ -188,9 +225,54 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         expect(call("GET", path(), other, null), 401);
         assertEquals(0, state(leader).path("participants").size());
         assertTrue(state(leader).path("coHostId").isNull());
+        join(leader, UUID.randomUUID());
+        var started = expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        expect(call("PUT", path() + "/audio", leader,
+            audio(started.path("version").asLong(), "CALM_MUSIC", true, "RAIN", true)), 200);
         expect(call("POST", "/groups/" + groupId + "/close", leader, null), 200);
+        assertEquals(0, count("select count(*) from room_presences"));
+        assertEquals("IDLE", database.queryForObject("select timer_status from study_rooms where study_group_id=?", String.class, groupId));
+        assertEquals(0, count("select count(*) from study_rooms where music_playing or ambient_playing"));
         expect(call("GET", path(), leader, null), 409);
         expect(command(leader, "START", 0), 409);
+    }
+
+    @Test
+    void removalAndReadmissionNeverReviveOldLeasesOrRolesOrBypassCapacity() {
+        configure(0, 25, 1, memberId, null);
+        UUID oldTab = UUID.randomUUID();
+        join(member, oldTab);
+        join(member, UUID.randomUUID());
+        assertEquals(2, count("select count(*) from room_presences where student_id=?", memberId));
+        expect(call("DELETE", "/groups/" + groupId + "/members/" + memberId, leader, null), 204);
+        assertEquals(0, count("select count(*) from room_presences where student_id=?", memberId));
+        join(other, UUID.randomUUID());
+        expect(approve(groupId, apply(groupId, member), leader), 200);
+        expect(call("PUT", path() + "/presence", member, Map.of("clientId", oldTab, "presence", "FOCUS")), 409);
+        expect(call("POST", path() + "/join", member, Map.of("clientId", oldTab)), 409);
+        var room = state(member);
+        assertEquals(1, room.path("participants").size());
+        assertEquals(leaderId, room.path("hostId").asLong());
+        assertFalse(room.path("canControl").asBoolean());
+        assertEquals(1, count("select count(*) from room_presences"));
+    }
+
+    @Test
+    void deactivationAndReadmissionRequireFreshPresenceAndExplicitRoleAssignment() {
+        configure(0, 25, 1, memberId, null);
+        UUID oldTab = UUID.randomUUID();
+        join(member, oldTab);
+        expect(call("POST", "/admin/users/" + memberId + "/deactivate", admin, null), 200);
+        assertEquals(0, count("select count(*) from room_presences where student_id=?", memberId));
+        join(other, UUID.randomUUID());
+        expect(call("POST", "/admin/users/" + memberId + "/reactivate", admin, null), 200);
+        String readmitted = login("member@example.test");
+        expect(approve(groupId, apply(groupId, readmitted), leader), 200);
+        expect(call("PUT", path() + "/presence", readmitted, Map.of("clientId", oldTab, "presence", "PRESENT")), 409);
+        expect(call("POST", path() + "/join", readmitted, Map.of("clientId", oldTab)), 409);
+        assertFalse(state(readmitted).path("canControl").asBoolean());
+        assertEquals(leaderId, state(readmitted).path("hostId").asLong());
+        assertEquals(1, state(leader).path("participants").size());
     }
 
     @Test
@@ -230,6 +312,13 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         Map<String, Object> input = new HashMap<>();
         input.put("focusMinutes", focus); input.put("breakMinutes", 1); input.put("participantLimit", capacity);
         input.put("hostId", host); input.put("coHostId", coHost); input.put("expectedVersion", version);
+        return input;
+    }
+    private Map<String, Object> audio(long version, String music, boolean playMusic, String ambient, boolean playAmbient) {
+        Map<String, Object> input = new HashMap<>();
+        input.put("musicPreset", music); input.put("musicPlaying", playMusic);
+        input.put("ambientPreset", ambient); input.put("ambientPlaying", playAmbient);
+        input.put("expectedVersion", version);
         return input;
     }
     private void expire(long studentId) {

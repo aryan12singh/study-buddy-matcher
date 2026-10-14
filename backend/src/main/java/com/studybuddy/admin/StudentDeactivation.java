@@ -12,6 +12,8 @@ import com.studybuddy.studygroup.GroupJoinRequestStatus;
 import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroupNotFoundException;
 import com.studybuddy.studygroup.StudyGroupRepository;
+import com.studybuddy.studyroom.RoomLifecycle;
+import com.studybuddy.studysession.StudySessionLifecycle;
 import org.springframework.stereotype.Component;
 
 /** Package-private operation reached only after authorized exclusive lifecycle locking. */
@@ -24,9 +26,13 @@ public class StudentDeactivation {
     private final GroupMembershipRepository memberships;
     private final GroupClosure closure;
     private final NotificationService notifications;
+    private final RoomLifecycle roomLifecycle;
+
+    private final StudySessionLifecycle sessionLifecycle;
 
     public StudentDeactivation(ConnectionRepository connections, MatchRequestRepository requests, GroupJoinRequestRepository applications,
-        StudyGroupRepository groups, GroupMembershipRepository memberships, GroupClosure closure, NotificationService notifications) {
+        StudyGroupRepository groups, GroupMembershipRepository memberships, GroupClosure closure,
+        NotificationService notifications, RoomLifecycle roomLifecycle, StudySessionLifecycle sessionLifecycle) {
         this.connections = connections;
         this.requests = requests;
         this.applications = applications;
@@ -34,8 +40,12 @@ public class StudentDeactivation {
         this.memberships = memberships;
         this.closure = closure;
         this.notifications = notifications;
+        this.sessionLifecycle = sessionLifecycle;
+        this.roomLifecycle = roomLifecycle;
     }
     void apply(Long studentId) {
+        roomLifecycle.revokeStudent(studentId);
+        sessionLifecycle.cancelForStudent(studentId);
         for (var connection : connections.findActiveByStudentId(studentId)) {
             connection.end();
             var other = connection.otherStudent(studentId);

@@ -17,6 +17,7 @@ import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroupRepository;
 import com.studybuddy.user.UserNotFoundException;
 import java.util.LinkedHashSet;
+import com.studybuddy.studysession.StudySessionLifecycle;
 import org.springframework.stereotype.Component;
 
 /** Explicit dependency cleanup, kept separate from reversible deactivation. */
@@ -33,10 +34,12 @@ public class StudentDeletion {
     private final NotificationRepository notificationRows;
     private final NotificationService notifications;
 
+    private final StudySessionLifecycle sessionLifecycle;
+
     public StudentDeletion(StudentRepository students, AvailabilitySlotRepository studentAvailability, MatchRequestRepository requests,
         ConnectionRepository connections, StudyGroupRepository groups, GroupJoinRequestRepository applications,
         GroupMembershipRepository memberships, GroupAvailabilitySlotRepository groupAvailability,
-        NotificationRepository notificationRows, NotificationService notifications) {
+        NotificationRepository notificationRows, NotificationService notifications, StudySessionLifecycle sessionLifecycle) {
         this.students = students;
         this.studentAvailability = studentAvailability;
         this.requests = requests;
@@ -47,6 +50,7 @@ public class StudentDeletion {
         this.groupAvailability = groupAvailability;
         this.notificationRows = notificationRows;
         this.notifications = notifications;
+        this.sessionLifecycle = sessionLifecycle;
     }
     void apply(Long id) {
         var student = students.findById(id).orElseThrow(() -> new UserNotFoundException(id));
@@ -69,8 +73,10 @@ public class StudentDeletion {
                 null, null, "account-delete:" + id + ":connection:" + connection.getId() + ":" + other.getId());
         }
         requests.deleteAll(buddyRequests);
+        allConnections.forEach(connection -> sessionLifecycle.deleteForConnection(connection.getId()));
         connections.deleteAll(allConnections);
         for (var group : groups.findByLeaderId(id)) {
+            sessionLifecycle.deleteForGroup(group.getId());
             notificationRows.deleteAll(notificationRows.findByResourceTypeAndResourceId(NotificationResourceType.GROUP, group.getId()));
             var members = memberships.findByStudyGroupId(group.getId());
             var groupRequests = applications.findByStudyGroupId(group.getId());

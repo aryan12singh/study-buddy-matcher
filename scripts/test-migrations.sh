@@ -42,6 +42,32 @@ SQL
 
 "$task_repo_root/scripts/migrate-database.sh"
 "${task_psql[@]}" --file="$task_repo_root/scripts/sql/assert-migrated-legacy.sql"
+# Populated extension state must survive the repeat, not just an empty new schema.
+"${task_psql[@]}" <<'SQL'
+INSERT INTO study_rooms(id,study_group_id,version,focus_minutes,break_minutes,participant_limit,
+ phase,timer_status,remaining_millis,audio_preset,audio_playing,music_preset,music_playing,ambient_preset,ambient_playing)
+ VALUES(90,20,3,25,5,2,'FOCUS','IDLE',1500000,'WHITE_NOISE',true,'CALM_MUSIC',false,'RAIN',true);
+INSERT INTO study_sessions(id,study_group_id,created_by,title,start_local,end_local,start_at,end_at,time_zone,
+ occurrence_count,status,created_at,updated_at)
+ VALUES(91,20,10,'Retained weekly session','2026-10-20 09:00','2026-10-20 10:00',
+ '2026-10-20 01:00+00','2026-10-20 02:00+00','Asia/Singapore',2,'SCHEDULED',
+ '2026-10-01 01:15+00','2026-10-01 01:15+00');
+INSERT INTO notifications(created_at,message,read,type,recipient_id,resource_type,resource_id,event_key) VALUES
+ ('2026-10-01 01:15+00','Retained cancellation',false,'MATCH_REQUEST_CANCELLED',10,'MATCH_REQUEST',40,'fixture:cancelled'),
+ ('2026-10-01 01:15+00','Retained session event',false,'GROUP_SESSION_CREATED',11,'SESSION',91,'fixture:session');
+SQL
 "$task_repo_root/scripts/migrate-database.sh"
 "${task_psql[@]}" --file="$task_repo_root/scripts/sql/assert-migrated-legacy.sql"
+"${task_psql[@]}" <<'SQL'
+DO $$ BEGIN
+ IF NOT EXISTS(SELECT 1 FROM study_rooms WHERE id=90 AND version=3 AND music_preset='CALM_MUSIC'
+   AND NOT music_playing AND ambient_preset='RAIN' AND ambient_playing)
+  OR NOT EXISTS(SELECT 1 FROM study_sessions WHERE id=91 AND title='Retained weekly session'
+   AND occurrence_count=2 AND calendar_uid IS NOT NULL)
+  OR (SELECT count(*) FROM notifications WHERE event_key IN ('fixture:cancelled','fixture:session')) <> 2
+  OR NOT (SELECT convalidated FROM pg_constraint WHERE conrelid='notifications'::regclass AND conname='notifications_type_check') THEN
+   RAISE EXCEPTION 'Populated repeat changed audio/session/event data or left the final enum unvalidated';
+ END IF;
+END $$;
+SQL
 printf 'Legacy upgrade, preflight rollback and repeat migration checks passed.\n'
