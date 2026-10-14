@@ -40,19 +40,24 @@ docs/       API contract, UML diagrams
 
 ## Open questions to settle before coding
 
-- **How is preferred group size represented?** The brief contradicts itself: the functional
-  requirements list it categorically ("one-to-one, small group, or either") while Appendix A
-  scores it numerically, treating "2-3 students" against "2 students" as compatible. A
-  categorical reading is a small compatibility matrix; a numeric one is interval overlap like
-  `TimeSlot`. `GroupSizeScorer`, the profile form, the seeder and the filter panel all depend
-  on the answer. **Team A to decide.**
+- **Preferred group size: decided by Team A.** Both readings, layered. Students choose
+  categorically ("one-to-one, small group, or either"), and the profile stores the choice as a
+  minimum and maximum number of people. `GroupSizeScorer` scores interval overlap, as Appendix A
+  does ("2-3 students" against "2 students" is compatible), and the search filter keeps students
+  whose range overlaps the chosen category. Details in the matching section of
+  [`README.md`](README.md#matching-engine).
 - **Admin deletion vs deactivation: decided by Team C.** Two separate actions. Deactivate is
   reversible: it revokes sign-in, ends active connections and group memberships, and keeps
   history. Delete is permanent and removes the account and its dependent records. Details in
   [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md).
 - **Basic usage information: decided by Team C.** Last successful sign-in, number of active
   connections, and number of open groups the student belongs to (including ones they lead).
-- **Is the window chrome real or decorative?** See [Visual direction](#visual-direction) below.
+- **Window chrome: implemented as decorative.** Conventional routes and shared retro
+  primitives are in the merged application. See [Visual direction](#visual-direction).
+- **Learning style and contact format: decided by the team.** The defined study preferences
+  cover the otherwise undefined learning-style wording; this is the team's interpretation,
+  not a claim of professor confirmation. Contacts accept Singapore or international formats
+  with shared normalization. See the [baseline contract](docs/DESIGN_DECISIONS.md#baseline-requirement-contract).
 
 ---
 
@@ -105,7 +110,7 @@ value is still in the payload and visible in the network tab.
   the same keys as `application.yml`. This replaced an earlier `backend/.env` approach: Spring
   Boot only reads the process environment, not `.env` files directly, which meant re-exporting
   values every new terminal; `application-local.yml` avoids that entirely with no extra tooling.
-- **Never write a real credential into a file in this repository**: not into `application.yml`,
+- **Never write a real credential into a tracked file in this repository**: not into `application.yml`,
   not into a test, not into a comment, not as a "temporary" default. `application-local.yml` and
   `.env` are both git-ignored; keep them that way. If you think you have committed a secret, say
   so immediately. Rotating it is easy, but only if we know.
@@ -120,7 +125,9 @@ value is still in the payload and visible in the network tab.
   `localhost:8080` in a component.
 - Components in `PascalCase`, one per file, file named after the component. Shared components
   live in the shared directory; screen-specific ones live beside their screen.
-- TODO: Team B to confirm the frontend directory layout once the Vite skeleton lands.
+- The implemented layout uses `src/features/<feature>/` for screens and their API/form helpers,
+  `src/shared/` for the client/auth/hooks/styles, and `src/shared/components/` for reusable UI.
+  Routes live in `src/routes.tsx`; the router is created once in `src/main.tsx`.
 
 ### Design source of truth
 
@@ -135,30 +142,27 @@ Direction from nat's inspiration board: **pixelated, retro, desktop-operating-sy
 late-nineties / early-noughties desktop metaphor: window chrome with a title bar and controls,
 pixel icons, chunky bevelled buttons, a pixel-art loading screen with a percentage bar.
 Reference sites: studiodunbar.xyz, chusmargallo.space (stacked movable windows), mitchivin.com
-(Windows XP-style login), peteroravec.com. Icon set under consideration: Streamline's pixel
-range.
+(Windows XP-style login), peteroravec.com. The implementation uses original CSS pixel drawings;
+Streamline's pixel range is an inspiration option, not a shipped dependency.
 
 Current wireframes take the metaphor literally: each page is a window with a title bar: Home,
 Student profile, Matching, Notifications, Study prep, study timer.
 
-**Open decisions, settle these before building screens:**
+**Implemented choices and remaining acceptance:**
 
-- TODO: Do windows stack and move, or is the chrome decorative with conventional navigation?
-  **Biggest decision here.** A real stacking window manager is a lot of frontend work that
-  earns nothing on a mark scheme rewarding OO design. Decorative chrome gets the look for a
-  fraction of the cost. Agree before anyone starts.
-- TODO: Confirm the aesthetic with Team A and Team C too. The matching page carries dense
-  information (score breakdown bars, a shared-hours heatmap) and must stay readable inside
-  the chosen chrome.
-- TODO: Pick the pixel font and check it is legible at body size on a projector. A marker
-  reads this screen from across a room. If the font fights that, use pixel for headings and
-  window titles only.
-- TODO: Fix the palette and check contrast. Retro palettes are often low contrast.
-- TODO: Decide the responsive story, or state plainly that the app is desktop-only.
-- TODO: Confirm the icon set and its licence; add it to the libraries table if it ships.
-
-Team C has a working implementation of these (decorative chrome, shared primitives under
-`frontend/src/shared/components/`) that the team can adopt or change.
+- Decorative title bars and conventional navigation are the current implementation; there
+  is no movable stacking-window manager.
+- Authenticated screens and the current landing page use the shared retro components under
+  `frontend/src/shared/components/`. Matching adds feature-specific bars and a heatmap.
+- Body and window text use Tahoma/Verdana/system fonts. The existing entry stylesheet still
+  imports Inter/Fraunces; sources/licences are in the README. No pixel font is required.
+- Shared palette/styles live in `frontend/src/shared/desktop.css`. Narrow layouts wrap
+  navigation, forms, weekly schedules and admin rows rather than declaring desktop-only use.
+- Original `PixelIcon` CSS drawings are reused. Inventory shipped assets/services in the
+  README and verify any newly added third-party licence before distribution.
+- Local Chromium/keyboard/layout evidence is recorded in the test guides. Latest-Figma
+  comparison, all-screen contrast/browser acceptance and physical-projector readability
+  still need the team's review; implemented styles do not constitute that sign-off.
 
 ### Shared components
 
@@ -166,20 +170,20 @@ Whoever needs a primitive first builds it, and everyone else reuses it. A one-of
 button is how a design system dies. Before building a shared element, check whether it already
 exists and say that you are adding it.
 
-The set we expect to need:
+The implemented set to reuse:
 
 | Component | Status |
 | --------- | ------ |
-| App shell and navigation | TODO |
-| Window frame / page container | TODO |
-| Button (primary, secondary, destructive) | TODO |
-| Form field, label, validation message | TODO |
-| Modal / dialog | TODO |
-| Empty, loading and error states | TODO |
-| Weekly availability grid | TODO |
-| Toast / notification | TODO |
-| Score breakdown bar | TODO |
-| Shared-hours heatmap | TODO |
+| App shell and navigation | `AppShell`, `TabBar` |
+| Window frame / page container | `WindowPage` |
+| Button (primary, secondary, destructive) | `Button` |
+| Form field, label, validation message | `Field`, `AccountFields`, `FormActions` |
+| Modal / dialog | `Dialog`, `ConfirmDialog` |
+| Empty, loading and error states | `StatePanel` |
+| Weekly availability grid | `WeeklySlotEditor`, `WeeklySchedule` |
+| Toast / notification | `ActionNotice`, `RouteNotice`; unread badge in `AppShell` |
+| Score breakdown bar | `features/matching/ScoreBreakdown` |
+| Shared-hours heatmap | `features/matching/SharedHoursHeatmap` |
 
 ### Rules for every screen
 
@@ -217,8 +221,14 @@ the pull request description.
 | Milestone | Date | Means |
 | --------- | ---- | ----- |
 | Base code | 11 Oct | Every compulsory feature works end to end |
-| Feature freeze | 24 Oct | Extras done, tests and polish landed, nothing new starts |
-| Submission | 15 Nov, 11:59 PM | All deliverables in |
+| Internal feature freeze | 24 Oct | Feature work stops; tests, integration and polish are ready for delivery |
+| Extras/integration delivery target | 25 Oct | Team issue milestone for the agreed selected extras |
+| Materials/rehearsal target | 8 Nov | Supporting materials and timed demo/Q&A rehearsal |
+| Final handoff target | 15 Nov 2026, 11:59 PM SGT | Team target; verify the actual LMS deadline and submission receipt |
+
+The formal brief states Week 13. Repository dates are team planning targets and do not
+independently verify the LMS deadline. Record the confirmed deadline in the
+[schedule record](docs/DESIGN_DECISIONS.md#schedule-and-submission-record).
 
 ### Picking up work
 
@@ -255,6 +265,10 @@ docs: document the matching configuration keys
 assistant, "Generated with" footers, or any similar line. The work is submitted as ours and the
 history should read that way. If you use an AI assistant, configure it not to add them; this
 file is the instruction it should be following.
+
+The formal coursework disclosure still belongs in [docs/AI_USAGE.md](docs/AI_USAGE.md) and
+the presentation. Record retained AI planning/code/review/documentation help accurately;
+commit formatting is not a reason to omit required disclosure or invent human review.
 
 Never commit `.env`, build output (`target/`, `dist/`, `node_modules/`), IDE folders, or a real
 credential in any form.

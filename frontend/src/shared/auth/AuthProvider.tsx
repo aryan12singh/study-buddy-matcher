@@ -71,7 +71,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         setRetryCount(value => value + 1)
       },
       login: (email, password) => authenticate('/auth/login', { email: email.trim().toLowerCase(), password }),
-      register: input => authenticate('/auth/register', { ...input, email: input.email.trim().toLowerCase() })
+      register: input => authenticate('/auth/register', { ...input, email: input.email.trim().toLowerCase() }),
+      updateAccountName: name => setAccount(current => current ? { ...current, name } : current)
     }}>{children}</AuthContext.Provider>
   )
 }

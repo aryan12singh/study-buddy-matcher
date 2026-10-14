@@ -9,7 +9,7 @@ export const STUDY_GOALS: StudyGoal[] = ['CONCEPT_REVIEW', 'PROBLEM_SOLVING', 'E
 export const STUDY_MODES: StudyMode[] = ['IN_PERSON', 'ONLINE', 'EITHER']
 export const WEEK_DAYS: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 export const CAMPUS_TIMEZONE = 'Asia/Singapore'
-const labels: Record<string, string> = { IN_PERSON: 'In person', ONLINE: 'Online', EITHER: 'Either', CONCEPT_REVIEW: 'Concept review',
+const labels: Record<string, string> = { IN_PERSON: 'In person', ONLINE: 'Online', EITHER: 'In person or online', CONCEPT_REVIEW: 'Concept review',
   PROBLEM_SOLVING: 'Problem solving', EXAM_PREPARATION: 'Exam preparation', PROJECT_DISCUSSION: 'Project discussion',
   PENDING: 'Pending', ACCEPTED: 'Accepted', DECLINED: 'Declined', CANCELLED: 'Cancelled', REJECTED: 'Rejected', STUDENT: 'Student', ADMIN: 'Administrator' }
 export function label(value: string | null | undefined) {

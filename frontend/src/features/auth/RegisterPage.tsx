@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/auth/useAuth'
 import { useAction } from '../../shared/api/useAction'
 import { validateAccountFields } from '../../shared/auth/validation'
+import { normalizeContactNumber } from '../../shared/auth/contactNumber'
 import WindowPage from '../../shared/components/WindowPage'
 import AccountFields from '../../shared/components/AccountFields'
 import Button from '../../shared/components/Button'
@@ -34,16 +35,16 @@ function RegisterPage() {
       name: form.name.trim(),
       school: form.school.trim(),
       programme: form.programme.trim(),
-      contactNumber: form.contactNumber.trim(),
+      contactNumber: normalizeContactNumber(form.contactNumber),
       yearOfStudy: Number(form.yearOfStudy)
     }))
-    if (result.ok) navigate('/connections', { replace: true })
+    if (result.ok) navigate(`/students/${result.value.id}/edit?welcome=1&tab=preferences`, { replace: true, state: { notice: 'Account created.' } })
   }
   return (
     <div className="desktop auth-desktop">
       <WindowPage
         title="Create a student account"
-        description="Start with your identity. Courses and study preferences can be added through the profile editor when available."
+        description="Start with your identity. You will add courses and study preferences right after."
       >
         <form
           onSubmit={submit}

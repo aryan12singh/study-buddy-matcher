@@ -5,7 +5,9 @@ export type GroupViewer = { leader: boolean; member: boolean; requestId: number 
 export type GroupSummary = { id: number; name: string; courseId: number; courseCode: string; courseName: string; leaderId: number; leaderName: string;
   preferredStudyMode: StudyMode | null; studyGoals: StudyGoal[]; maxGroupSize: number; memberCount: number; active: boolean; viewer: GroupViewer }
 export type GroupMember = { studentId: number; name: string; leader: boolean; joinedAt: string }
-export type GroupDetail = GroupSummary & { description: string | null; createdAt: string; availability: WeeklySlot[]; members: GroupMember[] }
+export type GroupDetail = GroupSummary & { description: string | null; createdAt: string; availability: WeeklySlot[]; members: GroupMember[];
+  /** Applications awaiting a decision; null unless the caller leads the group. */
+  pendingApplications: number | null }
 export type GroupApplication = { id: number; groupId: number; groupName: string; studentId: number; studentName: string; message: string | null;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED'; createdAt: string; respondedAt: string | null; groupActive: boolean }
 export type GroupInput = { name: string; description: string | null; courseId: number; studyGoals: StudyGoal[]; preferredStudyMode: StudyMode | null; maxGroupSize: number; availability: WeeklySlot[] }

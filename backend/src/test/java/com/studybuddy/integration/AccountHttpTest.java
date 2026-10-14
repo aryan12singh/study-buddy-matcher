@@ -35,10 +35,10 @@ class AccountHttpTest extends PostgresHttpTest {
         var edited = expect(call("PUT", "/admin/users/" + id, admin, update), 200);
         assertEquals("STUDENT", edited.path("account").path("role").asString());
         assertEquals("Updated name", edited.path("profile").path("name").asString());
-        assertEquals("private-created-contact", database.queryForObject("select contact_number from students where id=?", String.class, id));
-        update.put("contactNumber", "replacement-private-contact");
+        assertEquals("+12025550100", database.queryForObject("select contact_number from students where id=?", String.class, id));
+        update.put("contactNumber", "+442079460958");
         assertPrivateAdminPayload(expect(call("PUT", "/admin/users/" + id, admin, update), 200).toString());
-        assertEquals("replacement-private-contact", database.queryForObject("select contact_number from students where id=?", String.class, id));
+        assertEquals("+442079460958", database.queryForObject("select contact_number from students where id=?", String.class, id));
         assertEquals(1, expect(call("GET", "/admin/users?role=STUDENT&active=true&search=Updated", admin, null), 200).size());
         expect(call("POST", "/admin/users", admin, studentDetails("MIXEDCASE@example.test", "Duplicate")), 409);
         assertEquals(3, count("select count(*) from users"));
@@ -59,6 +59,57 @@ class AccountHttpTest extends PostgresHttpTest {
         assertEquals(id, login.path("account").path("id").asLong());
         assertEquals(1, count("select count(*) from users where id=? and last_login_at is not null", id));
         expect(call("GET", "/auth/me", login.path("token").asString(), null), 200);
+    }
+
+    @Test
+    void loginRejectsUtf8PasswordSuffixBeyondBcryptLimit() {
+        String password = "界".repeat(24);
+        Map<String, Object> registration = studentDetails("unicode@example.test", "Unicode student");
+        registration.put("password", password);
+        long id = expect(call("POST", "/auth/register", null, registration), 201)
+                .path("account").path("id").asLong();
+        var signedIn = expect(call("POST", "/auth/login", null,
+                Map.of("email", "unicode@example.test", "password", password)), 200);
+        assertEquals(id, signedIn.path("account").path("id").asLong());
+        var lastLogin = database.queryForObject("select last_login_at from users where id=?", java.time.OffsetDateTime.class, id);
+
+        var rejected = expect(call("POST", "/auth/login", null,
+                Map.of("email", "unicode@example.test", "password", password + "incorrect")), 401);
+        assertEquals("INVALID_CREDENTIALS", rejected.path("code").asString());
+        assertFalse(rejected.has("token"));
+        assertEquals(lastLogin, database.queryForObject("select last_login_at from users where id=?", java.time.OffsetDateTime.class, id));
+    }
+
+    @Test
+    void overlongLoginDoesNotRevealUnknownOrDeactivatedIdentity() {
+        String password = "界".repeat(24);
+        Map<String, Object> registration = studentDetails("deactivated@example.test", "Deactivated student");
+        registration.put("password", password);
+        long id = expect(call("POST", "/auth/register", null, registration), 201)
+                .path("account").path("id").asLong();
+        database.update("update users set active=false where id=?", id);
+        var lastLogin = database.queryForObject("select last_login_at from users where id=?", java.time.OffsetDateTime.class, id);
+
+        for (String email : List.of("unknown@example.test", "deactivated@example.test")) {
+            var rejected = expect(call("POST", "/auth/login", null,
+                    Map.of("email", email, "password", password + "incorrect")), 401);
+            assertEquals("INVALID_CREDENTIALS", rejected.path("code").asString());
+            assertEquals("Email or password is incorrect", rejected.path("message").asString());
+            assertFalse(rejected.has("token"));
+        }
+        assertEquals("ACCOUNT_DEACTIVATED", expect(call("POST", "/auth/login", null,
+                Map.of("email", "deactivated@example.test", "password", password)), 403).path("code").asString());
+        assertEquals(lastLogin, database.queryForObject("select last_login_at from users where id=?", java.time.OffsetDateTime.class, id));
+    }
+
+    @Test
+    void loginStillAcceptsExistingPasswordsShorterThanCreationMinimum() {
+        long id = student("legacy@example.test", "Legacy student", "private");
+        database.update("update users set password_hash=? where id=?", passwords.encode("short"), id);
+
+        assertEquals(id, expect(call("POST", "/auth/login", null,
+                Map.of("email", "legacy@example.test", "password", "short")), 200)
+                .path("account").path("id").asLong());
     }
 
     @Test
@@ -114,6 +165,9 @@ class AccountHttpTest extends PostgresHttpTest {
         assertFalse(database.queryForObject("select active from study_groups where id=?", Boolean.class, led));
         assertTrue(database.queryForObject("select active from study_groups where id=?", Boolean.class, other));
         expect(call("GET", "/connections", t, null), 401);
+        assertEquals("ACCOUNT_DEACTIVATED", expect(attemptLogin("target@example.test", true), 403).path("code").asString());
+        // A wrong password reveals nothing about the account's state
+        assertEquals("INVALID_CREDENTIALS", expect(attemptLogin("target@example.test", false), 401).path("code").asString());
         expect(call("GET", "/students/" + target + "/profile", b, null), 404);
         expect(call("POST", "/admin/users", admin, studentDetails("TARGET@example.test", "Reserved email")), 409);
         expect(call("POST", "/admin/users/" + target + "/reactivate", admin, null), 200);
@@ -218,13 +272,13 @@ class AccountHttpTest extends PostgresHttpTest {
     private Map<String, Object> studentDetails(String email, String name) {
         return new HashMap<>(Map.of("email", email, "password", "test-password-only", "role", "STUDENT",
                 "name", name, "school", "SCIS", "programme", "Information Systems", "yearOfStudy", 3,
-                "contactNumber", "private-created-contact"));
+                "contactNumber", "+12025550100"));
     }
 
     private void assertPrivateAdminPayload(String payload) {
         assertFalse(payload.contains("contactNumber"));
-        assertFalse(payload.contains("private-created-contact"));
-        assertFalse(payload.contains("replacement-private-contact"));
+        assertFalse(payload.contains("+12025550100"));
+        assertFalse(payload.contains("+442079460958"));
         assertFalse(payload.contains("password"));
     }
 }

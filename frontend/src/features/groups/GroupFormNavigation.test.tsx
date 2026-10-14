@@ -18,6 +18,7 @@ function renderForm(path: string) {
   const router = createMemoryRouter(createRoutesFromElements(<Route element={<>
     <CurrentPath />
     <Link to="/groups/6/edit">Open another group</Link>
+    <Link to="/groups/new">Create another group</Link>
     <Outlet />
   </>}>
       <Route path="/groups/new" element={<GroupFormPage />} />
@@ -73,5 +74,24 @@ describe('group save navigation', () => {
     await screen.findByDisplayValue('Another group')
     await act(async () => { save.resolve(response(group)) })
     expect(screen.getByText('Current path: /groups/6/edit')).toBeInTheDocument()
+  })
+
+  it('starts with a clean empty form after discarding an edited group into creation', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/courses' ? [course] : {
+      ...group, availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00:00', endTime: '11:00:00' }]
+    }))
+    renderForm('/groups/5/edit')
+    await screen.findByDisplayValue(group.name)
+    fireEvent.change(screen.getByLabelText('Start 1'), { target: { value: '25:00' } })
+    fireEvent.click(screen.getByRole('link', { name: 'Create another group' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
+    await screen.findByRole('heading', { name: 'Create study group' })
+    expect(screen.getByLabelText('Group name')).toHaveValue('')
+    expect(screen.getByLabelText('Course')).toHaveValue('')
+    expect(screen.queryByLabelText('Start 1')).not.toBeInTheDocument()
+    expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('link', { name: 'Cancel' })[0])
+    await screen.findByText('Current path: /groups')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

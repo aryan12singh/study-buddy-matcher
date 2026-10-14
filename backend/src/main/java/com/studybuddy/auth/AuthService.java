@@ -9,6 +9,7 @@ import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
 import com.studybuddy.user.UserRepository;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,8 +45,14 @@ public class AuthService {
         String email = InputRules.email(request.email());
         // Lock the identity lookup itself so a waiting login cannot retain an older managed User.
         User user = users.findByEmailForUpdate(email).orElseThrow(AuthService::invalidCredentials);
-        if (!user.isActive() || !passwords.matches(request.password(), user.getPasswordHash())) {
+        if (request.password().getBytes(StandardCharsets.UTF_8).length > InputRules.MAX_PASSWORD_LENGTH
+                || !passwords.matches(request.password(), user.getPasswordHash())) {
             throw invalidCredentials();
+        }
+        // Checked after the password, so only the account holder learns why they cannot sign in
+        if (!user.isActive()) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "ACCOUNT_DEACTIVATED",
+                "This account has been deactivated. Please contact an administrator.");
         }
         user.recordLogin();
         return signedIn(user);

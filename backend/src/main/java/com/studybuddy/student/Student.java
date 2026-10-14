@@ -69,11 +69,8 @@ public class Student {
     @Column(name = "preferred_study_mode", length = 20)
     private StudyMode preferredStudyMode;
 
-    // Preferred group size is stored as a numeric interval (e.g. min=2, max=3)
-    // rather than the categorical one-to-one/small-group/either reading, to
-    // match Appendix A's "2-3 students" vs "2 students" -> Compatible example.
-    // Open question for Team A per AGENTS.md; swap for an enum if they decide
-    // the categorical reading instead.
+    // The categorical profile choice maps to an inclusive numeric range for
+    // Appendix A's overlap scoring: one-to-one, small group or either.
     @Column(name = "preferred_group_size_min")
     private Integer preferredGroupSizeMin;
 

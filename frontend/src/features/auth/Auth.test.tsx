@@ -7,6 +7,7 @@ import AuthProvider from '../../shared/auth/AuthProvider'
 import { AuthContext } from '../../shared/auth/context'
 import { useAuth } from '../../shared/auth/useAuth'
 import { api, getAccessToken, SESSION_TOKEN_KEY, setAccessToken } from '../../shared/api/client'
+import { CONTACT_NUMBER_ERROR } from '../../shared/auth/contactNumber'
 import { adminAccount, deferred, response, studentAccount } from '../../test/renderApp'
 
 const originalAdapter = api.defaults.adapter
@@ -24,12 +25,14 @@ describe('auth and role boundaries', () => {
   it('logs in with normalized identity and stores only the session token', async () => {
     setAccessToken(null)
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ token: 'session-test-token', expiresAt: '2030-01-01T00:00:00Z', account: studentAccount }))
-    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: 0 } : []))
+    // Single-object endpoints stay unanswered here; this test is about login, not the home page's data.
+    vi.spyOn(api, 'get').mockImplementation(async path => path === '/profile/me' || path === '/students/me/summary'
+      ? new Promise(() => {}) : response(path === '/notifications/unread-count' ? { count: 0 } : []))
     renderAuthenticatedApp('/login')
     fireEvent.change(screen.getByLabelText('Email address'), { target: { value: '  STUDENT@example.test  ' } })
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'test-password' } })
     fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
-    expect(await screen.findByRole('heading', { name: 'Connections' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Welcome back, Priya' })).toBeInTheDocument()
     expect(post).toHaveBeenCalledWith('/auth/login', { email: 'student@example.test', password: 'test-password' })
     expect(sessionStorage.getItem(SESSION_TOKEN_KEY)).toBe('session-test-token')
     expect(sessionStorage.getItem('contactNumber')).toBeNull()
@@ -46,7 +49,23 @@ describe('auth and role boundaries', () => {
     fireEvent.change(screen.getByLabelText('Programme'), { target: { value: 'Information Systems' } })
     fireEvent.change(screen.getByLabelText('Contact number'), { target: { value: '+65 9999 1111' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
-    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', { email: 'new@example.test', password: 'a-long-passphrase', name: 'New Student', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 1, contactNumber: '+65 9999 1111' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', { email: 'new@example.test', password: 'a-long-passphrase', name: 'New Student', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 1, contactNumber: '+6599991111' }))
+  })
+  it('rejects contact letters inline before registration and accepts a corrected local Singapore number', async () => {
+    setAccessToken(null)
+    const post = vi.spyOn(api, 'post').mockImplementation(() => new Promise(() => {}))
+    renderAuthenticatedApp('/register')
+    for (const [label, value] of [['Email address', 'new@example.test'], ['Password', 'a-long-passphrase'],
+      ['Full name', 'New Student'], ['School', 'SCIS'], ['Programme', 'Information Systems'], ['Contact number', '9123ABCD']]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
+    expect(screen.getByText(CONTACT_NUMBER_ERROR)).toBeInTheDocument()
+    expect(screen.getByLabelText('Contact number')).toHaveAttribute('aria-invalid', 'true')
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText('Contact number'), { target: { value: '9 (123).45-67' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', expect.objectContaining({ contactNumber: '+6591234567' })))
   })
   it('guards admin routes from a student without requesting admin data', async () => {
     const get = vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: 0 } : []))

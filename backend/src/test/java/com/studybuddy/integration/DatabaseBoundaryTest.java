@@ -14,8 +14,8 @@ class DatabaseBoundaryTest extends PostgresHttpTest {
         student("private@example.test", "Private", "must-not-be-readable-by-browser-role");
         for (String role : new String[]{"anon", "authenticated"}) {
             for (String query : new String[]{"select contact_number from students", "select password_hash from users",
-                    "select * from notifications", "select * from study_rooms", "select * from room_presences",
-                    "insert into courses(code,name) values ('FORBIDDEN','Forbidden')"}) {
+                    "select * from notifications", "select * from study_rooms", "select * from room_presences", "select * from matching_enabled_criteria",
+                    "insert into matching_enabled_criteria(setting_id,criterion) values (1,'COURSE')", "insert into courses(code,name) values ('FORBIDDEN','Forbidden')"}) {
                 String state = database.execute((ConnectionCallback<String>) connection -> {
                     try (var statement = connection.createStatement()) {
                         statement.execute("set role " + role);
@@ -33,8 +33,8 @@ class DatabaseBoundaryTest extends PostgresHttpTest {
             }
         }
         assertEquals(1, count("select count(*) from students"));
-        assertEquals(18, count("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace "
-                + "where n.nspname='public' and c.relkind='r' and c.relrowsecurity"));
+        assertEquals(0, count("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace "
+                + "where n.nspname='public' and c.relkind='r' and not c.relrowsecurity"));
     }
 
     @Test

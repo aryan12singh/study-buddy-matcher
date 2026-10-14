@@ -33,6 +33,20 @@ if [ "$task_ready" != true ]; then
 fi
 task_port="$(docker port "$task_container" 5432/tcp | head -n 1 | awk -F: '{print $NF}')"
 export PGHOST=127.0.0.1 PGPORT="$task_port" PGDATABASE=studybuddy_test PGUSER=studybuddy_test PGPASSWORD="$task_database_password"
+# pg_isready can see the image's temporary Unix-socket initialization server.
+# Wait for the published TCP port before running migrations against the final server.
+task_ready=false
+for task_attempt in {1..60}; do
+  if psql --no-psqlrc --quiet --set=ON_ERROR_STOP=1 --command='SELECT 1' >/dev/null 2>&1; then
+    task_ready=true
+    break
+  fi
+  sleep 1
+done
+if [ "$task_ready" != true ]; then
+  printf 'PostgreSQL did not become ready on its published port.\n' >&2
+  exit 1
+fi
 psql --no-psqlrc --quiet --set=ON_ERROR_STOP=1 --command='CREATE DATABASE studybuddy_migration_test'
 PGDATABASE=studybuddy_migration_test "$task_repo_root/scripts/test-migrations.sh"
 "$task_repo_root/scripts/migrate-database.sh"

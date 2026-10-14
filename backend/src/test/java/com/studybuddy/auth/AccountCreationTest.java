@@ -33,14 +33,14 @@ class AccountCreationTest {
             ReflectionTestUtils.setField(user,"id",12L);
             return user;
         });
-        User user = creation.create(" Jamie@EXAMPLE.TEST ","runtime-password",Role.STUDENT," Jamie "," SCIS "," IS ",3," Synthetic contact ");
+        User user = creation.create(" Jamie@EXAMPLE.TEST ","runtime-password",Role.STUDENT," Jamie "," SCIS "," IS ",3," +1 (202) 555-0100 ");
         var captured = ArgumentCaptor.forClass(Student.class);
         verify(students).saveAndFlush(captured.capture());
         assertEquals("jamie@example.test",user.getEmail());
         assertEquals("encoded-test-value",user.getPasswordHash());
         assertSame(user,captured.getValue().getUser());
         assertEquals("Jamie",captured.getValue().getName());
-        assertEquals("Synthetic contact",captured.getValue().getContactNumber());
+        assertEquals("+12025550100",captured.getValue().getContactNumber());
     }
     @Test void duplicatesAreRejectedBeforeHashingOrWriting() {
         when(users.existsByEmail("jamie@example.test")).thenReturn(true);
@@ -50,8 +50,10 @@ class AccountCreationTest {
         verifyNoInteractions(students,passwords);
     }
     @Test void studentFieldValidationRunsBeforeAnyWrite() {
-        assertThrows(InvalidInputException.class,() -> creation.create("student@example.test","runtime-password",Role.STUDENT,null,"SCIS","IS",3,"contact"));
-        assertThrows(InvalidInputException.class,() -> creation.create("student@example.test","runtime-password",Role.STUDENT,"Student","SCIS","IS",0,"contact"));
+        assertThrows(InvalidInputException.class,() -> creation.create("student@example.test","runtime-password",Role.STUDENT,null,"SCIS","IS",3,"+12025550100"));
+        assertThrows(InvalidInputException.class,() -> creation.create("student@example.test","runtime-password",Role.STUDENT,"Student","SCIS","IS",0,"+12025550100"));
+        var contact = assertThrows(InvalidInputException.class,() -> creation.create("student@example.test","runtime-password",Role.STUDENT,"Student","SCIS","IS",3,"contact"));
+        assertTrue(contact.getFieldErrors().containsKey("contactNumber"));
         verify(users,never()).saveAndFlush(any());
         verifyNoInteractions(students,passwords);
     }

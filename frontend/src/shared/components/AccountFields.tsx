@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import type { AccountForm } from '../auth/validation'
+import { CONTACT_NUMBER_HINT } from '../auth/contactNumber'
 import Field from './Field'
 
 export default function AccountFields<T extends AccountForm>({ value, onChange, errors, student, creating, disabled }: {
@@ -43,8 +44,8 @@ export default function AccountFields<T extends AccountForm>({ value, onChange, 
           id={`${prefix}-${field.key}`}
           label={field.label}
           error={errors[field.key]}
-          hint={field.key === 'contactNumber' && !creating ?
-            'Leave blank to preserve the saved private number. The current number is not provided to administrators.'
+          hint={field.key === 'contactNumber' ?
+            `${CONTACT_NUMBER_HINT}${creating ? '' : ' Leave blank to preserve the saved private number. The current number is not provided to administrators.'}`
             :
             undefined}
         >
