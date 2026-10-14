@@ -3,7 +3,7 @@ import axios from 'axios'
 import { Link, useParams } from 'react-router-dom'
 import { createSession, getAvailability, getSession, updateSession } from './api'
 import type { SessionScope, StudySession } from './api'
-import { initialSessionForm, nextSuggestedTimes, sessionInput, validateSessionForm } from './sessionForm'
+import { initialSessionForm, nextSuggestedTimes, sessionInput, suggestionDurationMinutes, validateSessionForm } from './sessionForm'
 import type { SessionForm } from './sessionForm'
 import { sessionParent } from './sessionPresentation'
 import { scopeListPath } from './api'
@@ -63,6 +63,7 @@ function SessionEditor({ context }: { context: EditorContext }) {
   const [error, setError] = useState<string>()
   const [denied, setDenied] = useState(false)
   const [discard, setDiscard] = useState(false)
+  const [suggestionDuration, setSuggestionDuration] = useState('60')
   const alive = useRef(true)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
   const dirty = JSON.stringify(form) !== baseline
@@ -70,6 +71,11 @@ function SessionEditor({ context }: { context: EditorContext }) {
   const availability = useResource(`session-availability-${account?.id}-${context.scope.kind}-${context.scope.id}`,
     signal => getAvailability(context.scope, signal), true, false)
   const groupId = context.scope.kind === 'GROUP' ? context.scope.id : undefined
+  const durationMinutes = suggestionDurationMinutes(suggestionDuration)
+  const suggestions = durationMinutes === null ? [] : availability.data?.sharedSlots.flatMap(slot => {
+    const times = nextSuggestedTimes(slot, durationMinutes)
+    return times ? [{ slot, times }] : []
+  }) ?? []
   function edit(field: keyof SessionForm, value: string) {
     setForm(previous => ({ ...previous, [field]: value }))
     setErrors(previous => { const next = { ...previous }; delete next[field]; return next })
@@ -115,13 +121,21 @@ function SessionEditor({ context }: { context: EditorContext }) {
       <section className="detail-panel session-availability">
         <h2>Mutual weekly availability</h2>
         <p className="muted">These suggestions use Singapore time and current participants’ weekly availability. They suggest a time, not confirmed attendance.</p>
+        <Field id="session-suggestion-duration" label="Suggested session duration (minutes)"
+          error={durationMinutes === null ? 'Enter a positive whole number of minutes for suggestions.' : undefined}
+          hint="Defaults to 60 minutes. Changing this only filters suggestions; your entered dates stay unchanged until you choose a time.">
+          <input id="session-suggestion-duration" type="number" min="1" step="1" value={suggestionDuration} disabled={pending} onChange={event => setSuggestionDuration(event.target.value)} />
+        </Field>
         <StatePanel loading={availability.loading && !availability.data} error={availability.error} onRetry={() => availability.reload()} />
         {availability.data && <><p>{availability.data.participantCount} participants · {availability.data.sharedMinutes} shared minutes each week</p>
           <WeeklySchedule slots={availability.data.sharedSlots} />
-          <div className="actions">{availability.data.sharedSlots.map((slot, index) => <Button key={index} disabled={pending} onClick={() => {
-            setForm(previous => ({ ...previous, ...nextSuggestedTimes(slot) })); setErrors(previous => { const next = { ...previous }; delete next.startLocal; delete next.endLocal; delete next.timeZone; return next })
-          }}>Use next {label(slot.dayOfWeek)} {slot.startTime.slice(0, 5)}–{slot.endTime.slice(0, 5)} (SGT)</Button>)}</div>
+          <div className="actions">{suggestions.map(({ slot, times }, index) => <Button key={index} disabled={pending} onClick={() => {
+            const currentTimes = durationMinutes ? nextSuggestedTimes(slot, durationMinutes) : null
+            if (!currentTimes) return
+            setForm(previous => ({ ...previous, ...currentTimes })); setErrors(previous => { const next = { ...previous }; delete next.startLocal; delete next.endLocal; delete next.timeZone; return next })
+          }}>Use next {label(slot.dayOfWeek)} {times.startLocal.slice(11)}–{times.endLocal.slice(11)} (SGT, {durationMinutes} min)</Button>)}</div>
           {!availability.data.sharedSlots.length && <p className="muted">No shared weekly time is saved. Agree a date together and enter it manually.</p>}
+          {!!availability.data.sharedSlots.length && durationMinutes !== null && !suggestions.length && <p className="muted">No shared weekly window fits {durationMinutes} minutes. Choose a shorter duration or agree a date together and enter it manually.</p>}
         </>}
       </section>
       {error && <p className="field-error" role="alert">{error}</p>}

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
@@ -8,9 +8,10 @@ import SessionFormPage from './SessionFormPage'
 import SessionDetailPage from './SessionDetailPage'
 import UpcomingSessions from './UpcomingSessions'
 import GroupSessionAgenda from './GroupSessionAgenda'
+import SessionList from './SessionList'
 import type { StudySession } from './api'
 import { notificationLink } from '../notifications/api'
-import { nextSuggestedTimes, validateSessionForm, initialSessionForm } from './sessionForm'
+import { nextSuggestedTimes, validateSessionForm, initialSessionForm, suggestionDurationMinutes } from './sessionForm'
 
 const session: StudySession = {
   id: 11, version: 3, scope: 'GROUP', groupId: 5, connectionId: null, title: 'Exam revision',
@@ -32,16 +33,19 @@ function serve(overrides: Record<string, unknown> = {}) {
     '/connections/8/sessions': [{ ...session, scope: 'BUDDY', groupId: null, connectionId: 8 }], '/connections/8/sessions/availability': { ...availability, sharedSlots: [] }, ...overrides }
   return vi.spyOn(api, 'get').mockImplementation(async path => response(data[path as string]))
 }
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
+beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-10-14T00:00:00Z')) })
+afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 describe('dated study session workflows', () => {
   it('previews the next three group dates instead of prioritizing older recurring series', async () => {
     const recurring = [1, 2, 3].map((id, index) => ({
       ...session, id, title: `Older weekly series ${id}`, occurrenceCount: 52,
       startAt: `2026-0${id}-01T02:00:00Z`, endAt: `2026-0${id}-01T03:00:00Z`,
+      occurrences: [{ startAt: `2026-10-${15 + index}T02:00:00Z`, endAt: `2026-10-${15 + index}T03:00:00Z` }],
       nextOccurrence: { startAt: `2026-10-${15 + index}T02:00:00Z`, endAt: `2026-10-${15 + index}T03:00:00Z` }
     }))
     const imminent = { ...session, id: 4, title: 'Imminent one-off', startAt: '2026-10-14T02:00:00Z', endAt: '2026-10-14T03:00:00Z',
+      occurrences: [{ startAt: '2026-10-14T02:00:00Z', endAt: '2026-10-14T03:00:00Z' }],
       nextOccurrence: { startAt: '2026-10-14T02:00:00Z', endAt: '2026-10-14T03:00:00Z' } }
     // The scope endpoint orders original starts; the agenda must order each next occurrence.
     serve({ '/groups/5/sessions': [...recurring, imminent] })
@@ -51,13 +55,104 @@ describe('dated study session workflows', () => {
     expect(links).toEqual(['/sessions/4', '/sessions/1', '/sessions/2'])
   })
 
+  it('updates ongoing boundaries, advances a cached weekly series and removes expired room shortcuts', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-14T01:59:00Z'))
+    const first = { startAt: '2026-10-14T02:00:00Z', endAt: '2026-10-14T02:01:00Z' }
+    const next = { startAt: '2026-10-21T02:00:00Z', endAt: '2026-10-21T02:01:00Z' }
+    const weekly = { ...session, occurrences: [first, next], occurrenceCount: 2, nextOccurrence: first }
+    const oneOff = { ...session, id: 12, title: 'One-off session', occurrences: [first], nextOccurrence: first }
+    const { unmount } = renderPage(<SessionList sessions={[weekly, oneOff]} />)
+    const row = (title: string) => within(screen.getByRole('link', { name: title }).closest('li')!)
+    expect(row('Exam revision').getByText('Upcoming')).toBeInTheDocument()
+    act(() => { vi.advanceTimersByTime(60_000) })
+    expect(row('Exam revision').getByText('Ongoing')).toBeInTheDocument()
+    expect(row('One-off session').getByText('Ongoing')).toBeInTheDocument()
+    act(() => { vi.advanceTimersByTime(60_000) })
+    expect(row('Exam revision').getByText('Upcoming')).toBeInTheDocument()
+    expect(row('Exam revision').getByText(/21 Oct 2026/)).toBeInTheDocument()
+    expect(row('One-off session').getByText('Past session')).toBeInTheDocument()
+    expect(row('One-off session').queryByRole('link', { name: 'Open study room' })).not.toBeInTheDocument()
+    // Returning to a backgrounded view recovers even when the endpoint's projection is stale.
+    vi.setSystemTime(new Date('2026-10-21T02:01:00Z'))
+    fireEvent(window, new Event('focus'))
+    expect(row('Exam revision').getByText('Past session')).toBeInTheDocument()
+    unmount()
+  })
+
+  it('offers only actual safe current group links without inventing rooms for other plans', () => {
+    const variants = [session,
+      { ...session, id: 12, title: 'External meeting', roomLink: 'https://meet.example/study' },
+      { ...session, id: 13, title: 'Cancelled plan', status: 'CANCELLED' as const },
+      { ...session, id: 14, title: 'Past plan', occurrences: [{ startAt: '2026-10-13T02:00:00Z', endAt: '2026-10-13T03:00:00Z' }] },
+      { ...session, id: 15, title: 'Other group path', roomLink: '/groups/9/room' },
+      { ...session, id: 16, title: 'Unsafe legacy link', roomLink: 'https://meet.example/study?token=private' },
+      { ...session, id: 17, title: 'Buddy plan', scope: 'BUDDY' as const, groupId: null, connectionId: 8, roomLink: null }]
+    renderPage(<SessionList sessions={variants} />)
+    expect(screen.getAllByRole('link', { name: 'Open study room' })).toHaveLength(1)
+    expect(screen.getByRole('link', { name: 'Open study room' })).toHaveAttribute('href', '/groups/5/room')
+    const meeting = screen.getByRole('link', { name: 'Open meeting link' })
+    expect(meeting).toHaveAttribute('href', 'https://meet.example/study')
+    expect(meeting).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
   it('shows real upcoming dates on Home and links session notifications to their detail', async () => {
     const get = serve()
     renderPage(<UpcomingSessions />)
     expect(await screen.findByRole('link', { name: 'Exam revision' })).toHaveAttribute('href', '/sessions/11')
     expect(screen.getByText(/20 Oct 2026/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open study room' })).toHaveAttribute('href', '/groups/5/room')
     expect(get).toHaveBeenCalledWith('/sessions/mine', expect.objectContaining({ signal: expect.any(AbortSignal) }))
     expect(notificationLink({ id: 1, type: 'GROUP_SESSION_UPDATED', resourceType: 'SESSION', resourceId: 11, read: false, createdAt: '', message: '', eventKey: null })).toEqual({ to: '/sessions/11', label: 'View study session' })
+  })
+
+  it('fits a 45-minute plan inside a two-hour overlap while preserving drafts and manual scheduling', async () => {
+    serve({ '/groups/5/sessions/availability': { ...availability, sharedMinutes: 120,
+      sharedSlots: [{ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00' }] } })
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response(session))
+    const { router } = renderPage(<SessionFormPage kind="GROUP" />, '/groups/5/sessions/new', '/groups/:id/sessions/new')
+    const title = await screen.findByLabelText('Session title')
+    fireEvent.change(title, { target: { value: 'Focused revision' } })
+    fireEvent.change(screen.getByLabelText('Agenda (optional)'), { target: { value: 'Keep this draft agenda' } })
+    const start = screen.getByLabelText('Starts (session timezone)') as HTMLInputElement
+    const initialStart = start.value
+    const duration = screen.getByLabelText('Suggested session duration (minutes)')
+    expect(duration).toHaveValue(60)
+    await screen.findByRole('button', { name: /Use next Monday/ })
+    fireEvent.change(duration, { target: { value: '150' } })
+    expect(screen.getByText(/No shared weekly window fits 150 minutes/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Use next Monday/ })).not.toBeInTheDocument()
+    fireEvent.change(duration, { target: { value: '2.5' } })
+    expect(screen.getByText('Enter a positive whole number of minutes for suggestions.')).toBeInTheDocument()
+    expect(start).toHaveValue(initialStart)
+    fireEvent.change(duration, { target: { value: '45' } })
+    fireEvent.change(screen.getByLabelText('Session timezone'), { target: { value: 'Europe/London' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Use next Monday 10:00–10:45 (SGT, 45 min)' }))
+    expect(start).toHaveValue('2026-10-19T10:00')
+    expect(screen.getByLabelText('Ends (session timezone)')).toHaveValue('2026-10-19T10:45')
+    expect(screen.getByLabelText('Session timezone')).toHaveValue('Asia/Singapore')
+    expect(screen.getByLabelText('Agenda (optional)')).toHaveValue('Keep this draft agenda')
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.click(screen.getAllByRole('link', { name: 'Cancel' })[0])
+    expect(await screen.findByRole('dialog', { name: 'Discard unsaved changes?' })).toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Keep editing' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create study session' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sessions/11'))
+    expect(post).toHaveBeenCalledWith('/groups/5/sessions', expect.objectContaining({ title: 'Focused revision',
+      startLocal: '2026-10-19T10:00', endLocal: '2026-10-19T10:45', timeZone: 'Asia/Singapore', agenda: 'Keep this draft agenda' }))
+    expect(post.mock.calls[0][1]).not.toHaveProperty('suggestionDuration')
+  })
+
+  it('keeps manual saving available when a suggestion duration is invalid or no shared window fits', async () => {
+    serve()
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response(session))
+    renderPage(<SessionFormPage kind="GROUP" />, '/groups/5/sessions/new', '/groups/:id/sessions/new')
+    fireEvent.change(await screen.findByLabelText('Session title'), { target: { value: 'Manually agreed plan' } })
+    fireEvent.change(screen.getByLabelText('Suggested session duration (minutes)'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Starts (session timezone)'), { target: { value: '2026-10-20T10:00' } })
+    fireEvent.change(screen.getByLabelText('Ends (session timezone)'), { target: { value: '2026-10-20T10:45' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create study session' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/groups/5/sessions', expect.objectContaining({ title: 'Manually agreed plan', startLocal: '2026-10-20T10:00', endLocal: '2026-10-20T10:45' })))
   })
 
   it('retains separate list permissions and explains an empty agenda', async () => {
@@ -193,6 +288,9 @@ describe('dated study session workflows', () => {
     const form = initialSessionForm(session, 5)
     expect(validateSessionForm({ ...form, endLocal: '2026-10-21T01:00' }, 5)).toEqual({})
     expect(validateSessionForm({ ...form, startLocal: '2026-02-30T10:00', occurrenceCount: '53', roomLink: 'https://meet.example/room?token=private' }, 5)).toMatchObject({ startLocal: expect.any(String), occurrenceCount: expect.any(String), roomLink: expect.any(String) })
-    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '11:00' }, new Date('2026-10-19T03:00:00Z'))).toEqual({ startLocal: '2026-10-26T10:00', endLocal: '2026-10-26T11:00', timeZone: 'Asia/Singapore' })
+    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '11:00' }, 60, new Date('2026-10-19T03:00:00Z'))).toEqual({ startLocal: '2026-10-26T10:00', endLocal: '2026-10-26T11:00', timeZone: 'Asia/Singapore' })
+    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00' }, 45, new Date('2026-10-18T15:30:00Z'))).toEqual({ startLocal: '2026-10-19T10:00', endLocal: '2026-10-19T10:45', timeZone: 'Asia/Singapore' })
+    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '10:30' }, 45)).toBeNull()
+    expect(['', '0', '-1', '2.5', 'Infinity'].map(suggestionDurationMinutes)).toEqual([null, null, null, null, null])
   })
 })

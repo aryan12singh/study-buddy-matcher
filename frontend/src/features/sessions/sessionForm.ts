@@ -48,8 +48,15 @@ export function sessionInput(form: SessionForm): SessionInput {
   return { ...form, title: form.title.trim(), timeZone: form.timeZone.trim(), occurrenceCount: Number(form.occurrenceCount),
     agenda: form.agenda.trim() || null, location: form.location.trim() || null, roomLink: form.roomLink.trim() || null }
 }
+export function suggestionDurationMinutes(value: string) {
+  const duration = Number(value)
+  return Number.isSafeInteger(duration) && duration > 0 ? duration : null
+}
 /** Weekly availability is campus-local, independently of the session's selected timezone. */
-export function nextSuggestedTimes(slot: WeeklySlot, now = new Date()) {
+export function nextSuggestedTimes(slot: WeeklySlot, durationMinutes = 60, now = new Date()) {
+  const startMinutes = Number(slot.startTime.slice(0, 2)) * 60 + Number(slot.startTime.slice(3, 5))
+  const endMinutes = Number(slot.endTime.slice(0, 2)) * 60 + Number(slot.endTime.slice(3, 5))
+  if (!Number.isSafeInteger(durationMinutes) || durationMinutes <= 0 || endMinutes - startMinutes < durationMinutes) return null
   const localNow = localDateTime(now)
   const date = localNow.slice(0, 10)
   const day = new Date(`${date}T00:00:00Z`)
@@ -58,5 +65,9 @@ export function nextSuggestedTimes(slot: WeeklySlot, now = new Date()) {
   day.setUTCDate(day.getUTCDate() + offset)
   if (`${day.toISOString().slice(0, 10)}T${slot.startTime.slice(0, 5)}` <= localNow) day.setUTCDate(day.getUTCDate() + 7)
   const nextDate = day.toISOString().slice(0, 10)
-  return { startLocal: `${nextDate}T${slot.startTime.slice(0, 5)}`, endLocal: `${nextDate}T${slot.endTime.slice(0, 5)}`, timeZone: CAMPUS_TIMEZONE }
+  const startLocal = `${nextDate}T${slot.startTime.slice(0, 5)}`
+  // This date is a civil-time calculation; campus time has no daylight-saving changes.
+  const end = new Date(`${startLocal}:00Z`)
+  end.setUTCMinutes(end.getUTCMinutes() + durationMinutes)
+  return { startLocal, endLocal: end.toISOString().slice(0, 16), timeZone: CAMPUS_TIMEZONE }
 }

@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { cancelSession, getSession } from './api'
-import { occurrenceLabel, safeRoomLink, sessionParent } from './sessionPresentation'
+import { displayedOccurrence, nextSessionOccurrence, occurrenceLabel, sessionParent, sessionStatusLabel } from './sessionPresentation'
+import { useSessionClock } from './useSessionClock'
+import SessionRoomLink from './SessionRoomLink'
 import { useAuth } from '../../shared/auth/useAuth'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -26,7 +28,8 @@ function SessionDetail({ id }: { id: number }) {
   const action = useAction()
   const [confirm, setConfirm] = useState(false)
   const data = session.data
-  const roomLink = data ? safeRoomLink(data) : null
+  const clockSessions = useMemo(() => data ? [data] : [], [data])
+  const now = useSessionClock(clockSessions)
   async function cancel() {
     if (!data) return
     const result = await action.run(() => cancelSession(id, data.version), 'Study session cancelled for everyone.')
@@ -39,18 +42,17 @@ function SessionDetail({ id }: { id: number }) {
     <StatePanel loading={session.loading && !data} error={valid ? session.error : 'This session link is invalid.'} onRetry={valid ? () => session.reload() : undefined} />
     {data && <>
       <section className="detail-panel">
-        <div className="tag-list"><Badge tone={data.status === 'SCHEDULED' ? 'good' : 'neutral'}>{data.status === 'CANCELLED' ? 'Cancelled' : 'Scheduled'}</Badge>
+        <div className="tag-list"><Badge tone={nextSessionOccurrence(data, now) ? 'good' : 'neutral'}>{sessionStatusLabel(data, now)}</Badge>
           <Badge>{data.scope === 'GROUP' ? 'Group session' : 'Buddy session'}</Badge></div>
         <h2>When and where</h2>
-        <p>{occurrenceLabel(data.nextOccurrence ?? { startAt: data.startAt, endAt: data.endAt }, data.timeZone)}</p>
+        <p>{occurrenceLabel(displayedOccurrence(data, now), data.timeZone)}</p>
         <p><strong>Timezone:</strong> {data.timeZone}</p>
         <p><strong>Location:</strong> {data.location || 'To be agreed'}</p>
         <h3>Agenda</h3><p className="message-text">{data.agenda || 'No agenda saved yet.'}</p>
         <div className="actions">
           {data.canManage && data.status === 'SCHEDULED' && <><Link className="retro-button primary" to={`/sessions/${id}/edit`}>Edit session</Link>
             <Button variant="danger" disabled={action.pending} onClick={() => setConfirm(true)}>Cancel session</Button></>}
-          {roomLink && data.status === 'SCHEDULED' && (roomLink.startsWith('/') ? <Link className="retro-button" to={roomLink}>Open study room</Link>
-            : <a className="retro-button" href={roomLink} target="_blank" rel="noopener noreferrer">Open meeting link</a>)}
+          <SessionRoomLink session={data} now={now} />
           <CalendarButton sessionId={id} />
         </div>
         <p className="privacy-note">Calendar downloads are snapshots. Re-export after edits or cancellation, and check your calendar for duplicates. Each weekly date is exported as a separate event. No contacts or participant emails are included.</p>
