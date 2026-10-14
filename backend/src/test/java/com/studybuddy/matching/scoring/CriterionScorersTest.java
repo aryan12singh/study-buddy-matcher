@@ -82,7 +82,7 @@ class CriterionScorersTest {
         @Test
         void partialMarksComeFromConfiguration() {
             them.getCoursesTaken().add(is442);
-            CourseScorer generous = new CourseScorer(new ScoringRules(0.0, 0.7));
+            CourseScorer generous = new CourseScorer(new ScoringRules(0.0, 0.7, 60));
 
             assertEquals(0.7, generous.score(profile(me), profile(them), searchForCourse(4)).score());
         }
@@ -90,7 +90,7 @@ class CriterionScorersTest {
 
     @Nested
     class Availability {
-        private final AvailabilityOverlapScorer scorer = new AvailabilityOverlapScorer();
+        private final AvailabilityOverlapScorer scorer = new AvailabilityOverlapScorer(MatchingFixtures.rules());
 
         @Test
         void scoresSharedTimeAgainstTheSmallerTimetable() {

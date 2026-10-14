@@ -75,6 +75,8 @@ app:
       unknown-score: 0.0
       # Course score for a candidate who takes the course in focus but wants a buddy for another.
       takes-course-score: 0.5
+      # Shortest shared block that counts as time to meet; shorter overlaps are ignored.
+      min-session-minutes: 60
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

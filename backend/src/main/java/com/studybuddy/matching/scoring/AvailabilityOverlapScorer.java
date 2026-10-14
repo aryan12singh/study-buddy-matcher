@@ -12,6 +12,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class AvailabilityOverlapScorer implements CriterionScorer {
 
+    private final ScoringRules rules;
+
+    public AvailabilityOverlapScorer(ScoringRules rules) {
+        this.rules = rules;
+    }
+
     @Override
     public MatchingCriterion criterion() {
         return MatchingCriterion.AVAILABILITY;
@@ -25,6 +31,6 @@ public class AvailabilityOverlapScorer implements CriterionScorer {
             return CriterionResult.unknown();
         }
         long smallerTimetable = Math.min(mine.totalMinutes(), theirs.totalMinutes());
-        return CriterionResult.of(Math.min(1.0, (double) mine.sharedMinutesWith(theirs) / smallerTimetable));
+        return CriterionResult.of(Math.min(1.0, (double) mine.sessionMinutesWith(theirs, rules.minSessionMinutes()) / smallerTimetable));
     }
 }

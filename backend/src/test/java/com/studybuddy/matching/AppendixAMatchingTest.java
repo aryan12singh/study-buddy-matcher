@@ -44,7 +44,7 @@ class AppendixAMatchingTest {
             MatchingCriterion.STUDY_GOAL, 0.10, MatchingCriterion.GROUP_SIZE, 0.10));
 
     private final WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(MatchingFixtures.rules()),
-            new AvailabilityOverlapScorer(), new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()),
+            new AvailabilityOverlapScorer(MatchingFixtures.rules()), new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()),
             new QualityThresholds(0.75, 0.50), MatchingFixtures.rules());
 
     /** Student A: IS442; Wed 7-9 pm and Fri 2-4 pm; in person; exam preparation; 2-3 students. */

@@ -78,10 +78,11 @@ class MatchServiceTest {
     @BeforeEach
     void setUp() {
         MatchingProperties properties = MatchingFixtures.properties();
-        WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(MatchingFixtures.rules()), new AvailabilityOverlapScorer(),
+        WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(MatchingFixtures.rules()), new AvailabilityOverlapScorer(MatchingFixtures.rules()),
                 new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()), properties.quality(), properties.scoring());
         service = new MatchService(access, students, availabilitySlots, courses, config, properties,
-                new MatchSearchFilter(new ProfileProperties(5, 8)), scorer, new MatchResultAssembler(),
+                new MatchSearchFilter(new ProfileProperties(5, 8), properties.scoring()), scorer,
+                new MatchResultAssembler(properties.scoring()),
                 new MatchRelationships(connections, requests));
 
         me = student(ME, "Priya");
@@ -103,7 +104,7 @@ class MatchServiceTest {
         when(availabilitySlots.findAll()).thenReturn(List.of(
                 new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
                 new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)),
-                new AvailabilitySlot(weak, MONDAY, LocalTime.of(10, 30), LocalTime.of(12, 0))));
+                new AvailabilitySlot(weak, MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0))));
         when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new BalancedStrategy(),
                 new MatchingWeights(evenWeights()), EnumSet.allOf(MatchingCriterion.class), 0, 0));
     }
@@ -119,7 +120,7 @@ class MatchServiceTest {
         assertEquals(List.of(2L, 3L), results.stream().map(MatchResultDto::studentId).toList());
         assertEquals(MatchQuality.STRONG, results.get(0).quality());
         assertEquals(2.0, results.get(0).sharedHoursPerWeek());
-        assertEquals(0.5, results.get(1).sharedHoursPerWeek());
+        assertEquals(1.0, results.get(1).sharedHoursPerWeek());
     }
 
     @Test

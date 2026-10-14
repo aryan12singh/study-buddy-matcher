@@ -81,7 +81,7 @@ public final class MatchingFixtures {
     }
 
     public static ScoringRules rules() {
-        return new ScoringRules(0.0, 0.5);
+        return new ScoringRules(0.0, 0.5, 60);
     }
 
     public static PriorityTiers tiers() {

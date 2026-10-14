@@ -40,7 +40,7 @@ public class WeightedMatchScorer {
             }
         }
         double total = total(breakdown, weights);
-        double hours = searcher.availability().sharedMinutesWith(candidate.availability()) / 60.0;
+        double hours = searcher.availability().sessionMinutesWith(candidate.availability(), rules.minSessionMinutes()) / 60.0;
         var quality = thresholds.classify(total);
         String criteria = Arrays.stream(MatchingCriterion.values()).filter(enabled::contains)
                 .map(criterion -> criterion.label() + " " + (unknown.contains(criterion) ? "not shared"
