@@ -41,8 +41,8 @@ export default function RoomSettingsForm({ room, pending, onSave, serverErrors }
     if (saved) setDraft(null)
   }
   return <section className="detail-panel">
-    <h2>Leader settings</h2>
-    <p className="muted">Reset the timer before changing durations. The leader retains controls even when a host is disconnected.</p>
+    <h2>Room settings</h2>
+    <p className="muted">Reset the timer before changing durations. Present hosts and co-hosts can change durations and capacity. Only the leader assigns roles.</p>
     <form className="stack-form" noValidate onSubmit={submit}>
       <div className="form-grid">
         <Field id="focus-minutes" label="Focus minutes" error={displayedErrors.focusMinutes}>
@@ -58,12 +58,12 @@ export default function RoomSettingsForm({ room, pending, onSave, serverErrors }
             onChange={event => edit('participantLimit', event.target.value)} />
         </Field>
         <Field id="room-host" label="Host" error={displayedErrors.hostId}>
-          <select id="room-host" value={form.hostId} disabled={pending} onChange={event => edit('hostId', event.target.value)}>
+          <select id="room-host" value={form.hostId} disabled={pending || !room.leader} onChange={event => edit('hostId', event.target.value)}>
             {room.members.map(member => <option key={member.studentId} value={member.studentId}>{member.name}</option>)}
           </select>
         </Field>
         <Field id="room-co-host" label="Co-host" error={displayedErrors.coHostId}>
-          <select id="room-co-host" value={form.coHostId} disabled={pending} onChange={event => edit('coHostId', event.target.value)}>
+          <select id="room-co-host" value={form.coHostId} disabled={pending || !room.leader} onChange={event => edit('coHostId', event.target.value)}>
             <option value="">No co-host</option>
             {room.members.map(member => <option key={member.studentId} value={member.studentId}>{member.name}</option>)}
           </select>

@@ -79,7 +79,7 @@ describe('group fields and saved state', () => {
     expect(put).not.toHaveBeenCalled()
   })
   it('shows the saved agenda and never exposes contact through member rows', async () => {
-    vi.spyOn(api, 'get').mockResolvedValue(response(group))
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? [] : group))
     renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
     fireEvent.click(await screen.findByRole('button', { name: 'View agenda' }))
     const dialog = screen.getByRole('dialog')
@@ -92,7 +92,7 @@ describe('group fields and saved state', () => {
     { who: 'the leader', viewer: { leader: true, member: true, requestId: null, requestStatus: null }, pendingApplications: 2, banner: true },
     { who: 'a member', viewer: { leader: false, member: true, requestId: null, requestStatus: null }, pendingApplications: null, banner: false }
   ])('shows waiting applications to $who only, with one manage action and the copy link last', async ({ viewer, pendingApplications, banner }) => {
-    vi.spyOn(api, 'get').mockResolvedValue(response({ ...group, viewer, pendingApplications }))
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? [] : { ...group, viewer, pendingApplications }))
     renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
     await screen.findByRole('button', { name: 'View agenda' })
     if (banner) {

@@ -21,7 +21,7 @@ export default function NotificationsPage() {
   return (
     <WindowPage
       title="Notifications"
-      description="Buddy requests, group updates and account changes. Times shown in Singapore time."
+      description="Buddy requests, group and session updates, and account changes. Times shown in Singapore time."
       actions={<Button
         disabled={action.pending}
         onClick={() => action.run(readAllNotifications, 'All notifications marked as read.')}
@@ -72,7 +72,7 @@ export default function NotificationsPage() {
                   >
                     <div>
                       <div className="person-heading">
-                        <div className="notification-symbol"><PixelIcon kind={notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
+                        <div className="notification-symbol"><PixelIcon kind={notification.resourceType === 'SESSION' ? 'clock' : notification.type.startsWith('GROUP') ? 'groups' : 'connections'} /></div>
                         {!notification.read && (
                           <Badge tone="pending">Unread</Badge>
                         )}

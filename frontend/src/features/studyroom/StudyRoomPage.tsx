@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { configureRoom, joinRoom, leaveRoom, selectAudio, timerCommand } from './api'
-import type { AudioPreset, PresenceState, RoomConfiguration, RoomSnapshot } from './api'
+import type { RoomAudio, PresenceState, RoomConfiguration, RoomSnapshot } from './api'
 import { useStudyRoom } from './useStudyRoom'
 import RoomTimerPanel from './RoomTimerPanel'
 import RoomAudioPanel from './RoomAudioPanel'
@@ -16,12 +16,15 @@ import Field from '../../shared/components/Field'
 import Dialog from '../../shared/components/Dialog'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
+import RoomWeatherPanel from './RoomWeatherPanel'
+import type { WeatherCondition } from './weatherTheme'
 import './studyroom.css'
 
 export default function StudyRoomPage() {
   const { id } = useParams()
   // Changing groups remounts the page, so a previous room's private state cannot linger.
-  return <RoomPage key={id} groupId={Number(id)} />
+  const { account } = useAuth()
+  return <RoomPage key={`${account?.id}-${id}`} groupId={Number(id)} />
 }
 
 function RoomPage({ groupId }: { groupId: number }) {
@@ -31,6 +34,7 @@ function RoomPage({ groupId }: { groupId: number }) {
   const room = resource.snapshot?.room
   const action = useAction()
   const { account } = useAuth()
+  const [weatherTheme, setWeatherTheme] = useState<WeatherCondition>('CLEAR')
   const [presence, setPresence] = useState<PresenceState>('PRESENT')
   const [confirmation, setConfirmation] = useState<'leave' | 'reset' | null>(null)
   const joined = useRef(false)
@@ -81,8 +85,8 @@ function RoomPage({ groupId }: { groupId: number }) {
     }
   }
 
-  function audio(preset: AudioPreset, playing: boolean) {
-    if (room) void change(() => selectAudio(groupId, preset, playing, room.version), 'The room audio was updated.')
+  function audio(audio: RoomAudio) {
+    if (room) void change(() => selectAudio(groupId, audio, room.version), 'The room audio was updated.')
   }
 
   function settings(input: RoomConfiguration) {
@@ -111,6 +115,8 @@ function RoomPage({ groupId }: { groupId: number }) {
         </div>
       </section>
       {!room.hostOnline && <p className="privacy-note">The host is away. The leader retains controls, and a present co-host can keep the session going.</p>}
+      <RoomWeatherPanel liveEnabled onChange={setWeatherTheme} />
+      <div className="room-environment" data-weather={weatherTheme.toLowerCase()}>
       <div className="room-layout">
         <RoomTimerPanel snapshot={resource.snapshot} canControl={room.canControl && (resource.joinedHere || room.leader)}
           pending={action.pending} onControl={control} />
@@ -140,8 +146,10 @@ function RoomPage({ groupId }: { groupId: number }) {
           <p className="privacy-note">Group membership shares room access, not contact numbers.</p>
         </section>
       </div>
+      <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
+      </div>
       <RoomAudioPanel key={resource.joinedHere ? 'joined' : 'preview'} room={room} active={resource.joinedHere} pending={action.pending} onSelect={audio} />
-      {room.leader && <RoomSettingsForm room={room} pending={action.pending} onSave={settings} serverErrors={action.errors} />}
+      {room.canControl && (resource.joinedHere || room.leader) && <RoomSettingsForm room={room} pending={action.pending} onSave={settings} serverErrors={action.errors} />}
     </>}
     {confirmation && <Dialog title={confirmation === 'leave' ? 'Leave study room?' : 'Reset shared timer?'}
       busy={action.pending} onClose={() => setConfirmation(null)}>

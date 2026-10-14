@@ -3,26 +3,25 @@ import type { AudioPreset } from './api'
 /** Original synthesized audio; no tracks, accounts, provider requests or asset downloads. */
 export class RoomAudioEngine {
   private context: AudioContext | null = null
-  private source: AudioBufferSourceNode | null = null
-  private gain: GainNode | null = null
-  private preset: AudioPreset | null = null
+  private layers = new Map<'music' | 'ambient', { source: AudioBufferSourceNode; gain: GainNode; preset: AudioPreset }>()
 
   async enable() {
     if (!this.context) {
       if (!window.AudioContext) throw new Error('Audio is unavailable in this browser. The room works silently.')
       this.context = new AudioContext()
-      this.gain = this.context.createGain()
-      this.gain.connect(this.context.destination)
     }
     await this.context.resume()
   }
 
-  play(preset: AudioPreset, volume: number) {
-    if (!this.context || !this.gain || this.context.state !== 'running') throw new Error('Enable audio in this browser first.')
-    this.gain.gain.value = Math.min(1, Math.max(0, volume))
-    if (this.source && this.preset === preset) return
-    this.stop()
+  play(layer: 'music' | 'ambient', preset: AudioPreset, volume: number) {
+    if (!this.context || this.context.state !== 'running') throw new Error('Enable audio in this browser first.')
+    const current = this.layers.get(layer)
+    if (current?.preset === preset) { current.gain.gain.value = Math.min(1, Math.max(0, volume)); return }
+    this.stop(layer)
     const context = this.context
+    const gain = context.createGain()
+    gain.gain.value = Math.min(1, Math.max(0, volume))
+    gain.connect(context.destination)
     const duration = preset === 'CALM_MUSIC' ? 16 : 4
     const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate)
     const samples = buffer.getChannelData(0)
@@ -44,10 +43,15 @@ export class RoomAudioEngine {
       else samples[i] = noise * 0.075
     }
     const source = context.createBufferSource()
-    source.buffer = buffer; source.loop = true; source.connect(this.gain); source.start()
-    this.source = source; this.preset = preset
+    source.buffer = buffer; source.loop = true; source.connect(gain); source.start()
+    this.layers.set(layer, { source, gain, preset })
   }
 
-  stop() { this.source?.stop(); this.source?.disconnect(); this.source = null; this.preset = null }
-  close() { this.stop(); const context = this.context; this.context = null; this.gain = null; void context?.close().catch(() => {}) }
+  stop(layer?: 'music' | 'ambient') {
+    for (const [key, audio] of this.layers) {
+      if (layer && key !== layer) continue
+      audio.source.stop(); audio.source.disconnect(); audio.gain.disconnect(); this.layers.delete(key)
+    }
+  }
+  close() { this.stop(); const context = this.context; this.context = null; void context?.close().catch(() => {}) }
 }

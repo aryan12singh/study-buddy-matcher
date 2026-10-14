@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getConnections, getMatchRequests, decideMatchRequest, endConnection } from './api'
 import type { Connection, MatchRequest } from './api'
 import { useResource } from '../../shared/api/useResource'
@@ -129,6 +129,8 @@ export default function ConnectionsPage() {
                 studentId={connection.otherStudentId}
                 name={connection.otherStudentName}
                 actions={
+                  <>
+                  <Link className="retro-button" to={`/connections/${connection.id}/sessions`}>Plan study sessions</Link>
                   <Button
                     variant="danger"
                     disabled={action.pending}
@@ -139,6 +141,7 @@ export default function ConnectionsPage() {
                   >
                     Disconnect
                   </Button>
+                  </>
                 }
               >
                 <p className="row-meta">Connected since {formatTimestamp(connection.createdAt)} (SGT)</p>

@@ -15,6 +15,7 @@ import NextStepCard from './NextStepCard'
 import ProfileStatusBadge from './ProfileStatusBadge'
 import RequestCards from './RequestCards'
 import WeekGlance from './WeekGlance'
+import UpcomingSessions from '../sessions/UpcomingSessions'
 
 /**
  * A student's overview. Each endpoint is loaded once here and handed to the
@@ -43,6 +44,7 @@ export default function HomePage() {
         {step && <NextStepCard step={step} />}
         <ActivityStrip />
         <RequestCards requests={requests} pending={pending} />
+        <UpcomingSessions />
         <WeekGlance profile={profile} studentId={studentId} />
         <GroupCards groups={groups} />
         <FindBuddiesCard profile={profile} />

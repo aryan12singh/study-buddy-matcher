@@ -38,6 +38,7 @@ export default function AppShell() {
               <NavLink to="/find-buddies"><PixelIcon kind="search" /><span>Find buddies</span></NavLink>
               <NavLink to="/connections"><PixelIcon kind="connections" /><span>Connections</span></NavLink>
               <NavLink to="/groups"><PixelIcon kind="groups" /><span>Study groups</span></NavLink>
+              <NavLink to="/sessions"><PixelIcon kind="clock" /><span>Study sessions</span></NavLink>
               <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span>{notifications.data && notifications.data.count > 0 && (
                 <span className="unread-count" aria-label={`${notifications.data.count} unread notifications`}>{notifications.data.count}</span>
               )}</NavLink>
@@ -62,7 +63,7 @@ export default function AppShell() {
           <Outlet />
         </main>
       </div>
-      <footer className="desktop-footer">Study together, at your own pace. <span>Weekly schedules use Singapore time.</span></footer>
+      <footer className="desktop-footer">Study together, at your own pace. <span>Weekly availability uses Singapore time; dated sessions show their timezone.</span></footer>
     </div>
   )
 }

@@ -16,6 +16,9 @@ import GroupDetailPage from './features/groups/GroupDetailPage'
 import GroupFormPage from './features/groups/GroupFormPage'
 import GroupManagePage from './features/groups/GroupManagePage'
 import StudyRoomPage from './features/studyroom/StudyRoomPage'
+import SessionsPage from './features/sessions/SessionsPage'
+import SessionDetailPage from './features/sessions/SessionDetailPage'
+import SessionFormPage from './features/sessions/SessionFormPage'
 import AdminUsersPage from './features/admin/AdminUsersPage'
 import AdminUserDetailPage from './features/admin/AdminUserDetailPage'
 import AdminUserFormPage from './features/admin/AdminUserFormPage'
@@ -43,6 +46,13 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/groups/:id/edit" element={<GroupFormPage />} />
             <Route path="/groups/:id/manage" element={<GroupManagePage />} />
             <Route path="/groups/:id/room" element={<StudyRoomPage />} />
+            <Route path="/sessions" element={<SessionsPage />} />
+            <Route path="/sessions/:id" element={<SessionDetailPage />} />
+            <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
+            <Route path="/groups/:id/sessions" element={<SessionsPage kind="GROUP" />} />
+            <Route path="/groups/:id/sessions/new" element={<SessionFormPage kind="GROUP" />} />
+            <Route path="/connections/:id/sessions" element={<SessionsPage kind="BUDDY" />} />
+            <Route path="/connections/:id/sessions/new" element={<SessionFormPage kind="BUDDY" />} />
           </Route>
           <Route element={<RequireRole role="ADMIN" />}>
             <Route path="/admin/users" element={<AdminUsersPage />} />

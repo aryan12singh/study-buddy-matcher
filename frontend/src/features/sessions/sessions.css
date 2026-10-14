@@ -1,0 +1,12 @@
+.session-list { list-style: none; padding: 0; }
+.session-list h3 { margin: 0 0 .45rem; }
+.session-list p { margin: .4rem 0; }
+.session-preview { grid-column: 1 / -1; }
+.session-times { list-style: none; padding: 0; display: grid; gap: .45rem; }
+.session-times li { padding: .55rem; border: 1px solid var(--border, #8b8170); background: var(--panel, #fff8e8); }
+.session-availability { max-height: 22rem; overflow: auto; }
+.session-form-help { max-width: 70ch; }
+@media (max-width: 700px) {
+  .session-form .form-actions { position: static; }
+  .session-form .form-actions .actions > * { flex: 1 1 100%; }
+}
