@@ -1,5 +1,6 @@
 import type { StudyGoal, StudyMode, WeeklySlot } from '../../shared/api/types'
 import { validateSlots } from '../../shared/api/schedules'
+import { normalizeContactNumber, validateContactNumber } from '../../shared/auth/contactNumber'
 import type { GroupSizePreference, MyProfile, UpdateProfileRequest } from './api'
 
 /** Form state keeps raw input (strings) until it is saved. */
@@ -50,7 +51,7 @@ export function toRequest(form: ProfileForm): UpdateProfileRequest {
     school: form.school.trim(),
     programme: form.programme.trim(),
     yearOfStudy: Number(form.yearOfStudy),
-    contactNumber: form.contactNumber.trim(),
+    contactNumber: normalizeContactNumber(form.contactNumber),
     courseIds: form.courseIds,
     targetCourseId: form.targetCourseId ? Number(form.targetCourseId) : null,
     preferredStudyMode: form.preferredStudyMode as StudyMode,
@@ -62,9 +63,11 @@ export function toRequest(form: ProfileForm): UpdateProfileRequest {
 /** Mirrors the server rules so most mistakes are caught before saving; the server still has the final say (e.g. the course limit). */
 export function validateProfile(form: ProfileForm) {
   const errors: Record<string, string> = {}
-  for (const field of ['name', 'school', 'programme', 'contactNumber'] as const) {
+  for (const field of ['name', 'school', 'programme'] as const) {
     if (!form[field].trim() || form[field].trim().length > 255) errors[field] = 'Enter a value, up to 255 characters.'
   }
+  const contactError = validateContactNumber(form.contactNumber)
+  if (contactError) errors.contactNumber = contactError
   if (!Number.isInteger(Number(form.yearOfStudy)) || Number(form.yearOfStudy) < 1) errors.yearOfStudy = 'Enter a whole year of study of at least 1.'
   if (!form.courseIds.length) errors.courseIds = 'Choose at least one course you are currently taking.'
   if (!form.preferredStudyMode) errors.preferredStudyMode = 'Choose how you prefer to study.'

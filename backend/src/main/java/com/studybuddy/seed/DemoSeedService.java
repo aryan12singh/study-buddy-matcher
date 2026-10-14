@@ -90,7 +90,8 @@ public class DemoSeedService {
             String name = number == 1 ? "Priya Nair" : number == 2 ? "Jamie Lee" : number == 3 ? "Alex Tan" : "Demo Student " + number;
             String school = number%3 == 0 ? "SOE" : number%3 == 1 ? "SCIS" : "SOB";
             String programme = number%3 == 0 ? "Economics" : number%3 == 1 ? "Information Systems" : "Business Management";
-            var user = creation.create(email, properties.studentPassword(), Role.STUDENT, name, school, programme, 1 + (number%4), "Synthetic contact " + number);
+            String syntheticContact = "+120255501" + String.format("%02d", number);
+            var user = creation.create(email, properties.studentPassword(), Role.STUDENT, name, school, programme, 1 + (number%4), syntheticContact);
             var student = students.findById(user.getId()).orElseThrow();
             student.getCoursesTaken().add(seededCourses.get((number-1)%seededCourses.size()));
             student.getCoursesTaken().add(seededCourses.get(number%seededCourses.size()));

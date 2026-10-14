@@ -39,7 +39,7 @@ public class AccountCreation {
             name = InputRules.required(name, "Name", InputRules.TEXT_LIMIT);
             school = InputRules.required(school, "School", InputRules.TEXT_LIMIT);
             programme = InputRules.required(programme, "Programme", InputRules.TEXT_LIMIT);
-            contactNumber = InputRules.required(contactNumber, "Contact number", InputRules.TEXT_LIMIT);
+            contactNumber = InputRules.contactNumber(contactNumber);
             InputRules.year(yearOfStudy);
         }
         User user = users.saveAndFlush(new User(identity, passwords.encode(password), role));

@@ -21,4 +21,25 @@ class InputRulesTest {
         assertThrows(InvalidInputException.class,() -> InputRules.password("界".repeat(25)));
         assertThrows(InvalidInputException.class,() -> InputRules.password("short"));
     }
+    @Test void localSingaporeContactsUseACanonicalCountryCode() {
+        assertEquals("+6561234567", InputRules.contactNumber("6 (123) 45-67"));
+        assertEquals("+6581234567", InputRules.contactNumber("8.123.4567"));
+        assertEquals("+6591234567", InputRules.contactNumber("\t9 123 4567\n"));
+    }
+    @Test void internationalContactsRemoveSeparatorsAndAcceptBothDigitBounds() {
+        assertEquals("+12025550100", InputRules.contactNumber(" +1 (202) 555-0100 "));
+        assertEquals("+1234567", InputRules.contactNumber("+1234567"));
+        assertEquals("+123456789012345", InputRules.contactNumber("+123456789012345"));
+        assertEquals("+123456789012345", InputRules.contactNumber(" ".repeat(239) + "+123456789012345"));
+    }
+    @Test void invalidContactShapesAndOversizedRawInputHaveAFieldError() {
+        String[] invalid = {null, "", " \t ", "---()...", "12345678", "71234567", "9123456", "912345678",
+            "+123456", "+1234567890123456", "+01234567", "65 9123 4567", "++6591234567",
+            "659+1234567", "9123ABCD", "+12025550100 ext 2", "+12025550100x2", "+1/202/555/0100",
+            "９１２３４５６７", " ".repeat(240) + "+123456789012345"};
+        for (String value : invalid) {
+            var error = assertThrows(InvalidInputException.class, () -> InputRules.contactNumber(value), "Contact: " + value);
+            assertTrue(error.getFieldErrors().containsKey("contactNumber"));
+        }
+    }
 }

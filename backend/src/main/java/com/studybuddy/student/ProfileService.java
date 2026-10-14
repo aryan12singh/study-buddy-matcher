@@ -53,7 +53,7 @@ public class ProfileService {
         String name = InputRules.required(request.name(), "Name", InputRules.TEXT_LIMIT);
         String school = InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT);
         String programme = InputRules.required(request.programme(), "Programme", InputRules.TEXT_LIMIT);
-        String contactNumber = InputRules.required(request.contactNumber(), "Contact number", InputRules.TEXT_LIMIT);
+        String contactNumber = InputRules.contactNumber(request.contactNumber());
         InputRules.year(request.yearOfStudy());
         List<Course> taken = coursesTaken(request.courseIds());
         Course target = targetCourse(request.targetCourseId());

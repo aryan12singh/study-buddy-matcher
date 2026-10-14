@@ -1,4 +1,5 @@
 import Field from '../../shared/components/Field'
+import { CONTACT_NUMBER_HINT } from '../../shared/auth/contactNumber'
 import type { ProfileForm } from './profileForm'
 
 const FIELDS: { key: 'name' | 'school' | 'programme' | 'yearOfStudy' | 'contactNumber'; label: string; type?: string; hint?: string; full?: boolean }[] = [
@@ -6,7 +7,7 @@ const FIELDS: { key: 'name' | 'school' | 'programme' | 'yearOfStudy' | 'contactN
   { key: 'school', label: 'School' },
   { key: 'programme', label: 'Programme' },
   { key: 'yearOfStudy', label: 'Year of study', type: 'number' },
-  { key: 'contactNumber', label: 'Contact number', hint: 'Shared only with students you are connected to.' }
+  { key: 'contactNumber', label: 'Contact number', type: 'tel', hint: `${CONTACT_NUMBER_HINT} Shared only with students you are connected to.` }
 ]
 
 export default function AboutYouFields({ value, onChange, errors, disabled }: {
@@ -24,7 +25,7 @@ export default function AboutYouFields({ value, onChange, errors, disabled }: {
               id={`profile-${field.key}`}
               type={field.type || 'text'}
               min={field.type === 'number' ? 1 : undefined}
-              maxLength={field.type ? undefined : 255}
+              maxLength={field.type === 'number' ? undefined : 255}
               value={value[field.key]}
               disabled={disabled}
               onChange={event => onChange({ ...value, [field.key]: event.target.value })}
