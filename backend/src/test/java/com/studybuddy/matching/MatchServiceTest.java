@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -99,9 +100,9 @@ class MatchServiceTest {
 
         when(access.requireStudent(ME)).thenReturn(me);
         when(access.eligibleStudentIds()).thenReturn(List.of(1L, 2L, 3L));
-        when(students.findAllById(List.of(1L, 2L, 3L))).thenReturn(List.of(weak, me, strong));
+        when(students.findWithMatchingDetailsByIdIn(List.of(1L, 2L, 3L))).thenReturn(List.of(weak, me, strong));
         when(courses.existsById(4L)).thenReturn(true);
-        when(availabilitySlots.findAll()).thenReturn(List.of(
+        when(availabilitySlots.findByStudentIdIn(any())).thenReturn(List.of(
                 new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
                 new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)),
                 new AvailabilitySlot(weak, MONDAY, LocalTime.of(10, 0), LocalTime.of(12, 0))));
@@ -138,7 +139,7 @@ class MatchServiceTest {
         pending.getCoursesTaken().add(course(4, "IS442"));
         connected.getCoursesTaken().add(course(4, "IS442"));
         when(access.eligibleStudentIds()).thenReturn(List.of(1L, 2L, 3L, 4L, 5L));
-        when(students.findAllById(List.of(1L, 2L, 3L, 4L, 5L))).thenReturn(List.of(weak, me, strong, pending, connected));
+        when(students.findWithMatchingDetailsByIdIn(List.of(1L, 2L, 3L, 4L, 5L))).thenReturn(List.of(weak, me, strong, pending, connected));
         when(requests.findBySenderIdAndStatus(ME, MatchRequestStatus.PENDING))
                 .thenReturn(List.of(new MatchRequest(me, strong, null, MatchRequestOrigin.MATCHING, null, null)));
         when(requests.findByReceiverIdAndStatus(ME, MatchRequestStatus.PENDING))
@@ -221,7 +222,7 @@ class MatchServiceTest {
                 EnumSet.allOf(MatchingCriterion.class), 0, 4));
         strong.setYearOfStudy(3);
         weak.setYearOfStudy(2);
-        when(availabilitySlots.findAll()).thenReturn(List.of(
+        when(availabilitySlots.findByStudentIdIn(any())).thenReturn(List.of(
                 new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
                 new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(9, 30)),
                 new AvailabilitySlot(weak, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0))));
@@ -272,7 +273,7 @@ class MatchServiceTest {
         weak.setTargetCourse(strong.getTargetCourse());
         weak.setPreferredStudyMode(strong.getPreferredStudyMode());
         weak.getStudyGoals().clear(); weak.getStudyGoals().addAll(strong.getStudyGoals());
-        when(availabilitySlots.findAll()).thenReturn(List.of());
+        when(availabilitySlots.findByStudentIdIn(any())).thenReturn(List.of());
         for (MatchSort sort : MatchSort.values()) {
             assertEquals(List.of(2L, 3L), service.search(new MatchSearchCriteria(4L, null, null, null, null, null, sort, null), ME)
                     .matches().stream().map(MatchResultDto::studentId).toList());

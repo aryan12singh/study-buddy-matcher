@@ -20,8 +20,10 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +66,9 @@ public class MatchService {
     public MatchSearchResultDto search(MatchSearchCriteria search, Long actorId) {
         Student self = access.requireStudent(actorId);
         validate(search);
-        Map<Long, WeeklyAvailability> availability = availabilityByStudent();
+        List<Long> eligible = access.eligibleStudentIds();
+        List<Student> pool = students.findWithMatchingDetailsByIdIn(eligible);
+        Map<Long, WeeklyAvailability> availability = availabilityOf(eligible, self.getId());
         MatchingProfile searcher = profileOf(self, availability);
         MatchingConfigSnapshot settings = config.snapshot();
         MatchingStrategy strategy = settings.strategy();
@@ -73,7 +77,7 @@ public class MatchService {
 
         MatchSort sort = search.sort() == null ? MatchSort.BEST_MATCH : search.sort();
         int limit = search.limit() == null ? properties.defaultResultLimit() : search.limit();
-        List<ScoredCandidate> ranked = students.findAllById(access.eligibleStudentIds()).stream()
+        List<ScoredCandidate> ranked = pool.stream()
                 .filter(student -> !student.getId().equals(self.getId()))
                 .filter(student -> standing.get(student.getId()) != RelationshipState.CONNECTED)
                 .map(student -> profileOf(student, availability))
@@ -122,9 +126,11 @@ public class MatchService {
         }
     }
 
-    /** Loads every student's slots in one query instead of one query per candidate. */
-    private Map<Long, WeeklyAvailability> availabilityByStudent() {
-        return availabilitySlots.findAll().stream()
+    /** Loads the searcher's and every eligible student's slots in one query; inactive students' are never read. */
+    private Map<Long, WeeklyAvailability> availabilityOf(List<Long> eligible, Long selfId) {
+        Set<Long> ids = new HashSet<>(eligible);
+        ids.add(selfId);
+        return availabilitySlots.findByStudentIdIn(ids).stream()
                 .collect(Collectors.groupingBy(slot -> slot.getStudent().getId(),
                         Collectors.collectingAndThen(Collectors.toList(), WeeklyAvailability::from)));
     }
