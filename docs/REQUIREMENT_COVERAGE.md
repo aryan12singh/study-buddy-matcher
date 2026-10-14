@@ -21,11 +21,13 @@ Backend classes are under `backend/src/main/java/com/studybuddy/`, screens under
 `frontend/src/features/`, and HTTP tests under `backend/src/test/java/com/studybuddy/integration/`.
 API paths are listed in [API_CONTRACT.md](API_CONTRACT.md).
 
-The 13 October 2026 merged-main audit at `b33f286887a090cd9b765886263c0590a13a6acf`
-confirmed the principal integrated workflows and identified setup, concurrency, schedule-draft
-and navigation/copy gaps. The completion work and exact later verification belong in
-[TEAM_C_TESTING.md](TEAM_C_TESTING.md). Issue open/closed state and a passing historical
-suite do not substitute for the behavior checklist or human acceptance.
+The compulsory baseline covers #1–14 across all three teams. The baseline closure pass
+starts from merged main `fc1f6fb0526726d06c07a8bbf780b5a61c07399c`, fixes the two reproduced
+authentication/profile recovery defects and implements the accepted contact contract.
+Current checks and the issue-completion matrix are in [BASELINE_VERIFICATION.md](BASELINE_VERIFICATION.md).
+Earlier [Team A](TEAM_A_TESTING.md) and [Team C](TEAM_C_TESTING.md) records remain dated
+historical evidence. Source coverage, passing tests and issue closure do not assert grading
+acceptance, a member's understanding or actual submission.
 
 ## Platform and repeatable setup (#5)
 
@@ -46,6 +48,7 @@ suite do not substitute for the behavior checklist or human acceptance.
 | Public registration cannot select administrator role | Student-only registration contract | `AccountHttpTest`; admin creation is a separate guarded endpoint |
 | JWT validation, role guards, inactive/deleted/revoked account rejection | `JwtTokenService`, `JwtAuthenticationFilter`, `SecurityConfiguration`, `AccountAccess` | Auth context/route guards; `JwtTokenServiceTest`, `AccountHttpTest` |
 | Successful sign-in updates usage without lost concurrent account edits | Locked current identity in `AuthService` | `LoginConcurrencyTest`, `AccountHttpTest`; failed login preserves usage |
+| UTF-8 password byte bound before BCrypt login comparison; generic rejection and unchanged usage | `AuthService` and existing password limit | `AccountHttpTest` boundary, identity-neutrality and legacy-password regressions |
 | Invalid/duplicate credentials and safe loading/error feedback | Shared RFC 9457 problem boundary | Auth interaction tests and HTTP rejection cases |
 
 ## Own profile and study preferences (#7)
@@ -57,7 +60,9 @@ suite do not substitute for the behavior checklist or human acceptance.
 | Course count/existence, mode/group-size and year limits | Typed profile config and service validation | `ProfileServiceTest`; form validation; empty/invalid states |
 | Whole-profile/course/goal replacements use the same student write boundary as weekly replacements | `ProfileService` and account locking | `ProfileConcurrencyTest`; final run in `TEAM_C_TESTING.md` |
 | Own contact is editable; another student's contact still follows the privacy assembler | `MyProfileDto` for self; public/connected DTO boundary for other profiles | Profile/HTTP privacy tests; #11 below |
-| Contact format and learning-style ambiguity remain visible | Required, nonblank contact text; five defined matching criteria | Recorded clarification gates in `DESIGN_DECISIONS.md`; no guessed phone regex or sixth criterion |
+| Accepted Singapore/international contact validation and canonical storage on every write | `InputRules.contactNumber`, account creation, profile and optional admin replacement | Shared frontend contact helper; `ContactHttpTest`, input/service/UI tests; administrator omission/read privacy retained |
+| Independent profile/week drafts survive a failed refresh after saving the other section | Owner-keyed profile loader and retained `ProfileEditor` | `EditProfilePage.test.tsx` network/server/course recovery; permission/purge/owner-change clearing |
+| Learning style uses the defined study preferences | Team interpretation recorded in `DESIGN_DECISIONS.md`; no separate taxonomy or sixth scorer | Agreed baseline contract; does not claim professor confirmation |
 
 ## Weekly availability (#8)
 
@@ -145,8 +150,9 @@ Local Chromium workflows and keyboard/responsive checks are completed in the
 [dated verification record](TEAM_A_TESTING.md#verification-record---13-october-2026).
 Follow AGENTS.md's human cross-team review and author walkthrough for subsequent changes. The
 physical-projector demo remains a presentation check under the team's actual setup.
-The undefined learning-style wording remains a precise professor clarification under #41/#7;
-see [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md#undefined-learning-style-wording-417).
+The team has recorded its learning-style interpretation under #41/#7; see the
+[baseline contract](DESIGN_DECISIONS.md#baseline-requirement-contract). No professor response
+or additional taxonomy is asserted.
 Team A's class, sequence and use-case diagrams are in [diagrams/TEAM_A.md](diagrams/TEAM_A.md),
 and reproducible tests plus manual acceptance steps are in [TEAM_A_TESTING.md](TEAM_A_TESTING.md).
 E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tracked scope.
@@ -212,9 +218,10 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 
 ## Compulsory integrated acceptance map
 
-Use the repeatable scenarios and dated results in [TEAM_C_TESTING.md](TEAM_C_TESTING.md).
-These gates cover the compulsory application after the confirmed fixes; record the tested
-SHA and database target when accepting them.
+Use the current issue matrix, repeatable scenarios and results in
+[BASELINE_VERIFICATION.md](BASELINE_VERIFICATION.md). Older detailed Team C scenarios remain
+in [TEAM_C_TESTING.md](TEAM_C_TESTING.md). Record the tested SHA and database target when
+accepting the compulsory application.
 
 | Behavior to demonstrate | Source / automated coverage | Acceptance evidence to retain |
 | --- | --- | --- |
@@ -229,9 +236,9 @@ SHA and database target when accepting them.
 
 Technical source coverage, local automated results, hosted CI, shared-database rollout and
 human acceptance must each be recorded separately. Reviewers still need the author walkthrough,
-latest-Figma/design check, agreed contact-format interpretation, professor learning-style
-clarification, physical-projector check and integrated demo rehearsal. The coverage file does
-not close or alter GitHub issues.
+latest-Figma/design check, physical-projector check and integrated demo rehearsal. The
+accepted contact/learning-style contract is recorded; it does not assert professor approval.
+The coverage file does not itself close or alter GitHub issues.
 
 ## Selected extras and delivery
 
@@ -243,7 +250,7 @@ compulsory baseline and remain separate work; this completion pass implements ne
 | E1 AI match explanation (#15) | Pending on merged main; explanations are deterministic | Agreed provider/owner, privacy-safe inputs, fallback/cache/version/usage checks and actual API/UI/docs/demo evidence |
 | E2 collaborative study room/Pomodoro/music/calendar (#16) | Pending on merged main; PR #52 is a separate draft foundation | Room lease lifecycle fix and current-main integration; dated sessions/calendar exports, two-browser/audio/capacity/reconnect and calendar import acceptance |
 | README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
-| Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Professor/contact clarification, actual external service/audio inventory and human contribution verification |
+| Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |
 | AI disclosure (#43) and demo data/integrated acceptance (#44) | Known retained use recorded; repeatable core evidence exists | Every member confirms their retained use; final demo states and deployed/extras acceptance |
 | Presentation/slides (#45) and rehearsal/submission (#46) | Unverified in the inspected repository | Editable deck/PDF backup; timed 12-minute demo + 8-minute Q&A; actual hardware/network/audio, verified LMS deadline/receipt and private peer evaluations |
 

@@ -60,6 +60,7 @@ or human acceptance.
 | Saved buddy target | Independent of course enrolments; Home uses it for a matching preview. Find buddies requires a current course or goal | Claiming it always becomes the finder's default disagrees with current UI behavior; #7/#9 |
 | Preference representation | Categorical mode/group-size controls; group size becomes the agreed inclusive min/max interval; optional goal set | Storing another competing preference representation complicates Team A integration; #7 |
 | Whole-week replacement | Serialize per-student profile/availability writes before collection read/delete/insert; return a complete replacement | Individually valid concurrent weeks must never become a combined invalid week; #7/#8 |
+| Recoverable owner-editor refresh | Keep the other unsaved profile/week draft mounted after a successful save followed by a transient read failure; preserve retry/discard controls. Logout, identity changes and lost authorization clear it | Relaxing privacy purge globally would retain other students' private responses; #6/#7/#8 |
 | Time draft ownership | Shared editor reports incomplete/invalid raw text and dirty state to profile/group forms; save is blocked until valid, and exit protection includes that text | Keeping an old valid payload while showing a new invalid value silently saves the wrong input; #8/#12 |
 | Overlap policy | Personal availability rejects overlapping same-day blocks; groups permit overlap and the shared editor explains the applicable policy | A generic overlap warning must not imply a group API rejection; #8/#12 |
 | Setup and schema | Development packaging skips tests; the isolated harness provisions/migrates PostgreSQL for context/HTTP tests. Ordered SQL is required on runtime databases | Local application YAML does not provision the test profile; Hibernate update cannot replace custom migration/adoption/RLS work; #5/#17 |
@@ -71,9 +72,9 @@ The whole-system boundary and platform use cases are in [diagrams/PLATFORM.md](d
 
 Team A retains group-size preference interpretation, scoring/thresholds/search and matching
 configuration. Current shared fields store a numeric min/max interval; C displays that
-existing representation without deciding its scoring semantics. The objective mentions
-learning style without a defined field/scorer: the professor clarification remains a shared
-#41 item, rather than a new C field. Team B retains the own-profile/preferences/availability editor and dashboard. Team A's
+existing representation without deciding its scoring semantics. The team has recorded the
+learning-style interpretation in the baseline contract below. Team B retains the
+own-profile/preferences/availability editor and dashboard. Team A's
 matching preview is a narrow integration in that dashboard, described below; Team C does
 not own those profile editors.
 
@@ -140,27 +141,40 @@ complete the current issue scope; this entry does not assert professor or produc
 | Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
 | Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
 
-## Requirements still needing clarification
+## Baseline requirement contract
+
+The following choices were accepted by the project owner for compulsory delivery on
+14 October 2026. They settle the implementation contract for #7/#41; they do not assert a
+professor response or grading acceptance.
 
 ### Contact-number format (#7/#41)
 
-Issue #7 calls for format validation, but the formal field list does not define a country,
-permitted telephone format or normalization policy. The implemented contract requires
-nonblank text within the shared field limit. Demo contacts are synthetic. The team must agree
-and record a format/normalization rule before adding a regex or changing stored values; no
-professor or team format approval is asserted here. Apply an agreed rule consistently to
-registration, own-profile updates and admin student creation/replacement writes.
+Accept 8 ASCII digits starting with 6, 8 or 9 for a local Singapore number, or `+` followed by
+7–15 ASCII digits whose first digit is 1–9 for international input. Remove ASCII whitespace,
+hyphens, parentheses and dots. Store local Singapore input as `+65` plus the digits; retain
+the normalized leading `+` for international input. Reject letters, extensions, repeated or
+misplaced `+`, other punctuation and out-of-bound lengths. This checks representation only;
+country/carrier assignment and reachability are not verified.
+
+`InputRules.contactNumber` governs registration/admin creation, own-profile replacement and
+optional admin contact replacement. Frontend validation uses the same grammar and examples.
+Admin omission preserves the stored contact and never exposes it in a response. Legacy
+contacts are not rewritten automatically; replacements/full profile writes require the
+accepted format. New synthetic seed records use accepted formats, while repeat seeding
+continues to preserve existing profiles and passwords.
+
+Keeping arbitrary nonblank text would leave #7's format validation incomplete. Limiting
+all students to Singapore numbers would exclude international contacts; a phone-provider
+lookup or new library is unnecessary for this scoped format contract.
 
 ### Undefined learning-style wording (#41/#7)
 
-The official brief's objective names "preferred learning style". Its functional preference
-list and Appendix A define no separate learning-style field, permitted values, compatibility
-formula or relationship to study mode/goals. The latest discussion likewise supplies no
-settled extra taxonomy. [#41](https://github.com/aryan12singh/study-buddy-matcher/issues/41)
-explicitly asks for professor clarification and forbids inventing categories.
+The objective names “preferred learning style”, but the functional field list and Appendix A
+supply no separate taxonomy or scorer. The team interprets it through the defined study
+preferences: meeting mode, study goals and group preference, alongside course and availability.
+No additional field, guessed categories or sixth criterion is added.
 
-The five defined criteria implement the scoped matching issues. A sixth scorer or an assumed
-mapping from learning style to mode/goals is not introduced. The team still needs the
-professor's agreed interpretation, then must record it here and in #1/#7/#41; if a distinct
-field is required, Team B's profile contract and Team A's scorer/config/UI must change
-together. No professor response is claimed in this record.
+This accepted team interpretation completes the baseline implementation scope for #1/#7/#41.
+It is not presented as professor confirmation. Any later professor instruction requiring a
+separate field is a coordinated A/B change request, with its categories, API, scoring and
+validation agreed before implementation. Presentation and grading acceptance remain human gates.

@@ -2,6 +2,10 @@
 
 ## Scope and current status
 
+This is the historical 13 October verification record. The branch was subsequently merged
+as PR #55. Current baseline closure, contact/learning-style choices and later regressions
+are recorded in [BASELINE_VERIFICATION.md](BASELINE_VERIFICATION.md).
+
 This record covers the compulsory A/B/C application and the merged-main audit fixes on
 `fix/team-c/merged-main-completion`, based on main
 `b33f286887a090cd9b765886263c0590a13a6acf`.
@@ -151,8 +155,8 @@ two further reproduced profile-collection/group-route defects included. Team C's
 source coverage and technical checks are recorded here. No bonus code or room branch changes
 are included, and no GitHub issue state has been changed as a substitute for acceptance.
 
-Before merging, publish the branch when authorized, obtain branch CI and a cross-team review,
-and have the authors explain the retained changes. Professor interpretation of learning-style
-wording and a contact-format contract remain explicit decisions; this pass does not invent
-either graded requirement. Projector/Figma/browser acceptance, diagram exports, presentation,
-peer evaluations and final submission are separate human/delivery gates.
+At this snapshot, publication, branch CI and cross-team review were the next delivery steps.
+PR #55 later merged these changes; the baseline closure record carries the subsequent checks
+and accepted contact/learning-style contract. Authors must still explain retained changes.
+Projector/Figma/browser acceptance, diagram exports, presentation, peer evaluations and final
+submission are separate human/delivery gates.
