@@ -262,6 +262,7 @@ in `application-local.yml` or the process environment.
 | `app.matching.default-result-limit` / `app.matching.max-result-limit` | `20` / `50` | Default and largest search result count, applied after filtering and sorting |
 | `app.matching.quality.strong` / `app.matching.quality.good` | `0.75` / `0.50` | Weighted-total cut-offs for the Strong and Good match labels; anything lower is Fair |
 | `app.matching.scoring.unknown-score` | `0.0` | Value of a criterion either student left empty; the card shows it as "Not shared". 0 means missing data never outranks real compatibility |
+| `app.matching.scoring.takes-course-score` | `0.5` | Course score for a candidate who takes the course in focus but wants a buddy for a different one (wanting a buddy for it scores 1) |
 | `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
 | `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
 | `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |

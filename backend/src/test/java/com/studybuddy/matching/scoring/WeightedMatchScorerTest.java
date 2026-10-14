@@ -1,6 +1,7 @@
 package com.studybuddy.matching.scoring;
 
 import com.studybuddy.course.Course;
+import com.studybuddy.matching.MatchingFixtures;
 import com.studybuddy.matching.MatchQuality;
 import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.QualityThresholds;
@@ -29,7 +30,7 @@ class WeightedMatchScorerTest {
     private static final MatchSearchCriteria SEARCH = new MatchSearchCriteria(1L, null, null, null, null, null);
     private static final Set<MatchingCriterion> ALL = EnumSet.allOf(MatchingCriterion.class);
     private static final QualityThresholds THRESHOLDS = new QualityThresholds(0.75, 0.50);
-    private static final ScoringRules UNKNOWN_IS_ZERO = new ScoringRules(0.0);
+    private static final ScoringRules UNKNOWN_IS_ZERO = MatchingFixtures.rules();
 
     /** A scorer that always returns the same result, so the weighting can be checked on its own. */
     private record FixedScorer(MatchingCriterion criterion, CriterionResult result) implements CriterionScorer {
@@ -122,7 +123,7 @@ class WeightedMatchScorerTest {
                 new FixedScorer(MatchingCriterion.AVAILABILITY, CriterionResult.unknown()));
 
         MatchScore zero = scorer(scorers, UNKNOWN_IS_ZERO).score(SELF, CANDIDATE, SEARCH, new MatchingWeights(evenWeights()), ALL);
-        MatchScore half = scorer(scorers, new ScoringRules(0.5)).score(SELF, CANDIDATE, SEARCH, new MatchingWeights(evenWeights()), ALL);
+        MatchScore half = scorer(scorers, new ScoringRules(0.5, 0.5)).score(SELF, CANDIDATE, SEARCH, new MatchingWeights(evenWeights()), ALL);
 
         assertEquals(0.0, zero.scoreFor(MatchingCriterion.AVAILABILITY));
         assertEquals(0.5, half.scoreFor(MatchingCriterion.AVAILABILITY));
@@ -139,7 +140,7 @@ class WeightedMatchScorerTest {
         Student me = student(1, "Priya");
         Student emptyProfile = student(2, "Empty");
         emptyProfile.setTargetCourse(is442);
-        WeightedMatchScorer scorer = scorer(List.of(new CourseScorer(), new AvailabilityOverlapScorer(), new StudyModeScorer(),
+        WeightedMatchScorer scorer = scorer(List.of(new CourseScorer(MatchingFixtures.rules()), new AvailabilityOverlapScorer(), new StudyModeScorer(),
                 new StudyGoalScorer(), new GroupSizeScorer()), UNKNOWN_IS_ZERO);
         MatchingWeights balanced = new MatchingWeights(Map.of(MatchingCriterion.COURSE, 0.30, MatchingCriterion.AVAILABILITY, 0.30,
                 MatchingCriterion.STUDY_MODE, 0.20, MatchingCriterion.STUDY_GOAL, 0.10, MatchingCriterion.GROUP_SIZE, 0.10));

@@ -8,7 +8,6 @@ import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingProfile;
 import com.studybuddy.matching.scoring.MatchingWeights;
-import com.studybuddy.matching.scoring.ScoringRules;
 import com.studybuddy.matching.scoring.StudyGoalScorer;
 import com.studybuddy.matching.scoring.StudyModeScorer;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
@@ -44,9 +43,9 @@ class AppendixAMatchingTest {
             MatchingCriterion.COURSE, 0.30, MatchingCriterion.AVAILABILITY, 0.30, MatchingCriterion.STUDY_MODE, 0.20,
             MatchingCriterion.STUDY_GOAL, 0.10, MatchingCriterion.GROUP_SIZE, 0.10));
 
-    private final WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(),
+    private final WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(MatchingFixtures.rules()),
             new AvailabilityOverlapScorer(), new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()),
-            new QualityThresholds(0.75, 0.50), new ScoringRules(0.0));
+            new QualityThresholds(0.75, 0.50), MatchingFixtures.rules());
 
     /** Student A: IS442; Wed 7-9 pm and Fri 2-4 pm; in person; exam preparation; 2-3 students. */
     private static MatchingProfile studentA() {

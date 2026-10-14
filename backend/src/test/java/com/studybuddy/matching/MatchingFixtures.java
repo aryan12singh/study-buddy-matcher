@@ -80,12 +80,16 @@ public final class MatchingFixtures {
         return weights;
     }
 
+    public static ScoringRules rules() {
+        return new ScoringRules(0.0, 0.5);
+    }
+
     public static PriorityTiers tiers() {
         return new PriorityTiers(List.of(3.0, 1.0), List.of(1.0, 0.5));
     }
 
     public static MatchingProperties properties() {
-        return new MatchingProperties(MatchingStrategyType.BALANCED, strategyDefaults(), new QualityThresholds(0.75, 0.5), new ScoringRules(0.0), tiers(),
+        return new MatchingProperties(MatchingStrategyType.BALANCED, strategyDefaults(), new QualityThresholds(0.75, 0.5), rules(), tiers(),
                 EnumSet.allOf(MatchingCriterion.class), 0.0, 20, 50);
     }
 

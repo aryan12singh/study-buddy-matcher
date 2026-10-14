@@ -1,6 +1,7 @@
 package com.studybuddy.matching.scoring;
 
 import com.studybuddy.course.Course;
+import com.studybuddy.matching.MatchingFixtures;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
@@ -27,7 +28,7 @@ class CriterionScorersTest {
 
     @Nested
     class Course_ {
-        private final CourseScorer scorer = new CourseScorer();
+        private final CourseScorer scorer = new CourseScorer(MatchingFixtures.rules());
         private final Course is442 = course(4, "IS442");
         private final Course is216 = course(3, "IS216");
 
@@ -62,8 +63,28 @@ class CriterionScorersTest {
         }
 
         @Test
-        void unknownWithNoSearchedOrTargetCourse() {
+        void unknownWithNoSearchedOrTargetCourseAndNoCourses() {
             assertEquals(CriterionResult.unknown(), scorer.score(profile(me), profile(them), NO_FILTERS));
+        }
+
+        @Test
+        void scoresSharedCoursesWhenNoCourseIsInFocus() {
+            Course is212 = course(2, "IS212");
+            me.getCoursesTaken().addAll(List.of(is442, is216, is212));
+            them.getCoursesTaken().addAll(List.of(is442, is216));
+            Student fewerShared = student(3, "Alex");
+            fewerShared.getCoursesTaken().addAll(List.of(is442, course(5, "IS111")));
+
+            assertEquals(1.0, scorer.score(profile(me), profile(them), NO_FILTERS).score(), "both of their courses are mine");
+            assertEquals(0.5, scorer.score(profile(me), profile(fewerShared), NO_FILTERS).score(), "one of their two");
+        }
+
+        @Test
+        void partialMarksComeFromConfiguration() {
+            them.getCoursesTaken().add(is442);
+            CourseScorer generous = new CourseScorer(new ScoringRules(0.0, 0.7));
+
+            assertEquals(0.7, generous.score(profile(me), profile(them), searchForCourse(4)).score());
         }
     }
 
@@ -184,6 +205,20 @@ class CriterionScorersTest {
         them.getStudyGoals().add(StudyGoal.CONCEPT_REVIEW);
         assertEquals(1.0, new StudyGoalScorer().score(profile(me), profile(them),
                 new com.studybuddy.matching.MatchSearchCriteria(null, StudyGoal.CONCEPT_REVIEW, null, null, null, null)).score());
+    }
+
+    @Test
+    void goalSearchStillSeparatesCandidatesByTheSearchersOtherGoals() {
+        // Every candidate in a goal search has the searched goal, so it alone cannot rank them.
+        var conceptSearch = new com.studybuddy.matching.MatchSearchCriteria(null, StudyGoal.CONCEPT_REVIEW, null, null, null, null);
+        me.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
+        them.getStudyGoals().addAll(List.of(StudyGoal.CONCEPT_REVIEW, StudyGoal.EXAM_PREPARATION));
+        Student projectFocused = student(3, "Alex");
+        projectFocused.getStudyGoals().addAll(List.of(StudyGoal.CONCEPT_REVIEW, StudyGoal.PROJECT_DISCUSSION));
+        StudyGoalScorer scorer = new StudyGoalScorer();
+
+        assertEquals(1.0, scorer.score(profile(me), profile(them), conceptSearch).score());
+        assertEquals(0.5, scorer.score(profile(me), profile(projectFocused), conceptSearch).score());
     }
 
     @Nested
