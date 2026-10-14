@@ -4,7 +4,7 @@
 
 # Study Buddy Matcher
 
-A coursework web application for **IS442 Object Oriented Programming at SMU**. Students find
+A web application for **IS442 Object Oriented Programming at SMU**. Students find
 study partners from their courses, weekly availability and study preferences, then connect
 and form study groups. Administrators manage accounts and configure matching rules.
 
@@ -15,19 +15,18 @@ and form study groups. Administrators manage accounts and configure matching rul
 
 ## Overview
 
-The compulsory application covers Teams A, B and C. Selected E1/E2 extensions and final
-presentation/submission materials are tracked separately in the
-[requirement coverage map](docs/REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
-
-| User | Supported workflows |
+| Feature | What you can do |
 | --- | --- |
-| Student | Register/sign in; edit profile, courses and preferences; manage weekly availability; search and compare matches; send/answer requests; end connections; browse/create/apply to groups; read notifications |
-| Group leader | Edit a group, approve/reject applications, remove members and close the group |
-| Administrator | Create/edit accounts, view status and usage, deactivate/reactivate or permanently delete accounts, configure matching criteria/weights/strategy |
+| Profiles and availability | Register, sign in, manage courses and preferences, and edit a weekly schedule |
+| Matching | Compare scored candidates, shared hours and preferences; filter and sort results |
+| Connections | Send and answer requests, view accepted buddies' contacts and end a connection |
+| Study groups | Browse/create groups, apply to join and manage membership as a leader |
+| Collaborative study | Use private rooms, a shared Pomodoro, original music/ambience, weather scenes and dated sessions with calendar export |
+| Administration | Manage account status and usage, and configure matching criteria, weights and strategy |
 
-A leader is a student with authority over one group, not a third account role. Another
-student's contact number is returned only to the owner or an active accepted buddy.
-Group membership and administrator authority do not grant contact read access.
+Contact details are returned only to their owner or an active accepted buddy.
+Group membership and administrator authority do not grant contact read access. Group
+leadership is a per-group permission; Student and Administrator are the account roles.
 
 ## Getting Started
 
@@ -40,9 +39,10 @@ Group membership and administrator authority do not grant contact read access.
 | Git | Obtain the source |
 | `psql` and OpenSSL | Apply migrations and generate private signing keys |
 | A reachable PostgreSQL database | The team uses shared Supabase; access is provided privately |
-| Bash and running Docker | Full backend tests only; the harness creates disposable PostgreSQL 17 |
+| Bash | Run the migration and test scripts |
+| Running Docker | Full backend tests only; the harness creates disposable PostgreSQL 17 |
 
-### 1. Obtain the source and install
+### 1. Install dependencies
 
 ```bash
 git clone https://github.com/aryan12singh/study-buddy-matcher.git
@@ -54,7 +54,7 @@ npm ci
 cd ..
 ```
 
-### 2. Configure local credentials
+### 2. Configure the backend
 
 Create **`backend/src/main/resources/application-local.yml`**. It is ignored by Git and
 loads automatically because the default Spring profile is `local`.
@@ -69,8 +69,10 @@ jwt:
   secret: <random-signing-key>
 ```
 
-Generate the signing key with `openssl rand -base64 48`. Keep database credentials, signing
-keys and demo passwords private. Frontend `VITE_` values are public bundle configuration;
+Use the database owner/backend role with migration privileges; browser roles such as
+`anon` and `authenticated` are not suitable. Generate the signing key with
+`openssl rand -base64 48`. Keep database credentials, signing keys and demo passwords private.
+Frontend `VITE_` values are public bundle configuration;
 never use them for secrets.
 
 The copied **`frontend/.env`** contains:
@@ -79,16 +81,13 @@ The copied **`frontend/.env`** contains:
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
-### 3. Prepare the database and package
+### 3. Prepare the database
 
 Apply the existing ordered migrations to the same target as the backend datasource. Set
 `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD` privately, then run:
 
 ```bash
 scripts/migrate-database.sh
-cd backend
-./mvnw -DskipTests package
-cd ..
 ```
 
 For the shared database, follow the operator's
@@ -96,19 +95,19 @@ For the shared database, follow the operator's
 local tests. Hibernate `update` does not replace the migration constraints, legacy adoption,
 indexes or RLS/grants. The test profile validates a freshly migrated schema.
 
-The development package command skips tests. Local application YAML configures the running
-app; it does not provision the test database. Use the isolated harness in [Testing](#testing).
+Local application YAML configures the running app; it does not provision the test database.
+Use the isolated harness in [Testing](#testing).
 
 ### 4. Start both applications
 
 ```bash
-# Terminal 1: backend
+# Terminal 1: from the repository root
 cd backend
 ./mvnw spring-boot:run
 ```
 
 ```bash
-# Terminal 2: frontend
+# Terminal 2: from the repository root
 cd frontend
 npm run dev
 ```
@@ -116,7 +115,8 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173). The backend API is
 [http://localhost:8080/api](http://localhost:8080/api).
 
-### Demo data
+<details>
+<summary>Optional demo data</summary>
 
 The opt-in seeder adds **10 courses, 50 varied synthetic student profiles and one admin**.
 Use `DEMO_SEED_ENABLED=true`, `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` for one approved
@@ -129,16 +129,57 @@ Demo identities include `priya@demo.example.test`, `jamie@demo.example.test`,
 and `admin@demo.example.test`. Contacts are synthetic and must not be used to contact anyone.
 See [safe seeding](docs/DATABASE_OPERATIONS.md#safe-demo-seed).
 
-### Troubleshooting
+</details>
+
+<details>
+<summary>Troubleshooting</summary>
 
 | Symptom | Check |
 | --- | --- |
 | Java compiler/release error | Select JDK 21 and verify `java -version` in the same terminal |
-| Tests cannot connect after `clean install` | Use the development package command or the isolated harness; local YAML is not test provisioning |
+| Tests cannot connect after `clean install` | Run the isolated harness; local YAML is not test provisioning |
 | Backend cannot connect or a mapped column is missing | Verify the private datasource and the target's ordered migrations |
 | Test container cannot start | Start Docker; check `psql`/OpenSSL and access to `postgres:17` |
 | Browser requests fail | Check `VITE_API_BASE_URL`, backend startup and CORS; restart Vite after changing `.env` |
 | Courses/demo students are absent | Run the opt-in seed procedure on the approved target |
+
+</details>
+
+## Matching Engine
+
+Matching compares five criteria, each scored from 0 to 1. The weighted total describes
+compatibility; missing preferences receive a neutral 0.5.
+
+| Criterion | Compares |
+| --- | --- |
+| Course | Current course focus against a candidate's target and enrolments |
+| Availability | Shared weekly minutes relative to the caller's available minutes |
+| Study mode | In-person, online or either |
+| Study goals | Overlap between selected goals |
+| Group size | Overlap between preferred numeric ranges |
+
+Students choose one-to-one, small group or either; these map to ranges of 2–2,
+3–maximum or 2–maximum. Weekly availability uses Asia/Singapore time. Administrators
+configure enabled criteria, weights and balanced, availability-first or course-first
+ranking. Search excludes self, inactive accounts and existing active buddies.
+
+Scoring formulas, filtering and configuration behavior are described in
+[matching decisions](docs/DESIGN_DECISIONS.md#matching-decisions-team-a) and the
+[API contract](docs/API_CONTRACT.md).
+
+## Collaborative Study
+
+Accepted group members enter a private room with a shared Pomodoro, host/co-host controls,
+original layered music/ambience and live campus-weather scenes with selectable fallback.
+Local volume/mute preferences are remembered; playback requires explicit enable. Accessible
+phase cues mark focus/break transitions, and room access follows current membership.
+
+Group leaders and connected buddies schedule, edit and cancel dated sessions. Mutual
+availability suggestions fit a chosen duration, while manual scheduling remains available.
+Current/upcoming sessions appear on Home and group agendas with safe room shortcuts.
+Calendar downloads support single or bounded weekly dates with timezone/DST handling.
+They are snapshots: re-export after changes and check your calendar for old or duplicate
+copies. See [E2 documentation](docs/E2_TESTING.md) for details and calendar compatibility.
 
 ## Architecture
 
@@ -160,11 +201,9 @@ flowchart LR
     Assembler --> Controller
 ```
 
-`Student` composes `User` through a shared `@MapsId` identity. Immutable `TimeSlot` and
-`MatchScore` values, independent `CriterionScorer` implementations and polymorphic
-`MatchingStrategy` implementations keep matching responsibilities separate. Relationship
-and account mutations use documented lock ordering; full profile/availability replacements
-serialize per account. Supabase browser roles cannot read the application tables directly.
+Immutable `TimeSlot`/`MatchScore` values, independent criterion scorers and polymorphic
+matching strategies separate the matching responsibilities. Database access stays behind
+the backend's JWT-protected API.
 
 ```text
 backend/   Spring Boot, feature services/domain/DTOs, SQL migrations and tests
@@ -176,115 +215,53 @@ docs/      Contracts, decisions, coverage, diagrams and verification
 See [platform diagrams](docs/diagrams/PLATFORM.md), [matching diagrams](docs/diagrams/TEAM_A.md)
 and [connection/group diagrams](docs/diagrams/TEAM_C.md) for class and sequence detail.
 
-## Matching Engine
+## Testing
 
-Find buddies and Home use `GET /api/matches`. A search needs a current course or study goal;
-optional mode, group-size, shared-time and quality filters narrow the results. Self,
-inactive/deleted accounts and active buddies are excluded. Pending requests remain visible
-with a disabled duplicate-send action. Home shows up to three of the returned candidates.
+```bash
+# Repository root: complete backend suite in disposable PostgreSQL 17
+scripts/test-backend.sh
+```
 
-Each enabled criterion produces a score from 0 to 1. Compatibility is the weighted sum,
-not a probability of success. Missing preferences score a neutral 0.5; explicit filters
-still require the candidate to satisfy the selected preference.
+```bash
+# Frontend: interaction tests, lint, types and production build
+cd frontend
+npm test
+npm run lint
+npm run build
+```
 
-| Criterion | Rule |
-| --- | --- |
-| Course | Candidate targets the current course: 1; enrolled only: 0.5; no alignment: 0. Current search takes precedence over the saved target; no focus: 0.5 |
-| Availability | Unique shared weekly minutes divided by the caller's unique available minutes; missing availability: 0.5 |
-| Study mode | Same mode or either person's `EITHER`: 1; in-person versus online: 0; missing: 0.5 |
-| Study goals | Shared selected/saved focus goals divided by focus goal count; missing: 0.5 |
-| Group size | Preferred numeric ranges overlap: 1; disjoint: 0; missing: 0.5 |
+The backend harness creates its own credentials and database, checks fresh/repeated/legacy
+migrations, runs HTTP/JWT/database tests and removes its container. Never run destructive
+test fixtures against shared Supabase. CI runs both backend and frontend jobs on every PR.
 
-Balanced ranks by weighted total. Availability-first or course-first ranks by its enabled
-priority criterion, then total; disabling the priority falls back to total. Alternative
-sorts start with shared hours or same-year preference, then the strategy. Name and ID break
-ties. The server filters/sorts before applying the configured result limit, and the frontend
-preserves its ordering across quality labels.
+<details>
+<summary>Backend build and focused unit checks</summary>
 
-Weekly slots use recurring Asia/Singapore time and half-open boundaries. Touching slots
-share no minutes; duplicate/overlapping/adjacent inputs are merged before counting overlap.
-The categorical group-size UI maps to numeric ranges: one-to-one 2–2, small group 3–maximum,
-and either 2–maximum. The team interprets the brief's undefined “learning style” wording
-through the defined study preferences; no separate taxonomy or sixth scorer is invented.
+Package the backend without running database tests:
 
-Admin configuration enables criteria, edits each strategy's weights and minimum score,
-and persists versioned overrides. Enabled weights sum to 1; disabled weights are 0.
-Stale saves conflict, and each search uses one coherent settings snapshot. Restore defaults
-uses current external startup configuration. Full formulas and alternatives are in
-[design decisions](docs/DESIGN_DECISIONS.md#matching-decisions-team-a).
+```bash
+cd backend
+./mvnw -DskipTests package
+```
 
-## Profile and Relationship Contracts
+This package command skips tests. A focused unit-only run omits context/database integration
+checks:
 
-Contact input accepts an 8-digit Singapore number starting with 6, 8 or 9, or an international
-number beginning `+` with 7–15 digits (first digit 1–9). Spaces, hyphens, parentheses and dots
-are removed; local Singapore numbers are stored with `+65`. This is format validation,
-not verification of a carrier, country assignment or reachable phone. The same rule applies
-to registration, own-profile updates and admin contact replacement.
+```bash
+cd backend
+./mvnw test -Dtest='!com.studybuddy.integration.**,!StudyBuddyApplicationTests' \
+  -Dsurefire.failIfNoSpecifiedTests=false
+```
 
-Existing legacy contacts are not rewritten by this change. They remain protected by the
-same read policy; a replacement/full profile write must supply a valid contact. Omitting
-contact in an admin edit preserves the existing value. New demo records use valid synthetic
-formats, while reseeding preserves existing data.
-
-Profile details and weekly availability save separately. An error refreshing one after a
-successful save keeps the owner's other draft and discard warning available; logout,
-identity change and lost authorization clear it. Invalid time drafts block writes.
-An empty personal week is allowed while onboarding remains visibly incomplete. Personal
-slots reject overlap; group schedules may be empty or overlapping.
-
-Buddy acceptance creates an active connection; ending it removes contact access. Group
-leaders decide applications, count toward capacity, remove members and close groups.
-Notifications are recipient-scoped. Deactivation revokes access and ends active relationships;
-reactivation requires fresh sign-in and restores none. Permanent deletion removes dependent
-records. Administrator contact input is write-only. See the [API contract](docs/API_CONTRACT.md).
-
-## Collaborative Study
-
-Accepted members of an open group can enter a private room with a durable shared Pomodoro,
-expiring presence and leader-assigned host/co-host controls. A present host/co-host can tune
-durations and capacity; only the leader assigns roles. Removing membership revokes both
-browser leases and delegated roles, so readmission cannot revive old room access.
-
-Original native Web Audio supplies independently selectable music and ambience. Shared
-play/pause selections persist. This browser remembers its separate layer volume and mute
-preferences; playback still needs explicit enable after entering or rejoining a room.
-Unavailable or malformed local storage falls back to safe mixer defaults. A discreet,
-polite phase cue announces observed focus/break transitions without reading the countdown
-every second or replaying missed transitions on reconnect.
-The timer continues through disconnects; two-second polling reconciles shared controls with
-local countdown rendering. Audio playback positions are not synchronized.
-
-Group leaders schedule dated group sessions, and connected buddies manage private sessions
-for their active connection. Sessions support agendas, locations, valid IANA timezones,
-mutual weekly availability suggestions, updates/cancellation and bounded weekly repetition.
-Choose a positive whole-minute duration for suggestions (60 minutes initially): a 45-minute
-choice inside a shared 10:00–12:00 window fills 10:00–10:45, while shorter windows are omitted.
-Choosing a duration leaves entered dates untouched until a suggestion is selected, and manual
-scheduling stays available when no window fits. Existing server time/DST validation still applies.
-Actual current/upcoming sessions appear on Home, group agendas and notifications. Session
-labels and room shortcuts update at occurrence boundaries, including after returning to a tab;
-completed and cancelled plans have no room shortcut. Safe saved room links open a preview
-where joining remains explicit. Calendar downloads
-contain single or explicit weekly occurrences with stable IDs and UTC times preserving local
-wall time across DST. Downloads are snapshots: changed/cancelled sessions require re-export;
-remove a prior import before replacing it if the calendar client does not reconcile IDs.
-No calendar OAuth, attendance booking or two-way sync is included.
-
-The room's original pixel-window scene follows live SMU-campus weather through the approved
-Open-Meteo service, with selectable clear/cloud/rain/storm/snow/fog atmospheres and Singapore
-day/night styling. Server caching bounds provider requests; failure uses labelled last-known
-conditions or daylight/manual fallback. No device location, student information or JWT is sent
-to the provider. Decorative motion respects reduced-motion settings and does not change audio.
-
-Apply all ordered migrations before starting against a shared database. Source contracts and
-verification are in [the E2 guide](docs/E2_TESTING.md) and
-[bonus plan](docs/BONUS_IMPLEMENTATION_PLAN.md). E1 AI match explanations remain separate.
+</details>
 
 ## Configuration
 
-Only `VITE_`-prefixed values reach the frontend, and they end up in the public bundle, so
-never put a secret there. Database credentials, the JWT secret and demo passwords belong
-in `application-local.yml` or the process environment.
+Backend secrets belong in `application-local.yml` or the process environment; frontend
+settings belong in `frontend/.env`. Expand the relevant reference for defaults.
+
+<details>
+<summary>Backend, authentication, profiles and demo data</summary>
 
 | Key | Default / requirement | Purpose |
 | --- | --- | --- |
@@ -296,15 +273,31 @@ in `application-local.yml` or the process environment.
 | `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three settings above | Typed authentication config (`AuthProperties`) |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (min `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list as currently taken |
+| `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
+| `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
+| `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
+
+</details>
+
+<details>
+<summary>Matching configuration</summary>
+
+| Key | Default / requirement | Purpose |
+| --- | --- | --- |
 | `app.matching.default-strategy` | `BALANCED` | Strategy used until an admin chooses one (`BALANCED`, `AVAILABILITY_FIRST`, `COURSE_FIRST`) |
 | `app.matching.default-weights.<strategy>.*` | balanced: course `0.30`, availability `0.30`, study-mode `0.20`, study-goal `0.10`, group-size `0.10`; availability-first: availability `0`, course `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15`; course-first: course `0`, availability `0.40`, study-mode `0.30`, study-goal `0.15`, group-size `0.15` | Every strategy has all five weights, each from 0 to 1. Enabled weights add up to 1; disabled weights must be 0. The priority criterion is editable, including 0 |
 | `app.matching.default-enabled-criteria` | All five criteria | Global startup enabled criteria; disabled criteria must have zero weights |
 | `app.matching.default-min-score` | `0` | Minimum total compatibility returned, before a student's additional quality filter |
 | `app.matching.default-result-limit` / `app.matching.max-result-limit` | `20` / `50` | Default and largest search result count, applied after filtering and sorting |
 | `app.matching.quality.strong` / `app.matching.quality.good` | `0.75` / `0.50` | Weighted-total cut-offs for the Strong and Good match labels; anything lower is Fair |
-| `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
-| `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
-| `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
+
+</details>
+
+<details>
+<summary>Rooms, sessions and campus weather</summary>
+
+| Key | Default / requirement | Purpose |
+| --- | --- | --- |
 | `ROOM_DEFAULT_FOCUS_MINUTES` / `app.study-room.default-focus-minutes` | `25` | Initial focus duration |
 | `ROOM_DEFAULT_BREAK_MINUTES` / `app.study-room.default-break-minutes` | `5` | Initial break duration |
 | `ROOM_MAX_FOCUS_MINUTES` / `app.study-room.max-focus-minutes` | `180` | Maximum focus duration |
@@ -322,67 +315,45 @@ in `application-local.yml` or the process environment.
 | `WEATHER_CACHE_LIFETIME` / `app.weather.cache-lifetime` | `15m`, at least `30s` | Shared successful weather cache |
 | `WEATHER_RETRY_INTERVAL` / `app.weather.retry-interval` | `1m`, at least `30s` | Backoff after provider failure |
 | `WEATHER_MAXIMUM_STALE_AGE` / `app.weather.maximum-stale-age` | `24h`, no shorter than cache lifetime | Last-known observation age limit |
+
+</details>
+
+<details>
+<summary>Frontend configuration</summary>
+
+| Key | Default / requirement | Purpose |
+| --- | --- | --- |
 | `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
 | `VITE_REFRESH_INTERVAL_MS` | `30000` (min `15000`, max `300000`) | Background refresh interval for lists and details |
 
-The test profile reads `STUDYBUDDY_TEST_DATABASE_URL`, `STUDYBUDDY_TEST_DATABASE_USERNAME`,
-`STUDYBUDDY_TEST_DATABASE_PASSWORD` and `STUDYBUDDY_TEST_JWT_SECRET`; the migration runner
-reads the standard `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD`.
-`scripts/test-backend.sh` sets all of these itself.
+</details>
 
-## Testing
-
-The pipeline has two jobs: backend integrity/behavior and frontend interactions/lint/build.
-Tests focus on scoring/interval math, validation and privacy, state transitions, concurrency,
-database guarantees and meaningful user workflows. Targeted regressions cover the password
-byte boundary, recoverable owner drafts and the shared contact contract. No browser-test
-framework, third job or new service is required.
-
-```bash
-# Repository root: complete backend suite in private PostgreSQL 17
-scripts/test-backend.sh
-```
-
-```bash
-# Frontend: rendered tests, lint, types and production bundle
-cd frontend
-npm test
-npm run lint
-npm run build
-```
-
-The backend harness generates credentials, tests fresh/repeated/legacy migrations, runs the
-context and real HTTP/JWT/database suite, and removes its container. Never aim destructive
-fixtures at shared Supabase. CI runs these checks on every PR into main, including SQL and
-setup changes. A faster local unit-only check is available:
-
-```bash
-cd backend
-./mvnw test -Dtest='!com.studybuddy.integration.**,!StudyBuddyApplicationTests' \
-  -Dsurefire.failIfNoSpecifiedTests=false
-```
-
-Current baseline results, red/green regressions and live workflows belong in
-[BASELINE_VERIFICATION.md](docs/BASELINE_VERIFICATION.md). Older A/C records remain dated
-historical evidence. Human review and projector/browser acceptance are separate from tests.
+The isolated test harness supplies `STUDYBUDDY_TEST_DATABASE_URL`,
+`STUDYBUDDY_TEST_DATABASE_USERNAME`, `STUDYBUDDY_TEST_DATABASE_PASSWORD` and
+`STUDYBUDDY_TEST_JWT_SECRET` automatically. The migration runner uses the standard
+`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD` variables.
 
 ## Documentation
 
 | Document | Purpose |
 | --- | --- |
 | [API contract](docs/API_CONTRACT.md) | Endpoints, DTO/input shapes, authorization and errors |
-| [Design decisions](docs/DESIGN_DECISIONS.md) | Accepted contracts, alternatives and scope boundaries |
-| [Requirement coverage](docs/REQUIREMENT_COVERAGE.md) | Compulsory A/B/C behavior and test/source mapping |
+| [Design decisions](docs/DESIGN_DECISIONS.md) | Matching formulas, privacy rules and accepted design choices |
+| [Requirement coverage](docs/REQUIREMENT_COVERAGE.md) | Feature mapping and delivery records |
 | [E2 verification](docs/E2_TESTING.md) | Room/session/audio/weather/calendar checks and current evidence |
-| [Baseline verification](docs/BASELINE_VERIFICATION.md) | Repeatable checks and current delivery evidence |
+| [Baseline verification](docs/BASELINE_VERIFICATION.md) | Test coverage and workflow evidence |
 | [Database operations](docs/DATABASE_OPERATIONS.md) | Migration, seed, access and recovery procedures |
-| [Platform / Team A / Team C diagrams](docs/diagrams/PLATFORM.md) | System, class and sequence sources; detailed feature diagrams are linked within |
+| [Platform](docs/diagrams/PLATFORM.md) · [Matching](docs/diagrams/TEAM_A.md) · [Groups/connections](docs/diagrams/TEAM_C.md) | System, class and sequence diagrams |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was retained |
 | [Repository conventions](AGENTS.md) | Ownership, OO/layering rules and review process |
 
 ## Libraries
 
-Versions match the resolved Maven dependencies and the npm lockfile.
+<details>
+<summary>Dependency and service inventory</summary>
+
+Versions below match the resolved Maven dependencies and npm lockfile. Licences apply
+to the listed third-party libraries and services.
 
 | Library/tool | Resolved version | Purpose | Licence / primary source |
 | --- | --- | --- | --- |
@@ -407,16 +378,14 @@ Versions match the resolved Maven dependencies and the npm lockfile.
 | Open-Meteo weather service | Current weather API | Approved fixed-campus decorative weather; no SDK or key | CC BY 4.0 data, non-commercial free API; [documentation](https://open-meteo.com/en/docs), [terms](https://open-meteo.com/en/terms) |
 | source-map-js (transitive) | 1.2.2 | Existing source-map support; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
 
-Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing uses
-official PostgreSQL 17; no embedded database is used.
+Supabase provides hosted PostgreSQL; the browser does not use a Supabase SDK. Tests use
+the official PostgreSQL 17 container. Open-Meteo supplies optional campus weather, with
+visible CC BY 4.0 attribution and no student/device-location data sent to the provider.
 
-The shared retro shell and current landing screen use original CSS pixel drawings in
-`PixelIcon.tsx`, CSS shapes/patterns and Unicode glyphs. Tahoma/Verdana/system fonts are
-requested from the user's system; no font or external icon-set files are bundled.
-`index.css` still imports Google Fonts Inter and Fraunces under SIL OFL 1.1
-([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
-[Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt));
-network failure falls back to system fonts.
+</details>
+
+<details>
+<summary>Original assets and font licences</summary>
 
 | Asset / service | Origin and distribution record |
 | --- | --- |
@@ -424,32 +393,21 @@ network failure falls back to system fonts.
 | Shared/landing pixel icons, avatar initials and CSS patterns | Original project drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css`; no external icon set |
 | Room scenery and music/ambient synthesis | Original project CSS pixel scenery and native Web Audio; no external sound assets |
 | Open-Meteo weather | Approved non-commercial API, CC BY 4.0 attribution linked on the room screen; backend sends configured campus coordinates only |
-| Google Fonts stylesheet | Existing Inter/Fraunces remote import; SIL OFL 1.1 sources linked above, with system fallback |
+| Google Fonts stylesheet | Existing Inter/Fraunces remote import; SIL OFL 1.1 sources linked in this section, with system fallback |
 | Supabase / PostgreSQL | Hosted database reached only by backend JDBC; local/CI tests use the official PostgreSQL 17 container |
 
-No external music or AI-provider service ships in this branch. Open-Meteo is the sole added
-extension service; it is optional, cached and has a local fallback. Development assistance is disclosed in
-[AI_USAGE.md](docs/AI_USAGE.md).
+The retro interface uses original pixel drawings and CSS patterns with system fonts.
+The existing Google Fonts import uses Inter and Fraunces under SIL OFL 1.1
+([Inter licence](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt),
+[Fraunces licence](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt));
+network failure falls back to system fonts. No external music assets are required.
 
-## Team Workflow
+</details>
+
+## Team
 
 | Team | Members | Responsibility |
 | --- | --- | --- |
 | A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration |
 | B | Angel, Averyl, Guang Hao | Platform, authentication, own profile, availability, seed, dashboard and shell |
-| C | Aryan, Charlize | Requests/connections, contact privacy, study groups, notifications and admin accounts |
-
-Within Team C, Charlize built group/join-request rules, queries, DTOs and services. Aryan built
-requests, connections, profile privacy, notifications, admin accounts and their integrated
-controllers, screens, migrations and tests. Members must confirm their retained contributions
-and understand the implementation for the viva.
-
-Read [AGENTS.md](AGENTS.md), branch from current main and keep commits focused. Open a PR
-with related issues, behavior/test evidence and any shared-file effects; obtain cross-team
-review, then use **Squash and merge**. Secrets and generated build output stay untracked.
-
-The internal freeze is 24 October; extras integration targets 25 October and materials/rehearsal
-8 November. The 15 November 2026 23:59 SGT handoff is a team target pending the actual LMS
-deadline; the formal brief specifies Week 13. Final diagram exports, selected extras, slides,
-rehearsal, peer evaluation and submission are separate delivery work. See the
-[schedule record](docs/DESIGN_DECISIONS.md#schedule-and-submission-record).
+| C | Aryan, Charlize | Requests/connections, contact privacy, groups, notifications, admin accounts and collaborative study |
