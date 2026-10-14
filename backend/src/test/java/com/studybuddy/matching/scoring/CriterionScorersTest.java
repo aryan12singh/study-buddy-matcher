@@ -7,6 +7,8 @@ import com.studybuddy.student.StudyMode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static com.studybuddy.matching.MatchingFixtures.NO_FILTERS;
 import static com.studybuddy.matching.MatchingFixtures.course;
 import static com.studybuddy.matching.MatchingFixtures.profile;
@@ -15,6 +17,7 @@ import static com.studybuddy.matching.MatchingFixtures.slot;
 import static com.studybuddy.matching.MatchingFixtures.student;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.TUESDAY;
+import static java.time.DayOfWeek.WEDNESDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CriterionScorersTest {
@@ -69,11 +72,22 @@ class CriterionScorersTest {
         private final AvailabilityOverlapScorer scorer = new AvailabilityOverlapScorer();
 
         @Test
-        void scoresTheShareOfMyFreeTimeTheyShare() {
+        void scoresSharedTimeAgainstTheSmallerTimetable() {
+            // 1 shared hour; my week has 4 free hours and theirs 3, so 1 of 3.
             MatchingProfile mine = profile(me, slot(MONDAY, "09:00", "11:00"), slot(TUESDAY, "09:00", "11:00"));
             MatchingProfile theirs = profile(them, slot(MONDAY, "10:00", "13:00"));
 
-            assertEquals(0.25, scorer.score(mine, theirs, NO_FILTERS).score());
+            assertEquals(1.0 / 3, scorer.score(mine, theirs, NO_FILTERS).score(), 1e-9);
+        }
+
+        @Test
+        void scoresTheSameFromEitherStudentsSide() {
+            MatchingProfile small = profile(me, slot(MONDAY, "09:00", "11:00"));
+            MatchingProfile large = profile(them, slot(MONDAY, "09:00", "11:00"), slot(TUESDAY, "09:00", "17:00"),
+                    slot(WEDNESDAY, "09:00", "17:00"));
+
+            assertEquals(scorer.score(small, large, NO_FILTERS), scorer.score(large, small, NO_FILTERS));
+            assertEquals(1.0, scorer.score(large, small, NO_FILTERS).score(), "a busy timetable is not penalised");
         }
 
         @Test
@@ -137,6 +151,15 @@ class CriterionScorersTest {
             them.getStudyGoals().add(StudyGoal.PROJECT_DISCUSSION);
 
             assertEquals(0.5, scorer.score(profile(me), profile(them), NO_FILTERS).score());
+        }
+
+        @Test
+        void scoresTheSameFromEitherStudentsSide() {
+            me.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
+            them.getStudyGoals().addAll(List.of(StudyGoal.EXAM_PREPARATION, StudyGoal.PROJECT_DISCUSSION, StudyGoal.CONCEPT_REVIEW));
+
+            assertEquals(1.0, scorer.score(profile(me), profile(them), NO_FILTERS).score());
+            assertEquals(1.0, scorer.score(profile(them), profile(me), NO_FILTERS).score());
         }
 
         @Test

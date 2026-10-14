@@ -79,7 +79,8 @@ class MatchingHttpTest extends PostgresHttpTest {
         long peer = student("peer@example.test", "Peer", "83334444");
         database.update("update students set target_course_id=? where id=?", course, self);
         database.update("delete from student_courses where student_id=?", peer);
-        database.update("update availability_slots set end_time='10:30' where student_id=?", peer);
+        // Shifted rather than shortened: 90 of each student's 120 minutes overlap, an availability score of 0.75.
+        database.update("update availability_slots set start_time='09:30', end_time='11:30' where student_id=?", peer);
         account("admin@example.test", "ADMIN");
         String adminToken = login("admin@example.test");
         String studentToken = login("self@example.test");
@@ -241,7 +242,8 @@ class MatchingHttpTest extends PostgresHttpTest {
         long first=student("first@example.test","First","83334444");
         long second=student("second@example.test","Second","85556666");
         database.update("update students set target_course_id=? where id=?",course,first);
-        database.update("update availability_slots set end_time='10:00' where student_id=?",first);
+        // Shifted rather than shortened: 60 of each student's 120 minutes overlap, an availability score of 0.5.
+        database.update("update availability_slots set start_time='10:00', end_time='12:00' where student_id=?",first);
         account("admin@example.test","ADMIN");
         String admin=login("admin@example.test"),token=login("self@example.test");
         String path="/matches?courseId="+course;

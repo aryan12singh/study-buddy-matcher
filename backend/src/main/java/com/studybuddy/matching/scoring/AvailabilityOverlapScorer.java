@@ -4,7 +4,11 @@ import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.availability.WeeklyAvailability;
 import org.springframework.stereotype.Component;
 
-/** Scores the share of the searcher's free time that the candidate is also free. */
+/**
+ * Scores shared free time as a share of the smaller of the two timetables. Dividing by
+ * the smaller one makes the score the same from either student's side, and does not
+ * penalise a student for honestly listing a lot of free time.
+ */
 @Component
 public class AvailabilityOverlapScorer implements CriterionScorer {
 
@@ -20,6 +24,7 @@ public class AvailabilityOverlapScorer implements CriterionScorer {
         if (mine.isEmpty() || theirs.isEmpty()) {
             return CriterionResult.unknown();
         }
-        return CriterionResult.of(Math.min(1.0, (double) mine.sharedMinutesWith(theirs) / mine.totalMinutes()));
+        long smallerTimetable = Math.min(mine.totalMinutes(), theirs.totalMinutes());
+        return CriterionResult.of(Math.min(1.0, (double) mine.sharedMinutesWith(theirs) / smallerTimetable));
     }
 }

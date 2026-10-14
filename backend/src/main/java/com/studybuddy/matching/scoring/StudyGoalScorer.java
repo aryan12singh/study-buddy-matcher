@@ -6,7 +6,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
-/** Scores the share of the searcher's study goals that the candidate also has. */
+/**
+ * Scores shared study goals as a share of the smaller goal set (the overlap coefficient).
+ * The score is the same from either student's side, and a student open to several goals
+ * is treated like one who chose "either" for study mode: compatible, not penalised.
+ */
 @Component
 public class StudyGoalScorer implements CriterionScorer {
 
@@ -23,6 +27,6 @@ public class StudyGoalScorer implements CriterionScorer {
             return CriterionResult.unknown();
         }
         long inCommon = mine.stream().filter(theirs::contains).count();
-        return CriterionResult.of((double) inCommon / mine.size());
+        return CriterionResult.of((double) inCommon / Math.min(mine.size(), theirs.size()));
     }
 }
