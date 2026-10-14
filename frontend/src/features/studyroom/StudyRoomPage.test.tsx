@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { api } from '../../shared/api/client'
 import { deferred, renderPage, response } from '../../test/renderApp'
 import StudyRoomPage from './StudyRoomPage'
@@ -29,6 +29,11 @@ function open(overrides: Partial<StudyRoom> = {}) {
   vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/weather' ? weather : { ...room, ...overrides }))
   return renderPage(<StudyRoomPage />, '/groups/5/room', '/groups/:id/room')
 }
+async function joinStudyRoom() {
+  const button = await screen.findByRole('button', { name: 'Join study room' })
+  // Finish the joined panel's effects before testing browser audio consent.
+  await act(async () => { fireEvent.click(button) })
+}
 afterEach(() => { vi.restoreAllMocks(); Object.values(engine).forEach(mock => mock.mockReset()); localStorage.clear() })
 
 describe('private room screen', () => {
@@ -52,7 +57,7 @@ describe('private room screen', () => {
         timer: { ...room.timer, status: command === 'START' ? 'RUNNING' : 'IDLE' } }))
     })
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     fireEvent.click(await screen.findByRole('button', { name: 'Start focus' }))
     await screen.findByRole('button', { name: 'Pause for everyone' })
     expect(post).toHaveBeenCalledWith('/groups/5/room/timer', { command: 'START', expectedVersion: 0 })
@@ -76,7 +81,7 @@ describe('private room screen', () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ canControl: false })))
     const remove = vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     expect(screen.queryByRole('button', { name: 'Start focus' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('Shared music selection')).toBeDisabled()
@@ -97,7 +102,7 @@ describe('private room screen', () => {
       return response(joinedRoom())
     })
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     fireEvent.click(await screen.findByRole('button', { name: 'Leave room' }))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leave study room' }))
     await screen.findByRole('button', { name: 'Join study room' })
@@ -110,7 +115,7 @@ describe('private room screen', () => {
     vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: null, musicPlaying: false, ambientPreset: 'RAIN', ambientPlaying: true } })))
     vi.spyOn(api, 'put').mockRejectedValue(new Error('Membership removed'))
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
     await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25))
@@ -125,7 +130,7 @@ describe('private room screen', () => {
     vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: null, musicPlaying: false, ambientPreset: 'RAIN', ambientPlaying: true } })))
     const put = vi.spyOn(api, 'put')
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     expect(engine.play).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Enable audio in this browser' }))
@@ -141,7 +146,7 @@ describe('private room screen', () => {
     vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: 'CALM_MUSIC', musicPlaying: true, ambientPreset: 'RAIN', ambientPlaying: true } })))
     const put = vi.spyOn(api, 'put')
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     fireEvent.click(screen.getByRole('button', { name: 'Enable audio in this browser' }))
     await waitFor(() => expect(engine.play).toHaveBeenCalledWith('music', 'CALM_MUSIC', 0.25))
@@ -156,7 +161,7 @@ describe('private room screen', () => {
     vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: 'CALM_MUSIC', musicPlaying: true, ambientPreset: 'RAIN', ambientPlaying: true } })))
     vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
     const view = open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
     await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25))
@@ -171,7 +176,7 @@ describe('private room screen', () => {
     await screen.findByRole('button', { name: 'Join study room' })
     expect(engine.close).toHaveBeenCalled()
     engine.play.mockClear(); engine.enable.mockClear()
-    fireEvent.click(screen.getByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     expect(screen.getByRole('slider', { name: 'Your music volume: 60%' })).toBeDisabled()
     expect(screen.getByRole('slider', { name: 'Your ambience volume: 42%' })).toBeDisabled()
@@ -195,7 +200,7 @@ describe('private room screen', () => {
     vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
     const put = vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom({ version: 1, focusMinutes: 30 })))
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     fireEvent.change(await screen.findByLabelText('Focus minutes'), { target: { value: '30' } })
     expect(screen.getByLabelText('Host')).toBeDisabled()
     expect(screen.getByLabelText('Co-host')).toBeDisabled()
@@ -208,7 +213,7 @@ describe('private room screen', () => {
     engine.enable.mockRejectedValueOnce(new Error('Audio unavailable'))
     vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
     open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
     expect(await screen.findByText('Audio unavailable')).toBeInTheDocument()
