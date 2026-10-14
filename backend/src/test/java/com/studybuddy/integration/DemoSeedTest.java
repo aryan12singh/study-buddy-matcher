@@ -3,6 +3,7 @@ package com.studybuddy.integration;
 import com.studybuddy.matching.MatchResultDto;
 import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.MatchService;
+import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.seed.DemoSeedService;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
@@ -122,6 +123,30 @@ class DemoSeedTest extends PostgresHttpTest {
         for (int index = 0; index < tables.length; index++) {
             assertEquals(before[index], after[index], tables[index]);
         }
+    }
+
+    @Test
+    void thePresentersMatchesDifferEnoughToShowEachStrategy() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+        long is442 = count("select id from courses where code='IS442'");
+
+        List<MatchResultDto> results = search(presenter, is442);
+
+        // If every candidate scored the same on a criterion, changing its weight or switching
+        // strategy would not visibly change the list in a demo.
+        for (MatchingCriterion criterion : List.of(MatchingCriterion.COURSE, MatchingCriterion.AVAILABILITY,
+                MatchingCriterion.STUDY_GOAL, MatchingCriterion.GROUP_SIZE)) {
+            long distinct = results.stream().map(match -> scoreOf(match, criterion)).distinct().count();
+            assertTrue(distinct > 1, criterion + " scores the same for every match");
+        }
+        // Availability-first should lift someone whom course-first would not.
+        assertTrue(results.stream().anyMatch(match -> match.sharedHoursPerWeek() >= 3
+                && scoreOf(match, MatchingCriterion.COURSE) < 1.0), "a match sharing lots of time but only taking the course");
+    }
+
+    private static double scoreOf(MatchResultDto match, MatchingCriterion criterion) {
+        return match.breakdown().stream().filter(score -> score.criterion() == criterion).findFirst().orElseThrow().score();
     }
 
     private List<MatchResultDto> search(long searcher, long courseId) {

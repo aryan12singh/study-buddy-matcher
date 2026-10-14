@@ -133,7 +133,7 @@ business rules behave exactly as in live use:
 
 | Sign in as | What is ready to demo |
 | --- | --- |
-| `priya@demo.example.test` (presenter) | An incoming request from Marcus to accept (his contact number then appears). An outgoing request to Sofia. An active connection with Jamie and an ended one with Alex. Leads *IS442 Design Patterns Clinic* (3/5 members) with two pending applications to approve or reject |
+| `priya@demo.example.test` (presenter) | An incoming request from Marcus to accept (his contact number then appears). An outgoing request to Sofia. An active connection with Jamie and an ended one with Alex. Leads *IS442 Design Patterns Clinic* (3/5 members) with two pending applications to approve or reject. For the strategy demo, search IS442 and switch strategy as admin: Chen Xin Yi shares all six of Priya's free hours but only takes IS442, so she rises under Availability first and falls under Course first |
 | `appendix.a@demo.example.test` / `appendix.b@demo.example.test` | The brief's Appendix A pair. Searching IS442 as Student A shows Student B with 2 shared hours, scoring 0.85 STRONG under Balanced |
 | `hannah@demo.example.test` | Leads a full group (*Stats Finals Crunch*, 3/3) |
 | `ethan@demo.example.test` | Leads a closed group (*IS212 Sprint Retro*) |

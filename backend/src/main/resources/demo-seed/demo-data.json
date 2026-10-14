@@ -28,7 +28,7 @@
   },
   "students": [
     { "handle": "priya", "name": "Priya Nair", "school": "SCIS", "programme": "Information Systems", "year": 3, "contactNumber": "+12025550101",
-      "courses": ["IS442", "IS212", "IS216"], "targetCourse": "IS442", "studyMode": "EITHER", "groupSize": "EITHER",
+      "courses": ["IS442", "IS212", "IS216"], "targetCourse": "IS442", "studyMode": "EITHER", "groupSize": "SMALL_GROUP",
       "goals": ["CONCEPT_REVIEW", "EXAM_PREPARATION"], "availability": ["MON_EVE", "WED_EVE", "THU_AFT"] },
     { "handle": "jamie", "name": "Jamie Lee", "school": "SCIS", "programme": "Information Systems", "year": 3, "contactNumber": "+12025550102",
       "courses": ["IS442", "IS212"], "targetCourse": "IS442", "studyMode": "IN_PERSON", "groupSize": "SMALL_GROUP",
@@ -173,7 +173,7 @@
       "goals": ["PROBLEM_SOLVING", "CONCEPT_REVIEW"], "availability": ["WED_EVE", "SAT_AM"] },
     { "handle": "xinyi", "name": "Chen Xin Yi", "school": "SCIS", "programme": "Information Systems", "year": 4, "contactNumber": "+12025550149",
       "courses": ["IS214", "IS442"], "targetCourse": "IS214", "studyMode": "EITHER", "groupSize": "EITHER",
-      "goals": ["PROJECT_DISCUSSION"], "availability": ["THU_AFT", "FRI_AFT"] },
+      "goals": ["PROJECT_DISCUSSION"], "availability": ["MON_EVE", "WED_EVE", "THU_AFT"] },
     { "handle": "yusuf", "name": "Yusuf Ibrahim", "school": "LKCSB", "programme": "Business Management", "year": 3, "contactNumber": "+12025550150",
       "courses": ["IS210", "FNCE101"], "targetCourse": "IS210", "studyMode": "ONLINE", "groupSize": "ONE_TO_ONE",
       "goals": ["EXAM_PREPARATION"], "availability": ["MON_EVE", "TUE_AFT"] }
