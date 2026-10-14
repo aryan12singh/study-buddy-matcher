@@ -565,6 +565,32 @@ table may be added without team agreement.
 
 </details>
 
+### Why these libraries
+
+<!-- REVIEW (all members): the brief asks us to say why we picked each library and, where we
+compared options, why we preferred one. Keep an alternative only if we genuinely discussed
+it; otherwise change the row to say the library came with the fixed stack or scaffold. -->
+
+| Need | Chosen | Alternatives a marker may ask about | Why we chose it |
+| --- | --- | --- | --- |
+| Backend framework | Spring Boot | Jakarta EE, Micronaut, Javalin | Recommended in the brief. Dependency injection supports constructor-injected, single-responsibility services. Large ecosystem for persistence, security and validation |
+| Persistence | Spring Data JPA + Hibernate | Plain JDBC / `JdbcTemplate`, MyBatis, jOOQ | Maps the domain classes (`Student`, `StudyGroup`, `MatchRequest`) directly. Repository interfaces keep queries out of services. Pessimistic locks are used for request, group and admin races. Versioned SQL migrations stay the schema source of truth |
+| Database | PostgreSQL on Supabase | MySQL, H2/in-memory | Hosted Postgres the whole team shares, with no server to run. Partial unique indexes and check constraints enforce invariants such as "one pending request per pair". CI tests run on the same engine (PostgreSQL 17), not an embedded substitute |
+| Authentication | Spring Security + JJWT | Server sessions, Spring OAuth2 Resource Server (Nimbus), Supabase Auth | Stateless tokens suit a separate React client. JJWT gives a small, explicit HMAC sign-and-verify API. Spring Security supplies BCrypt and URL/role rules. Every request reloads the account, so a deactivated user's token stops working immediately |
+| Validation | Jakarta Bean Validation | Hand-written checks only | Declarative constraints on request DTOs, plus service-level rules for invariants that span several fields |
+| Frontend framework | React 19 | Vue, Angular, Svelte | Function components and hooks fit our shared component set (`WindowPage`, `Dialog`, `StatePanel`). The team is most familiar with it |
+| Build tool | Vite | Create React App (deprecated), webpack | Fast dev server and build. Environment variables (`VITE_API_BASE_URL`) keep URLs out of components |
+| Routing | React Router | TanStack Router, hand-rolled | Nested routes make role guards (`RequireRole`) and the login redirect declarative |
+| HTTP client | Axios | Browser `fetch` | One shared client with interceptors: the request interceptor adds the token, and the response interceptor turns a 401 into a session-expired logout in one place |
+| Typing | TypeScript | Plain JavaScript | API DTO types mirror backend DTOs, so contract drift shows up at build time |
+| Frontend tests | Vitest + Testing Library + jsdom | Jest, Cypress/Playwright | Vitest shares Vite's config. Testing Library tests behaviour the user sees (labels, buttons, empty states) rather than implementation details |
+| Backend tests | JUnit 5 + Mockito + Spring Boot Test | TestNG | Spring Boot's default. Mockito isolates services, and HTTP tests run against real PostgreSQL |
+| Lint | Oxlint | ESLint | Very fast with sensible defaults. Runs in CI on every pull request |
+| Styling | Plain CSS (`desktop.css`) + Tailwind base | CSS Modules, styled-components, full Tailwind | The retro desktop look is hand-written CSS. Tailwind came with the scaffold, and only its base reset is currently used <!-- REVIEW: remove Tailwind and the unused Google Fonts import, or explain why they stay --> |
+
+Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing uses
+official PostgreSQL 17; no embedded database is used.
+
 <details>
 <summary><strong>Visual and audio assets</strong></summary>
 
@@ -598,6 +624,37 @@ Within Team C, Charlize built the group and join-request rules, queries, DTOs an
 Aryan built requests, connections, profile privacy, notifications, admin accounts and their
 controllers, screens, migrations and tests, and the E2 collaborative study extension. Each
 member must confirm their retained contributions and be able to explain the implementation in the viva.
+
+### Individual contributions
+
+<!-- REVIEW (all members): each person fills in their own row with the classes, screens,
+tests and documents they built and can explain line by line in the viva. Keep it consistent
+with the git history and AI_USAGE.md, and list shared or cross-team work under everyone who
+did it. Remove this comment before submission. -->
+
+| Member | Team | Main code ownership (classes / screens) | Tests and docs | Other (coordination, seed, slides, demo) |
+| --- | --- | --- | --- | --- |
+| Natthida | A | <!-- REVIEW --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Chong Yee | A | <!-- REVIEW --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Joanne | A | <!-- REVIEW --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Angel | B | <!-- REVIEW --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Averyl | B | <!-- REVIEW --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Guang Hao | B | <!-- REVIEW --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Aryan | C | Requests, connections, profile privacy, notifications, admin accounts <!-- REVIEW: confirm --> | <!-- REVIEW --> | <!-- REVIEW --> |
+| Charlize | C | Group and join-request rules, queries, DTOs and services <!-- REVIEW: confirm --> | <!-- REVIEW --> | <!-- REVIEW --> |
+
+### How we coordinated
+
+- **Ownership by layer and feature.** Each team owns a vertical slice: Team A owns matching,
+  Team B the platform and profile, and Team C relationships, groups and administration.
+  Changes to shared files (`application.yml`, `pom.xml`, `package.json`, routes, the API
+  client) are flagged in the pull request.
+- **Agreed contracts first.** Endpoints between teams were agreed in
+  [API_CONTRACT.md](docs/API_CONTRACT.md) before either side was built.
+- **Cross-team review.** Each pull request is reviewed by someone from another team, so
+  every member reads code outside their own slice.
+  <!-- REVIEW: describe the real cadence: stand-ups, where we coordinated (Telegram, Discord,
+  etc.) and how decisions were recorded. -->
 
 **Contributing.** Read [AGENTS.md](AGENTS.md), branch from an up-to-date `main` and keep commits
 focused. Open a pull request with the related issue, test evidence and any shared-file effects,
