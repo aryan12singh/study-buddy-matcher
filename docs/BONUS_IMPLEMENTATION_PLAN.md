@@ -1,103 +1,101 @@
-# Bonus foundation and teammate handoff
+# E2 implementation and delivery
 
-9 October 2026. Branch `feat/team-c/collaborative-study-room` starts from merged
-`main` at `fadff38097870ce88c954cd5d4c4690630ef78ae`. Existing #48/#49 merge
-history is preserved.
+PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52), branch
+`feat/team-c/collaborative-study-room`, now targets the complete selected
+[E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16).
+The earlier foundation deliberately left session/calendar work to teammates;
+the project owner has since authorized completing it in this PR. Latest merged
+baseline work is integrated without rewriting existing merge history.
 
 ## Agreed scope
 
-This branch delivers a working room foundation and leaves substantial bonus work
-for teammates. It does not complete all of [E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16)
-or implement [E1 #15](https://github.com/aryan12singh/study-buddy-matcher/issues/15).
-
-| This branch | Teammate work after integration |
+| Component | Behavior |
 | --- | --- |
-| Private room for accepted members of an open group | Dated group and buddy study sessions |
-| Start/pause/resume/reset shared Pomodoro | Session agenda/editor and calendar export |
-| Expiring presence and capacity checks | Mutual availability using Team A's interval contract |
-| Leader-assigned host/co-host and shared audio selection | Session notifications and Team B dashboard integration |
-| Basic retro screen, original native browser audio and local consent/volume | E1 explanations of Team A's actual score breakdown |
-| Migrations, focused tests and documented contracts | Cross-team review, author walkthrough and bonus acceptance |
+| Private group room | Accepted active members only; join/leave, participant list, focus/break state, distinct-student capacity and expiring tab leases |
+| Shared Pomodoro | Configurable durations, server-time start/pause/resume/reset and observed-version conflict checks; state survives refresh/reconnect |
+| Leader/delegated control | Leader assigns host/co-host; present assigned hosts control timer/audio and configure durations/capacity without changing roles; leader retains recovery control |
+| Music and ambience | Independent original synthesized music and ambient selections/play state; intentional local enable, separate volume/mute and silent failure fallback |
+| Dated sessions | Group leader and the two connected buddies manage authorized dated series, timezone, title, optional agenda/location/room link and whole-series update/cancel |
+| Mutual availability | Existing Team A interval intersections across current participants; empty schedules stay empty and suggestions do not confirm attendance |
+| Calendar export | Single or bounded weekly series expanded to stable individual UTC events; correct timezone/DST resolution, private authenticated export and honest re-import limitations |
+| Product integration | Actual sessions in Home and group/buddy agendas; recipient-scoped change notifications; cancellation and parent lifecycle revoke access |
+| Weather enhancement | Approved original pixel themes, day/night and optional backend-cached Open-Meteo campus conditions, with selectable fallback and reduced motion |
+| Delivery | Ordered migrations, focused regressions, API/config/design diagrams, real workflow evidence and cross-team review |
 
-Aryan approved existing Team C retro components for the room screen because the
-accessible Figma file has an inspiration board and no dedicated bonus frames.
-Original built-in music/ambient presets were also approved. No external music
-account, asset, provider, library or dependency is introduced.
+The owner approved existing Team C retro components for these screens and original
+built-in audio. No external music account, audio provider, asset pack or new Java/npm
+dependency is introduced. Open-Meteo was separately approved for optional weather;
+its source/terms/attribution and configuration are recorded in the README and decisions.
 
 ## Sources and boundaries
 
-[E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16),
-[E1 #15](https://github.com/aryan12singh/study-buddy-matcher/issues/15) and
-[decisions #41](https://github.com/aryan12singh/study-buddy-matcher/issues/41)
-are the current bonus scope. The local `oop.pdf` discussion supplies the original
-ideas; `IS442-StudyBuddyMatcherSystem.pdf` supplies the brief/rubric. The issues
-record E1/E2 as the selected extras for this eight-member team. Closed duplicate
-proposals #35/#36 are not evidence of implementation.
+The formal `IS442-StudyBuddyMatcherSystem.pdf` supplies the brief and bonus rubric;
+the latest local `oop.pdf` discussion supplies the original proposals. Selected
+scope is recorded by #16 and [decisions #41](https://github.com/aryan12singh/study-buddy-matcher/issues/41).
+The weather enhancement was expressly adopted after the foundation plan.
 
-Weather/seasons, badges, public rooms, chat, shared notes/task boards and AI
-roadmap/helpers remain unselected proposals. Do not add them to this branch.
+[E1 #15](https://github.com/aryan12singh/study-buddy-matcher/issues/15) remains a
+separate AI match-explanation feature. Public rooms, chat, badges, task boards,
+shared notes, global online status, group-score recommendations and AI
+roadmap/helper/icebreaker proposals remain unselected. Completing E2 does not
+mean every discussion idea has been adopted or that the whole coursework submission
+is complete.
 
-The baseline contains Team C plus the platform foundation. Open #50 changes
-group/notification UX; open #51 changes profile/preferences/availability. Preserve
-their work when integrating. Room changes to `routes.tsx`, the group entry link,
-`application.yml` and migration assertions are additive shared integration points.
-Matching scores/configuration remain Team A's work; full own-profile/dashboard
-flows remain Team B's work.
+## Design and integration
 
-## How this foundation works
+Room and session controllers validate input and delegate to services. Assemblers
+return DTOs, with contacts/emails/tokens excluded. Membership/account locks precede
+group/connection locks, so changes serialize with lifecycle operations. Room
+leases are separate from the durable timer/audio state and from dated sessions.
+Removal, closure and deactivation clear leases/roles transactionally; readmission
+requires a new capacity-checked join. Session access always checks the current
+parent relationship, including after a notification link or calendar click.
 
-`StudyRoomController` validates inputs and calls `StudyRoomService`. The service
-checks active membership and locks accounts before the group, using the existing
-advisory-lock protocol. `RoomAssembler` returns DTOs with names and room roles,
-never contacts or entities. Room tables retain backend-only access.
+The timer stores an immutable server-time anchor and remaining duration instead of
+ticks. HTTP polling reconciles snapshots while the browser renders the countdown
+locally. Multiple tabs count once toward capacity; leaving removes only that tab's
+lease. A host disconnect does not pause the timer. The leader/co-host can recover,
+and an expired host must rejoin before controlling the room.
 
-`PomodoroTimer` is immutable and uses elapsed server time. `StudyRoom` persists an
-anchor, remaining duration and version, rather than storing ticks. All shared
-controls require the observed version. The timer runs through focus/break phases
-until paused/reset, including during disconnects or server restarts.
+Music and ambient layers share preset/play state. Native Web Audio requires local
+consent and stops on exit/access loss. Local volume/mute never enters API state;
+playback positions are not synchronized. Optional weather uses fixed configured
+campus coordinates, never the student's location or account data, with bounded
+network/cache behavior and visible stale/unavailable feedback.
 
-Each room page has a UUID lease, scoped to its authenticated student. Multiple
-tabs count as one student; leaving one tab removes only its lease. Heartbeats
-expire after 30 seconds by default. Reads and controls recheck active membership;
-expired presence must explicitly rejoin. The leader retains controls and a present
-host/co-host can control the timer/audio. Browser polling is two seconds by default,
-with local countdown rendering between snapshots. This is suitable for the small
-coursework dataset; it is not a low-latency streaming or sample-synchronized player.
+Sessions remain a separate `studysession` feature. Weekly availability stays
+campus-local and is reused through Team A's existing interval contract. Dated
+series store local start/end plus an IANA zone and generate bounded UTC
+occurrences. Missing/ambiguous DST endpoints are rejected. Group leader authority
+and current buddy-participant authority are checked independently of room host roles.
 
-Audio is original synthesis in `RoomAudioEngine`, through native Web Audio. No
-sound starts without local consent. Shared preset/play state is persisted; mute
-and volume are local. Leave, access failure or navigation stops browser audio.
+Calendar files are snapshots of independent events, not an OAuth integration or
+live subscription. Stable occurrence UIDs help clients recognize re-exports, but
+imports may duplicate/ignore edits or cancellations. Reducing a series does not
+delete an old imported occurrence, and ending access never removes an offline copy.
+Real client-import acceptance remains distinct from automated format checks.
 
-The full endpoint/DTO contract is in [API_CONTRACT.md](API_CONTRACT.md); choices
-and lifecycle behaviour are in [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
+Shared integration files include `application.yml`, routes, Home, connection/group
+entry points and notification enums/links. Their changes are additive and must be
+flagged in the PR. Scorers, ranking, privacy reveal and own-profile semantics are
+retained. The full contract is in [API_CONTRACT.md](API_CONTRACT.md), choices in
+[DESIGN_DECISIONS.md](DESIGN_DECISIONS.md), and diagrams under `docs/diagrams/`.
 
-## Suggested next slices
+## Verification and delivery gates
 
-1. **Sessions/calendar:** add a separate `studysession` package and feature folder.
-   Keep weekly group availability unchanged. Agree organizer permissions, dated
-   timezone-aware start/end, update/cancel behaviour and private buddy access.
-   Record endpoints before building clients. Calendar exports need stable UIDs,
-   escaping, line folding, bounded recurrence and an honest update/import policy.
-   Integrate event notifications and dashboard data with their owners. Verify real
-   imports before claiming Google/Apple/Outlook compatibility.
-2. **Availability suggestions:** consume an agreed Team A overlap contract. Do not
-   duplicate scoring/interval maths or treat suggested availability as attendance.
-3. **E1 on its own branch:** wait for real matching results and agree a provider.
-   Explain existing scores without changing ranking. Allowlist outbound signals;
-   exclude names, contacts, emails, IDs, messages, credentials and full schedules.
-   Add backend secret/timeout/limits configuration, evidence-aware cache invalidation
-   and deterministic fallback. Provider failure must not break matching. Record
-   genuine examples before calling E1 complete.
+Use the existing two-job pipeline. Run `scripts/test-backend.sh` and frontend
+`npm test`, `npm run lint`, `npm run build`. Keep focused pure timer/schedule/calendar
+tests, HTTP permission/lifecycle/concurrency checks and UI workflow regressions;
+avoid a new test framework or a second suite that mirrors every implementation line.
 
-## Verification and delivery
+[E2_TESTING.md](E2_TESTING.md) records the current results and acceptance status.
+The earlier room-only counts are historical evidence, not the current completion
+result. Verify two authenticated browsers, layered audio, membership revocation,
+dated-session dashboard/agenda/notification updates, export times and real imports
+into Google Calendar, Apple Calendar and Outlook. Record gaps honestly.
 
-Run `scripts/test-backend.sh` for disposable PostgreSQL migration/HTTP/concurrency
-checks, then frontend `npm test`, `npm run lint` and `npm run build`. The new focused
-suites are `PomodoroTimerTest`, `StudyRoomHttpTest`, `timer.test.ts` and
-`StudyRoomPage.test.tsx`. Database boundary checks include both new room tables.
-
-Local results and browser observations are recorded in
-[REQUIREMENT_COVERAGE.md](REQUIREMENT_COVERAGE.md). The new migration is not applied
-to shared Supabase by this branch. Apply it through the documented reviewed
-migration workflow before running the feature there. Keep #16 open until the
-remaining session/calendar work and final acceptance are complete.
+The new room/audio/session migrations are not claimed applied to shared Supabase.
+Use the reviewed [database procedure](DATABASE_OPERATIONS.md) before running this
+branch against a hosted target. Source completion, local verification, hosted CI,
+human review, merge, deployment and presentation acceptance remain separate gates.
+Do not close #16 using an unavailable-client acceptance claim or mark E1 complete.

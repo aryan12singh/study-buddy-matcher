@@ -15,6 +15,12 @@ Own student availability rejects same-day overlaps; group schedules permit overl
 schema upgrade explicitly interprets legacy event timestamps using
 the documented source timezone `Asia/Singapore`; it does not relabel them without conversion.
 
+Weekly `LocalTime` mappings use JDBC's direct local-time type for both personal and
+group slots. Their stored/displayed `10:00` remains `10:00` under Singapore or UTC
+JVM defaults; an instant/timezone conversion must not relabel these civil-time
+preferences. E2's `LocalDateTime` session fields likewise stay local civil values;
+their separately generated UTC occurrence fields carry timezone resolution.
+
 ## Identity, permissions and errors
 
 Login, registration and admin edits share trimmed, lowercase email identity. Its normalized
@@ -294,7 +300,7 @@ mean empty collections. Null collection entries, missing slot values and reverse
 are invalid. Valid group slots may overlap on the same day, unlike own student availability.
 The group form must block invalid/incomplete raw time drafts and include them in exit
 protection; overlap permission does not relax start/end or whole-minute validity. Slots retain
-their campus-local meaning; no dated sessions are introduced.
+their campus-local meaning; dated E2 sessions use the separate session endpoints.
 
 Browse filters are combined with AND. `EITHER` on a mode filter or group is compatible with
 any mode. Your groups is unaffected by browse filters and includes closed groups led by the
@@ -307,7 +313,8 @@ the caller's latest application. Detail adds `description,createdAt,availability
 pendingApplications`; `pendingApplications` is the number of applications awaiting a decision
 for the leader and `null` for every other caller.
 Member shape is `{studentId,name,leader,joinedAt}` in joining order. No group response carries
-contact data. The agenda UI uses saved goals and availability from detail.
+contact data. The agenda UI uses saved goals/weekly availability from detail and
+separately loads authorized dated E2 sessions.
 
 `GroupJoinRequestDto`: `{id,groupId,groupName,studentId,studentName,message,status,createdAt,
 respondedAt,groupActive}`. Status is `PENDING`, `ACCEPTED`, `REJECTED`. Message rules match
@@ -318,7 +325,7 @@ has no authority. Repeated decisions are 409. Editing, approving, removing and r
 blocked on closed groups. Closure rejects every pending application once and notifies current
 members other than the leader. The leader cannot be removed.
 
-## Private study room foundation (E2 #16)
+## Private study room (E2 #16)
 
 Accepted active student members of an open group can read its room. Pending
 applicants, non-members and admins cannot enter. A GET returns default state
@@ -332,15 +339,18 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | PUT | `/api/groups/{groupId}/room/presence` | `{clientId: UUID, presence: PRESENT / FOCUS / BREAK}`; renewed DTO, 200 |
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
-| PUT | `/api/groups/{groupId}/room/audio` | `{preset: CALM_MUSIC / RAIN / WHITE_NOISE / CAFE, playing: boolean, expectedVersion}`; DTO, 200 |
+| PUT | `/api/groups/{groupId}/room/audio` | `{musicPreset, musicPlaying, ambientPreset, ambientPlaying, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid
 timer transition returns 409. Only the leader or a currently present assigned
-host/co-host can change timer/audio. The leader retains these controls without
+host/co-host can change timer/audio/settings. The leader retains these controls without
 joining, so room capacity cannot block administrative recovery. Only the leader
-changes settings/roles. Null `hostId` uses the leader; null `coHostId` means none.
+assigns roles; a present delegated host/co-host can change durations/capacity only
+while preserving the effective current role assignments in the settings body.
+Attempting to reassign roles as a delegated host returns 403. Null `hostId` uses
+the leader; null `coHostId` means none.
 Assigned IDs must be active accepted members and distinct after that fallback.
 
 Durations are positive whole minutes, bounded by the configured maxima. Changing
@@ -354,8 +364,11 @@ Each heartbeat extends its lease by the configured lifetime. An unknown/expired
 lease returns 409 and requires an explicit join; it cannot bypass capacity by
 renewing. Inactive/removed members are excluded immediately; closed groups return
 409. The timer continues across disconnects and repeating focus/break phases.
-A removed/deleted/inactive host falls back to the leader, and invalid co-hosts
-are omitted. Account deletion cascades presences; leader/group deletion removes
+A removed/deactivated member loses all tab leases and assigned roles within the
+membership/account transaction; later readmission/reactivation cannot revive an
+old heartbeat. A removed/deleted/inactive host falls back to the leader, and invalid
+co-hosts are omitted. Group closure removes leases, resets the timer and stops both
+audio layers. Account deletion cascades presences; leader/group deletion removes
 the room. Clients purge snapshots/stop audio on refresh failure, then retry and
 explicitly rejoin. Browser timer rendering does not confer control authority.
 
@@ -370,7 +383,8 @@ leader, canControl, joined (actor present in any tab)
 pollIntervalMillis, leaseLifetimeMillis
 timer {phase: FOCUS/BREAK, status: IDLE/RUNNING/PAUSED,
        remainingMillis (at serverTime), focusMillis, breakMillis}
-audio {preset, playing}
+audio {musicPreset: CALM_MUSIC|null, musicPlaying: boolean,
+       ambientPreset: RAIN/WHITE_NOISE/CAFE|null, ambientPlaying: boolean}
 audioPresets [{id, label, kind: MUSIC/AMBIENT}]
 participants [{studentId, name, presence, expiresAt, leader, host, coHost}]
 members [{studentId, name}] (active accepted members for role selectors)
@@ -378,9 +392,135 @@ members [{studentId, name}] (active accepted members for role selectors)
 
 The browser renders elapsed time from each server snapshot and reconciles on the
 server-provided poll interval (default two seconds). Local enable/volume/mute are
-not sent to the API. Original synthesized audio shares a selection/play state,
-without synchronizing playback positions. No external music credentials/assets
-are required. Dated sessions/calendar are a later slice, with no placeholder APIs.
+not sent to the API. Original synthesized music and ambient layers have independent
+shared selection/play state and independent local volume/mute. A null preset is
+allowed only when that layer is paused; sending an ambient preset to the music
+layer, or vice versa, is 400. Playback requires local consent and failure leaves
+the room usable silently. Playback positions are not synchronized. No external
+music credentials/assets are required.
+
+## Dated study sessions and calendar (E2 #16)
+
+Session permissions are checked against the current parent relationship on every
+list, detail, change, availability and export. Group sessions require an active
+student who is an accepted member of the open group; only its leader manages
+them. Buddy sessions require the particular active connection and both accounts
+active; either participant manages them. Administrators gain no participant access.
+Sessions do not expose contacts/emails/tokens or invite unrelated students.
+
+| Method | Path | Input / result |
+| --- | --- | --- |
+| GET | `/api/sessions/mine` | Eligible sessions for the actor's open groups and active buddy connections; 200 `[SessionDto]` |
+| GET | `/api/groups/{groupId}/sessions` | Group agenda; 200 `[SessionDto]` |
+| POST | `/api/groups/{groupId}/sessions` | `SessionInput`; leader creates, 201 `SessionDto` |
+| GET | `/api/connections/{connectionId}/sessions` | Buddy agenda; 200 `[SessionDto]` |
+| POST | `/api/connections/{connectionId}/sessions` | `SessionInput`; participant creates, 201 `SessionDto` |
+| GET | `/api/groups/{groupId}/sessions/availability` | Mutual weekly availability; 200 `SessionAvailabilityDto` |
+| GET | `/api/connections/{connectionId}/sessions/availability` | Both buddies' mutual weekly availability; 200 `SessionAvailabilityDto` |
+| GET | `/api/sessions/{id}` | Current authorized `SessionDto`, 200 |
+| PUT | `/api/sessions/{id}` | Whole `SessionInput` plus `expectedVersion`; 200 `SessionDto` |
+| POST | `/api/sessions/{id}/cancel` | `{expectedVersion}`; 200 cancelled `SessionDto` |
+| GET | `/api/sessions/{id}/calendar` | Authorized `.ics` attachment, `text/calendar; charset=UTF-8`, 200 |
+
+```text
+SessionInput {
+  title, startLocal, endLocal, timeZone, occurrenceCount,
+  agenda?, location?, roomLink?, expectedVersion? // version required for PUT
+}
+SessionDto {
+  id, version, scope: GROUP/BUDDY, groupId|null, connectionId|null,
+  title, startLocal, endLocal, startAt, endAt, timeZone, occurrenceCount,
+  agenda|null, location|null, roomLink|null, status: SCHEDULED/CANCELLED,
+  canManage, occurrences: [{startAt,endAt}], nextOccurrence|null,
+  updatedAt, cancelledAt|null
+}
+SessionAvailabilityDto {
+  timeZone, participantCount, sharedSlots: [AvailabilitySlot], sharedMinutes
+}
+```
+
+`startLocal` and `endLocal` are whole-minute local date-times without an offset;
+`timeZone` is a valid IANA zone, such as `Asia/Singapore`. `startAt`, `endAt` and
+occurrence timestamps are UTC instants. A series contains one occurrence or a
+bounded weekly count (default maximum 52). Every generated start/end preserves
+its local wall time and must have exactly one valid offset in that zone: a missing
+or repeated DST time anywhere in the series is rejected rather than silently
+shifted. Every end must follow its start; default maximum elapsed duration is
+24 hours. Bounds come from `app.study-session` configuration.
+
+Title is required and at most 255 characters. Agenda is optional and at most
+4000; location is optional and at most 255; room link is optional and at most
+2048. Blank optional values become null. A room link is this group's exact
+`/groups/{groupId}/room` path, or an HTTPS URL with a host and without user info,
+query parameters or fragments; a buddy session cannot use a private group path.
+The API does not fetch these URLs. Invalid values return 400 with field errors.
+
+PUT edits the whole saved series. Its non-negative `expectedVersion`, and the
+version in cancellation requests, must match the current value; stale writes are
+409. A cancelled series cannot be edited. Parent-row locking serializes changes
+with connection/group lifecycle operations. Removal immediately revokes group
+session access. Ending a connection, closing a group or deactivating an account
+revokes the affected access and cancels affected scheduled sessions; reactivation
+or a new buddy connection does not restore those schedules. Permanent parent/account
+deletion removes dependent records through the documented database relations.
+
+`/sessions/mine` returns scheduled sessions with a current/upcoming occurrence,
+ordered by that occurrence's start; cancelled/completed series are absent from Home.
+The parent agendas retain authorized session history, including cancelled records.
+
+Mutual suggestions intersect the current participants' saved weekly availability
+using Team A's `WeeklyAvailability.sharedSlotsWith`; they are campus-local
+`Asia/Singapore` blocks, not timezone-converted dated bookings. Missing availability
+yields an empty result. Suggestions do not confirm attendance, reserve a time or
+prevent manually scheduling another time. Actual dated sessions feed Home,
+group/buddy agendas and recipient-scoped created/updated/cancelled notifications.
+
+Calendar downloads expand the bounded weekly series into individual UTC `VEVENT`
+records. Each occurrence keeps a stable series UID plus its index, revision and
+timestamps; the export preserves wall time across DST without requiring client
+recurrence-rule/timezone interpretation. Escaped text and CRLF/octet line folding
+prevent malformed properties. There is no `ATTENDEE`/`ORGANIZER` contact payload,
+generated credential or authenticated export API URL. Only validated absolute HTTPS room links are
+exported; a private in-app group room path remains available in the authenticated
+screen and is omitted from `.ics`. A cancelled session can be downloaded with
+cancelled event status while the actor remains eligible for its parent relationship.
+
+The file is a snapshot, with no OAuth, subscription or two-way sync. Clients may
+duplicate events or ignore changes/cancellations when re-imported; reducing a
+series count does not delete previously imported extra occurrences. Ending the
+parent relationship blocks further export and never removes an offline calendar
+copy. Client-side whole-series editing is not promised. Real Google Calendar,
+Apple Calendar and Outlook import acceptance is recorded separately in
+[E2_TESTING.md](E2_TESTING.md), never inferred from parser tests alone.
+
+## Optional campus weather and local themes
+
+`GET /api/weather` uses the existing authenticated student API guard and returns
+200 even when the provider is disabled/unavailable. It accepts no user-selected
+coordinates or device location.
+
+```text
+WeatherDto {
+  available, condition: CLEAR/CLOUDY/RAIN/STORM/SNOW/FOG,
+  temperatureCelsius|null, isDay, observedAt|null, stale, location
+}
+```
+
+`available=false` means no usable observation; its default condition/day fields
+are fallback metadata and must not be presented as current weather. With usable
+cached data after provider failure, `stale=true` labels last-known conditions.
+The default backend request targets fixed configured SMU campus coordinates,
+uses a four-second timeout, caches success for fifteen minutes, retries failure
+after one minute and discards observations older than twenty-four hours. It sends
+no student/room/contact/token/schedule data and uses no provider API key. The test
+profile disables provider requests.
+
+The room's original CSS scene offers automatic live campus conditions or locally
+selected clear/cloudy/rain/storm/snow/fog. Manual choices are decorative and saved
+only in that browser. Without usable live data, the scene follows Singapore day/night
+and the manual choices remain available. `prefers-reduced-motion` stops animations.
+Weather data attribution links to [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
+provider outages do not change shared timer/audio state or block a room/session action.
 
 ## Notifications
 
@@ -392,12 +532,20 @@ are required. Dated sessions/calendar are a later slice, with no placeholder API
 | POST | `/api/notifications/read-all` | none | 204 | Student |
 
 Notification DTO: `{id,type,message,read,createdAt,resourceType,resourceId,eventKey,requestDirection}`.
-`resourceType` is `MATCH_REQUEST`, `GROUP`, `STUDENT` or null. Resource ID and type are both null
+`resourceType` is `MATCH_REQUEST`, `GROUP`, `STUDENT`, `SESSION` or null. Resource ID and type are both null
 for safe generic deletion notices and older notices without metadata. `eventKey` is a nullable
 stable event identity, never an authentication token. MATCH_REQUEST links to requests/
-connections; GROUP links to the group; STUDENT links to its public/connected profile. Opening
+connections; GROUP links to the group; STUDENT links to its public/connected profile;
+SESSION links to its authorized session detail. Opening
 a target still uses its authorized endpoint. A now unavailable target returns a safe 404;
 notification metadata does not confer permissions.
+
+E2 adds `GROUP_SESSION_CREATED/UPDATED/CANCELLED` and
+`BUDDY_SESSION_CREATED/UPDATED/CANCELLED`. GROUPS includes group session notices;
+REQUESTS includes buddy session notices; ALL includes both. Recipients are current
+active members/participants other than the initiating actor; lifecycle cancellation
+notices use the same recipient boundary. Session revision/change/recipient identities
+deduplicate events within successful transactions. No reminder scheduler is implied.
 
 `requestDirection` is `INCOMING`, `OUTGOING` or null. For a `MATCH_REQUEST` resource it follows
 the stored participants and notification recipient: the receiver's event links to Incoming,
@@ -680,10 +828,12 @@ uses the documented `/api/matches` response alongside the other sections. It rea
 endpoints, each section independently so one failure does not hide the others:
 `GET /api/profile/me` (profile progress and weekly availability), `GET /api/students/me/summary` (activity counts),
 `GET /api/match-requests/incoming` (pending requests, preview only; accept/decline stays on
-Connections), `GET /api/groups/mine` (open groups) and `GET /api/notifications` (latest five).
+Connections), `GET /api/groups/mine` (open groups), `GET /api/notifications` (latest five)
+and E2 `GET /api/sessions/mine` (actual upcoming dated group/buddy sessions).
 A change to any of these response shapes needs a matching change to the home page.
 
-The UI polish adds no endpoint or DTO field. Group capacity/leader/member/application
+The original baseline UI polish added no endpoint or DTO field. E2 now adds the
+room/session/weather contracts documented above. Group capacity/leader/member/application
 indicators use the existing `memberCount`, `maxGroupSize`, `active` and `viewer` fields;
 they never infer membership from a local click or reserve a place for a pending request.
 Schedule duplicate/copy produces the same weekly-slot array accepted by POST/PUT groups;
@@ -703,3 +853,12 @@ no-store/session-purge rules govern that read. Group-link copy uses the client o
 `/groups/{id}` and drops query/hash. Clipboard denial has a manual fallback, not another API.
 Create/update/delete destination feedback contains generic outcome text and no DTO/private
 fields.
+
+E2 student routes are `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
+`/sessions/{id}/edit`, `/groups/{id}/sessions` and `/connections/{id}/sessions`;
+each parent list has a `/new` editor for its authorized managers. Group detail
+loads a dated-session agenda only for accepted members of an open group, while
+Connections offers a session link for each active buddy. Session notification
+links target `/sessions/{id}` and recheck permission through the detail endpoint.
+Local browser drafts, room host roles and notification metadata never grant
+session management or calendar access.

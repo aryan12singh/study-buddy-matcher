@@ -1,8 +1,9 @@
 # Database operations
 
 The application uses backend JDBC with application JWTs. It does not use a browser Supabase
-SDK or Supabase Auth policies. The current migration set defines 17 mapped public application
-tables, including `matching_enabled_criteria`, plus their sequences/default privileges and
+SDK or Supabase Auth policies. This branch's complete migration set defines 20 mapped public
+application tables: the 17 baseline tables plus `study_rooms`, `room_presences` and
+`study_sessions`, together with their sequences/default privileges and
 browser grants; provider-managed schemas are untouched. This describes the schema after
 applying the complete ordered migration set, not the current hosted deployment state.
 
@@ -15,8 +16,11 @@ applying the complete ordered migration set, not the current hosted deployment s
 | `20261006170448_backend_only_database_access.sql` | RLS and deny browser table/sequence grants; future default privileges follow the same model |
 | `20261006172934_collection_goal_primary_keys.sql` | Natural owner/goal primary keys for the two set collections; preserve valid rows and reject legacy null goals |
 | `20261007220000_match_request_cancellation.sql` | Distinguishes lifecycle cancellation from decline in request and notification constraints |
+| `20261009010000_study_rooms.sql` | Private room/timer state and expiring presence leases; backend-only tables/sequences |
 | `20261011090000_matching_weights_per_strategy.sql` | Matching weights belong to a strategy: adds `matching_configs.strategy` (existing rows become Balanced) and replaces one weight per criterion with one per strategy and criterion |
 | `20261013090000_complete_matching_configuration.sql` | Singleton matching settings, minimum score, persistent revision/override state and `matching_enabled_criteria`; preserves valid legacy overrides and denies browser access to the new table |
+| `20261014010000_room_audio_layers.sql` | Independent music/ambient columns and checks; backfills legacy selections once and preserves changed layer state on repetition |
+| `20261014020000_study_sessions.sql` | Private group/buddy dated sessions, bounded schedule/parent/status checks, calendar UID and scoped query indexes; backend-only table/sequence |
 
 These are versioned source files. The historical shared
 MCP migration runner records its own deployment timestamps, so do not expect those history
@@ -60,7 +64,8 @@ schema/data was captured outside tracked source. It was restored into an isolate
 including the provider roles needed for ACL restoration. The complete ordered SQL set passed
 against that restored database, retaining identical account and student-profile data.
 
-The exact seven source migrations above were then applied transactionally through the hosted
+The seven compulsory source migrations (excluding the later E2 room/audio/session files)
+were then applied transactionally through the hosted
 migration runner, with the exclusive application advisory lock and bounded lock/statement
 timeouts. History records the operation as `merged_main_compulsory_schema_rollout`.
 No application table was truncated, seeded or reset; no existing account was deleted.
@@ -178,10 +183,11 @@ are historical evidence, not a fresh hosted count for the current branch.
 
 ## Privacy and access verification
 
-After the complete migration set, all 17 application tables have RLS enabled;
+After this branch's complete migration set, all 20 application tables have RLS enabled;
 PUBLIC/anon/authenticated grants are revoked and there are no browser policies. This
-boundary, including the new enabled-criteria table, passed the 13 October disposable tests;
-it must also be verified after the hosted rollout. The backend owner is intentionally not FORCE-RLS, so
+baseline boundary, including enabled criteria, passed the 13 October disposable tests.
+The room/session boundary belongs to the E2 completion verification and must be checked
+after its reviewed hosted rollout. The backend owner is intentionally not FORCE-RLS, so
 JDBC still works. Revocation of browser sequence and future default table/sequence/function
 privileges prevents an alternate direct API data path. Do not add a permissive policy to make
 the dashboard's advisor INFO notice disappear.
@@ -228,9 +234,41 @@ References: [PostgreSQL partial indexes](https://www.postgresql.org/docs/17/inde
 [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security),
 [securing the API](https://supabase.com/docs/guides/api/securing-your-api).
 
-## PR #52 room migration
+## PR #52 E2 upgrade
 
-The branch also includes `20261009010000_study_rooms.sql`, adding backend-only
-`study_rooms` and `room_presences` with RLS and browser-role grant revocation.
-It has not been applied to shared Supabase. Run the ordered migration set before
-starting this branch; the baseline matching migrations remain required.
+The ordered set now includes the original room migration and two forward E2 migrations.
+This document does not claim they were applied to shared Supabase. Do not revise an
+already-applied room migration or use Hibernate `update` as a substitute for the
+audio adoption and security constraints. Inspect actual target history/schema first;
+the historical compulsory rollout above remains a baseline-only record.
+
+The original room table retains its legacy single-audio columns for repeatable upgrades.
+The layer migration backfills only rows with missing layer-playing flags: a legacy
+music choice becomes the music layer and a legacy ambient choice becomes the ambient
+layer. Repeating SQL must preserve current selections and never restart paused audio.
+New clients use independent music/ambient fields; old single-preset clients are not
+the E2 API contract. Deploy the upgraded backend and frontend together.
+
+`study_sessions` belongs to exactly one group or connection, enforced by a database
+check. Its local date-time fields are intentional civil times in the saved IANA zone;
+its UTC first-occurrence fields and event timestamps use `timestamptz`. They must not
+go through the earlier legacy event-time conversion. Occurrence count is bounded
+1–52, each end follows its start, and cancellation timestamp/status agree.
+Parent deletion cascades the session; deleting a creator sets its audit reference to
+null. Application lifecycle collaborators cancel affected future series and remove
+session-linked notifications before permanent parent cleanup.
+
+Before E2 rollout, restore a private populated backup into disposable PostgreSQL and
+verify the complete ten-file order, repeated migrations, legacy audio adoption,
+all 20 mapped-table RLS/grants, normal JDBC mapping, retained baseline data and session
+calendar/lifecycle behavior. Capture only counts/checksums/schema facts in shareable
+evidence, never backup contents/password hashes/contacts. The normal runner takes the
+exclusive application advisory lock and wraps the complete sequence in one transaction.
+Follow the populated-database preflight/rollback procedure above.
+
+After rollout, verify all three E2 tables and sequences deny `PUBLIC`, `anon` and
+`authenticated`, constraints/indexes are installed, the application starts with
+`ddl-auto=validate`, and the current PR's room/session workflow checks pass. Weather
+uses a bounded in-memory backend cache and adds no database table or browser grant.
+Record the actual target/time/migration-history name separately from local results in
+[E2_TESTING.md](E2_TESTING.md).

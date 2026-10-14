@@ -238,11 +238,36 @@ Notifications are recipient-scoped. Deactivation revokes access and ends active 
 reactivation requires fresh sign-in and restores none. Permanent deletion removes dependent
 records. Administrator contact input is write-only. See the [API contract](docs/API_CONTRACT.md).
 
-## Study room foundation
+## Collaborative Study
 
-PR #52 adds private accepted-member rooms, durable shared Pomodoro, expiring presence,
-leader-assigned host/co-host and original native browser audio. The room migration must
-be applied before startup. The completion scope is in [the E2 plan](docs/BONUS_IMPLEMENTATION_PLAN.md).
+Accepted members of an open group can enter a private room with a durable shared Pomodoro,
+expiring presence and leader-assigned host/co-host controls. A present host/co-host can tune
+durations and capacity; only the leader assigns roles. Removing membership revokes both
+browser leases and delegated roles, so readmission cannot revive old room access.
+
+Original native Web Audio supplies independently selectable music and ambience. Shared
+play/pause selections persist, while explicit audio consent, volume and mute stay local.
+The timer continues through disconnects; two-second polling reconciles shared controls with
+local countdown rendering. Audio playback positions are not synchronized.
+
+Group leaders schedule dated group sessions, and connected buddies manage private sessions
+for their active connection. Sessions support agendas, locations, valid IANA timezones,
+mutual weekly availability suggestions, updates/cancellation and bounded weekly repetition.
+Actual upcoming sessions appear on Home, group agendas and notifications. Calendar downloads
+contain single or explicit weekly occurrences with stable IDs and UTC times preserving local
+wall time across DST. Downloads are snapshots: changed/cancelled sessions require re-export;
+remove a prior import before replacing it if the calendar client does not reconcile IDs.
+No calendar OAuth, attendance booking or two-way sync is included.
+
+The room's original pixel-window scene follows live SMU-campus weather through the approved
+Open-Meteo service, with selectable clear/cloud/rain/storm/snow/fog atmospheres and Singapore
+day/night styling. Server caching bounds provider requests; failure uses labelled last-known
+conditions or daylight/manual fallback. No device location, student information or JWT is sent
+to the provider. Decorative motion respects reduced-motion settings and does not change audio.
+
+Apply all ordered migrations before starting against a shared database. Source contracts and
+verification are in [the E2 guide](docs/E2_TESTING.md) and
+[bonus plan](docs/BONUS_IMPLEMENTATION_PLAN.md). E1 AI match explanations remain separate.
 
 ## Configuration
 
@@ -269,12 +294,23 @@ in `application-local.yml` or the process environment.
 | `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
 | `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |
 | `DEMO_ADMIN_PASSWORD` / `app.demo-seed.admin-password` | Required only when seeding | Password for the newly seeded demo admin |
-| `STUDY_ROOM_FOCUS_MINUTES` / `app.study-room.default-focus-minutes` | `25` | Initial focus duration |
-| `STUDY_ROOM_BREAK_MINUTES` / `app.study-room.default-break-minutes` | `5` | Initial break duration |
-| `STUDY_ROOM_MAX_FOCUS_MINUTES` / `app.study-room.max-focus-minutes` | `120` | Maximum focus duration |
-| `STUDY_ROOM_MAX_BREAK_MINUTES` / `app.study-room.max-break-minutes` | `60` | Maximum break duration |
-| `STUDY_ROOM_LEASE_LIFETIME` / `app.study-room.lease-lifetime` | `30s` | Expiring browser presence |
-| `STUDY_ROOM_POLL_INTERVAL` / `app.study-room.poll-interval` | `2s` | Shared room refresh interval |
+| `ROOM_DEFAULT_FOCUS_MINUTES` / `app.study-room.default-focus-minutes` | `25` | Initial focus duration |
+| `ROOM_DEFAULT_BREAK_MINUTES` / `app.study-room.default-break-minutes` | `5` | Initial break duration |
+| `ROOM_MAX_FOCUS_MINUTES` / `app.study-room.max-focus-minutes` | `180` | Maximum focus duration |
+| `ROOM_MAX_BREAK_MINUTES` / `app.study-room.max-break-minutes` | `60` | Maximum break duration |
+| `ROOM_LEASE_LIFETIME` / `app.study-room.lease-lifetime` | `30s` | Expiring browser presence |
+| `ROOM_POLL_INTERVAL` / `app.study-room.poll-interval` | `2s` | Shared room refresh interval |
+| `SESSION_MAXIMUM_OCCURRENCES` / `app.study-session.maximum-occurrences` | `52` | Maximum bounded weekly occurrences (1 means one-off) |
+| `SESSION_MAXIMUM_DURATION_HOURS` / `app.study-session.maximum-duration-hours` | `24` | Maximum elapsed duration per occurrence |
+| `app.study-session.availability-time-zone` | `Asia/Singapore` | Fixed campus timezone for weekly suggestions |
+| `WEATHER_ENABLED` / `app.weather.enabled` | `true`; test profile `false` | Enable approved campus weather provider |
+| `WEATHER_LATITUDE` / `app.weather.latitude` | `1.297` | Server-configured campus latitude |
+| `WEATHER_LONGITUDE` / `app.weather.longitude` | `103.849` | Server-configured campus longitude |
+| `WEATHER_LOCATION` / `app.weather.location` | `SMU campus` | Display label for configured coordinates |
+| `WEATHER_TIMEOUT` / `app.weather.timeout` | `4s`, at most `10s` | Bounded provider connection/request timeout |
+| `WEATHER_CACHE_LIFETIME` / `app.weather.cache-lifetime` | `15m`, at least `30s` | Shared successful weather cache |
+| `WEATHER_RETRY_INTERVAL` / `app.weather.retry-interval` | `1m`, at least `30s` | Backoff after provider failure |
+| `WEATHER_MAXIMUM_STALE_AGE` / `app.weather.maximum-stale-age` | `24h`, no shorter than cache lifetime | Last-known observation age limit |
 | `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
 | `VITE_REFRESH_INTERVAL_MS` | `30000` (min `15000`, max `300000`) | Background refresh interval for lists and details |
 
@@ -326,6 +362,7 @@ historical evidence. Human review and projector/browser acceptance are separate 
 | [API contract](docs/API_CONTRACT.md) | Endpoints, DTO/input shapes, authorization and errors |
 | [Design decisions](docs/DESIGN_DECISIONS.md) | Accepted contracts, alternatives and scope boundaries |
 | [Requirement coverage](docs/REQUIREMENT_COVERAGE.md) | Compulsory A/B/C behavior and test/source mapping |
+| [E2 verification](docs/E2_TESTING.md) | Room/session/audio/weather/calendar checks and current evidence |
 | [Baseline verification](docs/BASELINE_VERIFICATION.md) | Repeatable checks and current delivery evidence |
 | [Database operations](docs/DATABASE_OPERATIONS.md) | Migration, seed, access and recovery procedures |
 | [Platform / Team A / Team C diagrams](docs/diagrams/PLATFORM.md) | System, class and sequence sources; detailed feature diagrams are linked within |
@@ -356,6 +393,7 @@ Versions match the resolved Maven dependencies and the npm lockfile.
 | Vitest / jsdom | 5.0.1 / 30.1.0 | Frontend tests/DOM | MIT, [Vitest](https://github.com/vitest-dev/vitest), [jsdom](https://github.com/jsdom/jsdom) |
 | Testing Library React / jest-dom | 16.3.3 / 7.0.1 | Rendered interactions/assertions | MIT, [React Testing Library](https://github.com/testing-library/react-testing-library), [jest-dom](https://github.com/testing-library/jest-dom) |
 | @types/node / react / react-dom | 24.13.6 / 19.3.0 / 19.3.0 | Development declarations | MIT, [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
+| Open-Meteo weather service | Current weather API | Approved fixed-campus decorative weather; no SDK or key | CC BY 4.0 data, non-commercial free API; [documentation](https://open-meteo.com/en/docs), [terms](https://open-meteo.com/en/terms) |
 | source-map-js (transitive) | 1.2.2 | Existing source-map support; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
 
 Supabase is the hosted PostgreSQL service, not a browser SDK dependency. Testing uses
@@ -373,11 +411,13 @@ network failure falls back to system fonts.
 | --- | --- |
 | `frontend/public/favicon.svg` | Original project pixel-book SVG; reused as the application favicon and README identity |
 | Shared/landing pixel icons, avatar initials and CSS patterns | Original project drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css`; no external icon set |
+| Room scenery and music/ambient synthesis | Original project CSS pixel scenery and native Web Audio; no external sound assets |
+| Open-Meteo weather | Approved non-commercial API, CC BY 4.0 attribution linked on the room screen; backend sends configured campus coordinates only |
 | Google Fonts stylesheet | Existing Inter/Fraunces remote import; SIL OFL 1.1 sources linked above, with system fallback |
 | Supabase / PostgreSQL | Hosted database reached only by backend JDBC; local/CI tests use the official PostgreSQL 17 container |
 
-No music or AI-provider service ships in the compulsory baseline. Record actual extension
-services/assets here when they are integrated. Development assistance is disclosed in
+No external music or AI-provider service ships in this branch. Open-Meteo is the sole added
+extension service; it is optional, cached and has a local fallback. Development assistance is disclosed in
 [AI_USAGE.md](docs/AI_USAGE.md).
 
 ## Team Workflow
