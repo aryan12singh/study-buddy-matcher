@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Course, WeeklySlot } from '../../shared/api/types'
 import { useAction } from '../../shared/api/useAction'
 import { useAuth } from '../../shared/auth/useAuth'
@@ -41,6 +41,12 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
   const [slotDrafts, setSlotDrafts] = useState<WeeklySlotDrafts>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [slotError, setSlotError] = useState<string>()
+  // A save finishing after logout or a purge must not rename the next signed-in account.
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
 
   const profileDirty = JSON.stringify(form) !== JSON.stringify(toForm(saved))
   const slotsDirty = Object.keys(slotDrafts).length > 0 || !sameSlots(slots, savedSlots)
@@ -59,6 +65,7 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
 
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (pending) return
     const invalid = validateProfile(form)
     setErrors(invalid)
     if (Object.keys(invalid).length) {
@@ -66,7 +73,7 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
       return
     }
     const result = await profileAction.run(() => updateMyProfile(toRequest(form)), 'Profile saved.')
-    if (result.ok) {
+    if (result.ok && mounted.current) {
       setSaved(result.value)
       updateAccountName?.(result.value.name)
       setForm(toForm(result.value))
@@ -75,6 +82,7 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
 
   async function saveAvailability(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (pending) return
     const finished = finishSlotDrafts(slots, slotDrafts)
     setSlots(finished.slots)
     setSlotDrafts(finished.drafts)
@@ -84,7 +92,7 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
     setSlotError(invalid)
     if (invalid) return
     const result = await availabilityAction.run(() => replaceMyAvailability(finished.slots), 'Weekly availability saved.')
-    if (result.ok) {
+    if (result.ok && mounted.current) {
       setSavedSlots(result.value)
       setSlots(result.value)
     }

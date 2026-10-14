@@ -55,7 +55,7 @@ class ProfileServiceTest {
     }
 
     private static UpdateProfileRequest request(List<Long> courseIds, Long targetId, StudyMode mode, GroupSizePreference size) {
-        return new UpdateProfileRequest(" Demo Student 4 ", "SCIS", "Information Systems", 2, " Synthetic contact 4 ",
+        return new UpdateProfileRequest(" Demo Student 4 ", "SCIS", "Information Systems", 2, " +1 (202) 555-0104 ",
             courseIds, targetId, mode, size, Set.of(StudyGoal.EXAM_PREPARATION));
     }
 
@@ -84,7 +84,8 @@ class ProfileServiceTest {
         order.verify(access).requireStudent(STUDENT_ID);
         order.verify(courses).findAllById(List.of(2L, 1L));
         assertEquals("Demo Student 4", student.getName());
-        assertEquals("Synthetic contact 4", student.getContactNumber());
+        assertEquals("+12025550104", student.getContactNumber());
+        assertEquals("+12025550104", profile.contactNumber());
         assertEquals(2, student.getYearOfStudy());
         assertEquals(Set.of(oop, spm), student.getCoursesTaken());
         assertSame(bpas, student.getTargetCourse());
@@ -103,6 +104,17 @@ class ProfileServiceTest {
         when(availability.findByStudentId(STUDENT_ID)).thenReturn(List.of());
         assertDoesNotThrow(() -> service.updateMine(STUDENT_ID,
             request(List.of(1L), 3L, StudyMode.EITHER, GroupSizePreference.EITHER)));
+    }
+
+    @Test void invalidContactChangesNoProfileFields() {
+        when(access.requireStudent(STUDENT_ID)).thenReturn(student);
+        var error = assertThrows(InvalidInputException.class, () -> service.updateMine(STUDENT_ID,
+            new UpdateProfileRequest("Changed name", "SCIS", "IS", 2, "+12025550104 ext 4",
+                List.of(1L), null, StudyMode.ONLINE, GroupSizePreference.EITHER, Set.of())));
+        assertTrue(error.getFieldErrors().containsKey("contactNumber"));
+        assertEquals("Demo Student 4", student.getName());
+        assertEquals("Synthetic contact 4", student.getContactNumber());
+        verifyNoInteractions(courses, availability);
     }
 
     @Test void atLeastOneCourseIsRequired() {

@@ -92,7 +92,7 @@ public class AdminUserService {
             String school = InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT);
             String programme = InputRules.required(request.programme(), "Programme", InputRules.TEXT_LIMIT);
             InputRules.year(request.yearOfStudy());
-            String contact = request.contactNumber() == null ? null : InputRules.required(request.contactNumber(), "Contact number", InputRules.TEXT_LIMIT);
+            String contact = request.contactNumber() == null ? null : InputRules.contactNumber(request.contactNumber());
             student.setName(name);
             student.setSchool(school);
             student.setProgramme(programme);

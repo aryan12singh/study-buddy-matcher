@@ -54,9 +54,10 @@ docs/       API contract, UML diagrams
   connections, and number of open groups the student belongs to (including ones they lead).
 - **Window chrome: implemented as decorative.** Conventional routes and shared retro
   primitives are in the merged application. See [Visual direction](#visual-direction).
-- **Learning style and contact format:** the undefined learning-style taxonomy needs the
-  professor's interpretation; the contact-format requirement needs a recorded team contract.
-  See [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md#requirements-still-needing-clarification).
+- **Learning style and contact format: decided by the team.** The defined study preferences
+  cover the otherwise undefined learning-style wording; this is the team's interpretation,
+  not a claim of professor confirmation. Contacts accept Singapore or international formats
+  with shared normalization. See the [baseline contract](docs/DESIGN_DECISIONS.md#baseline-requirement-contract).
 
 ---
 

@@ -7,7 +7,7 @@ are tracked extensions and are not shown as shipped application features.
 
 Detailed OO and transaction diagrams remain in [TEAM_A.md](TEAM_A.md) and [TEAM_C.md](TEAM_C.md).
 The [API contract](../API_CONTRACT.md), [decisions](../DESIGN_DECISIONS.md),
-[coverage map](../REQUIREMENT_COVERAGE.md) and [test record](../TEAM_C_TESTING.md) explain fields,
+[coverage map](../REQUIREMENT_COVERAGE.md) and [baseline test record](../BASELINE_VERIFICATION.md) explain fields,
 validation choices and verification limits. Export these diagrams legibly and review them
 with the team before using them in the presentation.
 
@@ -337,7 +337,7 @@ matches. `MatchingHttpTest` and matching rendered tests cover these branches.
 
 | Flow | Empty / invalid / unauthorized alternative | Evidence |
 | --- | --- | --- |
-| Registration/login | Missing fields or short/oversize password → 400; duplicate normalized email → 409; incorrect password → 401; correct password for inactive account → 403 | `AccountCreationTest`, `AccountHttpTest`, auth rendered tests |
+| Registration/login | Creation missing fields or short/oversize password → 400; duplicate normalized email → 409; incorrect or otherwise-valid over-byte login password → 401; correct password for inactive account → 403 | `AccountCreationTest`, `AccountHttpTest`, auth rendered tests |
 | Own profile | Unknown/excess courses or missing preferences → 400; other role → 403; raw time draft remains local until complete | Profile/availability/editor tests and compulsory record |
 | Buddy requests | No requests → empty list; self/duplicate/connected pair or repeat decision → conflict; wrong receiver → 403 | `BuddyHttpTest`, request/connection tests |
 | Privacy | Stranger/pending/group-only viewer → public DTO; inactive or missing subject → 404; after disconnect → contact withheld | Privacy assembler and HTTP tests |
@@ -346,5 +346,6 @@ matches. `MatchingHttpTest` and matching rendered tests cover these branches.
 | Admin accounts | Student/unauthenticated caller rejected; self-removal → conflict; removal never leaves an unusable last admin; deleted dependencies are removed safely | `AccountHttpTest`, admin/JWT tests |
 
 The [coverage map](../REQUIREMENT_COVERAGE.md#compulsory-integrated-acceptance-map) links the
-cross-feature checklist. Human cross-team review, author explanations, professor clarification,
-hosted rollout, Figma/projector acceptance and submission remain separately recorded gates.
+cross-feature checklist. Human cross-team review, author explanations, hosted rollout, Figma/projector acceptance
+and submission remain separately recorded gates. The contact/learning-style baseline contract
+is recorded in the decisions; no professor confirmation is claimed.

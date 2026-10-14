@@ -117,7 +117,7 @@ class ProfileConcurrencyTest extends PostgresHttpTest {
 
     private Map<String, Object> profile(String name, long courseId, String goal) {
         return Map.of("name", name, "school", "SCIS", "programme", "Information Systems", "yearOfStudy", 3,
-                "contactNumber", name + " contact", "courseIds", List.of(courseId), "preferredStudyMode", "ONLINE",
+                "contactNumber", name.equals("First") ? "+12025550101" : "+12025550102", "courseIds", List.of(courseId), "preferredStudyMode", "ONLINE",
                 "groupSizePreference", "EITHER", "studyGoals", List.of(goal));
     }
 

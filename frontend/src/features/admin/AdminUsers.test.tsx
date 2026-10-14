@@ -3,6 +3,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { api } from '../../shared/api/client'
 import { adminAccount, deferred, renderPage, response } from '../../test/renderApp'
 import { REFRESH_INTERVAL_MS } from '../../shared/api/useResource'
+import { CONTACT_NUMBER_ERROR } from '../../shared/auth/contactNumber'
 import AdminUsersPage from './AdminUsersPage'
 import AdminUserDetailPage from './AdminUserDetailPage'
 import AdminUserFormPage from './AdminUserFormPage'
@@ -30,13 +31,13 @@ describe('administrator account forms and privacy', () => {
     await screen.findByDisplayValue('Jamie')
     fireEvent.change(screen.getByLabelText('Replace contact number (optional)'), { target: { value: '+65 9999 1111' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save account changes' }))
-    await waitFor(() => expect(put).toHaveBeenCalledWith('/admin/users/2', expect.objectContaining({ contactNumber: '+65 9999 1111' })))
+    await waitFor(() => expect(put).toHaveBeenCalledWith('/admin/users/2', expect.objectContaining({ contactNumber: '+6599991111' })))
   })
   it('validates student creation and sends only account fields for an administrator', async () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...detail, account: { ...account, id: 100, role: 'ADMIN', name: null }, profile: null, usage: null }))
     renderPage(<AdminUserFormPage />, '/admin/users/new', '/admin/users/new', adminAccount)
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
-    expect(screen.getByText('Enter a contact number, up to 255 characters.')).toBeInTheDocument()
+    expect(screen.getByText(CONTACT_NUMBER_ERROR)).toBeInTheDocument()
     expect(post).not.toHaveBeenCalled()
     fireEvent.change(screen.getByLabelText('Account role'), { target: { value: 'ADMIN' } })
     expect(screen.queryByLabelText('Full name')).not.toBeInTheDocument()
@@ -44,6 +45,31 @@ describe('administrator account forms and privacy', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'a-long-passphrase' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/admin/users', { email: 'newadmin@example.test', role: 'ADMIN', password: 'a-long-passphrase' }))
+  })
+  it('rejects invalid student creation contact inline and sends corrected international input canonically', async () => {
+    const post = vi.spyOn(api, 'post').mockImplementation(() => new Promise(() => {}))
+    renderPage(<AdminUserFormPage />, '/admin/users/new', '/admin/users/new', adminAccount)
+    for (const [label, value] of [['Email address', 'new@example.test'], ['Password', 'a-long-passphrase'],
+      ['Full name', 'New Student'], ['School', 'SCIS'], ['Programme', 'Information Systems'], ['Contact number', 'not-a-number']]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+    expect(screen.getByText(CONTACT_NUMBER_ERROR)).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText('Contact number'), { target: { value: '+1 (202) 555-0100' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/admin/users', expect.objectContaining({ role: 'STUDENT', contactNumber: '+12025550100' })))
+  })
+  it('rejects a malformed optional contact replacement before saving account changes', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response(detail))
+    const put = vi.spyOn(api, 'put')
+    renderPage(<AdminUserFormPage />, '/admin/users/2/edit', '/admin/users/:id/edit', adminAccount)
+    await screen.findByDisplayValue('Jamie')
+    fireEvent.change(screen.getByLabelText('Replace contact number (optional)'), { target: { value: '659+1234567' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save account changes' }))
+    expect(screen.getByText(CONTACT_NUMBER_ERROR)).toBeInTheDocument()
+    expect(screen.getByLabelText('Replace contact number (optional)')).toHaveAttribute('aria-invalid', 'true')
+    expect(put).not.toHaveBeenCalled()
   })
   it('shows actual usage and never presents a stored contact field', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(detail))

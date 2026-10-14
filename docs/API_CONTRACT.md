@@ -1,8 +1,7 @@
 # API contract
 
-The Team C endpoints below are implemented on the Team C feature branch, with the controller
-and DTO shapes the React frontend uses. Team A's matching and Team B's own-profile editor are
-separate.
+This contract covers the integrated compulsory Team A/B/C application and the DTO/input
+shapes used by the React frontend. Selected E1/E2 extensions are separate work.
 
 Base path `/api`; JSON requests/responses. Protected requests use
 `Authorization: Bearer <token>`. Actor, student and administrator identity always comes from
@@ -19,10 +18,22 @@ the documented source timezone `Asia/Singapore`; it does not relabel them withou
 ## Identity, permissions and errors
 
 Login, registration and admin edits share trimmed, lowercase email identity. Its normalized
-value is unique in PostgreSQL, including inactive accounts. Passwords require at least eight
-characters and at most 72 UTF-8 bytes. Passwords are encoded with the existing Spring Security
-BCrypt encoder. Secrets, hashes, token versions and stored contact data are absent from admin,
+value is unique in PostgreSQL, including inactive accounts. New passwords require at least
+eight characters and at most 72 UTF-8 bytes. Login retains annotated request validation;
+otherwise-valid input exceeding the UTF-8 byte limit gets the same 401 `INVALID_CREDENTIALS`
+as a wrong password before BCrypt comparison. Malformed/over-character-limit fields still
+return 400. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
 request, connection, group and notification responses.
+
+Contact input accepts local Singapore 8-digit numbers beginning 6/8/9, or `+` followed by
+7–15 international digits beginning 1–9. ASCII whitespace, hyphens, parentheses and dots are removed;
+local input gains `+65`. Invalid replacements return 400 with a `contactNumber` field error.
+The rule applies to registration, own-profile replacement and admin creation/replacement;
+omitted admin contact preserves the stored value. Existing values are not bulk rewritten,
+and administrator responses still omit contacts. This is format, not reachability, validation.
+
+The team interprets learning style through the existing defined preferences; no separate
+field is part of this baseline contract. This records the team decision, not professor confirmation.
 
 JWTs include account ID, role, expiry and account token version. Every protected request checks
 that the account still exists, is active, and matches the token role/version. Mutation services
@@ -80,7 +91,7 @@ student only. Account role selection belongs to the administrator creation endpo
 
 `RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
 (integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
-Contact numbers are required nonblank text at creation, without a newly invented format rule.
+Contact numbers are required at creation and follow the accepted format/normalization contract above.
 Registration saves the identity and `@MapsId` student profile atomically and signs in the account.
 
 ```json
@@ -232,8 +243,13 @@ Monday first then by start time. Optional preference/target-course fields may be
 
 Relationship state is `SELF`, `STRANGER`, `INCOMING_PENDING`, `OUTGOING_PENDING` or `CONNECTED`.
 A pending state includes its request ID; connected includes its connection ID; irrelevant IDs
-are null. The existing numeric preferred-group-size storage remains a Team A decision, not
-an additional C scoring interpretation.
+are null. The categorical profile choice maps to Team A's numeric range scoring contract;
+profile viewing does not introduce another scoring interpretation.
+
+The owner's profile editor keeps independently saved profile/week drafts across recoverable
+profile/course refresh errors. Retry does not discard the other draft. Lost authorization,
+account changes and explicit session purge clear it; this does not retain another student's
+private profile after a failed refresh.
 
 ## Groups and membership applications
 

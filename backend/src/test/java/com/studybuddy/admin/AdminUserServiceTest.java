@@ -126,7 +126,7 @@ class AdminUserServiceTest {
 
     @Test
     void creationUsesTheSharedAccountPolicy() {
-        var request = new AdminUserCreateRequest("bob@example.test","a-valid-runtime-password",Role.STUDENT,"Bob","SCIS","Information Systems",3,"Synthetic contact");
+        var request = new AdminUserCreateRequest("bob@example.test","a-valid-runtime-password",Role.STUDENT,"Bob","SCIS","Information Systems",3,"+12025550100");
         when(creation.create(request.email(),request.password(),request.role(),request.name(),request.school(),request.programme(),request.yearOfStudy(),request.contactNumber())).thenReturn(bobUser);
         assertEquals(BOB_ID,service.create(request,ADMIN_ID).account().id());
         verify(access).lockAdmin(ADMIN_ID);
@@ -134,10 +134,10 @@ class AdminUserServiceTest {
 
     @Test
     void editNormalizesIdentityAndReplacesProfileFields() {
-        var detail = service.update(BOB_ID,new AdminUserUpdateRequest(" Robert@EXAMPLE.TEST ","Robert","SOE","Economics",2,"Replacement contact"),ADMIN_ID);
+        var detail = service.update(BOB_ID,new AdminUserUpdateRequest(" Robert@EXAMPLE.TEST ","Robert","SOE","Economics",2,"6 (123) 45-67"),ADMIN_ID);
         assertEquals("robert@example.test",bobUser.getEmail());
         assertEquals("SOE",detail.profile().school());
-        assertEquals("Replacement contact",bob.getContactNumber());
+        assertEquals("+6561234567",bob.getContactNumber());
     }
 
     @Test
@@ -151,6 +151,17 @@ class AdminUserServiceTest {
     void blankContactReplacementIsInvalid() {
         assertThrows(InvalidInputException.class,() -> service.update(BOB_ID,new AdminUserUpdateRequest(bobUser.getEmail(),"Bob","SCIS","IS",3," "),ADMIN_ID));
         assertEquals("Bob",bob.getName());
+    }
+
+    @Test
+    void invalidContactReplacementChangesNoPublicOrPrivateFields() {
+        String previous = bob.getContactNumber();
+        var error = assertThrows(InvalidInputException.class, () -> service.update(BOB_ID,
+            new AdminUserUpdateRequest("changed@example.test", "Changed name", "SOE", "Economics", 2, "9123ABCD"), ADMIN_ID));
+        assertTrue(error.getFieldErrors().containsKey("contactNumber"));
+        assertEquals("bob@example.test", bobUser.getEmail());
+        assertEquals("Bob", bob.getName());
+        assertEquals(previous, bob.getContactNumber());
     }
 
     @Test

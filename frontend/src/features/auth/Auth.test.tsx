@@ -7,6 +7,7 @@ import AuthProvider from '../../shared/auth/AuthProvider'
 import { AuthContext } from '../../shared/auth/context'
 import { useAuth } from '../../shared/auth/useAuth'
 import { api, getAccessToken, SESSION_TOKEN_KEY, setAccessToken } from '../../shared/api/client'
+import { CONTACT_NUMBER_ERROR } from '../../shared/auth/contactNumber'
 import { adminAccount, deferred, response, studentAccount } from '../../test/renderApp'
 
 const originalAdapter = api.defaults.adapter
@@ -48,7 +49,23 @@ describe('auth and role boundaries', () => {
     fireEvent.change(screen.getByLabelText('Programme'), { target: { value: 'Information Systems' } })
     fireEvent.change(screen.getByLabelText('Contact number'), { target: { value: '+65 9999 1111' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
-    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', { email: 'new@example.test', password: 'a-long-passphrase', name: 'New Student', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 1, contactNumber: '+65 9999 1111' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', { email: 'new@example.test', password: 'a-long-passphrase', name: 'New Student', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 1, contactNumber: '+6599991111' }))
+  })
+  it('rejects contact letters inline before registration and accepts a corrected local Singapore number', async () => {
+    setAccessToken(null)
+    const post = vi.spyOn(api, 'post').mockImplementation(() => new Promise(() => {}))
+    renderAuthenticatedApp('/register')
+    for (const [label, value] of [['Email address', 'new@example.test'], ['Password', 'a-long-passphrase'],
+      ['Full name', 'New Student'], ['School', 'SCIS'], ['Programme', 'Information Systems'], ['Contact number', '9123ABCD']]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
+    expect(screen.getByText(CONTACT_NUMBER_ERROR)).toBeInTheDocument()
+    expect(screen.getByLabelText('Contact number')).toHaveAttribute('aria-invalid', 'true')
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText('Contact number'), { target: { value: '9 (123).45-67' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', expect.objectContaining({ contactNumber: '+6591234567' })))
   })
   it('guards admin routes from a student without requesting admin data', async () => {
     const get = vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: 0 } : []))

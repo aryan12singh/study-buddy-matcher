@@ -12,6 +12,9 @@ public final class InputRules {
     public static final int MIN_PASSWORD_LENGTH = 8;
     public static final int MAX_PASSWORD_LENGTH = 72;
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern CONTACT_SEPARATORS = Pattern.compile("[ \\t\\n\\r\\f\\x0B().-]");
+    private static final Pattern SINGAPORE_CONTACT = Pattern.compile("[689][0-9]{7}");
+    private static final Pattern INTERNATIONAL_CONTACT = Pattern.compile("\\+[1-9][0-9]{6,14}");
 
     private InputRules() {
     }
@@ -29,6 +32,21 @@ public final class InputRules {
             throw new InvalidInputException("password", "Password must contain at least 8 characters and at most 72 UTF-8 bytes");
         }
         return value;
+    }
+
+    /** Local Singapore input is stored with +65; international input keeps its leading +. */
+    public static String contactNumber(String value) {
+        if (value != null && value.length() <= TEXT_LIMIT) {
+            String normal = CONTACT_SEPARATORS.matcher(value).replaceAll("");
+            if (SINGAPORE_CONTACT.matcher(normal).matches()) {
+                return "+65" + normal;
+            }
+            if (INTERNATIONAL_CONTACT.matcher(normal).matches()) {
+                return normal;
+            }
+        }
+        throw new InvalidInputException("contactNumber",
+            "Use 8 Singapore digits starting with 6, 8 or 9, or + followed by 7 to 15 international digits starting with 1 to 9");
     }
 
     public static String required(String value, String field, int limit) {

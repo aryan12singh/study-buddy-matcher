@@ -7,6 +7,7 @@ import { useViewNavigation } from '../../shared/components/useViewNavigation'
 import type { Role } from '../../shared/api/types'
 import { label } from '../../shared/api/types'
 import { validateAccountFields } from '../../shared/auth/validation'
+import { normalizeContactNumber } from '../../shared/auth/contactNumber'
 import WindowPage from '../../shared/components/WindowPage'
 import StatePanel from '../../shared/components/StatePanel'
 import Field from '../../shared/components/Field'
@@ -73,7 +74,7 @@ export default function AdminUserFormPage() {
           school: form.school.trim(),
           programme: form.programme.trim(),
           yearOfStudy: Number(form.yearOfStudy),
-          ...(form.contactNumber.trim() ? { contactNumber: form.contactNumber.trim() } : {})
+          ...(form.contactNumber.trim() ? { contactNumber: normalizeContactNumber(form.contactNumber) } : {})
         }
         :
         {})
