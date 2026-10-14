@@ -11,5 +11,7 @@ spring:
 jwt:
   secret: ${STUDYBUDDY_TEST_JWT_SECRET}
 app:
+  weather:
+    enabled: false
   demo-seed:
     enabled: false

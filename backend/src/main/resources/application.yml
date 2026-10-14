@@ -28,6 +28,15 @@ app:
     maximum-occurrences: ${SESSION_MAXIMUM_OCCURRENCES:52}
     maximum-duration-hours: ${SESSION_MAXIMUM_DURATION_HOURS:24}
     availability-time-zone: Asia/Singapore
+  weather:
+    enabled: ${WEATHER_ENABLED:true}
+    latitude: ${WEATHER_LATITUDE:1.297}
+    longitude: ${WEATHER_LONGITUDE:103.849}
+    location: ${WEATHER_LOCATION:SMU campus}
+    timeout: ${WEATHER_TIMEOUT:4s}
+    cache-lifetime: ${WEATHER_CACHE_LIFETIME:15m}
+    retry-interval: ${WEATHER_RETRY_INTERVAL:1m}
+    maximum-stale-age: ${WEATHER_MAXIMUM_STALE_AGE:24h}
   study-room:
     default-focus-minutes: ${ROOM_DEFAULT_FOCUS_MINUTES:25}
     default-break-minutes: ${ROOM_DEFAULT_BREAK_MINUTES:5}
