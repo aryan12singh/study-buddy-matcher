@@ -246,14 +246,25 @@ durations and capacity; only the leader assigns roles. Removing membership revok
 browser leases and delegated roles, so readmission cannot revive old room access.
 
 Original native Web Audio supplies independently selectable music and ambience. Shared
-play/pause selections persist, while explicit audio consent, volume and mute stay local.
+play/pause selections persist. This browser remembers its separate layer volume and mute
+preferences; playback still needs explicit enable after entering or rejoining a room.
+Unavailable or malformed local storage falls back to safe mixer defaults. A discreet,
+polite phase cue announces observed focus/break transitions without reading the countdown
+every second or replaying missed transitions on reconnect.
 The timer continues through disconnects; two-second polling reconciles shared controls with
 local countdown rendering. Audio playback positions are not synchronized.
 
 Group leaders schedule dated group sessions, and connected buddies manage private sessions
 for their active connection. Sessions support agendas, locations, valid IANA timezones,
 mutual weekly availability suggestions, updates/cancellation and bounded weekly repetition.
-Actual upcoming sessions appear on Home, group agendas and notifications. Calendar downloads
+Choose a positive whole-minute duration for suggestions (60 minutes initially): a 45-minute
+choice inside a shared 10:00–12:00 window fills 10:00–10:45, while shorter windows are omitted.
+Choosing a duration leaves entered dates untouched until a suggestion is selected, and manual
+scheduling stays available when no window fits. Existing server time/DST validation still applies.
+Actual current/upcoming sessions appear on Home, group agendas and notifications. Session
+labels and room shortcuts update at occurrence boundaries, including after returning to a tab;
+completed and cancelled plans have no room shortcut. Safe saved room links open a preview
+where joining remains explicit. Calendar downloads
 contain single or explicit weekly occurrences with stable IDs and UTC times preserving local
 wall time across DST. Downloads are snapshots: changed/cancelled sessions require re-export;
 remove a prior import before replacing it if the calendar client does not reconcile IDs.

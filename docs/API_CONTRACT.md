@@ -468,11 +468,23 @@ deletion removes dependent records through the documented database relations.
 ordered by that occurrence's start; cancelled/completed series are absent from Home.
 The parent agendas retain authorized session history, including cancelled records.
 
+Frontend presentation selects the current/next occurrence from the authorized
+occurrence list using the browser clock. A plan is Ongoing from its start (inclusive)
+until its end (exclusive); an ended weekly occurrence advances to the next date.
+Current/upcoming group cards can expose the same safe saved room link as details.
+Cancelled/completed plans have no shortcut; opening a link does not admit a student
+to the room or bypass any backend eligibility/capacity check.
+
 Mutual suggestions intersect the current participants' saved weekly availability
 using Team A's `WeeklyAvailability.sharedSlotsWith`; they are campus-local
 `Asia/Singapore` blocks, not timezone-converted dated bookings. Missing availability
 yields an empty result. Suggestions do not confirm attendance, reserve a time or
-prevent manually scheduling another time. Actual dated sessions feed Home,
+prevent manually scheduling another time. The frontend's duration chooser defaults
+to 60 positive whole minutes and fits that duration at the beginning of a returned
+overlap; insufficient windows are omitted. This chooser is not a new API field:
+only selecting a suggestion changes the existing start/end/timezone fields, and
+server duration/DST validation remains authoritative. Invalid or no-fit chooser
+values do not block an otherwise valid manually entered session. Actual dated sessions feed Home,
 group/buddy agendas and recipient-scoped created/updated/cancelled notifications.
 
 Calendar downloads expand the bounded weekly series into individual UTC `VEVENT`

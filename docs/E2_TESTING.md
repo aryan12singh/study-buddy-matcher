@@ -92,10 +92,11 @@ independent review must be recorded against the final published commit.
 | Gate | Current completion evidence |
 | --- | --- |
 | Backend suite and migration/access checks | 437 passed, zero failures/errors/skips; fresh, legacy and populated repeat migrations/access checks passed |
-| Frontend suite, lint, type check and production build | 305 passed across 34 files; lint/type/build passed (existing lint and bundle advisories recorded) |
+| Frontend suite, lint, type check and production build | 316 passed across 36 files after the approved usability pass; lint/type/build passed (existing lint and bundle advisories recorded) |
 | Two-browser timer, host and reconnect; recorded tolerance | 23 real-browser checks passed against Java/disposable PostgreSQL; see observations below |
 | Layered audio, failure fallback and exit/revocation | 23 real-browser checks passed against Java/disposable PostgreSQL; see observations below |
 | Group/buddy sessions, suggestions, Home/agendas and notifications | 23 real-browser checks passed against Java/disposable PostgreSQL; see observations below |
+| Approved usability upgrades | 22 additional real Chromium checks passed against the unchanged Java backend and a fresh disposable database; see the usability record below |
 | Calendar single/weekly/DST/privacy checks | Real single, 3-week London DST and cancelled snapshots downloaded; dates/privacy checked |
 | Google Calendar import | Actual Google web import: single 1/1, weekly 3/3; Singapore display 17:00 then 18:00/18:00 across London DST. Cancelled snapshot imported 3/3; earlier weekly events no longer appeared in search |
 | Apple Calendar import | Actual macOS Calendar import: single and all three weekly occurrences verified in search; correct Singapore DST display. Re-import marked existing weekly events Cancelled |
@@ -147,7 +148,7 @@ The personal/group civil-time round-trip regression passed under both Singapore 
 defaults. This is local verification; the schema/time mapping correction is not a deployment claim.
 
 The existing owner-profile hook lint warning is retained. The completed production bundle
-is approximately 555 KB before gzip and triggers Vite's nonblocking size advisory. No dependency, extra CI job, browser-test framework or external
+is approximately 559 KB before gzip after the usability pass and triggers Vite's nonblocking size advisory. No dependency, extra CI job, browser-test framework or external
 music service was added.
 
 The final audit corrected the group agenda preview to sort by each series' next occurrence
@@ -156,3 +157,53 @@ series. Calendar evidence used isolated synthetic test calendars, without invita
 attendees. Google and Apple test data were removed after the owner approved cleanup; no
 Outlook test calendar was created. File imports are snapshots and client-specific observed
 cancellation behavior is not a general synchronization guarantee.
+
+
+## Approved usability pass
+
+The five approved enhancements reuse existing backend contracts: Ongoing labels,
+safe direct group room actions, accessible phase cues, local mixer preferences and
+duration-aware mutual suggestions. No backend code, migration, dependency, workflow
+or disclosure-file change was required.
+
+The final frontend run passed **316 tests across 36 files**, TypeScript, lint and
+production build. Added regressions exercise exact occurrence boundaries/weekly
+advancement and preview ordering, safe action visibility, duration fitting/no-fit/
+invalid choices with draft retention, observed/reset/reconnect/latency phase cues,
+and preference validation/leave-rejoin persistence without remembered consent.
+Tests remain in the existing pipeline. The owner-profile hook warning is retained;
+there are no new lint warnings.
+
+**22 additional actual Chromium checks passed** with synthetic accounts against the
+migrated Java application and a fresh disposable PostgreSQL database. These covered:
+
+- Home and parent agendas showing Ongoing/Upcoming/Past/Cancelled correctly;
+  real wall-clock start/end boundaries changed labels and removed ended shortcuts
+  without navigation. Safe room actions opened previews requiring explicit join.
+- A 45-minute choice within a 10:00–12:00 shared slot filled 10:00–10:45 Singapore
+  time; the 30-minute slot was omitted. Exact fit, no fit, zero/fractional input,
+  unchanged drafts, no premature write and a real manual/selected-date save passed.
+- Original native Web Audio required a gesture; separate music/ambience gains and
+  mute persisted through leave/rejoin/reload while leaving closed the native context
+  and re-entry required fresh playback enable. Corrupt/out-of-range preferences and
+  injected mixer-storage read/write denial fell back safely.
+- A real server-clock focus/break boundary produced one polite atomic phase cue.
+  Countdown ticks and polling did not repeat it; countdown live announcements were
+  off, and reload into a running phase did not replay historical messages.
+- The 390-pixel editor and agenda had no horizontal overflow; suggestion actions
+  remained readable. A stranger received no private session or room shortcut. No
+  browser page errors were observed.
+
+Elapsed session and shortened timer anchors were prepared only as isolated SQL
+fixtures; observations used actual Java responses and browser/server clocks, not
+mocked HTTP payloads. Native audio-context state and ARIA/DOM checks are integration
+evidence, not physical loudspeaker or assistive-technology acceptance. Desktop and
+mobile screenshots were inspected. External calendar imports were unchanged and
+were not repeated; the deferred Outlook check remains deferred.
+
+The independent Astra high audit found **no actionable findings** in this delta and
+passed 76 bounded cases against the actual presentation/suggestion helpers. Its
+scope included timer continuity, permissions, clock cleanup, audio consent/storage
+and manual scheduling. It did not substitute for the suite or browser walkthrough.
+Final hosted checks are recorded against the published HEAD on PR #52. Shared
+Supabase remains unchanged; human review and rollout remain delivery gates.

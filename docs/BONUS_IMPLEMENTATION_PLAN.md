@@ -22,6 +22,12 @@ baseline work is integrated without rewriting existing merge history.
 | Weather enhancement | Approved original pixel themes, day/night and optional backend-cached Open-Meteo campus conditions, with selectable fallback and reduced motion |
 | Delivery | Ordered migrations, focused regressions, API/config/design diagrams, real workflow evidence and cross-team review |
 
+The owner approved a contained usability pass on the same PR: accurate ongoing-session
+labels, direct safe room actions on current/upcoming cards, an accessible phase-transition
+cue, remembered browser-local audio volume/mute and duration-aware mutual suggestions.
+These use existing authorized DTOs and native browser capabilities; they introduce no API,
+schema, library or provider changes. The existing disclosure file is unchanged in this pass.
+
 The owner approved existing Team C retro components for these screens and original
 built-in audio. No external music account, audio provider, asset pack or new Java/npm
 dependency is introduced. Open-Meteo was separately approved for optional weather;
