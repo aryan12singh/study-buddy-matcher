@@ -149,6 +149,76 @@ events are independent copies, so shortening/cancellation/revocation cannot eras
 them. Re-export/import limitations and real-client acceptance are in
 [E2_TESTING.md](../E2_TESTING.md).
 
+## Lifecycles (state machines)
+
+Each lifecycle is owned by its entity. `MatchRequest`, `GroupJoinRequest`, `Connection` and
+`StudyGroup` expose intention-revealing transition methods (`accept()`, `decline()`,
+`cancel()`, `reject()`, `end()`, `close()`) and no status setter, so an illegal transition
+cannot be written from outside the class. Every transition out of a final state throws, and
+the API reports it as 409.
+
+### Match request and connection
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> PENDING : sender sends request<br/>(optional message)
+    PENDING --> ACCEPTED : receiver accepts
+    PENDING --> DECLINED : receiver declines
+    PENDING --> CANCELLED : sender or receiver<br/>account deactivated
+    ACCEPTED --> [*]
+    DECLINED --> [*]
+    CANCELLED --> [*]
+
+    state ACCEPTED {
+        direction LR
+        [*] --> Active : Connection created<br/>(contact number visible)
+        Active --> Ended : a participant ends it, or<br/>an account is deactivated
+        Ended --> [*] : contact hidden again
+    }
+```
+
+`MatchRequestService.send` rejects these before a request is created:
+
+- **409:** sending to yourself, an active connection already exists between the pair, or a
+  pending request already exists in *either* direction.
+- **404:** the receiver is inactive or unknown.
+
+Only the receiver may accept or decline; anyone else gets 403. Accepting and creating the
+`Connection` happen in one transaction with the request row locked, so a double accept or an
+accept racing a decline resolves to a single outcome.
+
+An ended connection keeps `endedAt` for history. Contact privacy is recomputed on every read,
+so the contact number disappears as soon as the connection ends, and the pair may send a new
+request afterwards.
+
+### Group join request and membership
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> PENDING : student applies<br/>(group active, not already<br/>member or pending)
+    PENDING --> ACCEPTED : leader approves<br/>(group not full)
+    PENDING --> REJECTED : leader rejects
+    PENDING --> REJECTED : group closed
+    PENDING --> REJECTED : applicant deactivated
+    ACCEPTED --> [*] : GroupMembership created
+    REJECTED --> [*]
+```
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Open : leader creates group<br/>(leader becomes first member)
+    Open --> Open : leader edits details<br/>(max size ≥ current members)
+    Open --> Closed : leader closes, or<br/>leader account deactivated
+    Closed --> [*] : pending applications rejected,<br/>members notified
+```
+
+Approval is serialised on the group row, so two approvals cannot both take the last place.
+Removing a member deletes the `GroupMembership` row. A closed group rejects edits, approvals,
+rejections and removals.
+
 ## Domain and OO boundaries
 
 ```mermaid
