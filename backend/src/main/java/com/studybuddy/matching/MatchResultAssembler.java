@@ -29,7 +29,8 @@ public class MatchResultAssembler {
 
     private static List<CriterionScoreDto> breakdownOf(MatchScore score, Set<MatchingCriterion> enabled) {
         return Arrays.stream(MatchingCriterion.values())
-                .map(criterion -> new CriterionScoreDto(criterion, score.scoreFor(criterion), enabled.contains(criterion)))
+                .map(criterion -> new CriterionScoreDto(criterion, score.scoreFor(criterion), enabled.contains(criterion),
+                        score.isKnown(criterion)))
                 .toList();
     }
 

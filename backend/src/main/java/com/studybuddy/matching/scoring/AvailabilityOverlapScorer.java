@@ -14,12 +14,12 @@ public class AvailabilityOverlapScorer implements CriterionScorer {
     }
 
     @Override
-    public double score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
+    public CriterionResult score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
         WeeklyAvailability mine = searcher.availability();
         WeeklyAvailability theirs = candidate.availability();
         if (mine.isEmpty() || theirs.isEmpty()) {
-            return NEUTRAL_SCORE;
+            return CriterionResult.unknown();
         }
-        return Math.min(1.0, (double) mine.sharedMinutesWith(theirs) / mine.totalMinutes());
+        return CriterionResult.of(Math.min(1.0, (double) mine.sharedMinutesWith(theirs) / mine.totalMinutes()));
     }
 }

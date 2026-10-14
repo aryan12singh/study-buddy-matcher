@@ -17,15 +17,15 @@ public class GroupSizeScorer implements CriterionScorer {
     }
 
     @Override
-    public double score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
+    public CriterionResult score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
         Student mine = searcher.student();
         Student theirs = candidate.student();
         if (mine.getPreferredGroupSizeMin() == null || mine.getPreferredGroupSizeMax() == null
                 || theirs.getPreferredGroupSizeMin() == null || theirs.getPreferredGroupSizeMax() == null) {
-            return NEUTRAL_SCORE;
+            return CriterionResult.unknown();
         }
         boolean overlap = mine.getPreferredGroupSizeMin() <= theirs.getPreferredGroupSizeMax()
                 && theirs.getPreferredGroupSizeMin() <= mine.getPreferredGroupSizeMax();
-        return overlap ? 1.0 : 0.0;
+        return CriterionResult.of(overlap ? 1.0 : 0.0);
     }
 }

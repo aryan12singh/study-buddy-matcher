@@ -8,8 +8,8 @@ const is442 = { id: 4, code: 'IS442', name: 'Object Oriented Programming' }
 const is216 = { id: 3, code: 'IS216', name: 'Web Application Development' }
 const myProfile = { id: 1, coursesTaken: [is442, is216], targetCourse: is442, preferredStudyMode: 'ONLINE', availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '11:00' }] }
 const breakdown = (course: number, availability: number) => [
-  { criterion: 'COURSE', score: course, enabled: true }, { criterion: 'AVAILABILITY', score: availability, enabled: true },
-  { criterion: 'STUDY_MODE', score: 1, enabled: true }, { criterion: 'STUDY_GOAL', score: 0, enabled: true }, { criterion: 'GROUP_SIZE', score: 0.5, enabled: true }
+  { criterion: 'COURSE', score: course, enabled: true, known: true }, { criterion: 'AVAILABILITY', score: availability, enabled: true, known: true },
+  { criterion: 'STUDY_MODE', score: 1, enabled: true, known: true }, { criterion: 'STUDY_GOAL', score: 0, enabled: true, known: true }, { criterion: 'GROUP_SIZE', score: 0.5, enabled: true, known: true }
 ]
 const jamie = {
   studentId: 2, name: 'Jamie Lee', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, studyMode: 'ONLINE',

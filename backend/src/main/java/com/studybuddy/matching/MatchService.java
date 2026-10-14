@@ -70,7 +70,6 @@ public class MatchService {
         MatchingProfile searcher = profileOf(self, availability);
         MatchingConfigSnapshot settings = config.snapshot();
         MatchingStrategy strategy = settings.strategy();
-        QualityThresholds thresholds = properties.quality();
         MatchQuality minimum = search.minQuality() == null ? MatchQuality.FAIR : search.minQuality();
         Map<Long, RelationshipState> standing = relationships.of(self.getId());
 
@@ -82,7 +81,7 @@ public class MatchService {
                 .map(student -> profileOf(student, availability))
                 .filter(candidate -> filter.accepts(search, searcher, candidate))
                 .map(candidate -> new ScoredCandidate(candidate, scorer.score(searcher, candidate, search, settings.weights(),
-                        settings.enabledCriteria(), thresholds)))
+                        settings.enabledCriteria())))
                 .filter(scored -> scored.score().total() >= settings.minScore())
                 .filter(scored -> scored.score().quality().isAtLeast(minimum))
                 .sorted(ordering(sort, searcher, settings))

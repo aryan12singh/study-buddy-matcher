@@ -59,6 +59,10 @@ app:
     quality:
       strong: 0.75
       good: 0.50
+    scoring:
+      # What a criterion is worth when either student left it empty. 0 means missing
+      # data never outranks real compatibility; the card shows it as "not shared".
+      unknown-score: 0.0
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

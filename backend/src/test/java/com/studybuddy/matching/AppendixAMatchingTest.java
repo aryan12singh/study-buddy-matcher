@@ -8,6 +8,7 @@ import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingProfile;
 import com.studybuddy.matching.scoring.MatchingWeights;
+import com.studybuddy.matching.scoring.ScoringRules;
 import com.studybuddy.matching.scoring.StudyGoalScorer;
 import com.studybuddy.matching.scoring.StudyModeScorer;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
@@ -44,7 +45,8 @@ class AppendixAMatchingTest {
             MatchingCriterion.STUDY_GOAL, 0.10, MatchingCriterion.GROUP_SIZE, 0.10));
 
     private final WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(),
-            new AvailabilityOverlapScorer(), new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()));
+            new AvailabilityOverlapScorer(), new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()),
+            new QualityThresholds(0.75, 0.50), new ScoringRules(0.0));
 
     /** Student A: IS442; Wed 7-9 pm and Fri 2-4 pm; in person; exam preparation; 2-3 students. */
     private static MatchingProfile studentA() {
@@ -72,7 +74,7 @@ class AppendixAMatchingTest {
 
     private MatchScore score(MatchingProfile searcher, MatchingProfile candidate) {
         return scorer.score(searcher, candidate, searchForCourse(IS442.getId()), BALANCED,
-                EnumSet.allOf(MatchingCriterion.class), new QualityThresholds(0.75, 0.50));
+                EnumSet.allOf(MatchingCriterion.class));
     }
 
     @Test

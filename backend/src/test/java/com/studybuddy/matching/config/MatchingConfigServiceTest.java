@@ -88,7 +88,7 @@ class MatchingConfigServiceTest {
         weights.get(BALANCED).put(MatchingCriterion.COURSE, 0.2001);
         var defaults = MatchingFixtures.properties();
         service = new MatchingConfigService(weightRows, strategyRows,
-                new MatchingProperties(BALANCED, weights, defaults.quality(), ALL, 0, 20, 50), STRATEGIES,
+                new MatchingProperties(BALANCED, weights, defaults.quality(), defaults.scoring(), ALL, 0, 20, 50), STRATEGIES,
                 new MatchingConfigAssembler(), access);
         assertEquals(0.2001, service.snapshot().weights().weightOf(MatchingCriterion.COURSE));
     }

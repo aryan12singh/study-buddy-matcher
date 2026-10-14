@@ -79,7 +79,7 @@ class MatchServiceTest {
     void setUp() {
         MatchingProperties properties = MatchingFixtures.properties();
         WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(), new AvailabilityOverlapScorer(),
-                new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()));
+                new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()), properties.quality(), properties.scoring());
         service = new MatchService(access, students, availabilitySlots, courses, config, properties,
                 new MatchSearchFilter(new ProfileProperties(5, 8)), scorer, new MatchResultAssembler(),
                 new MatchRelationships(connections, requests));

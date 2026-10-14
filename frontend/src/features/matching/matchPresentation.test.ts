@@ -27,4 +27,9 @@ describe('criterionVerdict', () => {
     expect(criterionVerdict('GROUP_SIZE', 0, 0)).toBe('Differs')
     expect(criterionVerdict('AVAILABILITY', 0.2, 3.5)).toBe('3.5 h')
   })
+
+  it('says a preference is not shared instead of scoring missing data', () => {
+    expect(criterionVerdict('AVAILABILITY', 0, 0, false)).toBe('Not shared')
+    expect(criterionVerdict('STUDY_MODE', 0, 0, false)).toBe('Not shared')
+  })
 })

@@ -16,13 +16,13 @@ public class StudyGoalScorer implements CriterionScorer {
     }
 
     @Override
-    public double score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
+    public CriterionResult score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
         Set<StudyGoal> mine = search.studyGoal() == null ? searcher.student().getStudyGoals() : Set.of(search.studyGoal());
         Set<StudyGoal> theirs = candidate.student().getStudyGoals();
         if (mine.isEmpty() || theirs.isEmpty()) {
-            return NEUTRAL_SCORE;
+            return CriterionResult.unknown();
         }
         long inCommon = mine.stream().filter(theirs::contains).count();
-        return (double) inCommon / mine.size();
+        return CriterionResult.of((double) inCommon / mine.size());
     }
 }

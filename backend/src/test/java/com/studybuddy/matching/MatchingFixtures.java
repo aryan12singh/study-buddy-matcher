@@ -6,6 +6,7 @@ import com.studybuddy.matching.availability.WeeklyAvailability;
 import com.studybuddy.matching.config.MatchingProperties;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingProfile;
+import com.studybuddy.matching.scoring.ScoringRules;
 import com.studybuddy.matching.strategy.MatchingStrategyType;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudyGoal;
@@ -79,7 +80,7 @@ public final class MatchingFixtures {
     }
 
     public static MatchingProperties properties() {
-        return new MatchingProperties(MatchingStrategyType.BALANCED, strategyDefaults(), new QualityThresholds(0.75, 0.5),
+        return new MatchingProperties(MatchingStrategyType.BALANCED, strategyDefaults(), new QualityThresholds(0.75, 0.5), new ScoringRules(0.0),
                 EnumSet.allOf(MatchingCriterion.class), 0.0, 20, 50);
     }
 

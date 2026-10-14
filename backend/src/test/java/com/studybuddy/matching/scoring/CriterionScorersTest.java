@@ -7,7 +7,6 @@ import com.studybuddy.student.StudyMode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static com.studybuddy.matching.scoring.CriterionScorer.NEUTRAL_SCORE;
 import static com.studybuddy.matching.MatchingFixtures.NO_FILTERS;
 import static com.studybuddy.matching.MatchingFixtures.course;
 import static com.studybuddy.matching.MatchingFixtures.profile;
@@ -33,7 +32,7 @@ class CriterionScorersTest {
         void fullMarksWhenTheCandidateWantsABuddyForTheSearchedCourse() {
             them.setTargetCourse(is442);
 
-            assertEquals(1.0, scorer.score(profile(me), profile(them), searchForCourse(4)));
+            assertEquals(1.0, scorer.score(profile(me), profile(them), searchForCourse(4)).score());
         }
 
         @Test
@@ -41,14 +40,14 @@ class CriterionScorersTest {
             them.getCoursesTaken().add(is442);
             them.setTargetCourse(is216);
 
-            assertEquals(0.5, scorer.score(profile(me), profile(them), searchForCourse(4)));
+            assertEquals(0.5, scorer.score(profile(me), profile(them), searchForCourse(4)).score());
         }
 
         @Test
         void zeroWhenTheCandidateDoesNotTakeIt() {
             them.getCoursesTaken().add(is216);
 
-            assertEquals(0.0, scorer.score(profile(me), profile(them), searchForCourse(4)));
+            assertEquals(0.0, scorer.score(profile(me), profile(them), searchForCourse(4)).score());
         }
 
         @Test
@@ -56,12 +55,12 @@ class CriterionScorersTest {
             me.setTargetCourse(is442);
             them.setTargetCourse(is442);
 
-            assertEquals(1.0, scorer.score(profile(me), profile(them), NO_FILTERS));
+            assertEquals(1.0, scorer.score(profile(me), profile(them), NO_FILTERS).score());
         }
 
         @Test
-        void neutralWithNoSearchedOrTargetCourse() {
-            assertEquals(NEUTRAL_SCORE, scorer.score(profile(me), profile(them), NO_FILTERS));
+        void unknownWithNoSearchedOrTargetCourse() {
+            assertEquals(CriterionResult.unknown(), scorer.score(profile(me), profile(them), NO_FILTERS));
         }
     }
 
@@ -74,25 +73,25 @@ class CriterionScorersTest {
             MatchingProfile mine = profile(me, slot(MONDAY, "09:00", "11:00"), slot(TUESDAY, "09:00", "11:00"));
             MatchingProfile theirs = profile(them, slot(MONDAY, "10:00", "13:00"));
 
-            assertEquals(0.25, scorer.score(mine, theirs, NO_FILTERS));
+            assertEquals(0.25, scorer.score(mine, theirs, NO_FILTERS).score());
         }
 
         @Test
         void fullMarksWhenAllMyFreeTimeIsShared() {
             assertEquals(1.0, scorer.score(profile(me, slot(MONDAY, "09:00", "10:00")),
-                    profile(them, slot(MONDAY, "08:00", "12:00")), NO_FILTERS));
+                    profile(them, slot(MONDAY, "08:00", "12:00")), NO_FILTERS).score());
         }
 
         @Test
         void zeroWhenNoTimeIsShared() {
             assertEquals(0.0, scorer.score(profile(me, slot(MONDAY, "09:00", "10:00")),
-                    profile(them, slot(TUESDAY, "09:00", "10:00")), NO_FILTERS));
+                    profile(them, slot(TUESDAY, "09:00", "10:00")), NO_FILTERS).score());
         }
 
         @Test
-        void neutralWhenEitherStudentHasNoAvailability() {
-            assertEquals(NEUTRAL_SCORE, scorer.score(profile(me), profile(them, slot(MONDAY, "09:00", "10:00")), NO_FILTERS));
-            assertEquals(NEUTRAL_SCORE, scorer.score(profile(me, slot(MONDAY, "09:00", "10:00")), profile(them), NO_FILTERS));
+        void unknownWhenEitherStudentHasNoAvailability() {
+            assertEquals(CriterionResult.unknown(), scorer.score(profile(me), profile(them, slot(MONDAY, "09:00", "10:00")), NO_FILTERS));
+            assertEquals(CriterionResult.unknown(), scorer.score(profile(me, slot(MONDAY, "09:00", "10:00")), profile(them), NO_FILTERS));
         }
     }
 
@@ -103,7 +102,7 @@ class CriterionScorersTest {
         private double score(StudyMode mine, StudyMode theirs) {
             me.setPreferredStudyMode(mine);
             them.setPreferredStudyMode(theirs);
-            return scorer.score(profile(me), profile(them), NO_FILTERS);
+            return scorer.score(profile(me), profile(them), NO_FILTERS).score();
         }
 
         @Test
@@ -119,8 +118,10 @@ class CriterionScorersTest {
         }
 
         @Test
-        void neutralWhenEitherHasNoPreference() {
-            assertEquals(NEUTRAL_SCORE, score(null, StudyMode.ONLINE));
+        void unknownWhenEitherHasNoPreference() {
+            me.setPreferredStudyMode(null);
+            them.setPreferredStudyMode(StudyMode.ONLINE);
+            assertEquals(CriterionResult.unknown(), scorer.score(profile(me), profile(them), NO_FILTERS));
         }
     }
 
@@ -135,7 +136,7 @@ class CriterionScorersTest {
             them.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
             them.getStudyGoals().add(StudyGoal.PROJECT_DISCUSSION);
 
-            assertEquals(0.5, scorer.score(profile(me), profile(them), NO_FILTERS));
+            assertEquals(0.5, scorer.score(profile(me), profile(them), NO_FILTERS).score());
         }
 
         @Test
@@ -143,14 +144,14 @@ class CriterionScorersTest {
             me.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
             them.getStudyGoals().add(StudyGoal.PROBLEM_SOLVING);
 
-            assertEquals(0.0, scorer.score(profile(me), profile(them), NO_FILTERS));
+            assertEquals(0.0, scorer.score(profile(me), profile(them), NO_FILTERS).score());
         }
 
         @Test
-        void neutralWhenEitherHasNoGoals() {
+        void unknownWhenEitherHasNoGoals() {
             me.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
 
-            assertEquals(NEUTRAL_SCORE, scorer.score(profile(me), profile(them), NO_FILTERS));
+            assertEquals(CriterionResult.unknown(), scorer.score(profile(me), profile(them), NO_FILTERS));
         }
     }
 
@@ -159,7 +160,7 @@ class CriterionScorersTest {
         me.getStudyGoals().add(StudyGoal.EXAM_PREPARATION);
         them.getStudyGoals().add(StudyGoal.CONCEPT_REVIEW);
         assertEquals(1.0, new StudyGoalScorer().score(profile(me), profile(them),
-                new com.studybuddy.matching.MatchSearchCriteria(null, StudyGoal.CONCEPT_REVIEW, null, null, null, null)));
+                new com.studybuddy.matching.MatchSearchCriteria(null, StudyGoal.CONCEPT_REVIEW, null, null, null, null)).score());
     }
 
     @Nested
@@ -171,7 +172,7 @@ class CriterionScorersTest {
             me.setPreferredGroupSizeMax(myMax);
             them.setPreferredGroupSizeMin(theirMin);
             them.setPreferredGroupSizeMax(theirMax);
-            return scorer.score(profile(me), profile(them), NO_FILTERS);
+            return scorer.score(profile(me), profile(them), NO_FILTERS).score();
         }
 
         @Test
@@ -187,11 +188,11 @@ class CriterionScorersTest {
         }
 
         @Test
-        void neutralWhenEitherHasNoPreference() {
+        void unknownWhenEitherHasNoPreference() {
             me.setPreferredGroupSizeMin(2);
             me.setPreferredGroupSizeMax(3);
 
-            assertEquals(NEUTRAL_SCORE, scorer.score(profile(me), profile(them), NO_FILTERS));
+            assertEquals(CriterionResult.unknown(), scorer.score(profile(me), profile(them), NO_FILTERS));
         }
     }
 }

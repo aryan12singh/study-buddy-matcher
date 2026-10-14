@@ -3,6 +3,7 @@ package com.studybuddy.matching.config;
 import com.studybuddy.matching.QualityThresholds;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingWeights;
+import com.studybuddy.matching.scoring.ScoringRules;
 import com.studybuddy.matching.strategy.MatchingStrategyType;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,6 +25,7 @@ public record MatchingProperties(
         @NotNull MatchingStrategyType defaultStrategy,
         Map<MatchingStrategyType, Map<MatchingCriterion, Double>> defaultWeights,
         @NotNull QualityThresholds quality,
+        @NotNull ScoringRules scoring,
         Set<MatchingCriterion> defaultEnabledCriteria,
         double defaultMinScore, int defaultResultLimit, int maxResultLimit) {
 

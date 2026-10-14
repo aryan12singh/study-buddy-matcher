@@ -22,17 +22,17 @@ public class CourseScorer implements CriterionScorer {
     }
 
     @Override
-    public double score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
+    public CriterionResult score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
         Long focus = search.courseId() != null ? search.courseId() : idOf(searcher.student().getTargetCourse());
         if (focus == null) {
-            return NEUTRAL_SCORE;
+            return CriterionResult.unknown();
         }
         Student other = candidate.student();
         if (focus.equals(idOf(other.getTargetCourse()))) {
-            return 1.0;
+            return CriterionResult.of(1.0);
         }
         boolean takesCourse = other.getCoursesTaken().stream().anyMatch(course -> focus.equals(course.getId()));
-        return takesCourse ? TAKES_COURSE_SCORE : 0.0;
+        return CriterionResult.of(takesCourse ? TAKES_COURSE_SCORE : 0.0);
     }
 
     private static Long idOf(Course course) {

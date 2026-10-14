@@ -1,15 +1,19 @@
 package com.studybuddy.matching.scoring;
 
-import java.util.Map;
 import com.studybuddy.matching.MatchQuality;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The result of matching two students: the score on each criterion and the
  * combined total, unique shared hours, quality and deterministic explanation.
- * Immutable; every compatibility score is finite and between 0.0 and 1.0.
+ * Immutable; every compatibility score is finite and between 0.0 and 1.0. Criteria
+ * in {@code unknownCriteria} had no data on one side, so their breakdown value is
+ * the configured unknown score rather than a measured one.
  */
 public record MatchScore(Map<MatchingCriterion, Double> breakdown, double total,
-        double sharedHoursPerWeek, String explanation, MatchQuality quality) {
+        double sharedHoursPerWeek, String explanation, MatchQuality quality, Set<MatchingCriterion> unknownCriteria) {
 
     public MatchScore {
         breakdown = Map.copyOf(breakdown);
@@ -18,15 +22,21 @@ public record MatchScore(Map<MatchingCriterion, Double> breakdown, double total,
         if (!Double.isFinite(sharedHoursPerWeek) || sharedHoursPerWeek < 0 || explanation == null || quality == null) {
             throw new IllegalArgumentException("Shared hours, explanation and quality are required");
         }
+        unknownCriteria = unknownCriteria == null ? Set.of() : Set.copyOf(unknownCriteria);
     }
 
     public MatchScore(Map<MatchingCriterion, Double> breakdown, double total) {
-        this(breakdown, total, 0.0, "", MatchQuality.FAIR);
+        this(breakdown, total, 0.0, "", MatchQuality.FAIR, Set.of());
     }
 
     /** The score on one criterion, or 0.0 if the strategy did not score it. */
     public double scoreFor(MatchingCriterion criterion) {
         return breakdown.getOrDefault(criterion, 0.0);
+    }
+
+    /** False when either student left this preference empty. */
+    public boolean isKnown(MatchingCriterion criterion) {
+        return !unknownCriteria.contains(criterion);
     }
 
     private static void requireInRange(double score, String label) {

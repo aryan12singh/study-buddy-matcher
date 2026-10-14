@@ -37,8 +37,8 @@ export type MatchResult = {
   totalScore: number
   explanation: string
   relevantCourse: { id: number; code: string; name: string } | null
-  /** Every criterion from 0 to 1, in the same order each time. */
-  breakdown: { criterion: MatchingCriterion; score: number; enabled: boolean }[]
+  /** Every criterion from 0 to 1, in the same order each time. `known` is false when either student left it empty. */
+  breakdown: { criterion: MatchingCriterion; score: number; enabled: boolean; known: boolean }[]
   sharedHoursPerWeek: number
   /** The weekly blocks when both students are free, Monday first. */
   sharedSlots: WeeklySlot[]
