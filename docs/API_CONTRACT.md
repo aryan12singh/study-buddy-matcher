@@ -11,8 +11,9 @@ Controllers validate input and call services; entities never become response bod
 
 All event timestamps are UTC instants, serialized with `Z`. Weekly schedules are recurring
 campus-local times in `Asia/Singapore`, with weekdays `MONDAY` through `SUNDAY` and whole-minute
-`HH:mm`/`HH:mm:ss` times. Slots require `startTime < endTime`; empty schedules and overlapping
-slots are allowed. The schema upgrade explicitly interprets legacy event timestamps using
+`HH:mm`/`HH:mm:ss` times. Slots require `startTime < endTime`; empty schedules are allowed.
+Own student availability rejects same-day overlaps; group schedules permit overlaps. The
+schema upgrade explicitly interprets legacy event timestamps using
 the documented source timezone `Asia/Singapore`; it does not relabel them without conversion.
 
 ## Identity, permissions and errors
@@ -132,6 +133,11 @@ Group size is stored on `students` as a minimum and maximum: one-to-one = 2-2, s
 3-max, either = 2-max. Availability blocks must start before they end, use whole minutes and not
 overlap on the same day; there is no limit on how many. Invalid input returns 400
 `INVALID_INPUT` with `fieldErrors` keyed by the request field (`courseIds`, `availability`, ...).
+
+The shared editor keeps raw time drafts separate from this complete-slot payload. Invalid or
+incomplete text blocks profile save and participates in unsaved-change protection; it must
+not silently submit a previous valid time. An empty saved `slots` array remains valid. This
+draft state is local form state, not an added API/DTO field.
 
 ## Buddy requests, connections and study profiles
 
@@ -269,7 +275,10 @@ Name is required and <=255 characters. Course ID must be positive/existing. Maxi
 required and >=2; reduction below current accepted membership is 400. Description is optional
 and <=4000 characters; blank becomes null. Mode is optional. Missing/null goals and availability
 mean empty collections. Null collection entries, missing slot values and reversed/equal times
-are invalid. Slots retain their campus-local meaning; no dated sessions are introduced.
+are invalid. Valid group slots may overlap on the same day, unlike own student availability.
+The group form must block invalid/incomplete raw time drafts and include them in exit
+protection; overlap permission does not relax start/end or whole-minute validity. Slots retain
+their campus-local meaning; no dated sessions are introduced.
 
 Browse filters are combined with AND. `EITHER` on a mode filter or group is compatible with
 any mode. Your groups is unaffected by browse filters and includes closed groups led by the

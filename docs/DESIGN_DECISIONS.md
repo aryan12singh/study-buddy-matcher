@@ -21,12 +21,12 @@ not rules from the brief.
 | Group capacity | Accepted members including leader count; pending requests do not. Group row serializes approval, edit, remove and close | Separate pre-counts allow over-capacity commits; #12 |
 | Group closure | One-way closed record; pending applicants rejected, other accepted members notified; no new requests/approval/edit | Student leave, leader transfer, reopen and dated sessions are separate scope; #12 |
 | Optional group data | Preserve existing acceptance of absent goals/mode/weekly slots; always require name/course/capacity >=2 | Inventing compulsory choices changes a graded field requirement; #12 |
-| Weekly times | Whole minutes, same-day start before end, Asia/Singapore; empty and overlapping slots allowed | Dated sessions, overnight splitting and shared-hour maths belong elsewhere; #8/#12 |
+| Weekly times | Whole minutes, same-day start before end, Asia/Singapore. Group schedules may be empty or overlap; a student's own schedule rejects same-day overlap | Group meeting slots and personal availability have distinct validation contracts; dated sessions and overnight splitting remain separate scope; #8/#12 |
 | Event times | Java Instant + PostgreSQL timestamptz + Z API timestamps; legacy local values explicitly converted from Asia/Singapore | Relabelling timestamp without conversion shifts recorded moments; matching-owned timestamps untouched |
 | Notifications | One service, safe summary/resource metadata, recipient scope, persistent read state and transaction/event-key deduplication | Email/SMS/push/reminders and session events deferred; #13 |
 | Database access | Backend JDBC owner writes; browser table/sequence grants revoked, RLS enabled with no browser policies | Supabase Auth/RLS browser access is a different architecture from application JWTs; #11 |
 | Cross-instance write order | Shared transaction advisory guard for domain writes; exclusive for account lifecycle/seed; sorted user rows before group/request rows; actor version rechecked | Process mutex alone fails multiple instances; exclusive all writes unnecessarily blocks independent work |
-| Windows | Decorative title bars and conventional routes; C group forms and admin layouts added where Figma has none | Movable stacking manager adds no OO value; #9/#41 |
+| Windows | Decorative title bars and conventional routes; shared retro components are the implemented baseline | Movable stacking manager adds no OO value. The existence of an implemented screen does not certify latest-Figma acceptance; #9/#41 |
 | Data freshness | Refetch on mutations/focus/visibility plus bounded poll; purge sensitive view state on disconnect/logout/401; forms preserve inputs | A saved/displayed number cannot be erased from someone else's memory; #11/#13 |
 | Seed | Explicit opt-in, runtime passwords, missing identities/courses only, no resets | Shared destructive reseeds and committed/default passwords unsafe; #5/#44 |
 | Shared foundation | Minimum auth/client/shell/course/seed/counts for C to run independently, documented interfaces for B/A reuse | Duplicate full B product implementation would create integration conflict |
@@ -46,6 +46,27 @@ notification failure and verify rollback, and run simultaneous decisions against
 The advisory protocol is for this backend's writes; arbitrary privileged SQL outside the
 protocol can still break cross-row capacity rules. Operators must not bypass it.
 
+## Platform and own-profile decisions (Team B boundary)
+
+This describes the implemented platform and the 13 October compulsory completion work.
+Team ownership describes responsibility; it does not establish unrecorded individual authorship
+or human acceptance.
+
+| Decision | Choice and reason | Alternative / affected work |
+| --- | --- | --- |
+| Identity/profile model | `Student` composes `User` with a shared `@MapsId` identity; administrators need no student profile | User inheritance would mix account/security concerns with student-only preferences; #5/#6/#7 |
+| Authentication | Existing Spring Security/JJWT/BCrypt; server validates role, active account and token version on each request | Browser route guards alone cannot enforce authorization; Supabase browser auth is a different model; #6 |
+| Own profile boundary | `MyProfileAssembler` returns self-only profile/contact fields; other-student reads use the public/connected privacy assembler | Reusing the own-profile DTO for discovery would expose contact/email; #7/#11 |
+| Saved buddy target | Independent of course enrolments; Home uses it for a matching preview. Find buddies requires a current course or goal | Claiming it always becomes the finder's default disagrees with current UI behavior; #7/#9 |
+| Preference representation | Categorical mode/group-size controls; group size becomes the agreed inclusive min/max interval; optional goal set | Storing another competing preference representation complicates Team A integration; #7 |
+| Whole-week replacement | Serialize per-student profile/availability writes before collection read/delete/insert; return a complete replacement | Individually valid concurrent weeks must never become a combined invalid week; #7/#8 |
+| Time draft ownership | Shared editor reports incomplete/invalid raw text and dirty state to profile/group forms; save is blocked until valid, and exit protection includes that text | Keeping an old valid payload while showing a new invalid value silently saves the wrong input; #8/#12 |
+| Overlap policy | Personal availability rejects overlapping same-day blocks; groups permit overlap and the shared editor explains the applicable policy | A generic overlap warning must not imply a group API rejection; #8/#12 |
+| Setup and schema | Development packaging skips tests; the isolated harness provisions/migrates PostgreSQL for context/HTTP tests. Ordered SQL is required on runtime databases | Local application YAML does not provision the test profile; Hibernate update cannot replace custom migration/adoption/RLS work; #5/#17 |
+| Responsive/font baseline | Shared decorative chrome, Tahoma/Verdana/system body fonts, original CSS pixels and wrapping narrow layouts | A pixel font/window manager is not needed to implement the current design. Latest-Figma, contrast/projector and full browser checks remain acceptance gates; #9/#41/#42 |
+
+The whole-system boundary and platform use cases are in [diagrams/PLATFORM.md](diagrams/PLATFORM.md).
+
 ## Cross-team decisions still owned elsewhere
 
 Team A retains group-size preference interpretation, scoring/thresholds/search and matching
@@ -56,15 +77,22 @@ learning style without a defined field/scorer: the professor clarification remai
 matching preview is a narrow integration in that dashboard, described below; Team C does
 not own those profile editors.
 
-Global online status, group-score recommendations, richer notes/task boards and dated/live
-room features remain proposals/later scope. Agenda displays the actual recurring schedule
-and goals. No fake presence, progress, room participants or scheduled session data is shown.
+Global online status, group-score recommendations and richer notes/task boards remain proposals.
+The selected E1 AI-explanation and E2 room/session/calendar work is still pending on merged
+main; PR #52 is a separate draft foundation. Agenda displays the actual recurring schedule and
+goals. The compulsory UI does not infer presence, progress or dated-session data. See the
+[selected-extra map](REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
 
 ## Schedule and submission record
 
-The formal brief states Week 13, a 12-minute demo and 8-minute Q&A. Current project issues
-#41/#46 record 11 October core, 25 October extras/integration, 8 November materials/rehearsal,
-and 15 November 2026 11:59 pm SGT final handoff. README and AGENTS use these team dates.
+The formal brief states Week 13, a 12-minute demo and 8-minute Q&A. Team planning records
+11 October for the compulsory core, 24 October for the internal feature freeze, 25 October
+for extras/integration delivery, 8 November for materials/rehearsal, and 15 November 2026
+23:59 SGT for final handoff. Internal freeze and delivery are distinct milestones.
+
+These are team targets. The exact LMS deadline, final submitted version/receipt and private
+peer-evaluation completion still need direct confirmation; neither the repository date nor
+a local build/export proves submission. No LMS confirmation is claimed here.
 
 ## UI polish
 
@@ -76,6 +104,7 @@ and 15 November 2026 11:59 pm SGT final handoff. README and AGENTS use these tea
 | Destination feedback | Generic create/update/delete messages are displayed at the destination, consumed from the history state and dismissible. Back/reload does not replay them; no account/contact/password/draft values enter these messages |
 | URL views | Groups use `view`, `courseId`, `studyGoal`, `studyMode`; notifications use `view`. Tabs push history; group filter edits replace the current entry. Invalid enum/numeric values default safely and unrelated query keys are preserved |
 | Weekly editing | Duplicate creates an independent block; copy adds it to selected other days without adding an identical existing block. The live preview sorts for display without reordering the input. Existing whole-minute, same-day validation remains authoritative |
+| Schedule draft validation | Invalid/incomplete text participates in save blocking and unsaved-change protection; clearing/changing a time cannot silently submit an older valid slot. Own-profile overlap validation and group overlap permission remain distinct |
 | Copy convenience | An explicit click copies the canonical group URL without query/hash, or an already-authorised contact. Denied/unavailable clipboard gives manual guidance. Contacts are never duplicated into the fallback or persisted by the component |
 | Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No made-up percentage or online indicator |
 | Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
@@ -110,6 +139,17 @@ complete the current issue scope; this entry does not assert professor or produc
 | Default/override precedence | External startup defaults apply until saved overrides exist. Explicit restore clears overrides and reuses current external defaults; overrides persist across restarts | Silent reset on each startup loses admin settings; #4 |
 | Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
 | Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
+
+## Requirements still needing clarification
+
+### Contact-number format (#7/#41)
+
+Issue #7 calls for format validation, but the formal field list does not define a country,
+permitted telephone format or normalization policy. The implemented contract requires
+nonblank text within the shared field limit. Demo contacts are synthetic. The team must agree
+and record a format/normalization rule before adding a regex or changing stored values; no
+professor or team format approval is asserted here. Apply an agreed rule consistently to
+registration, own-profile updates and admin student creation/replacement writes.
 
 ### Undefined learning-style wording (#41/#7)
 

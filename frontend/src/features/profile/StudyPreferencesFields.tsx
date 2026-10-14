@@ -53,7 +53,7 @@ export default function StudyPreferencesFields({ value, onChange, errors, course
         <Field
           id="profile-target-course"
           label="Course I need a study buddy for (optional)"
-          hint="Used as the default course when you search for matches."
+          hint="Matching compares this preference with other students. It also sets your home preview; choose the course for each search on Find buddies."
           error={errors.targetCourseId}
         >
           <select

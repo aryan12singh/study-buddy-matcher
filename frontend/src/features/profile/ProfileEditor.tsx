@@ -8,6 +8,8 @@ import FormActions from '../../shared/components/FormActions'
 import StatePanel from '../../shared/components/StatePanel'
 import TabBar from '../../shared/components/TabBar'
 import WeeklySlotEditor from '../../shared/components/WeeklySlotEditor'
+import { finishSlotDrafts } from '../../shared/components/weeklySlotDrafts'
+import type { WeeklySlotDrafts } from '../../shared/components/weeklySlotDrafts'
 import { useFormExit } from '../../shared/components/useFormExit'
 import { replaceMyAvailability, updateMyProfile } from './api'
 import type { MyProfile } from './api'
@@ -36,11 +38,12 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
   const [form, setForm] = useState(() => toForm(profile))
   const [savedSlots, setSavedSlots] = useState<WeeklySlot[]>(profile.availability)
   const [slots, setSlots] = useState<WeeklySlot[]>(profile.availability)
+  const [slotDrafts, setSlotDrafts] = useState<WeeklySlotDrafts>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [slotError, setSlotError] = useState<string>()
 
   const profileDirty = JSON.stringify(form) !== JSON.stringify(toForm(saved))
-  const slotsDirty = !sameSlots(slots, savedSlots)
+  const slotsDirty = Object.keys(slotDrafts).length > 0 || !sameSlots(slots, savedSlots)
   const pending = profileAction.pending || availabilityAction.pending
   const exit = useFormExit(profileDirty || slotsDirty, pending)
   const fieldErrors = { ...profileAction.errors, ...errors }
@@ -72,10 +75,15 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
 
   async function saveAvailability(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const invalid = validateAvailability(slots)
+    const finished = finishSlotDrafts(slots, slotDrafts)
+    setSlots(finished.slots)
+    setSlotDrafts(finished.drafts)
+    const invalid = Object.keys(finished.drafts).length
+      ? 'Correct the highlighted weekly times before saving.'
+      : validateAvailability(finished.slots)
     setSlotError(invalid)
     if (invalid) return
-    const result = await availabilityAction.run(() => replaceMyAvailability(slots), 'Weekly availability saved.')
+    const result = await availabilityAction.run(() => replaceMyAvailability(finished.slots), 'Weekly availability saved.')
     if (result.ok) {
       setSavedSlots(result.value)
       setSlots(result.value)
@@ -125,6 +133,11 @@ export default function ProfileEditor({ profile, courses, initialTab, welcome }:
               />
             )}
             value={slots}
+            drafts={slotDrafts}
+            onDraftsChange={next => {
+              setSlotDrafts(next)
+              setSlotError(undefined)
+            }}
             onChange={next => {
               setSlots(next)
               setSlotError(undefined)

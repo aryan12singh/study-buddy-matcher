@@ -5,29 +5,8 @@ import { label, WEEK_DAYS } from '../api/types'
 import Button from './Button'
 import Dialog from './Dialog'
 import WeeklySchedule from './WeeklySchedule'
-
-type Edge = 'startTime' | 'endTime'
-/** What the student is typing in one time box, before it becomes a valid HH:MM time. */
-type Draft = { text: string; finished: boolean }
-const LAST_MINUTE = 24 * 60 - 1
-
-function minutesOf(time: string) {
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours * 60 + minutes
-}
-
-function timeOf(minutes: number) {
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
-}
-
-/** Reads 24-hour input as HH:MM: "18:00", "1800" and, once finished, "930" or "9". Otherwise undefined. */
-function parseTime(text: string, finished: boolean) {
-  const match = text.match(/^(\d{1,2}):(\d{2})$/) || text.match(/^(\d{2})(\d{2})$/)
-    || (finished ? text.match(/^(\d)(\d{2})$/) || text.match(/^(\d{1,2})()$/) : null)
-  if (!match) return undefined
-  const hours = Number(match[1]), minutes = Number(match[2] || 0)
-  return hours <= 23 && minutes <= 59 ? timeOf(hours * 60 + minutes) : undefined
-}
+import { changedTime, minutesOf, parseTime } from './weeklySlotDrafts'
+import type { SlotEdge, WeeklySlotDrafts } from './weeklySlotDrafts'
 
 function overlaps(left: WeeklySlot, right: WeeklySlot) {
   return left.dayOfWeek === right.dayOfWeek
@@ -54,16 +33,18 @@ function nextFreeDay(slots: WeeklySlot[], slot: WeeklySlot) {
  * prop is the screen's own summary, shown under the list. `empty` is what the
  * screen wants shown inside the editor while there are no times.
  */
-export default function WeeklySlotEditor({ value, onChange, error, disabled, empty }: {
+export default function WeeklySlotEditor({ value, onChange, drafts, onDraftsChange, error, disabled, empty, allowOverlaps = false }: {
   value: WeeklySlot[]
   onChange: (slots: WeeklySlot[]) => void
+  drafts: WeeklySlotDrafts
+  onDraftsChange: (drafts: WeeklySlotDrafts) => void
   error?: string
   disabled?: boolean
   empty?: ReactNode
+  allowOverlaps?: boolean
 }) {
   const prefix = useId()
-  // Keyed by `${row}-${edge}`; removed as soon as the box holds a valid time.
-  const [drafts, setDrafts] = useState<Record<string, Draft>>({})
+  // The owning form keeps drafts so invalid text is unsaved work, including across tabs.
   const [added, setAdded] = useState<{ index: number; message: string } | null>(null)
   const [copying, setCopying] = useState<{ slot: WeeklySlot; days: WeeklySlot['dayOfWeek'][] } | null>(null)
   const [notice, setNotice] = useState('')
@@ -90,49 +71,46 @@ export default function WeeklySlotEditor({ value, onChange, error, disabled, emp
   function update(index: number, next: Partial<WeeklySlot>) {
     replace(value.map((slot, item) => item === index ? { ...slot, ...next } : slot))
   }
-  /** Moving the start to or past the end pushes the end one hour later, so the time stays valid. */
-  function commit(index: number, edge: Edge, time: string) {
-    const slot = value[index]
-    if (edge === 'endTime') return update(index, { endTime: time })
-    const start = minutesOf(time)
-    const endTime = minutesOf(slot.endTime) > start ? slot.endTime : timeOf(Math.min(start + 60, LAST_MINUTE))
-    update(index, { startTime: time, endTime })
+  function commit(index: number, edge: SlotEdge, time: string) {
+    replace(value.map((slot, item) => item === index ? changedTime(slot, edge, time) : slot))
   }
-  function setDraft(key: string, draft?: Draft) {
-    setDrafts(previous => {
-      const next = { ...previous }
-      if (draft) next[key] = draft
-      else delete next[key]
-      return next
-    })
+  function setDraft(index: number, edge: SlotEdge, draft?: WeeklySlotDrafts[number][SlotEdge]) {
+    const row = { ...drafts[index] }
+    if (draft) row[edge] = draft
+    else delete row[edge]
+    const next = { ...drafts }
+    if (Object.keys(row).length) next[index] = row
+    else delete next[index]
+    onDraftsChange(next)
   }
-  function edit(index: number, edge: Edge, raw: string) {
+  function edit(index: number, edge: SlotEdge, raw: string) {
     const text = raw.replace(/[^\d:]/g, '').slice(0, 5)
-    const key = `${index}-${edge}`
     const time = parseTime(text, false)
     if (time) {
-      setDraft(key)
+      setDraft(index, edge)
       commit(index, edge, time)
     } else {
-      setDraft(key, { text, finished: false })
+      setDraft(index, edge, { text, finished: false })
     }
   }
-  function finish(index: number, edge: Edge) {
-    const key = `${index}-${edge}`
-    const draft = drafts[key]
+  function finish(index: number, edge: SlotEdge) {
+    const draft = drafts[index]?.[edge]
     if (!draft) return
     const time = parseTime(draft.text, true)
     if (time) {
-      setDraft(key)
+      setDraft(index, edge)
       commit(index, edge, time)
     } else {
-      setDraft(key, { ...draft, finished: true })
+      setDraft(index, edge, { ...draft, finished: true })
     }
   }
   function duplicate(index: number) {
+    if (drafts[index]) return
     const copy = { ...value[index], dayOfWeek: nextFreeDay(value, value[index]) }
+    onDraftsChange(Object.fromEntries(Object.entries(drafts).map(([row, draft]) => [
+      Number(row) > index ? Number(row) + 1 : Number(row), draft
+    ])))
     onChange([...value.slice(0, index + 1), copy, ...value.slice(index + 1)])
-    setDrafts({})
     setAdded({
       index: index + 1,
       message: copy.dayOfWeek === value[index].dayOfWeek
@@ -141,15 +119,17 @@ export default function WeeklySlotEditor({ value, onChange, error, disabled, emp
     })
   }
   function remove(index: number) {
-    setDrafts({})
+    onDraftsChange(Object.fromEntries(Object.entries(drafts).filter(([row]) => Number(row) !== index).map(([row, draft]) => [
+      Number(row) > index ? Number(row) - 1 : Number(row), draft
+    ])))
     replace(value.filter((_, item) => item !== index))
   }
 
   /** Plain-language explanation of what is wrong with a row and how to fix it. */
   function rowProblem(index: number) {
     const slot = value[index]
-    for (const edge of ['startTime', 'endTime'] as Edge[]) {
-      const draft = drafts[`${index}-${edge}`]
+    for (const edge of ['startTime', 'endTime'] as SlotEdge[]) {
+      const draft = drafts[index]?.[edge]
       if (!draft?.finished) continue
       const which = edge === 'startTime' ? 'start' : 'end'
       return draft.text === ''
@@ -161,13 +141,14 @@ export default function WeeklySlotEditor({ value, onChange, error, disabled, emp
     if (minutesOf(start) > minutesOf(end)) {
       return `This ends at ${end}, before it starts at ${start}. To study past midnight, end at 23:59 and add a new time on the next day from 00:00.`
     }
+    if (allowOverlaps) return undefined
     const clashes = value.filter((other, item) => item !== index && overlaps(slot, other))
     return clashes.length
       ? `This clashes with ${clashes.map(describe).join(' and ')}. Change the times or remove one of them.`
       : undefined
   }
 
-  function timeBox(index: number, slot: WeeklySlot, edge: Edge, name: string, describedBy?: string) {
+  function timeBox(index: number, slot: WeeklySlot, edge: SlotEdge, name: string, describedBy?: string) {
     const id = `${prefix}-${index}-${edge}`
     return (
       <div>
@@ -179,7 +160,7 @@ export default function WeeklySlotEditor({ value, onChange, error, disabled, emp
           autoComplete="off"
           placeholder="HH:MM"
           maxLength={5}
-          value={drafts[`${index}-${edge}`]?.text ?? slot[edge].slice(0, 5)}
+          value={drafts[index]?.[edge]?.text ?? slot[edge].slice(0, 5)}
           aria-invalid={describedBy ? true : undefined}
           aria-describedby={describedBy}
           onChange={event => edit(index, edge, event.target.value)}
@@ -220,8 +201,8 @@ export default function WeeklySlotEditor({ value, onChange, error, disabled, emp
             <span className="slot-to" aria-hidden="true">to</span>
             {timeBox(index, slot, 'endTime', 'End', problem ? messageId : undefined)}
             <div className="slot-actions">
-              <Button aria-label={`Duplicate time ${index + 1}`} onClick={() => duplicate(index)}>Duplicate</Button>
-              <Button aria-label={`Copy time block ${index + 1} to other days`} onClick={() => setCopying({ slot: { ...slot }, days: [] })}>Copy to days</Button>
+              <Button aria-label={`Duplicate time ${index + 1}`} disabled={Boolean(drafts[index])} onClick={() => duplicate(index)}>Duplicate</Button>
+              <Button aria-label={`Copy time block ${index + 1} to other days`} disabled={Boolean(drafts[index])} onClick={() => setCopying({ slot: { ...slot }, days: [] })}>Copy to days</Button>
               <Button aria-label={`Remove time ${index + 1}`} onClick={() => remove(index)}>Remove</Button>
             </div>
             {problem && <p className="slot-message slot-error" id={messageId}><span aria-hidden="true">! </span>{problem}</p>}

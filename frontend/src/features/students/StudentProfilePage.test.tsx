@@ -13,6 +13,16 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 describe('profile privacy and relationship actions', () => {
+  it('links a sent request to the outgoing requests view', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile,
+      relationship: { state: 'OUTGOING_PENDING', requestId: 7, connectionId: null }
+    }))
+    const { router } = renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    const link = await screen.findByRole('link', { name: 'View your requests' })
+    expect(link).toHaveAttribute('href', '/connections?view=outgoing')
+    fireEvent.click(link)
+    await waitFor(() => expect(router.state.location.pathname + router.state.location.search).toBe('/connections?view=outgoing'))
+  })
   it.each([
     { origin: 'matching', path: '/find-buddies?courseId=3&sort=MOST_SHARED_HOURS', label: 'Back to matching', state: { returnTo: { path: '/find-buddies?courseId=3&sort=MOST_SHARED_HOURS', label: 'Back to matching' } } },
     { origin: 'a direct link', path: '/connections', label: 'Back to connections', state: undefined }
