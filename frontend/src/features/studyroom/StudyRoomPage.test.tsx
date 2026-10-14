@@ -29,7 +29,7 @@ function open(overrides: Partial<StudyRoom> = {}) {
   vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/weather' ? weather : { ...room, ...overrides }))
   return renderPage(<StudyRoomPage />, '/groups/5/room', '/groups/:id/room')
 }
-afterEach(() => { vi.restoreAllMocks(); Object.values(engine).forEach(mock => mock.mockReset()) })
+afterEach(() => { vi.restoreAllMocks(); Object.values(engine).forEach(mock => mock.mockReset()); localStorage.clear() })
 
 describe('private room screen', () => {
   it('shows an empty preview and keeps controls and audio inactive before joining', async () => {
@@ -150,6 +150,45 @@ describe('private room screen', () => {
     expect(engine.play).toHaveBeenCalledWith('music', 'CALM_MUSIC', 0)
     expect(engine.play).toHaveBeenLastCalledWith('ambient', 'RAIN', 0.25)
     expect(put).not.toHaveBeenCalled()
+  })
+
+  it('remembers each local gain and mute across leaving, rejoining and remounting without remembering playback consent', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: 'CALM_MUSIC', musicPlaying: true, ambientPreset: 'RAIN', ambientPlaying: true } })))
+    vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
+    const view = open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Join study room' }))
+    await screen.findByRole('button', { name: 'Leave room' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
+    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25))
+    fireEvent.change(screen.getByRole('slider', { name: 'Your music volume: 25%' }), { target: { value: '60' } })
+    fireEvent.change(screen.getByRole('slider', { name: 'Your ambience volume: 25%' }), { target: { value: '42' } })
+    fireEvent.click(screen.getByLabelText('Mute only my music'))
+    expect(JSON.parse(localStorage.getItem('study-room-audio-preferences')!)).toEqual({
+      volume: { music: 60, ambient: 42 }, muted: { music: true, ambient: false },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Leave room' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leave study room' }))
+    await screen.findByRole('button', { name: 'Join study room' })
+    expect(engine.close).toHaveBeenCalled()
+    engine.play.mockClear(); engine.enable.mockClear()
+    fireEvent.click(screen.getByRole('button', { name: 'Join study room' }))
+    await screen.findByRole('button', { name: 'Leave room' })
+    expect(screen.getByRole('slider', { name: 'Your music volume: 60%' })).toBeDisabled()
+    expect(screen.getByRole('slider', { name: 'Your ambience volume: 42%' })).toBeDisabled()
+    expect(screen.getByLabelText('Mute only my music')).toBeChecked()
+    expect(engine.enable).not.toHaveBeenCalled()
+    expect(engine.play).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Enable audio in this browser' }))
+    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.42))
+    expect(engine.play).toHaveBeenCalledWith('music', 'CALM_MUSIC', 0)
+    view.unmount()
+    engine.play.mockClear(); engine.enable.mockClear()
+    open()
+    expect(await screen.findByRole('slider', { name: 'Your music volume: 60%' })).toBeDisabled()
+    expect(screen.getByLabelText('Mute only my music')).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Enable audio in this browser' })).toBeDisabled()
+    expect(engine.play).not.toHaveBeenCalled()
+    expect(engine.enable).not.toHaveBeenCalled()
   })
 
   it('allows a present host to change duration and capacity while preserving leader-only roles', async () => {

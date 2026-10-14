@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RoomAudio, StudyRoom } from './api'
 import { RoomAudioEngine } from './RoomAudioEngine'
+import { readRoomAudioPreferences, saveRoomAudioPreferences } from './roomAudioPreferences'
+import type { RoomAudioPreferences } from './roomAudioPreferences'
 import Button from '../../shared/components/Button'
 import Field from '../../shared/components/Field'
 
@@ -9,8 +11,8 @@ export default function RoomAudioPanel({ room, active, pending, onSelect }: {
 }) {
   const engine = useRef<RoomAudioEngine | null>(null)
   const [enabled, setEnabled] = useState(false)
-  const [volume, setVolume] = useState({ music: 25, ambient: 25 })
-  const [muted, setMuted] = useState({ music: false, ambient: false })
+  const [preferences, setPreferences] = useState(readRoomAudioPreferences)
+  const { volume, muted } = preferences
   const [error, setError] = useState<string>()
   const canControl = room.canControl && (active || room.leader)
   useEffect(() => {
@@ -44,9 +46,13 @@ export default function RoomAudioPanel({ room, active, pending, onSelect }: {
     try { await audio.enable(); if (engine.current === audio) { setError(undefined); setEnabled(true) } }
     catch (failure) { if (engine.current === audio) setError(failure instanceof Error ? failure.message : 'Audio unavailable; the room works silently.') }
   }
+  function updatePreferences(next: RoomAudioPreferences) {
+    setPreferences(next)
+    saveRoomAudioPreferences(next)
+  }
   return <section className="detail-panel">
     <h2>Room audio</h2>
-    <p>Mix original music with ambience. Everyone shares each selection and play state; volume and mute stay in your browser.</p>
+    <p>Mix original music with ambience. Everyone shares each selection and play state; your browser remembers only your volume and mute choices.</p>
     <div className="form-grid">
       {(['music', 'ambient'] as const).map(layer => {
         const title = layer === 'music' ? 'Music' : 'Ambience'
@@ -73,10 +79,10 @@ export default function RoomAudioPanel({ room, active, pending, onSelect }: {
           </Button>}
           <Field id={`room-${layer}-volume`} label={`Your ${title.toLowerCase()} volume: ${volume[layer]}%`}>
             <input id={`room-${layer}-volume`} type="range" min="0" max="100" value={volume[layer]} disabled={!enabled}
-              onChange={event => setVolume({ ...volume, [layer]: Number(event.target.value) })} />
+              onChange={event => updatePreferences({ ...preferences, volume: { ...volume, [layer]: Number(event.target.value) } })} />
           </Field>
           <label className="checkbox-label"><input type="checkbox" checked={muted[layer]} disabled={!enabled}
-            onChange={event => setMuted({ ...muted, [layer]: event.target.checked })} /> Mute only my {title.toLowerCase()}</label>
+            onChange={event => updatePreferences({ ...preferences, muted: { ...muted, [layer]: event.target.checked } })} /> Mute only my {title.toLowerCase()}</label>
         </fieldset>
       })}
     </div>
