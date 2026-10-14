@@ -184,22 +184,29 @@ inactive/deleted accounts and active buddies are excluded. Pending requests rema
 with a disabled duplicate-send action. Home shows up to three of the returned candidates.
 
 Each enabled criterion produces a score from 0 to 1. Compatibility is the weighted sum,
-not a probability of success. Missing preferences score a neutral 0.5; explicit filters
-still require the candidate to satisfy the selected preference.
+not a probability of success. A preference either student left empty is *unknown*: it
+scores `app.matching.scoring.unknown-score` (0 by default) and the card shows "Not shared",
+so missing data never outranks real compatibility. Explicit filters still require the
+candidate to satisfy the selected preference. Every score is the same from either
+student's side.
 
 | Criterion | Rule |
 | --- | --- |
-| Course | Candidate targets the current course: 1; enrolled only: 0.5; no alignment: 0. Current search takes precedence over the saved target; no focus: 0.5 |
-| Availability | Unique shared weekly minutes divided by the caller's unique available minutes; missing availability: 0.5 |
-| Study mode | Same mode or either person's `EITHER`: 1; in-person versus online: 0; missing: 0.5 |
-| Study goals | Shared selected/saved focus goals divided by focus goal count; missing: 0.5 |
-| Group size | Preferred numeric ranges overlap: 1; disjoint: 0; missing: 0.5 |
+| Course | With a course in focus (the searched course, else the caller's target): candidate wants a buddy for it: 1; only takes it: `takes-course-score` (0.5); neither: 0. With no course in focus: shared courses divided by the smaller course list. No courses on either side: unknown |
+| Availability | Shared weekly minutes divided by the smaller of the two timetables. Only shared blocks of at least `min-session-minutes` (60) count. No timetable on either side: unknown |
+| Study mode | Same mode or either person's `EITHER`: 1; in-person versus online: 0; missing: unknown |
+| Study goals | Shared goals divided by the smaller goal set. A goal search adds the searched goal to the caller's saved goals, so the other goals still separate candidates. Missing: unknown |
+| Group size | Preferred numeric ranges overlap: 1; disjoint: 0; missing: unknown |
 
-Balanced ranks by weighted total. Availability-first or course-first ranks by its enabled
-priority criterion, then total; disabling the priority falls back to total. Alternative
-sorts start with shared hours or same-year preference, then the strategy. Name and ID break
-ties. The server filters/sorts before applying the configured result limit, and the frontend
-preserves its ordering across quality labels.
+Balanced ranks by weighted total. Availability-first and course-first rank by bands of their
+priority criterion first (`app.matching.priority-tiers.*`: 3 h or more / 1 to 3 h / under
+1 h shared; wants a buddy for the course / takes it / neither), then by weighted total within
+a band, and their default weights give the priority criterion the largest share. Disabling
+the priority falls back to the total. Alternative sorts start with shared hours or same-year
+preference, then the strategy. More shared hours, then name and ID, break remaining ties.
+The server filters/sorts before applying the configured result limit, and the frontend
+preserves its ordering across quality labels. A one-sentence explanation for each match
+comes from a `MatchExplainer` that sees only the score, never a profile.
 
 Weekly slots use recurring Asia/Singapore time and half-open boundaries. Touching slots
 share no minutes; duplicate/overlapping/adjacent inputs are merged before counting overlap.
