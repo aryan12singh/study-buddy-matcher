@@ -107,6 +107,20 @@ public class GroupJoinRequest {
     }
 
     /**
+     * Closes the application on the applicant's side, either by choice or because their account
+     * was deactivated, so the history never shows a rejection the leader did not give.
+     *
+     * @throws IllegalStateException if the request is no longer pending
+     */
+    public void withdraw() {
+        respond(GroupJoinRequestStatus.WITHDRAWN);
+    }
+
+    public boolean isFrom(Long studentId) {
+        return student.getId().equals(studentId);
+    }
+
+    /**
      * Lets a caller check the state first, so a stale request is reported as
      * such rather than as whatever other rule happens to fail next.
      *

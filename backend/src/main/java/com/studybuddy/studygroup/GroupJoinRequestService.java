@@ -90,6 +90,25 @@ public class GroupJoinRequestService {
         return assembler.toDto(request);
     }
 
+    /**
+     * Lets the applicant take back an application the leader has not answered. Another student's
+     * application is reported as not found, so its existence is not revealed.
+     */
+    public GroupJoinRequestDto withdraw(Long requestId, Long actorId) {
+        access.beginWrite();
+        var student = access.requireStudent(actorId);
+        Long groupId = requests.findGroupIdForApplicant(requestId, actorId)
+            .orElseThrow(() -> new GroupJoinRequestNotFoundException(requestId));
+        access.lockAccounts(actorId, actorId, lookup.leaderId(groupId));
+        StudyGroup group = lookup.findGroupForUpdate(groupId);
+        var request = requests.findByIdForUpdate(requestId).orElseThrow(() -> new GroupJoinRequestNotFoundException(requestId));
+        request.withdraw();
+        notifications.notify(group.getLeader(), NotificationType.GROUP_JOIN_REQUEST_WITHDRAWN,
+            student.getName() + " withdrew their request to join " + group.getName(), NotificationResourceType.GROUP, groupId,
+            "group-request:" + requestId + ":withdrawn");
+        return assembler.toDto(request);
+    }
+
     private GroupJoinRequest forDecision(Long groupId, Long requestId, Long actorId) {
         access.beginWrite();
         access.requireStudent(actorId);

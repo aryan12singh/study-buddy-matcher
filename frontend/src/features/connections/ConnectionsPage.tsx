@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getConnections, getMatchRequests, decideMatchRequest, endConnection } from './api'
+import { getConnections, getMatchRequests, decideMatchRequest, endConnection, withdrawMatchRequest } from './api'
 import type { Connection, MatchRequest } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -27,7 +27,7 @@ export default function ConnectionsPage() {
   const tab = requestedView === 'outgoing' || requestedView === 'connected' ? requestedView : 'incoming'
   const [sending, setSending] = useState(false),
     [ending, setEnding] = useState<Connection | null>(null),
-    [declining, setDeclining] = useState<MatchRequest | null>(null)
+    [confirming, setConfirming] = useState<{ request: MatchRequest; kind: 'decline' | 'withdraw' } | null>(null)
   const [notice, setNotice] = useState<string>()
   const action = useAction()
   const requests = useResource(
@@ -49,7 +49,12 @@ export default function ConnectionsPage() {
         key={request.id}
         studentId={id}
         name={name}
-        actions={tab === 'incoming' && request.status === 'PENDING' && (
+        actions={request.status !== 'PENDING' ? undefined : tab === 'outgoing' ? (
+          <Button
+            disabled={action.pending}
+            onClick={() => { action.clear(); setConfirming({ request, kind: 'withdraw' }) }}
+          >Withdraw request</Button>
+        ) : (
           <>
             <Button
               variant="primary"
@@ -60,7 +65,7 @@ export default function ConnectionsPage() {
             </Button>
             <Button
               disabled={action.pending}
-              onClick={() => { action.clear(); setDeclining(request) }}
+              onClick={() => { action.clear(); setConfirming({ request, kind: 'decline' }) }}
             >Decline request</Button>
           </>
         )}
@@ -79,10 +84,13 @@ export default function ConnectionsPage() {
     )
   }
 
-  async function decline() {
-    if (!declining) return
-    const result = await action.run(() => decideMatchRequest(declining.id, 'decline'), 'Request declined.')
-    if (result.ok) setDeclining(null)
+  async function confirmRequestAction() {
+    if (!confirming) return
+    const { request, kind } = confirming
+    const result = kind === 'decline'
+      ? await action.run(() => decideMatchRequest(request.id, 'decline'), 'Request declined.')
+      : await action.run(() => withdrawMatchRequest(request.id), 'Request withdrawn.')
+    if (result.ok) setConfirming(null)
   }
 
   async function disconnect() {
@@ -116,7 +124,7 @@ export default function ConnectionsPage() {
           action.clear()
         }}
       />
-      <ActionNotice error={ending || declining ? undefined : action.error} success={notice || action.success} />
+      <ActionNotice error={ending || confirming ? undefined : action.error} success={notice || action.success} />
       {tab === 'connected' ? (
         <>
           <StatePanel
@@ -190,16 +198,20 @@ export default function ConnectionsPage() {
           setSearch({ view: 'outgoing' })
           setNotice('Match request sent.')
         }} />}
-      {declining && (
+      {confirming && (
         <ConfirmDialog
-          title={`Decline ${declining.senderName}'s request?`}
-          confirmLabel="Decline request"
+          title={confirming.kind === 'decline'
+            ? `Decline ${confirming.request.senderName}'s request?`
+            : `Withdraw your request to ${confirming.request.receiverName}?`}
+          confirmLabel={confirming.kind === 'decline' ? 'Decline request' : 'Withdraw request'}
           pending={action.pending}
           error={action.error}
-          onClose={() => setDeclining(null)}
-          onConfirm={decline}
+          onClose={() => setConfirming(null)}
+          onConfirm={confirmRequestAction}
         >
-          <p>Declining cannot be undone. {declining.senderName} is told the request was declined and can send a new one later.</p>
+          <p>{confirming.kind === 'decline'
+            ? 'This answer is final. They can send you a new request later if you both want to study together.'
+            : 'They will no longer see this request. You can send a new one later.'}</p>
         </ConfirmDialog>
       )}
       {ending && (

@@ -29,24 +29,23 @@ export default function GroupManagePage() {
     [rejecting, setRejecting] = useState<GroupApplication | null>(null)
   const action = useAction()
 
-  async function reject() {
-    if (!rejecting) return
-    const result = await action.run(() => decideApplication(groupId, rejecting.id, 'reject'), 'Application rejected.')
-    if (result.ok) setRejecting(null)
+  function dismissConfirmation() {
+    setRemoving(null)
+    setClosing(false)
+    setRejecting(null)
   }
 
   async function confirm() {
-    const result = await action.run(
-      async () => {
-        if (removing) await removeMember(groupId, removing.studentId); else await closeGroup(groupId)
-      },
-      removing ? 'Member removed.' : 'Study group closed.',
-      true
-    )
-    if (result.ok) {
-      setRemoving(null)
-      setClosing(false)
-    }
+    const result = rejecting
+      ? await action.run(() => decideApplication(groupId, rejecting.id, 'reject'), 'Application rejected.')
+      : await action.run(
+        async () => {
+          if (removing) await removeMember(groupId, removing.studentId); else await closeGroup(groupId)
+        },
+        removing ? 'Member removed.' : 'Study group closed.',
+        true
+      )
+    if (result.ok) dismissConfirmation()
   }
   return (
     <WindowPage
@@ -173,31 +172,18 @@ export default function GroupManagePage() {
           )}
         </>
       )}
-      {rejecting && (
+      {(removing || closing || rejecting) && (
         <ConfirmDialog
-          title={`Reject ${rejecting.studentName}'s application?`}
-          confirmLabel="Reject application"
+          title={rejecting ? `Reject ${rejecting.studentName}'s application?` : removing ? `Remove ${removing.name}?` : 'Close this study group?'}
+          confirmLabel={rejecting ? 'Reject application' : removing ? 'Remove member' : 'Close group'}
           pending={action.pending}
           error={action.error}
-          onClose={() => setRejecting(null)}
-          onConfirm={reject}
-        >
-          <p>Rejecting cannot be undone. {rejecting.studentName} is notified and can apply again while the group is open.</p>
-        </ConfirmDialog>
-      )}
-      {(removing || closing) && (
-        <ConfirmDialog
-          title={removing ? `Remove ${removing.name}?` : 'Close this study group?'}
-          confirmLabel={removing ? 'Remove member' : 'Close group'}
-          pending={action.pending}
-          error={action.error}
-          onClose={() => {
-            setRemoving(null)
-            setClosing(false)
-          }}
+          onClose={dismissConfirmation}
           onConfirm={confirm}
         >
-          {removing ? (
+          {rejecting ? (
+            <p>This answer is final and {rejecting.studentName} will be notified. They may apply again later while the group has space.</p>
+          ) : removing ? (
             <p>This removes {removing.name} from the group and notifies them. Their buddy connections remain separate.</p>
           ) : (
             <>

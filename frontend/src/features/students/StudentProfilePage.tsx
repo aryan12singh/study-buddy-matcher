@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { getStudentProfile } from './api'
-import { decideMatchRequest, endConnection } from '../connections/api'
+import { decideMatchRequest, endConnection, withdrawMatchRequest } from '../connections/api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
 import { label } from '../../shared/api/types'
@@ -26,8 +26,18 @@ export default function StudentProfilePage() {
   const action = useAction()
   const [requestRecipient, setRequestRecipient] = useState<{ id: number; name: string } | null>(null)
   const [ending, setEnding] = useState(false)
+  const [answering, setAnswering] = useState<'decline' | 'withdraw' | null>(null)
   const student = profile.data,
     relationship = student?.relationship
+
+  async function confirmRequestAction() {
+    if (!relationship?.requestId || !answering) return
+    const requestId = relationship.requestId
+    const result = answering === 'decline'
+      ? await action.run(() => decideMatchRequest(requestId, 'decline'), 'Request declined.')
+      : await action.run(() => withdrawMatchRequest(requestId), 'Request withdrawn.')
+    if (result.ok) setAnswering(null)
+  }
 
   async function disconnect() {
     if (!relationship?.connectionId) return
@@ -55,7 +65,7 @@ export default function StudentProfilePage() {
         emptyKind="connections"
         emptyAction={<Link className="retro-button" to={back.path}>{back.label}</Link>}
       />
-      <ActionNotice error={ending ? undefined : action.error} success={action.success} />
+      <ActionNotice error={ending || answering ? undefined : action.error} success={action.success} />
       {student && (
         <>
           <div className="detail-grid">
@@ -102,7 +112,13 @@ export default function StudentProfilePage() {
                 <>
                   <Badge tone="pending">Request sent</Badge>
                   <p>Waiting for {student.name} to respond.</p>
-                  <Link to="/connections?view=outgoing">View your requests</Link>
+                  <div className="actions">
+                    <Button
+                      disabled={action.pending}
+                      onClick={() => { action.clear(); setAnswering('withdraw') }}
+                    >Withdraw request</Button>
+                    <Link to="/connections?view=outgoing">View your requests</Link>
+                  </div>
                 </>
               )}
               {relationship?.state === 'INCOMING_PENDING' && (
@@ -119,7 +135,7 @@ export default function StudentProfilePage() {
                     </Button>
                     <Button
                       disabled={action.pending}
-                      onClick={() => action.run(() => decideMatchRequest(relationship.requestId!, 'decline'), 'Request declined.')}
+                      onClick={() => { action.clear(); setAnswering('decline') }}
                     >Decline request</Button>
                   </div>
                 </>
@@ -187,6 +203,22 @@ export default function StudentProfilePage() {
           receiverName={requestRecipient.name}
           onClose={() => setRequestRecipient(null)}
         />}
+      {answering && (
+        <ConfirmDialog
+          title={answering === 'decline'
+            ? `Decline ${student?.name || 'this student'}'s request?`
+            : `Withdraw your request to ${student?.name || 'this student'}?`}
+          confirmLabel={answering === 'decline' ? 'Decline request' : 'Withdraw request'}
+          pending={action.pending}
+          error={action.error}
+          onClose={() => setAnswering(null)}
+          onConfirm={confirmRequestAction}
+        >
+          <p>{answering === 'decline'
+            ? 'This answer is final. They can send you a new request later if you both want to study together.'
+            : 'They will no longer see this request. You can send a new one later.'}</p>
+        </ConfirmDialog>
+      )}
       {ending && (
         <ConfirmDialog
           title={`Disconnect from ${student?.name || 'this student'}?`}

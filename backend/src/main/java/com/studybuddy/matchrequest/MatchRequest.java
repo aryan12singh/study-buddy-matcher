@@ -146,7 +146,7 @@ public class MatchRequest {
     }
 
     /**
-     * Closes a request nobody answered because one of the two accounts was deactivated.
+     * Closes a request nobody answered: the sender withdrew it, or one of the two accounts was deactivated.
      *
      * @throws IllegalStateException if the request is no longer pending
      */

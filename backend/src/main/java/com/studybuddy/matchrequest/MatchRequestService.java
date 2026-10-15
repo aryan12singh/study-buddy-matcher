@@ -14,6 +14,7 @@ import com.studybuddy.notification.NotificationType;
 import com.studybuddy.course.CourseNotFoundException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,12 +91,30 @@ public class MatchRequestService {
         return assembler.toDto(request);
     }
 
+    /** Lets the sender take back a request that has not been answered yet. */
+    public MatchRequestDto cancel(Long requestId, Long actorId) {
+        MatchRequest request = lockedFor(requestId, actorId, MatchRequestRepository.Participants::getSenderId,
+            "Only the student who sent this request can cancel it");
+        request.cancel();
+        notifications.notify(request.getReceiver(), NotificationType.MATCH_REQUEST_CANCELLED,
+            request.getSender().getName() + " withdrew their study-buddy request", NotificationResourceType.MATCH_REQUEST,
+            request.getId(), "match:" + request.getId() + ":cancelled");
+        return assembler.toDto(request);
+    }
+
     private MatchRequest forDecision(Long id, Long actorId) {
+        return lockedFor(id, actorId, MatchRequestRepository.Participants::getReceiverId,
+            "Only the student who received this request can respond");
+    }
+
+    /** Checks the actor holds the given side of the request, then locks both students and the request. */
+    private MatchRequest lockedFor(Long id, Long actorId, Function<MatchRequestRepository.Participants, Long> allowedSide,
+        String refusal) {
         access.beginWrite();
         access.requireStudent(actorId);
         var participants = requests.findParticipants(id).orElseThrow(() -> new MatchRequestNotFoundException(id));
-        if (!Objects.equals(participants.getReceiverId(), actorId)) {
-            throw new ForbiddenActionException("Only the student who received this request can respond");
+        if (!Objects.equals(allowedSide.apply(participants), actorId)) {
+            throw new ForbiddenActionException(refusal);
         }
         access.lockStudents(actorId, participants.getSenderId(), participants.getReceiverId());
         return requests.findByIdForUpdate(id).orElseThrow(() -> new MatchRequestNotFoundException(id));

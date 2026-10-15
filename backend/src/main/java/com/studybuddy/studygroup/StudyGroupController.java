@@ -60,6 +60,12 @@ public class StudyGroupController {
         return service.close(id, actor.id());
     }
 
+    @PostMapping("/{id}/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leave(@PathVariable Long id, @AuthenticationPrincipal AccountPrincipal actor) {
+        service.leave(id, actor.id());
+    }
+
     @DeleteMapping("/{id}/members/{studentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remove(@PathVariable Long id, @PathVariable Long studentId, @AuthenticationPrincipal AccountPrincipal actor) {
