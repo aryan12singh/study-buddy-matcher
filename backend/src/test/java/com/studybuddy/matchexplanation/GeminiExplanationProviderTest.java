@@ -83,6 +83,7 @@ class GeminiExplanationProviderTest {
         assertTrue(body.contains("PROMPT-TEXT"), body);
         assertTrue(body.contains("\"responseMimeType\":\"application/json\""), body);
         assertTrue(body.contains("\"maxOutputTokens\":200"), body);
+        assertTrue(body.contains("\"thinkingBudget\":0"), body);
         assertFalse(body.contains("test-key"), body);
     }
 

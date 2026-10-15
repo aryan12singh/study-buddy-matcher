@@ -23,6 +23,11 @@ import java.util.Optional;
 @Component
 public class GeminiExplanationProvider implements ExplanationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GeminiExplanationProvider.class);
+    /**
+     * Gemini 2.5 models think by default and the thinking tokens count against the output limit,
+     * which would truncate a short JSON reply. Wording a known score needs no reasoning step.
+     */
+    private static final int NO_THINKING = 0;
 
     private final AiExplanationProperties properties;
     private final JsonMapper json;
@@ -59,7 +64,8 @@ public class GeminiExplanationProvider implements ExplanationProvider {
                 "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", prompt)))),
                 "generationConfig", Map.of(
                         "responseMimeType", "application/json",
-                        "maxOutputTokens", properties.maxOutputTokens()));
+                        "maxOutputTokens", properties.maxOutputTokens(),
+                        "thinkingConfig", Map.of("thinkingBudget", NO_THINKING)));
     }
 
     private Optional<String> textOf(String reply) {
