@@ -343,6 +343,25 @@ or the property in `application-local.yml`.
 </details>
 
 <details>
+<summary><strong>AI match explanations</strong></summary>
+
+<br />
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `app.ai.explanation.enabled` | `false` | Turns on Gemini match explanations; also needs `api-key`. Off means the standard explanation is always used |
+| `app.ai.explanation.api-key` | none; set only in `application-local.yml` | Gemini API key. Never committed, logged or sent to the browser |
+| `app.ai.explanation.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
+| `app.ai.explanation.model` | `gemini-2.5-flash` | Gemini model ID; part of the explanation cache key |
+| `app.ai.explanation.timeout` | `5s` | Connect and read timeout before falling back to the standard explanation |
+| `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
+| `app.ai.explanation.max-characters` | `600` | Longest explanation shown; longer replies fall back |
+| `app.ai.explanation.daily-call-limit` | `200` | Gemini calls per day before falling back; in memory, so a restart resets it |
+| `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
+
+</details>
+
+<details>
 <summary><strong>Study rooms, sessions and weather</strong></summary>
 
 <br />
