@@ -504,10 +504,17 @@ may become visible on the next request; it cannot mix a new strategy, enabled se
 with previous weights/version inside one response. Configuration mutation is serialized in
 PostgreSQL, including the first save when no prior override rows exist.
 
-Balanced ranks by the total. Availability-first compares the availability score first,
-then total; Course-first compares course first, then total. A priority criterion can have an
-editable weight. Within an equal-priority tie, its weighted term is equal and cannot affect
-the secondary order. If the priority is disabled, its raw score is ignored and the strategy
+Balanced ranks by the total. Availability-first ranks by bands of unique shared hours first
+(`app.matching.priority-tiers.availability-hours`, default 3 h or more / 1 to 3 h / under 1 h),
+then by total within a band; Course-first ranks by bands of course score first, then total.
+Course bands are the scorer's own outcomes, 1 and `app.matching.scoring.takes-course-score`
+(with a course in focus: wants a buddy for it / takes it / neither; with no course in focus:
+all courses shared / at least that share shared / fewer), so there is no separate course-band
+setting. A candidate whose priority criterion is unknown always ranks in the lowest band,
+whatever `unknown-score` is. Bands stop a small difference in the priority criterion from outranking
+every other criterion. Each strategy's default weights give its priority criterion the largest
+share, so the displayed total and quality label reflect what the list is ranked by; the weight
+stays editable. If the priority is disabled, its raw score is ignored and the strategy
 falls back to total. Disabled criteria never influence the strategy comparison through either route. Explicit
 student filters and alternative sorts remain available: disabling availability scoring does
 not remove a minimum-shared-hours filter or Most shared hours sort; disabling course scoring
@@ -528,10 +535,10 @@ Find buddies page (`/find-buddies`) and Home preview consume this same response.
 | Query parameter | Values | Meaning |
 | --- | --- | --- |
 | `courseId` | positive known course ID | Candidate targets or takes this course; overrides caller's saved target for course scoring |
-| `studyGoal` | `CONCEPT_REVIEW`, `PROBLEM_SOLVING`, `EXAM_PREPARATION`, `PROJECT_DISCUSSION` | Candidate has this goal; overrides saved goals as the scoring focus |
+| `studyGoal` | `CONCEPT_REVIEW`, `PROBLEM_SOLVING`, `EXAM_PREPARATION`, `PROJECT_DISCUSSION` | Candidate has this goal; added to the caller's saved goals for goal scoring |
 | `studyMode` | `IN_PERSON`, `ONLINE`, `EITHER`, optional | Same mode or candidate `EITHER`; `EITHER` filters nothing; missing candidate mode cannot satisfy a specific mode |
 | `groupSize` | `ONE_TO_ONE`, `SMALL_GROUP`, `EITHER`, optional | Candidate range overlaps 2-2 or 3-configured maximum; `EITHER` filters nothing; missing range cannot satisfy a specific category |
-| `minSharedHours` | positive integer, optional | At least this many unique shared hours from saved weekly availability |
+| `minSharedHours` | positive integer, optional | At least this many unique shared hours from saved weekly availability, counting only shared blocks of at least `app.matching.scoring.min-session-minutes` |
 | `minQuality` | `FAIR`, `GOOD`, `STRONG`, optional | Hide lower quality; `FAIR` imposes no additional minimum |
 | `sort` | `BEST_MATCH`, `MOST_SHARED_HOURS`, `SAME_YEAR_FIRST`, optional | Defaults `BEST_MATCH`; alternative sorts use shared time or equality to caller's year first |
 | `limit` | positive integer, optional | Defaults `app.matching.default-result-limit` (20), cannot exceed `app.matching.max-result-limit` (50) |
@@ -544,9 +551,9 @@ limit and unknown enum inputs return 400. Empty results are 200 with `matches:[]
 
 The full eligible filtered set is sorted before limiting. `totalMatches` counts that set
 before the limit; this endpoint is bounded top-results discovery, not offset pagination.
-`BEST_MATCH` uses active strategy, then case-insensitive name, then student ID. Alternative
-sorts apply descending unique shared minutes or same-year equality first, then the same
-strategy/name/ID chain. This makes duplicate names/tied scores deterministic. The frontend
+`BEST_MATCH` uses active strategy, then more shared hours, then case-insensitive name, then
+student ID. Alternative sorts apply descending unique shared minutes or same-year equality
+first, then the same strategy/shared-hours/name/ID chain. This makes duplicate names/tied scores deterministic. The frontend
 retains server order; quality badges do not regroup the cards.
 
 Response fields:
@@ -566,9 +573,9 @@ MatchResultDto {
   studyGoals: StudyGoal[],
   relevantCourse: {id,code,name} | null,
   totalScore: number in [0,1],
-  explanation: deterministic string,
+  explanation: deterministic string from the configured MatchExplainer,
   quality: STRONG | GOOD | FAIR,
-  breakdown: {criterion,score:number in [0,1],enabled:boolean}[],
+  breakdown: {criterion,score:number in [0,1],enabled:boolean,known:boolean}[],
   sharedHoursPerWeek: number,
   sharedSlots: {dayOfWeek,startTime,endTime}[],
   relationship: STRANGER | INCOMING_PENDING | OUTGOING_PENDING
@@ -579,9 +586,15 @@ The response's strategy and configuration version belong to the same scoring sna
 `totalScore` and criterion scores retain calculation precision; only display percentages
 are rounded. Percentages mean preference compatibility, never a success probability.
 Breakdown has all five criteria in declaration order; disabled entries have `enabled:false`
-and score 0. An enabled missing preference uses 0.5. Quality uses the configured Strong/Good
-cut-offs on the total, with Fair below Good. The deterministic explanation describes enabled
-criterion compatibility, unique shared hours and quality; it uses no AI or fabricated match.
+and score 0. An enabled preference that either student left empty has `known:false` and
+scores `app.matching.scoring.unknown-score` (0 by default); clients show it as not shared
+rather than as partial agreement. Availability and saved-goal scores are symmetric: A's
+score against B equals B's against A. Course scoring and a searched goal follow the
+searcher's current course or goal, so those can differ by direction. Quality uses the configured Strong/Good cut-offs on the total, with
+Fair below Good. The deterministic explanation describes enabled criterion compatibility
+(unknown criteria as "not shared"), unique shared hours and quality; it uses no AI or
+fabricated match. `MatchExplainer` receives only the score, never a profile, so a future
+explainer cannot reveal private fields.
 
 `relevantCourse` is the current search course if supplied. For a goal-only search it is the
 first common target/enrolled course ordered by course code then ID, or null when there is

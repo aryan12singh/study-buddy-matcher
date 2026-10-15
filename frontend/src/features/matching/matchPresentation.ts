@@ -8,9 +8,11 @@ export const CRITERION_LABELS: Record<MatchingCriterion, string> = {
 
 /**
  * A short word for one criterion's score. Availability shows the shared hours instead,
- * because "3 h" says more than a word. A score of 0.5 also means a preference is unset.
+ * because "3 h" says more than a word. A preference either student left empty is
+ * "Not shared" rather than a score, so missing data never reads as partial agreement.
  */
-export function criterionVerdict(criterion: MatchingCriterion, score: number, sharedHours: number) {
+export function criterionVerdict(criterion: MatchingCriterion, score: number, sharedHours: number, known = true) {
+  if (!known) return 'Not shared'
   if (criterion === 'AVAILABILITY') return `${sharedHours} h`
   if (score >= 1) return criterion === 'COURSE' ? 'Same course' : 'Matches'
   return score > 0 ? 'Partly' : 'Differs'

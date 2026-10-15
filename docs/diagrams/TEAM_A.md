@@ -31,7 +31,7 @@ flowchart LR
 ```
 
 A course or goal is required for discovery; profile completion is helpful but missing
-preferences use the documented neutral score. Active connections are not discovered again.
+preferences are reported as unknown ("not shared") and score the configured unknown value, 0 by default. Active connections are not discovered again.
 Students cannot call admin configuration, and an administrator does not gain access to a
 student's private contact through matching. Every check is enforced server-side.
 
@@ -56,7 +56,18 @@ classDiagram
     class CriterionScorer {
         <<interface>>
         criterion() MatchingCriterion
-        score(searcher, candidate, criteria) double
+        score(searcher, candidate, criteria) CriterionResult
+    }
+    class CriterionResult {
+        <<record>>
+        double score
+        boolean known
+    }
+    class ScoringRules {
+        <<record>>
+        double unknownScore
+        double takesCourseScore
+        int minSessionMinutes
     }
     class CourseScorer
     class AvailabilityOverlapScorer
@@ -64,16 +75,21 @@ classDiagram
     class StudyGoalScorer
     class GroupSizeScorer
     class WeightedMatchScorer {
-        score(profiles, search, weights, enabled, thresholds) MatchScore
+        score(profiles, search, weights, enabled) MatchScore
     }
     class MatchScore {
         <<record>>
         Map breakdown
         double total
         double sharedHoursPerWeek
-        String explanation
         MatchQuality quality
+        Set unknownCriteria
     }
+    class MatchExplainer {
+        <<interface>>
+        explain(score, enabled) String
+    }
+    class TemplateMatchExplainer
     class MatchingWeights {
         <<record>>
         Map values
@@ -93,6 +109,7 @@ classDiagram
         totalMinutes() long
         sharedMinutesWith(other) long
         sharedSlotsWith(other) List
+        sharedSessionsWith(other, minimumMinutes) List
     }
     class MatchingStrategy {
         <<interface>>
@@ -100,8 +117,25 @@ classDiagram
         ranking(enabled) Comparator
     }
     class BalancedStrategy
+    class PriorityTierStrategy {
+        <<abstract>>
+        tierOf(score) int
+        priority()* MatchingCriterion
+        priorityValue(score)* double
+    }
+    class PriorityTiers {
+        <<record>>
+        List availabilityHours
+    }
     class AvailabilityFirstStrategy
     class CourseFirstStrategy
+    class MatchSort {
+        <<enumeration>>
+        BEST_MATCH
+        MOST_SHARED_HOURS
+        SAME_YEAR_FIRST
+        before(searcher) Comparator
+    }
     class MatchingConfigService {
         get(actorId) MatchingConfigDto
         update(request, actorId) MatchingConfigDto
@@ -120,6 +154,8 @@ classDiagram
         <<record>>
         startup defaults
         quality cutoffs
+        scoring rules
+        priority tiers
         result limits
     }
     class MatchResultAssembler {
@@ -150,15 +186,24 @@ classDiagram
     CriterionScorer <|.. StudyModeScorer
     CriterionScorer <|.. StudyGoalScorer
     CriterionScorer <|.. GroupSizeScorer
+    CriterionScorer ..> CriterionResult
     WeightedMatchScorer --> CriterionScorer
+    WeightedMatchScorer --> ScoringRules
+    MatchResultAssembler --> MatchExplainer
+    MatchExplainer <|.. TemplateMatchExplainer
+    MatchExplainer ..> MatchScore
+    MatchService ..> MatchSort
     WeightedMatchScorer ..> MatchScore
     WeightedMatchScorer --> MatchingWeights
     CriterionScorer ..> MatchingProfile
     MatchingProfile --> WeeklyAvailability
     WeeklyAvailability *-- TimeSlot
     MatchingStrategy <|.. BalancedStrategy
-    MatchingStrategy <|.. AvailabilityFirstStrategy
-    MatchingStrategy <|.. CourseFirstStrategy
+    MatchingStrategy <|.. PriorityTierStrategy
+    PriorityTierStrategy <|-- AvailabilityFirstStrategy
+    PriorityTierStrategy <|-- CourseFirstStrategy
+    AvailabilityFirstStrategy ..> PriorityTiers
+    CourseFirstStrategy ..> ScoringRules
     MatchingStrategy ..> MatchScore
     MatchingConfigService --> MatchingProperties
     MatchingConfigService --> MatchingConfigAssembler
@@ -169,7 +214,10 @@ classDiagram
 
 Scorers are pure collaborators: no repository or controller access. `WeeklyAvailability`
 canonicalizes intervals; `MatchScore`, `MatchingWeights` and interval records protect value
-state. Strategy implementations encapsulate ranking, while the search service coordinates
+state. Strategy implementations encapsulate ranking; the two priority strategies share their
+banded ranking through the `PriorityTierStrategy` template method and only name their criterion
+and banded value. `MatchExplainer` keeps wording out of scoring and sees only the score, never a
+profile. Each `MatchSort` value supplies its own comparator. The search service coordinates
 authorization, candidate filtering and repositories inside its transaction. Assemblers
 construct DTOs, and the controller only converts query inputs/delegates/returns DTOs.
 
@@ -232,11 +280,11 @@ sequenceDiagram
     Service->>Service: exclude self/connections; canonicalize weekly slots
     loop eligible candidate matching filters
         Service->>Scoring: score enabled criteria with configured weights
-        Scoring-->>Service: immutable score, explanation, quality and unique shared hours
+        Scoring-->>Service: immutable score, quality, unknown criteria and shared session hours
     end
     Service->>Strategy: order filtered scores with enabled priorities
     Strategy-->>Service: comparator
-    Service->>Service: selected sort, name/ID ties, pre-limit count, then limit
+    Service->>Service: selected sort, shared-hours/name/ID ties, pre-limit count, then limit
     Service->>Assembler: public fields + relevant course + score + pending state
     Assembler-->>Service: MatchResultDto list
     Service-->>API: versioned MatchSearchResultDto

@@ -5,8 +5,8 @@ import { CRITERION_LABELS, criterionVerdict } from './matchPresentation'
 export default function ScoreBreakdown({ match }: { match: MatchResult }) {
   return (
     <ul className="score-breakdown" aria-label="Score breakdown">
-      {match.breakdown.map(({ criterion, score, enabled }) => {
-        const verdict = enabled ? criterionVerdict(criterion, score, match.sharedHoursPerWeek) : 'Disabled by administrator'
+      {match.breakdown.map(({ criterion, score, enabled, known }) => {
+        const verdict = enabled ? criterionVerdict(criterion, score, match.sharedHoursPerWeek, known) : 'Disabled by administrator'
         return (
           <li key={criterion} className={`score-${criterion.toLowerCase().replaceAll('_', '-')}`}>
             <div className="score-caption"><span>{CRITERION_LABELS[criterion]}</span><span>{verdict}</span></div>

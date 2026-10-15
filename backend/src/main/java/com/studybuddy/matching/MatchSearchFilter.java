@@ -1,6 +1,7 @@
 package com.studybuddy.matching;
 
 import com.studybuddy.matching.scoring.MatchingProfile;
+import com.studybuddy.matching.scoring.ScoringRules;
 import com.studybuddy.student.GroupSizePreference;
 import com.studybuddy.student.ProfileProperties;
 import com.studybuddy.student.Student;
@@ -18,9 +19,11 @@ public class MatchSearchFilter {
     private static final int MINUTES_PER_HOUR = 60;
 
     private final ProfileProperties profileLimits;
+    private final ScoringRules rules;
 
-    public MatchSearchFilter(ProfileProperties profileLimits) {
+    public MatchSearchFilter(ProfileProperties profileLimits, ScoringRules rules) {
         this.profileLimits = profileLimits;
+        this.rules = rules;
     }
 
     public boolean accepts(MatchSearchCriteria search, MatchingProfile searcher, MatchingProfile candidate) {
@@ -68,11 +71,11 @@ public class MatchSearchFilter {
         return theirMin <= wanted.maximumSize(profileLimits.groupSizeMax()) && wanted.minimumSize() <= theirMax;
     }
 
-    private static boolean sharesEnoughTime(Integer minSharedHours, MatchingProfile searcher, MatchingProfile candidate) {
+    private boolean sharesEnoughTime(Integer minSharedHours, MatchingProfile searcher, MatchingProfile candidate) {
         if (minSharedHours == null) {
             return true;
         }
-        long sharedMinutes = searcher.availability().sharedMinutesWith(candidate.availability());
+        long sharedMinutes = searcher.availability().sessionMinutesWith(candidate.availability(), rules.minSessionMinutes());
         return sharedMinutes >= (long) minSharedHours * MINUTES_PER_HOUR;
     }
 }

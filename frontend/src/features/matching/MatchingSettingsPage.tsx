@@ -109,7 +109,7 @@ export default function MatchingSettingsPage() {
           </fieldset>
           <fieldset className="settings-fieldset form-grid" disabled={action.pending}>
             <legend>{activeLabel} weights</legend>
-            <p className="field-hint form-full">All enabled weights add up to 1. Editing one scales the others without rounding saved precision; 0.3 means 30%. Priority strategies compare their enabled priority first, then this weighted compatibility score.</p>
+            <p className="field-hint form-full">All enabled weights add up to 1. Editing one scales the others without rounding saved precision; 0.3 means 30%. Priority strategies group students by their priority criterion first, then rank by this weighted score within each group, so give the priority criterion a meaningful weight.</p>
             {shown && CRITERIA.map(({ key, label }) => (
               <Field key={key} id={`weight-${key}`} label={label} error={errors[`weight-${key}`]}
                 hint={!form.enabledCriteria.includes(key) ? 'Disabled: does not affect ranking.' : total !== null ? `${formatPercentage(shown[key])} of the total score` : undefined}>

@@ -58,25 +58,34 @@ current search:
 | Criterion | Fixture | Score | Weight | Contribution |
 | --- | --- | ---: | ---: | ---: |
 | Course | Candidate targets the selected course | 1 | 0.30 | 0.30 |
-| Availability | Caller has 6 unique free hours, of which 3 are shared | 0.5 | 0.30 | 0.15 |
+| Availability | Each student has 6 unique free hours, of which 3 are shared | 0.5 | 0.30 | 0.15 |
 | Study mode | Caller online; candidate either | 1 | 0.20 | 0.20 |
 | Goal | Candidate has the selected goal | 1 | 0.10 | 0.10 |
-| Group size | Candidate has not supplied a range | 0.5 | 0.10 | 0.05 |
-| Total | Sum of contributions | | 1.00 | **0.80** |
+| Group size | Candidate has not supplied a range (unknown) | 0 | 0.10 | 0 |
+| Total | Sum of contributions | | 1.00 | **0.75** |
 
-With default quality cut-offs this is a Strong match. Exact total 0.80 drives ranking,
-threshold and quality; the screen formats it as 80% compatibility. The missing group range
-uses the neutral score, but a specific group-size filter cannot claim it is compatible.
+With default quality cut-offs this is a Strong match. Exact total 0.75 drives ranking,
+threshold and quality; the screen formats it as 75% compatibility. The missing group range
+is unknown: it scores the configured unknown value (0), the card shows "Not shared", and a
+specific group-size filter cannot claim it is compatible. Availability divides by the smaller
+timetable, so the score is the same from either student's side.
+
+`AppendixAMatchingTest` reproduces the brief's Appendix A table with the real scorers and
+asserts the 2-hour overlap and a 0.85 Strong total under Balanced weights.
 
 For the Appendix A case, the caller's two 2-hour blocks total 4 hours, the one shared block
 is 2 hours and availability is 2/4 = 0.5. Adding a duplicate shared block or a nested block
 must keep shared time at 2 hours. Two blocks that only meet at 21:00 share 0 minutes.
 Weekly slots recur in SGT; UTC timestamp handling does not alter these local preferences.
 
-Strategy fixtures deliberately put stronger priority overlap/course alignment against a
-larger weighted total. Availability-first and Course-first must obey that priority before
-the secondary total, even across different quality labels. Disabling the priority criterion
-must remove that comparison. Equal strategy results use case-insensitive name then ID.
+Strategy fixtures deliberately put a higher priority band against a larger weighted total.
+Availability-first ranks by shared-hour bands (3 h or more / 1 to 3 h / under 1 h) and
+Course-first by course bands at 1 and `takes-course-score` (wants a buddy for it / takes it /
+neither) before the total; an unknown priority criterion is always in the lowest band, and
+lowering `takes-course-score` must not merge "takes it" into "neither";
+within a band the total decides, so the displayed score never increases down a band.
+Disabling the priority criterion must remove that comparison. Equal strategy results use
+more shared hours, then case-insensitive name, then ID.
 MOST_SHARED_HOURS and SAME_YEAR_FIRST add their comparison before this existing chain.
 
 ## Acceptance scenarios against a local demo
@@ -97,7 +106,7 @@ shared foundation, reused by matching.
    criterion bars match the API payload. Check the shared-hours total against the heatmap.
 4. With a saved target or goal, Home displays up to three results from the same endpoint,
    configuration revision and server ranking. Open the link to preserve that search context.
-5. Confirm incomplete preferences have clear setup guidance and neutral scores; neither
+5. Confirm incomplete preferences have clear setup guidance and show as "Not shared"; neither
    view fabricates matches or requires an AI provider to work.
 
 ### 2. Filters, sorts and limits

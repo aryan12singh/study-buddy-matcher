@@ -38,6 +38,20 @@ public record WeeklyAvailability(List<TimeSlot> slots) {
                 .flatMap(mine -> other.slots.stream().flatMap(theirs -> mine.intersection(theirs).stream()))
                 .toList());
     }
+
+    /**
+     * The shared blocks long enough to hold a study session, in week order. Shorter
+     * fragments, such as a 15-minute overlap, cannot be used to meet, so do not count.
+     */
+    public List<TimeSlot> sharedSessionsWith(WeeklyAvailability other, int minimumSessionMinutes) {
+        return sharedSlotsWith(other).stream()
+                .filter(slot -> slot.durationMinutes() >= minimumSessionMinutes)
+                .toList();
+    }
+
+    public long sessionMinutesWith(WeeklyAvailability other, int minimumSessionMinutes) {
+        return sharedSessionsWith(other, minimumSessionMinutes).stream().mapToLong(TimeSlot::durationMinutes).sum();
+    }
     private static List<TimeSlot> merged(List<TimeSlot> input) {
         List<TimeSlot> ordered = input.stream()
                 .sorted(Comparator.comparing(TimeSlot::day).thenComparing(TimeSlot::start).thenComparing(TimeSlot::end))

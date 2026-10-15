@@ -104,6 +104,17 @@ class TimeSlotTest {
     }
 
     @Test
+    void sessionsIgnoreSharedBlocksTooShortToMeetIn() {
+        WeeklyAvailability mine = week(slot(MONDAY, "09:00", "11:00"), slot(TUESDAY, "09:00", "11:00"));
+        WeeklyAvailability theirs = week(slot(MONDAY, "10:45", "12:00"), slot(TUESDAY, "08:00", "10:00"));
+
+        assertEquals(List.of(slot(TUESDAY, "09:00", "10:00")), mine.sharedSessionsWith(theirs, 60));
+        assertEquals(60, mine.sessionMinutesWith(theirs, 60));
+        assertEquals(75, mine.sessionMinutesWith(theirs, 0), "a zero minimum keeps every overlap");
+        assertEquals(75, mine.sharedMinutesWith(theirs), "the raw interval maths is unchanged");
+    }
+
+    @Test
     void emptyWeekSharesNothing() {
         WeeklyAvailability empty = week();
 
