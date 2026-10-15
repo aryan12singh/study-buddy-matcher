@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import type { MatchResult } from './api'
+import type { MatchResult, MatchSearch } from './api'
 import { QUALITY_LABELS, QUALITY_TONES, sharedHoursText } from './matchSearchForm'
 import { label } from '../../shared/api/types'
 import Avatar from '../../shared/components/Avatar'
@@ -8,9 +8,10 @@ import Button from '../../shared/components/Button'
 import ScoreBreakdown from './ScoreBreakdown'
 import SharedHoursHeatmap from './SharedHoursHeatmap'
 import { returnToState } from '../../shared/navigation/returnTo'
+import MatchExplanationPanel from '../matchexplanation/MatchExplanationPanel'
 
 /** One search result: who the student is, why they match, and when you are both free. */
-export default function MatchCard({ match, onSendRequest }: { match: MatchResult; onSendRequest: () => void }) {
+export default function MatchCard({ match, search, onSendRequest }: { match: MatchResult; search: MatchSearch; onSendRequest: () => void }) {
   const location = useLocation()
   const backToSearch = returnToState(`${location.pathname}${location.search}`, 'Back to find buddies')
   return (
@@ -26,6 +27,7 @@ export default function MatchCard({ match, onSendRequest }: { match: MatchResult
         <p className="match-compatibility"><strong>{new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 1 }).format(match.totalScore)} compatibility</strong><span className="field-hint">A comparison of study preferences, not a probability of success.</span></p>
         {match.relevantCourse && <p className="row-meta">Relevant course: {match.relevantCourse.code} {match.relevantCourse.name}</p>}
         {/* <p className="match-explanation">{match.explanation}</p> */}
+        <MatchExplanationPanel candidateId={match.studentId} search={search} />
         <ScoreBreakdown match={match} />
         <div className="match-card-footer">
           <p className="row-meta">{match.relationship === 'CONNECTED' ?
