@@ -27,8 +27,10 @@ import com.studybuddy.matchrequest.MatchRequestStatus;
 import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.AvailabilitySlot;
 import com.studybuddy.student.AvailabilitySlotRepository;
+import com.studybuddy.student.GroupSizePreference;
 import com.studybuddy.student.ProfileProperties;
 import com.studybuddy.student.Student;
+import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
@@ -286,5 +288,37 @@ class MatchServiceTest {
 
         assertThrows(ForbiddenActionException.class, () -> service.search(courseSearch(null), ME));
         verifyNoInteractions(students);
+    }
+
+    @Test
+    void evaluateScoresExactlyAsSearchDoes() {
+        when(access.eligibleStudent(2L)).thenReturn(strong);
+        MatchResultDto fromSearch = service.search(courseSearch(null), ME).matches().stream()
+                .filter(result -> result.studentId() == 2L).findFirst().orElseThrow();
+
+        MatchEvaluation evaluation = service.evaluate(courseSearch(null), ME, 2L);
+
+        assertEquals(fromSearch, evaluation.result());
+        assertEquals(MatchingStrategyType.BALANCED, evaluation.strategy());
+        assertEquals(StudyMode.ONLINE, evaluation.searcherStudyMode());
+        assertEquals(java.util.Set.of(StudyGoal.EXAM_PREPARATION), evaluation.searcherStudyGoals());
+        assertEquals(GroupSizePreference.EITHER, evaluation.candidateGroupSize());
+    }
+
+    @Test
+    void evaluateRejectsTheSearcherThemself() {
+        assertThrows(StudentNotFoundException.class, () -> service.evaluate(courseSearch(null), ME, ME));
+    }
+
+    @Test
+    void evaluateRejectsAnInvalidSearchBeforeLookingUpTheCandidate() {
+        assertThrows(InvalidMatchSearchException.class,
+                () -> service.evaluate(new MatchSearchCriteria(null, null, null, null, null, null), ME, 2L));
+    }
+
+    @Test
+    void evaluatePassesOnIneligibleCandidateErrors() {
+        when(access.eligibleStudent(9L)).thenThrow(new StudentNotFoundException(9L));
+        assertThrows(StudentNotFoundException.class, () -> service.evaluate(courseSearch(null), ME, 9L));
     }
 }
