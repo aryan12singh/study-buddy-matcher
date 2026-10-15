@@ -179,10 +179,15 @@ state, an approved operator does a one-off reset:
 
 1. **Stop every backend** pointed at the database, and tell the team. Anything done with demo
    accounts (requests, groups, edits) will be lost.
-2. **Run [`scripts/sql/reset-demo-data.sql`](../scripts/sql/reset-demo-data.sql)** once, in the
-   Supabase SQL editor or with `psql --set=ON_ERROR_STOP=1 --file=...`.
-   - It deletes every `@demo.example.test` account and everything depending on it, in one
-     transaction, and ends by printing `demo_accounts_remaining = 0`.
+2. **Run the whole of [`scripts/sql/reset-demo-data.sql`](../scripts/sql/reset-demo-data.sql)**
+   once, in the Supabase SQL editor or with `psql --set=ON_ERROR_STOP=1 --file=...`. Run the
+   full file, not a selection.
+   - It deletes every `@demo.example.test` account and everything depending on it in a single
+     `DO` statement, so it is atomic however the client sends it: an error changes nothing. It
+     ends by printing `demo_accounts_remaining = 0`.
+   - An earlier version kept its working lists in temporary tables across several statements and
+     failed in the Supabase SQL editor with `relation "demo_students" does not exist`, before any
+     delete ran. If you saw that error, nothing was removed; run the current file.
    - Courses, matching configuration and non-demo accounts are kept. A non-demo account only
      loses its own requests, connections, memberships and applications that involved demo
      accounts.
