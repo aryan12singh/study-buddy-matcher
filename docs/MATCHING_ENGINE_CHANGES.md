@@ -1,6 +1,6 @@
 # Matching engine changes: decision report
 
-Branch `fix/team-a/matching-engine`, eleven commits on top of `main` at `9bccf7b`, local only
+Branch `fix/team-a/matching-engine`, twelve commits on top of `main` at `9bccf7b`, local only
 (not pushed). Companion seed branch `fix/team-b/demo-seed-matching-variety`, one commit on
 top of `feat/team-b/demo-seed-story`. Prepared 15 Oct 2026 for Team A to review, adopt or
 adapt. Team A owns the matching engine, so nothing here should merge without Team A agreeing
@@ -36,7 +36,8 @@ AI disclosure: these changes, tests and this report were produced with an AI cod
 | 7 | Sort options chosen by an if/else on an enum; ties broken alphabetically | Each `MatchSort` value supplies its comparator; ties go to more shared hours, then name, then id | `0f4a1bd` |
 | 8 | One search ran 127 SQL statements with 50 students | Entity-graph bulk load: 20 statements, none per candidate, identical results | `b19341f` |
 | 9 | Docs described the old rules | README, API contract, design decisions, Team A diagrams, testing guide, coverage | `b7db4f5` |
-| 10 | This report | | (this commit) |
+| 10 | This report | | `7f74ed5` |
+| 11 | Nothing stopped the query count from creeping back | `MatchingQueryCountTest`: the statement count stays the same as the pool grows, and inactive students are never loaded | (latest commit) |
 
 Seed branch: the presenter's matches all scored the same on group size and nearly all on
 availability, so switching strategy barely changed the list. Two data edits plus a guard
@@ -253,12 +254,29 @@ identical results. None of the remaining queries runs per candidate.
 **Why.** Over Supabase on campus wifi, 127 round trips can take seconds, and Home calls the
 same endpoint. The query count is also a good before/after slide.
 
-**Overlap with another branch.** A separate local branch, `fix/team-a/match-search-query-count`,
-solves the same problem globally with `hibernate.default_batch_fetch_size` and adds
-`MatchingQueryCountTest`. That test also passes on this branch. The approaches touch different
-lines and can coexist; pick one owner. This branch's approach is targeted (only the search path
-changes); the other is one line but affects every entity. Keeping that branch's test as a
-guard is recommended either way.
+**Overlap with another branch, resolved.** A separate branch,
+`fix/team-a/match-search-query-count`, solved the same problem with one global setting,
+`hibernate.default_batch_fetch_size: 64`, plus a guard test. Both versions were measured with
+200 inactive students and a growing active pool (3 courses, 3 goals and 3 slots each):
+
+| Active candidates | Batch size: statements / entities loaded | Entity graph: statements / entities loaded |
+| ---: | --- | --- |
+| 10 | 20 / 849 | 11 / 49 |
+| 50 | 20 / 1,009 | 11 / 209 |
+| 100 | 26 / 1,209 | 11 / 409 |
+| 300 | 35 / 2,009 | 11 / 1,209 |
+
+The batch setting still grows a statement every 64 students and, because the search still
+called `findAll()` on slots, loads every inactive student too. The entity graph stays flat and
+reads eligible students only. It also keeps the fix visible in the repository method the search
+calls, instead of a global setting that changes how every entity loads. The entity graph is
+kept; the batch setting is not adopted. Applying the batch setting to this branch's engine gave
+identical numbers, so the difference comes from the query fix, not the engine rewrite.
+
+Its guard test was adopted and tightened as `MatchingQueryCountTest`: the statement count must
+be identical at 10 and 40 candidates, and adding inactive students must not change the number
+of entities loaded. With this fix both pass; with it reverted, both fail (42 → 132 statements,
+25 → 65 entities).
 
 ### 9. Documentation (`b7db4f5`)
 
@@ -305,7 +323,7 @@ presenter row now includes the strategy demo script.
 
 ## Verification evidence
 
-- Backend: **398 tests, 0 failures** on the branch tip, against PostgreSQL 18 with all
+- Backend: **400 tests, 0 failures** on the branch tip, against PostgreSQL 18 with all
   migrations applied (CI uses PostgreSQL 17). Every commit was run through the full suite before
   committing. Counts come from the Surefire XML reports, which include `@Nested` classes.
 - Frontend: type-check, **274 tests**, lint (only the existing `OwnerProfilePage` warning) and
@@ -335,8 +353,10 @@ presenter row now includes the strategy demo script.
    shared database keep their old weights (priority criterion 0). The bands still fix the
    ordering, but the score will ignore the priority criterion until an admin clicks "Restore
    defaults" or re-weights it.
-4. **Duplicate query-count work.** Choose between this branch's entity graph and
-   `fix/team-a/match-search-query-count`'s batch size, and keep its `MatchingQueryCountTest`.
+4. **Duplicate query-count work, resolved.** The entity graph is kept and the other branch's
+   guard test is adopted here (see decision 8), so `fix/team-a/match-search-query-count` is
+   no longer needed. It still tracks `origin/main` as its upstream; delete it, or run
+   `git branch --unset-upstream` on it, so a bare `git push` cannot target `main`.
 5. **Unknown score above 0.5.** If anyone raises `unknown-score` above 0.5, an unknown course
    would land in Course-first's middle band. Keep it at 0 unless the team decides otherwise.
 6. **Shared-slot privacy.** Decide whether strangers should see exact shared times, and record
