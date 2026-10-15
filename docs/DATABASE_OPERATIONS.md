@@ -175,8 +175,26 @@ new identity; leave seeding disabled during normal account-lifecycle demonstrati
 **Moving a shared database from the earlier seed.** A database seeded before October 2026 still
 holds the old `student04`–`student50` identities. The new seed adds its students alongside them
 but skips the history, because `priya`, `jamie` and `alex` already exist. To get the full demo
-state, an approved operator first permanently deletes the old `@demo.example.test` students
-through the admin screen (or an equivalent reviewed SQL script), then runs the seed once.
+state, an approved operator does a one-off reset:
+
+1. **Stop every backend** pointed at the database, and tell the team. Anything done with demo
+   accounts (requests, groups, edits) will be lost.
+2. **Run [`scripts/sql/reset-demo-data.sql`](../scripts/sql/reset-demo-data.sql)** once, in the
+   Supabase SQL editor or with `psql --set=ON_ERROR_STOP=1 --file=...`.
+   - It deletes every `@demo.example.test` account and everything depending on it, in one
+     transaction, and ends by printing `demo_accounts_remaining = 0`.
+   - Courses, matching configuration and non-demo accounts are kept. A non-demo account only
+     loses its own requests, connections, memberships and applications that involved demo
+     accounts.
+3. **Start one backend with seeding enabled**, then **wait for the seed to finish** before
+   stopping it: the seed runs after startup and is rolled back if the app stops mid-way. It is
+   complete when `select count(*) from study_groups where name = 'IS212 Sprint Retro'` returns 1.
+4. **Disable seeding** again and sign in as `priya@demo.example.test` to check the demo state.
+
+The full sequence (old seed with a non-demo account interacting with demo accounts, then the
+reset script, then the new seed) was rehearsed on a disposable local PostgreSQL. It produced
+14 courses, 50 demo students plus the untouched non-demo account, one admin, one deactivated
+student and the four demo groups.
 <!-- REVIEW (Team B): agree who performs the shared-database reset and when, before running it. -->
 
 Handles include priya, jamie, alex, appendix.a, appendix.b, hannah, ethan, ryan and admin, all
