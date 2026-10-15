@@ -276,6 +276,17 @@ cancelled event cannot remove a previously imported offline copy, and a revoked
 relationship cannot still download the old calendar. Manual weather scenes are
 decoration, not forecasts. No shared hosted E2 rollout is claimed by source changes.
 
+## AI match explanation (E1, #15)
+
+| Requirement | Backend | Screen | Tests |
+| --- | --- | --- | --- |
+| Explain an existing match without changing scores or ranking | `MatchService.evaluate`, `MatchExplanationService` | `matchexplanation/MatchExplanationPanel` on `MatchCard` | `MatchServiceTest`, `MatchExplanationHttpTest` |
+| Send only an allowlisted summary; no names, contacts, emails, IDs, messages or schedules | `ExplanationEvidence`, `ExplanationEvidenceFactory`, `ExplanationPromptBuilder` | — | `ExplanationEvidenceFactoryTest`, `ExplanationPromptBuilderTest`, `GeminiExplanationProviderTest` |
+| Ground wording in evidence; no probability claims | Prompt v1, `ExplanationOutputValidator` | AI label states scores are separate | `ExplanationOutputValidatorTest`; real examples in `AI_USAGE.md` |
+| Fall back on failure, timeout or unusable output; matching stays available | `GeminiExplanationProvider`, `ExplanationQuota`, `MatchExplanationService` | "Standard explanation" label; error with retry | `GeminiExplanationProviderTest`, `MatchExplanationServiceTest`, `ExplanationQuotaTest` |
+| Cache repeated inputs; invalidate on preference, score, config, prompt or model change | `ExplanationHasher`, `ExplanationCache`, `match_explanations` | — | `ExplanationHasherTest`, `MatchExplanationHttpTest` |
+| Authorisation and safe rendering | Same rules as search | Text rendered as plain text | `MatchExplanationHttpTest`, `MatchExplanationPanel.test.tsx` |
+
 ## Selected extras and delivery
 
 The team has recorded both E1 and E2 as its selected required extras. They extend the
@@ -283,7 +294,7 @@ compulsory baseline. This PR implements E2; E1 remains separate work.
 
 | Tracked scope | Current baseline status | Remaining gate |
 | --- | --- | --- |
-| E1 AI match explanation (#15) | Pending on merged main; explanations are deterministic | Agreed provider/owner, privacy-safe inputs, fallback/cache/version/usage checks and actual API/UI/docs/demo evidence |
+| E1 AI match explanation (#15) | Implemented on `feat/team-c/e1-ai-match-explanation` (Gemini, owner Charlize); see the E1 section above | Live Gemini STRONG/GOOD/FAIR examples, cross-team review and merge |
 | E2 collaborative study room/Pomodoro/music/calendar (#16) | Full source scope in current PR #52, including the approved weather enhancement; see the map above | Local suites, 23 browser checks, restart proof and independent audit passed; Outlook import acceptance deferred by owner, cross-team review/merge and reviewed deployment remain |
 | README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
 | Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |

@@ -190,6 +190,18 @@ complete the current issue scope; this entry does not assert professor or produc
 | Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
 | Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
 
+## AI match explanation decisions (E1)
+
+Choices for [#15](https://github.com/aryan12singh/study-buddy-matcher/issues/15), recorded
+16 October 2026. Team A agreed the `MatchService.evaluate` addition and the `MatchCard` button.
+
+| Question | Implemented choice and reason | Alternative / affected work |
+| --- | --- | --- |
+| When is AI called? | Only when a student clicks **Explain this match**. Keeps search fast, stays inside free-tier rate limits and sends data only when wanted | Explaining every card on search multiplies calls per search and slows results; #3 |
+| What is cached? | Text keyed by a SHA-256 of the evidence, prompt version and model. Any change produces a new key, so stale rows are never read and the table stores no student IDs | Per-student keys would need cleanup on account deletion and explicit invalidation on config changes; #14/#4 |
+| What happens on failure? | Every failure (off, over quota, timeout, error, unusable reply) returns the matching engine's own explanation labelled "Standard explanation"; the endpoint fails only for search's own reasons | Surfacing AI errors would make matching look broken whenever Gemini is down; #2 |
+| Which score is explained? | `MatchService.evaluate` scores one candidate with search's validation, snapshot and scorer, so the text describes the clicked card | A client-sent breakdown could be forged and drift from search; #1/#2 |
+
 ## Baseline requirement contract
 
 The following choices were accepted by the project owner for compulsory delivery on
