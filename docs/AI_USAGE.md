@@ -21,8 +21,9 @@ The application's E1 feature, separate from development assistance above.
 - **Provider:** Google Gemini API, free tier, model `gemini-2.5-flash` (`app.ai.explanation.model`). Called only when a student clicks **Explain this match**, at most `daily-call-limit` times a day.
 - **Sent:** only `ExplanationEvidence`: quality, total score, strategy, each criterion's rounded score and enabled flag, shared hours (nearest half hour), course code and name, shared goals, both study modes and both group-size preferences.
 - **Never sent:** names, student or account IDs, emails, contact numbers, school, programme, year, messages, availability slots, connections or group memberships. `ExplanationEvidenceFactoryTest` and `ExplanationPromptBuilderTest` check this.
+- **Request settings:** thinking is turned off (`thinkingBudget: 0`) so the short JSON reply is not cut off by the output-token limit.
 - **Output checks:** JSON shape, length limit, and no probability, chance-of-success, guarantee or percentage claims. Anything else falls back to the matching engine's own explanation, labelled "Standard explanation".
-- **Fallback verified live (16 Oct):** a real Gemini error returned the standard explanation in under a second, with no error shown to the student.
+- **Fallback observed (16 Oct):** in the development sandbox every request to Gemini failed (a network restriction of that environment, not a Gemini error), and the endpoint returned the standard explanation in under a second with no error shown to the student.
 - **Real examples:** to be recorded by the owner from an unrestricted network: one STRONG, one GOOD and one FAIR match, each with its breakdown and an accuracy note.
 - **Limitations:** free-tier prompts may be used by Google and read by reviewers; the daily limit is in memory and resets on restart; the prompt is English-only; wording can change when the model changes.
 - **Development assistance:** Claude helped design, plan, implement and test E1 (backend `matchexplanation` package, Team A's `MatchService.evaluate`, the frontend panel). Charlize reviewed the design and plan; authors remain responsible for explaining every line.

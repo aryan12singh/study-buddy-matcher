@@ -282,7 +282,7 @@ decoration, not forecasts. No shared hosted E2 rollout is claimed by source chan
 | --- | --- | --- | --- |
 | Explain an existing match without changing scores or ranking | `MatchService.evaluate`, `MatchExplanationService` | `matchexplanation/MatchExplanationPanel` on `MatchCard` | `MatchServiceTest`, `MatchExplanationHttpTest` |
 | Send only an allowlisted summary; no names, contacts, emails, IDs, messages or schedules | `ExplanationEvidence`, `ExplanationEvidenceFactory`, `ExplanationPromptBuilder` | — | `ExplanationEvidenceFactoryTest`, `ExplanationPromptBuilderTest`, `GeminiExplanationProviderTest` |
-| Ground wording in evidence; no probability claims | Prompt v1, `ExplanationOutputValidator` | AI label states scores are separate | `ExplanationOutputValidatorTest`; real examples in `AI_USAGE.md` |
+| Ground wording in evidence; no probability claims | Prompt v1, `ExplanationOutputValidator` | AI label states scores are separate | `ExplanationOutputValidatorTest`; live examples still to be recorded in `AI_USAGE.md` |
 | Fall back on failure, timeout or unusable output; matching stays available | `GeminiExplanationProvider`, `ExplanationQuota`, `MatchExplanationService` | "Standard explanation" label; error with retry | `GeminiExplanationProviderTest`, `MatchExplanationServiceTest`, `ExplanationQuotaTest` |
 | Cache repeated inputs; invalidate on preference, score, config, prompt or model change | `ExplanationHasher`, `ExplanationCache`, `match_explanations` | — | `ExplanationHasherTest`, `MatchExplanationHttpTest` |
 | Authorisation and safe rendering | Same rules as search | Text rendered as plain text | `MatchExplanationHttpTest`, `MatchExplanationPanel.test.tsx` |
