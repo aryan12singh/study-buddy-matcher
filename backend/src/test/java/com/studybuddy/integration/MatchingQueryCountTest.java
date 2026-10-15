@@ -21,7 +21,11 @@ class MatchingQueryCountTest extends PostgresHttpTest {
     private static final int SMALL_POOL = 10;
     private static final int LARGE_POOL = 40;
     private static final int INACTIVE_STUDENTS = 20;
-    /** Generous ceiling over the measured 11, so unrelated query changes do not break the build. */
+    /**
+     * Generous ceiling over the measured 11 Hibernate-prepared statements, so unrelated query
+     * changes do not break the build. PostgreSQL's own statement log also counts transaction
+     * control, which is why a logged demo-seed search shows about 20.
+     */
     private static final long MAX_STATEMENTS_PER_SEARCH = 15;
 
     @Autowired

@@ -187,8 +187,9 @@ Each enabled criterion produces a score from 0 to 1. Compatibility is the weight
 not a probability of success. A preference either student left empty is *unknown*: it
 scores `app.matching.scoring.unknown-score` (0 by default) and the card shows "Not shared",
 so missing data never outranks real compatibility. Explicit filters still require the
-candidate to satisfy the selected preference. Every score is the same from either
-student's side.
+candidate to satisfy the selected preference. Availability and saved-goal scores are the
+same from either student's side. Course scoring and a searched goal follow the searcher's
+current course or goal, so those can differ by direction.
 
 | Criterion | Rule |
 | --- | --- |
@@ -199,9 +200,12 @@ student's side.
 | Group size | Preferred numeric ranges overlap: 1; disjoint: 0; missing: unknown |
 
 Balanced ranks by weighted total. Availability-first and course-first rank by bands of their
-priority criterion first (`app.matching.priority-tiers.*`: 3 h or more / 1 to 3 h / under
-1 h shared; wants a buddy for the course / takes it / neither), then by weighted total within
-a band, and their default weights give the priority criterion the largest share. Disabling
+priority criterion first, then by weighted total within a band, and their default weights
+give the priority criterion the largest share. Availability bands come from `app.matching.priority-tiers.availability-hours` (3 h or more /
+1 to 3 h / under 1 h shared). Course bands are the course scorer's own outcomes, 1 and
+`takes-course-score`: with a course in focus they mean wants a buddy for it / takes it /
+neither; with no course in focus, all courses shared / at least that share shared / fewer.
+A priority criterion that is unknown always ranks in the lowest band. Disabling
 the priority falls back to the total. Alternative sorts start with shared hours or same-year
 preference, then the strategy. More shared hours, then name and ID, break remaining ties.
 The server filters/sorts before applying the configured result limit, and the frontend
@@ -263,13 +267,13 @@ in `application-local.yml` or the process environment.
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list as currently taken |
 | `app.matching.default-strategy` | `BALANCED` | Strategy used until an admin chooses one (`BALANCED`, `AVAILABILITY_FIRST`, `COURSE_FIRST`) |
 | `app.matching.default-weights.<strategy>.*` | balanced: course `0.30`, availability `0.30`, study-mode `0.20`, study-goal `0.10`, group-size `0.10`; availability-first: availability `0.40`, course `0.25`, study-mode `0.15`, study-goal `0.10`, group-size `0.10`; course-first: course `0.40`, availability `0.25`, study-mode `0.15`, study-goal `0.10`, group-size `0.10` | Every strategy has all five weights, each from 0 to 1. Enabled weights add up to 1; disabled weights must be 0. A priority strategy gives its own criterion the largest share so the displayed score reflects the ranking |
-| `app.matching.priority-tiers.availability-hours` / `app.matching.priority-tiers.course-score` | `[3.0, 1.0]` / `[1.0, 0.5]` | Band boundaries, highest first, that Availability-first and Course-first rank by before the weighted score: 3 h or more / 1 to 3 h / under 1 h shared; wants a buddy for the course / takes it / neither |
+| `app.matching.priority-tiers.availability-hours` | `[3.0, 1.0]` | Shared-hour band boundaries, highest first, that Availability-first ranks by before the weighted score: 3 h or more / 1 to 3 h / under 1 h. Course-first has no setting; its bands are 1 and `takes-course-score` |
 | `app.matching.default-enabled-criteria` | All five criteria | Global startup enabled criteria; disabled criteria must have zero weights |
 | `app.matching.default-min-score` | `0` | Minimum total compatibility returned, before a student's additional quality filter |
 | `app.matching.default-result-limit` / `app.matching.max-result-limit` | `20` / `50` | Default and largest search result count, applied after filtering and sorting |
 | `app.matching.quality.strong` / `app.matching.quality.good` | `0.75` / `0.50` | Weighted-total cut-offs for the Strong and Good match labels; anything lower is Fair |
 | `app.matching.scoring.unknown-score` | `0.0` | Value of a criterion either student left empty; the card shows it as "Not shared". 0 means missing data never outranks real compatibility |
-| `app.matching.scoring.takes-course-score` | `0.5` | Course score for a candidate who takes the course in focus but wants a buddy for a different one (wanting a buddy for it scores 1) |
+| `app.matching.scoring.takes-course-score` | `0.5` | Course score for a candidate who takes the course in focus but wants a buddy for a different one (wanting a buddy for it scores 1). Also the lower Course-first band boundary |
 | `app.matching.scoring.min-session-minutes` | `60` | Shortest shared block that counts as time to meet. Shorter overlaps are ignored in the availability score, shared hours, the minimum-hours filter and the shared-slot list |
 | `DEMO_SEED_ENABLED` / `app.demo-seed.enabled` | `false` | Opt in to the demo seeder for one startup |
 | `DEMO_STUDENT_PASSWORD` / `app.demo-seed.student-password` | Required only when seeding | Password for newly seeded demo students |

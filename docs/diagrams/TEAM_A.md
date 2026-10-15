@@ -126,7 +126,6 @@ classDiagram
     class PriorityTiers {
         <<record>>
         List availabilityHours
-        List courseScore
     }
     class AvailabilityFirstStrategy
     class CourseFirstStrategy
@@ -204,7 +203,7 @@ classDiagram
     PriorityTierStrategy <|-- AvailabilityFirstStrategy
     PriorityTierStrategy <|-- CourseFirstStrategy
     AvailabilityFirstStrategy ..> PriorityTiers
-    CourseFirstStrategy ..> PriorityTiers
+    CourseFirstStrategy ..> ScoringRules
     MatchingStrategy ..> MatchScore
     MatchingConfigService --> MatchingProperties
     MatchingConfigService --> MatchingConfigAssembler

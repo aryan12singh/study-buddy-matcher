@@ -1,7 +1,8 @@
 # Matching engine changes: decision report
 
-Branch `fix/team-a/matching-engine`, twelve commits on top of `main` at `9bccf7b`, local only
-(not pushed). Companion seed branch `fix/team-b/demo-seed-matching-variety`, one commit on
+Branch `fix/team-a/matching-engine`, fifteen commits on top of `main` at `9bccf7b` (twelve
+original, three review follow-ups described in decision 10), opened as a pull request for Team
+A's review. Companion seed branch `fix/team-b/demo-seed-matching-variety`, one commit on
 top of `feat/team-b/demo-seed-story`. Prepared 15 Oct 2026 for Team A to review, adopt or
 adapt. Team A owns the matching engine, so nothing here should merge without Team A agreeing
 to own and explain it.
@@ -38,6 +39,7 @@ AI disclosure: these changes, tests and this report were produced with an AI cod
 | 9 | Docs described the old rules | README, API contract, design decisions, Team A diagrams, testing guide, coverage | `b7db4f5` |
 | 10 | This report | | `7f74ed5` |
 | 11 | Nothing stopped the query count from creeping back | `MatchingQueryCountTest`: the statement count stays the same as the pool grows, and inactive students are never loaded | (latest commit) |
+| 12 | Review follow-ups: docs contradicted the code, course bands and `takes-course-score` had to match by hand, screens copied config values | Course bands derived from the scoring rule; unknown priority always lowest band; generic strategy text; docs corrected | decision 10 |
 
 Seed branch: the presenter's matches all scored the same on group size and nearly all on
 availability, so switching strategy barely changed the list. Two data edits plus a guard
@@ -155,10 +157,11 @@ Course-first now only say which criterion they prioritise and what value it is b
 Ranking is: band of the priority criterion first, then the weighted total within the band.
 Bands come from `app.matching.priority-tiers.*`: availability `[3.0, 1.0]` hours (3 h or
 more, 1 to 3 h, under 1 h) and course `[1.0, 0.5]` (wants a buddy for the course, takes it,
-neither). Default weights now give the priority criterion the largest share
+neither). *Revised in decision 10: course bands are now derived from `takes-course-score`.* Default weights now give the priority criterion the largest share
 (Availability-first: availability 0.40, course 0.25, mode 0.15, goal 0.10, group 0.10;
 Course-first mirrors it). `MatchingStrategy` has one `ranking(enabled)` method instead of two.
-The strategy descriptions on the admin and results screens now say what the bands are.
+The strategy descriptions on the admin and results screens now say what the bands are
+(*revised in decision 10 to describe the rule without numbers*).
 
 **Why.** Reproduced live on `main`: under Availability-first, a student with 0 shared hours
 showed "1.00 Strong" yet ranked 4th below three "0.65 Good" cards, because the order used one
@@ -251,6 +254,11 @@ every slot in the database, including inactive students').
 search went from **127 to 20 statements** (about 12 queries plus transaction control), with
 identical results. None of the remaining queries runs per candidate.
 
+**Two numbers, one result.** The 20 comes from PostgreSQL's statement log, which also
+records transaction control (`BEGIN`, `COMMIT`, `SET`). `MatchingQueryCountTest` and the table
+below count statements Hibernate prepares, which is **11** for a search (re-measured on
+15 Oct 2026). Both stay the same however many candidates there are.
+
 **Why.** Over Supabase on campus wifi, 127 round trips can take seconds, and Home calls the
 same endpoint. The query count is also a good before/after slide.
 
@@ -286,6 +294,42 @@ field), design decisions (rationale rows), Team A class and sequence diagrams (n
 `TemplateMatchExplainer`, `MatchSort` behaviour), the Team A testing guide's worked example
 (now 0.75 because missing group size is unknown) and requirement coverage evidence. Each new
 config key also got its README row in the commit that added it, as AGENTS.md requires.
+
+### 10. Review follow-ups
+
+A cross-team review of this branch found three places where the docs said something the
+code does not do, two settings that had to be kept equal by hand, and strategy text that
+copied configuration values. Fixed in three commits:
+
+- **Course-first bands now come from the scoring rule.** `app.matching.priority-tiers.course-score`
+  is gone; `CourseFirstStrategy` builds its bands from `1.0` and
+  `app.matching.scoring.takes-course-score`. Before, the "takes it" band started at a
+  hard-coded 0.5 in YAML, so setting `takes-course-score: 0.4` silently put "takes it"
+  students in the same band as students who do not take the course. With a takes-course
+  score of 0 or 1, "takes it" simply gets no band of its own.
+- **Unknown priority data always ranks in the lowest band.** `PriorityTierStrategy.tierOf`
+  returns the lowest band when the priority criterion is unknown. Before, raising
+  `unknown-score` to 0.5 would put a student with no courses in Course-first's middle band,
+  above students who really share courses. (Availability-first already behaved this way,
+  because a missing timetable means 0 shared hours.)
+- **Band validation is shared.** The "positive, highest first" check moved from
+  `PriorityTiers` to `PriorityTierStrategy.requireDescending`, so configured (availability)
+  and derived (course) boundaries are checked the same way.
+- **Strategy descriptions no longer copy config values.** The admin settings hint and the
+  Find buddies "Ranked by…" line said "3 h or more, then 1 to 3 h…". If the YAML changed,
+  the screen would contradict the order shown. They now describe the rule without numbers;
+  the numbers live in the README configuration table.
+- **Docs corrected.** README and API contract no longer claim every score is the same from
+  either side: availability and saved goals are, course and a searched goal follow the
+  searcher's current intent (`CriterionScorersTest` now pins that). The Goals, Availability,
+  Strategy priority, Score symmetry and Stable ordering rows in `DESIGN_DECISIONS.md` were
+  rewritten to match the code. Course-first bands with no course in focus are documented as
+  "all courses shared / at least `takes-course-score` shared / fewer".
+- **Query counts explained** (see decision 8).
+
+Tests added: course bands follow a lowered `takes-course-score`; a takes-course score of 0 or 1
+leaves one band; an unknown priority stays in the lowest band even with `unknown-score` 0.5;
+course scoring differs by direction on purpose.
 
 ## Seed changes
 
@@ -339,7 +383,11 @@ presenter row now includes the strategy demo script.
 
   Within every band the displayed score never increases down the list, and Kai (no timetable)
   shows availability "Not shared" and sits near the bottom instead of tying with real overlap.
-- Query count: 127 → 20 statements per search (method above).
+- Query count: 127 → 20 statements per search in the PostgreSQL log, 11 Hibernate-prepared
+  statements in `MatchingQueryCountTest` (decision 8 explains the difference).
+- After the review follow-ups (decision 10): **404 backend tests, 0 failures** against a
+  disposable PostgreSQL 17 via `scripts/test-backend.sh`; frontend **274 tests** and type-check
+  pass; lint shows only the existing `OwnerProfilePage` warning.
 
 ## Things the team needs to know or decide
 
@@ -357,11 +405,18 @@ presenter row now includes the strategy demo script.
    guard test is adopted here (see decision 8), so `fix/team-a/match-search-query-count` is
    no longer needed. It still tracks `origin/main` as its upstream; delete it, or run
    `git branch --unset-upstream` on it, so a bare `git push` cannot target `main`.
-5. **Unknown score above 0.5.** If anyone raises `unknown-score` above 0.5, an unknown course
-   would land in Course-first's middle band. Keep it at 0 unless the team decides otherwise.
+5. **Unknown score.** Fixed in decision 10: an unknown priority criterion always ranks in the
+   lowest band, so `unknown-score` only affects the weighted total. Keep it at 0 unless the
+   team decides otherwise.
 6. **Shared-slot privacy.** Decide whether strangers should see exact shared times, and record
    it.
-7. **E1.** Build the AI explanation as a second `MatchExplainer`; keep the template as the
+7. **Overlap scoring can be gamed (decision needed).** Availability, saved goals and course
+   lists with no course in focus divide by the *smaller* set. A student who lists every goal,
+   or a very open timetable, scores close to 100% on that criterion against almost anyone
+   who shares one item. This is intended ("do not penalise openness") and documented, but
+   Team A should consciously accept it, or switch that criterion to Jaccard (shared / union)
+   and accept that open students are penalised instead.
+8. **E1.** Build the AI explanation as a second `MatchExplainer`; keep the template as the
    default so the app works without a key or network.
 
 ## Viva notes: explaining each change

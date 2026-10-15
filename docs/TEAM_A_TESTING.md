@@ -80,7 +80,9 @@ Weekly slots recur in SGT; UTC timestamp handling does not alter these local pre
 
 Strategy fixtures deliberately put a higher priority band against a larger weighted total.
 Availability-first ranks by shared-hour bands (3 h or more / 1 to 3 h / under 1 h) and
-Course-first by course bands (wants a buddy for it / takes it / neither) before the total;
+Course-first by course bands at 1 and `takes-course-score` (wants a buddy for it / takes it /
+neither) before the total; an unknown priority criterion is always in the lowest band, and
+lowering `takes-course-score` must not merge "takes it" into "neither";
 within a band the total decides, so the displayed score never increases down a band.
 Disabling the priority criterion must remove that comparison. Equal strategy results use
 more shared hours, then case-insensitive name, then ID.

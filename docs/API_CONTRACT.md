@@ -506,9 +506,12 @@ PostgreSQL, including the first save when no prior override rows exist.
 
 Balanced ranks by the total. Availability-first ranks by bands of unique shared hours first
 (`app.matching.priority-tiers.availability-hours`, default 3 h or more / 1 to 3 h / under 1 h),
-then by total within a band; Course-first ranks by bands of course score first
-(`app.matching.priority-tiers.course-score`, default wants a buddy for the course / takes it /
-neither), then total. Bands stop a small difference in the priority criterion from outranking
+then by total within a band; Course-first ranks by bands of course score first, then total.
+Course bands are the scorer's own outcomes, 1 and `app.matching.scoring.takes-course-score`
+(with a course in focus: wants a buddy for it / takes it / neither; with no course in focus:
+all courses shared / at least that share shared / fewer), so there is no separate course-band
+setting. A candidate whose priority criterion is unknown always ranks in the lowest band,
+whatever `unknown-score` is. Bands stop a small difference in the priority criterion from outranking
 every other criterion. Each strategy's default weights give its priority criterion the largest
 share, so the displayed total and quality label reflect what the list is ranked by; the weight
 stays editable. If the priority is disabled, its raw score is ignored and the strategy
@@ -585,8 +588,9 @@ are rounded. Percentages mean preference compatibility, never a success probabil
 Breakdown has all five criteria in declaration order; disabled entries have `enabled:false`
 and score 0. An enabled preference that either student left empty has `known:false` and
 scores `app.matching.scoring.unknown-score` (0 by default); clients show it as not shared
-rather than as partial agreement. Every criterion score is symmetric: A's score against B
-equals B's against A. Quality uses the configured Strong/Good cut-offs on the total, with
+rather than as partial agreement. Availability and saved-goal scores are symmetric: A's
+score against B equals B's against A. Course scoring and a searched goal follow the
+searcher's current course or goal, so those can differ by direction. Quality uses the configured Strong/Good cut-offs on the total, with
 Fair below Good. The deterministic explanation describes enabled criterion compatibility
 (unknown criteria as "not shared"), unique shared hours and quality; it uses no AI or
 fabricated match. `MatchExplainer` receives only the score, never a profile, so a future
