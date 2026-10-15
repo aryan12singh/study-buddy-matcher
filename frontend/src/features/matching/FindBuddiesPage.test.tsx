@@ -422,7 +422,7 @@ describe('Find buddies page', () => {
     else expect(screen.getByText(new RegExp(`Sorted by ${sort === 'MOST_SHARED_HOURS' ? 'Most shared hours' : 'Same year first'}\\. Balanced matching breaks ties`))).toBeInTheDocument()
   })
 
-  it('shows exact server compatibility, explanation, relevant course and disabled bars', async () => {
+  it('shows exact server compatibility, relevant course and disabled bars without the raw explanation', async () => {
     const match = { ...jamie, totalScore: 0.747, explanation: 'Course aligned; study goals disabled.',
       breakdown: jamie.breakdown.map(item => ({ ...item, enabled: item.criterion !== 'STUDY_GOAL' })) }
     mockApi(() => Promise.resolve(response(ranked([match]))))
@@ -430,7 +430,7 @@ describe('Find buddies page', () => {
     const row = await card('Jamie Lee')
     expect(within(row).getByText('74.7% compatibility')).toBeInTheDocument()
     expect(within(row).getByText('A comparison of study preferences, not a probability of success.')).toBeInTheDocument()
-    expect(within(row).getByText('Course aligned; study goals disabled.')).toBeInTheDocument()
+    expect(within(row).queryByText('Course aligned; study goals disabled.')).not.toBeInTheDocument()
     expect(within(row).getByText('Relevant course: IS442 Object Oriented Programming')).toBeInTheDocument()
     expect(within(row).getByRole('meter', { name: 'Study goal score' })).toHaveAttribute('aria-valuetext', 'Disabled by administrator')
     expect(screen.getByText(/Configuration version 2/)).toBeInTheDocument()

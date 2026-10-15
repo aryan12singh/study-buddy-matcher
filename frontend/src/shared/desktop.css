@@ -515,7 +515,7 @@
 .match-compatibility { margin: 0; }
 .match-compatibility strong { font-size: 1.15rem; }
 .match-compatibility .field-hint { display: block; }
-.match-explanation { margin: 0; line-height: 1.5; }
+/* .match-explanation { margin: 0; line-height: 1.5; } */
 .home-match-preview { list-style: none; display: grid; gap: .65rem; padding: 0; margin: .85rem 0; }
 .home-match-preview li { padding: .7rem; border: 1px solid #b5c6ce; background: white; }
 .home-match-preview a { font-weight: 700; }
