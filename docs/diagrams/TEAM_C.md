@@ -197,6 +197,7 @@ classDiagram
         GroupJoinRequestStatus status
         accept()
         reject()
+        withdraw()
     }
     class GroupMembership {
         Instant joinedAt
@@ -488,7 +489,7 @@ sequenceDiagram
     alt deactivate
         Service->>Cleanup: StudentDeactivation.apply()
         Cleanup->>DB: end connections; cancel pending buddy requests
-        Cleanup->>DB: close led groups; reject pending applications; leave open groups
+        Cleanup->>DB: close led groups; withdraw own pending applications; leave open groups
         Cleanup->>DB: revoke room leases and roles; cancel affected future sessions
         Service->>DB: inactive + increment token version
     else delete permanently
