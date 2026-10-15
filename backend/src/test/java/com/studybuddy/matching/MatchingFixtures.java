@@ -85,7 +85,7 @@ public final class MatchingFixtures {
     }
 
     public static PriorityTiers tiers() {
-        return new PriorityTiers(List.of(3.0, 1.0), List.of(1.0, 0.5));
+        return new PriorityTiers(List.of(3.0, 1.0));
     }
 
     public static MatchingProperties properties() {

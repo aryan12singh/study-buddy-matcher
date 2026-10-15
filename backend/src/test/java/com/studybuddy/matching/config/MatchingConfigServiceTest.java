@@ -27,7 +27,7 @@ class MatchingConfigServiceTest {
     private static final long ADMIN_ID = 1L;
     private static final Set<MatchingCriterion> ALL = EnumSet.allOf(MatchingCriterion.class);
     private static final List<MatchingStrategy> STRATEGIES = List.of(new BalancedStrategy(), new AvailabilityFirstStrategy(MatchingFixtures.tiers()),
-            new CourseFirstStrategy(MatchingFixtures.tiers()));
+            new CourseFirstStrategy(MatchingFixtures.rules()));
     @Mock private MatchingConfigRepository weightRows;
     @Mock private MatchingStrategySettingRepository strategyRows;
     @Mock private AccountAccess access;

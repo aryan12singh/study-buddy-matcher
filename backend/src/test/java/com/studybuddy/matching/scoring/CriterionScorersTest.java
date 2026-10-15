@@ -80,6 +80,17 @@ class CriterionScorersTest {
         }
 
         @Test
+        void isScoredFromTheSearchersCourseSoItCanDifferByDirection() {
+            // Deliberate: course scoring follows the searcher's current intent, not a shared measure.
+            me.setTargetCourse(is442);
+            them.getCoursesTaken().add(is442);
+            them.setTargetCourse(is216);
+
+            assertEquals(0.5, scorer.score(profile(me), profile(them), NO_FILTERS).score(), "they take my target course");
+            assertEquals(0.0, scorer.score(profile(them), profile(me), NO_FILTERS).score(), "I do not take theirs");
+        }
+
+        @Test
         void partialMarksComeFromConfiguration() {
             them.getCoursesTaken().add(is442);
             CourseScorer generous = new CourseScorer(new ScoringRules(0.0, 0.7, 60));

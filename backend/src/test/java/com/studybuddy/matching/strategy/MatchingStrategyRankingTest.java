@@ -3,6 +3,7 @@ package com.studybuddy.matching.strategy;
 import com.studybuddy.matching.MatchQuality;
 import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
+import com.studybuddy.matching.scoring.ScoringRules;
 import org.junit.jupiter.api.Test;
 
 import java.util.Comparator;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.studybuddy.matching.MatchingFixtures.rules;
 import static com.studybuddy.matching.MatchingFixtures.tiers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,7 +20,7 @@ class MatchingStrategyRankingTest {
 
     private static final Set<MatchingCriterion> ALL = EnumSet.allOf(MatchingCriterion.class);
     private final AvailabilityFirstStrategy availabilityFirst = new AvailabilityFirstStrategy(tiers());
-    private final CourseFirstStrategy courseFirst = new CourseFirstStrategy(tiers());
+    private final CourseFirstStrategy courseFirst = new CourseFirstStrategy(rules());
 
     /** A score with a name, so a ranking can be read as a list of names. */
     private record Named(String name, MatchScore score) {
@@ -63,6 +65,38 @@ class MatchingStrategyRankingTest {
     void courseFirstRanksByCourseBandsBeforeTheTotal() {
         assertEquals(List.of("wants a buddy for it", "takes it", "unrelated"), rank(courseFirst, ALL,
                 score("unrelated", 0, 6, 0.99), score("takes it", 0.5, 0, 0.9), score("wants a buddy for it", 1.0, 0, 0.3)));
+    }
+
+    @Test
+    void courseBandsFollowTheConfiguredTakesCourseScore() {
+        // Course bands come from the scoring rule, so lowering the takes-course score cannot
+        // drop "takes it" into the same band as "neither".
+        CourseFirstStrategy lowerPartialScore = new CourseFirstStrategy(new ScoringRules(0.0, 0.4, 60));
+
+        assertEquals(List.of("wants a buddy for it", "takes it", "unrelated"), rank(lowerPartialScore, ALL,
+                score("unrelated", 0, 6, 0.60), score("takes it", 0.4, 0, 0.55), score("wants a buddy for it", 1.0, 0, 0.70)));
+    }
+
+    @Test
+    void aTakesCourseScoreOfZeroOrOneLeavesOnlyTheFullMatchBand() {
+        for (double takesCourse : new double[] {0.0, 1.0}) {
+            CourseFirstStrategy strategy = new CourseFirstStrategy(new ScoringRules(0.0, takesCourse, 60));
+
+            assertEquals(1, strategy.tierOf(score("wants a buddy for it", 1.0, 0, 0).score()));
+            assertEquals(0, strategy.tierOf(score("partial", 0.5, 0, 0).score()));
+        }
+    }
+
+    @Test
+    void unknownPriorityAlwaysLandsInTheLowestBand() {
+        // With an unknown score of 0.5, a student with no courses would otherwise share the
+        // "half or more" band with a real match and outrank them on total.
+        Named noCourses = new Named("no courses", new MatchScore(Map.of(MatchingCriterion.COURSE, 0.5), 0.9, 0,
+                MatchQuality.STRONG, Set.of(MatchingCriterion.COURSE)));
+
+        assertEquals(0, courseFirst.tierOf(noCourses.score()));
+        assertEquals(List.of("shares half my courses", "no courses"), rank(courseFirst, ALL, noCourses,
+                score("shares half my courses", 0.5, 0, 0.4)));
     }
 
     @Test
