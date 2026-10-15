@@ -118,15 +118,32 @@ Open [http://localhost:5173](http://localhost:5173). The backend API is
 
 ### Demo data
 
-The opt-in seeder adds **10 courses, 50 varied synthetic student profiles and one admin**.
+The opt-in seeder adds **14 courses across six schools, 50 synthetic students and one admin**,
+all read from [`demo-data.json`](backend/src/main/resources/demo-seed/demo-data.json).
+
+- **Varied preferences.** Every study mode, group-size preference and study goal is
+  represented.
+- **Overlapping timetables.** Timetables are built from shared weekly blocks (e.g. Wednesday
+  19:00–21:00), so most pairs genuinely overlap. Three students have no timetable, to show the
+  empty state.
+
+Students are created through the normal registration and profile rules. On a fresh database
+the seeder then replays a demo history through the real services, so notifications and
+business rules behave exactly as in live use:
+
+| Sign in as | What is ready to demo |
+| --- | --- |
+| `priya@demo.example.test` (presenter) | An incoming request from Marcus to accept (his contact number then appears). An outgoing request to Sofia. An active connection with Jamie and an ended one with Alex. Leads *IS442 Design Patterns Clinic* (3/5 members) with two pending applications to approve or reject. For the strategy demo, search IS442 and switch strategy as admin: Chen Xin Yi shares all six of Priya's free hours but only takes IS442, so she rises under Availability first and falls under Course first |
+| `appendix.a@demo.example.test` / `appendix.b@demo.example.test` | The brief's Appendix A pair. Searching IS442 as Student A shows Student B with 2 shared hours, scoring 0.85 STRONG under Balanced |
+| `hannah@demo.example.test` | Leads a full group (*Stats Finals Crunch*, 3/3) |
+| `ethan@demo.example.test` | Leads a closed group (*IS212 Sprint Retro*) |
+| `admin@demo.example.test` | `ryan@demo.example.test` is already deactivated, so the account-status view shows both states |
+
 Use `DEMO_SEED_ENABLED=true`, `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` for one approved
 startup, then disable seeding. Passwords belong in private configuration or the process
-environment. Repeat runs add only missing data; existing passwords, profiles and groups
-are preserved.
-
-Demo identities include `priya@demo.example.test`, `jamie@demo.example.test`,
-`alex@demo.example.test`, `student04@demo.example.test` through `student50@demo.example.test`,
-and `admin@demo.example.test`. Contacts are synthetic and must not be used to contact anyone.
+environment. Repeat runs add only missing courses and accounts, and existing data is never
+changed. The demo history is replayed only when none of the 50 demo students existed before.
+Contacts are synthetic (+1 202-555-01xx fictional range) and must not be used to contact anyone.
 See [safe seeding](docs/DATABASE_OPERATIONS.md#safe-demo-seed).
 
 ### Troubleshooting
