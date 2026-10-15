@@ -12,7 +12,6 @@ import Badge from '../../shared/components/Badge'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
-import SendRequestDialog from './SendRequestDialog'
 import PersonCard from '../../shared/components/PersonCard'
 
 /** What a request is about; a profile origin is the default, so only matching is called out. */
@@ -25,10 +24,8 @@ export default function ConnectionsPage() {
   const [search, setSearch] = useSearchParams()
   const requestedView = search.get('view')
   const tab = requestedView === 'outgoing' || requestedView === 'connected' ? requestedView : 'incoming'
-  const [sending, setSending] = useState(false),
-    [ending, setEnding] = useState<Connection | null>(null),
+  const [ending, setEnding] = useState<Connection | null>(null),
     [confirming, setConfirming] = useState<{ request: MatchRequest; kind: 'decline' | 'withdraw' } | null>(null)
-  const [notice, setNotice] = useState<string>()
   const action = useAction()
   const requests = useResource(
     `requests-${tab}`,
@@ -102,13 +99,7 @@ export default function ConnectionsPage() {
     <WindowPage
       title="Connections"
       description="Manage buddy requests and accepted study connections."
-      actions={<Button variant="primary" onClick={() => {
-        action.clear()
-        setNotice(undefined)
-        setSending(true)
-      }}>
-        Send match request
-      </Button>}
+      actions={<Link className="retro-button primary" to="/find-buddies">Find study buddies</Link>}
     >
       <TabBar
         label="Connection views"
@@ -120,11 +111,10 @@ export default function ConnectionsPage() {
         ]}
         onChange={value => {
           setSearch({ view: value })
-          setNotice(undefined)
           action.clear()
         }}
       />
-      <ActionNotice error={ending || confirming ? undefined : action.error} success={notice || action.success} />
+      <ActionNotice error={ending || confirming ? undefined : action.error} success={action.success} />
       {tab === 'connected' ? (
         <>
           <StatePanel
@@ -135,7 +125,7 @@ export default function ConnectionsPage() {
             emptyTitle="No connected buddies yet"
             emptyMessage="Send a match request or accept an incoming request to connect."
             emptyKind="connections"
-            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
+            emptyAction={<Link className="retro-button" to="/find-buddies">Find study buddies</Link>}
           />
           <div className="data-list">
             {connections.data?.map(connection => (
@@ -178,7 +168,7 @@ export default function ConnectionsPage() {
               :
               'Your sent requests and their decisions will appear here.'}
             emptyKind="connections"
-            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
+            emptyAction={<Link className="retro-button" to="/find-buddies">Find study buddies</Link>}
           />
           <div className="data-list">
             {waiting?.map(requestRow)}
@@ -193,11 +183,6 @@ export default function ConnectionsPage() {
           )}
         </>
       )}
-      {sending &&
-        <SendRequestDialog onClose={() => setSending(false)} onSent={() => {
-          setSearch({ view: 'outgoing' })
-          setNotice('Match request sent.')
-        }} />}
       {confirming && (
         <ConfirmDialog
           title={confirming.kind === 'decline'

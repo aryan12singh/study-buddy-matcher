@@ -57,6 +57,13 @@ describe('buddy requests and connections', () => {
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2))
     expect(post).toHaveBeenLastCalledWith('/match-requests/10/decline')
   })
+  it('starts new requests from Find study buddies instead of asking for a student ID', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([]))
+    renderPage(<ConnectionsPage />, '/connections', '/connections')
+    expect(await screen.findByText('No incoming requests')).toBeInTheDocument()
+    for (const link of screen.getAllByRole('link', { name: 'Find study buddies' })) expect(link).toHaveAttribute('href', '/find-buddies')
+    expect(screen.queryByLabelText('Student ID')).not.toBeInTheDocument()
+  })
   it('lets the sender withdraw a pending outgoing request after confirming', async () => {
     vi.spyOn(api, 'get').mockResolvedValueOnce(response([request])).mockResolvedValue(response([{ ...request, status: 'CANCELLED' }]))
     const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...request, status: 'CANCELLED' }))
