@@ -56,9 +56,21 @@ class GeminiExplanationProviderTest {
     }
 
     private GeminiExplanationProvider provider() {
+        return provider("");
+    }
+
+    /** The real base URL carries a version path, as Gemini's does. */
+    private GeminiExplanationProvider provider(String basePath) {
         return new GeminiExplanationProvider(new AiExplanationProperties(true,
-                "http://127.0.0.1:" + server.getAddress().getPort(), "test-model", "test-key", Duration.ofMillis(500),
-                200, 600, 10, "UTC"), ExplanationFixtures.JSON);
+                "http://127.0.0.1:" + server.getAddress().getPort() + basePath, "test-model", "test-key",
+                Duration.ofMillis(500), 200, 600, 10, "UTC"), ExplanationFixtures.JSON);
+    }
+
+    @Test
+    void keepsTheVersionPathOfTheBaseUrl() {
+        assertTrue(provider("/v1beta").explain("PROMPT").isPresent());
+
+        assertEquals("/v1beta/models/test-model:generateContent", requestPath.get());
     }
 
     @Test
