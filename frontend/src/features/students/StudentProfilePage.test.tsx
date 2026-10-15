@@ -82,7 +82,7 @@ describe('profile privacy and relationship actions', () => {
     expect(screen.getByText('No courses listed.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Send match request' })).toBeInTheDocument()
   })
-  it.each(['focus', 'timer'] as const)('keeps the request draft and context across %s refreshes while purging private profile data', async refresh => {
+  it.each(['focus', 'timer'] as const)('keeps the request draft and context across %s refreshes and drops a contact the refreshed profile no longer carries', async refresh => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     const pending = deferred<never>()
     const connectedProfile = {
@@ -130,13 +130,16 @@ describe('profile privacy and relationship actions', () => {
     expectDraft()
     await refreshProfile()
     expect(profileReads).toBe(3)
-    expect(screen.queryByText('+65 9999 1111')).not.toBeInTheDocument()
-    expect(screen.getByText('Loading…', { selector: '.loading-caption' })).toBeInTheDocument()
+    // The page stays on screen while revalidating instead of blanking to a skeleton.
+    expect(screen.getByText('+65 9999 1111')).toBeInTheDocument()
+    expect(screen.queryByText('Loading…', { selector: '.loading-caption' })).not.toBeInTheDocument()
     expectDraft()
+    // The other student ended the connection: the refreshed public profile replaces the contact.
     await act(async () => {
-      pending.resolve(response(connectedProfile))
+      pending.resolve(response(publicProfile))
       await pending.promise
     })
+    expect(screen.queryByText('+65 9999 1111')).not.toBeInTheDocument()
     expectDraft()
     fireEvent.click(within(dialog).getByRole('button', { name: 'Send match request' }))
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('Already connected to this student.')
