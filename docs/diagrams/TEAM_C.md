@@ -153,9 +153,9 @@ them. Re-export/import limitations and real-client acceptance are in
 
 Each lifecycle is owned by its entity. `MatchRequest`, `GroupJoinRequest`, `Connection` and
 `StudyGroup` expose intention-revealing transition methods (`accept()`, `decline()`,
-`cancel()`, `reject()`, `end()`, `close()`) and no status setter, so an illegal transition
-cannot be written from outside the class. Every transition out of a final state throws, and
-the API reports it as 409.
+`cancel()`, `reject()`, `withdraw()`, `end()`, `close()`) and no status setter, so an illegal
+transition cannot be written from outside the class. Every transition out of a final state
+throws, and the API reports it as 409.
 
 ### Match request and connection
 
@@ -164,8 +164,8 @@ stateDiagram-v2
     direction LR
     [*] --> PENDING : sender sends request<br/>(optional message)
     PENDING --> ACCEPTED : receiver accepts
-    PENDING --> DECLINED : receiver declines
-    PENDING --> CANCELLED : sender or receiver<br/>account deactivated
+    PENDING --> DECLINED : receiver declines<br/>(after confirming)
+    PENDING --> CANCELLED : sender withdraws it, or<br/>either account deactivated
     ACCEPTED --> [*]
     DECLINED --> [*]
     CANCELLED --> [*]
@@ -184,13 +184,14 @@ stateDiagram-v2
   pending request already exists in *either* direction.
 - **404:** the receiver is inactive or unknown.
 
-Only the receiver may accept or decline; anyone else gets 403. Accepting and creating the
-`Connection` happen in one transaction with the request row locked, so a double accept or an
-accept racing a decline resolves to a single outcome.
+Only the receiver may accept or decline, and only the sender may withdraw (cancel); anyone
+else gets 403. The other student is notified of a decline or a withdrawal. Accepting and
+creating the `Connection` happen in one transaction with the request row locked, so a double
+accept, or an accept racing a decline or withdrawal, resolves to a single outcome.
 
 An ended connection keeps `endedAt` for history. Contact privacy is recomputed on every read,
 so the contact number disappears as soon as the connection ends, and the pair may send a new
-request afterwards.
+request afterwards. A withdrawn request likewise frees the pair to send a new one.
 
 ### Group join request and membership
 
@@ -199,11 +200,18 @@ stateDiagram-v2
     direction LR
     [*] --> PENDING : student applies<br/>(group active, not already<br/>member or pending)
     PENDING --> ACCEPTED : leader approves<br/>(group not full)
-    PENDING --> REJECTED : leader rejects
-    PENDING --> REJECTED : group closed
-    PENDING --> REJECTED : applicant deactivated
+    PENDING --> REJECTED : leader rejects (after<br/>confirming), or group closed
+    PENDING --> WITHDRAWN : applicant withdraws, or<br/>applicant deactivated
     ACCEPTED --> [*] : GroupMembership created
     REJECTED --> [*]
+    WITHDRAWN --> [*]
+```
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Member : application approved
+    Member --> [*] : member leaves (after confirming),<br/>leader removes them, or<br/>member deactivated (open<br/>groups only; closed groups<br/>keep members as history)
 ```
 
 ```mermaid
@@ -216,8 +224,9 @@ stateDiagram-v2
 ```
 
 Approval is serialised on the group row, so two approvals cannot both take the last place.
-Removing a member deletes the `GroupMembership` row. A closed group rejects edits, approvals,
-rejections and removals.
+Leaving or being removed deletes the `GroupMembership` row, and the leader is notified when a
+member leaves or an applicant withdraws. A leader cannot leave their own group; they close it
+instead. A closed group rejects edits, approvals, rejections, removals and leaving.
 
 ## Domain and OO boundaries
 
