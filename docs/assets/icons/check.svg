@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <title>Testing</title>
+  <rect width="32" height="32" rx="4" fill="#1c3348" />
+  <path d="M6 6h20v20H6z" fill="#fff6dc" />
+  <path d="M10 15h3v3h-3zM13 18h3v3h-3zM16 15h3v3h-3zM19 12h3v3h-3z" fill="#efc36b" />
+</svg>

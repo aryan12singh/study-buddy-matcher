@@ -1,6 +1,7 @@
 package com.studybuddy.connection;
 
 import com.studybuddy.common.AccountAccess;
+import com.studybuddy.studysession.StudySessionLifecycle;
 import com.studybuddy.notification.NotificationResourceType;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
@@ -16,12 +17,14 @@ public class ConnectionService {
     private final ConnectionAssembler assembler;
     private final NotificationService notifications;
     private final AccountAccess access;
+    private final StudySessionLifecycle sessions;
 
-    public ConnectionService(ConnectionRepository connections, ConnectionAssembler assembler, NotificationService notifications, AccountAccess access) {
+    public ConnectionService(ConnectionRepository connections, ConnectionAssembler assembler, NotificationService notifications, AccountAccess access, StudySessionLifecycle sessions) {
         this.connections = connections;
         this.assembler = assembler;
         this.notifications = notifications;
         this.access = access;
+        this.sessions = sessions;
     }
 
     @Transactional(readOnly = true)
@@ -40,6 +43,7 @@ public class ConnectionService {
         access.lockStudents(actorId, pair.getStudentAId(), pair.getStudentBId());
         Connection connection = connections.findByIdForUpdate(id).orElseThrow(() -> new ConnectionNotFoundException(id));
         connection.end();
+        sessions.cancelForConnection(id);
         notifications.notify(connection.otherStudent(actorId), NotificationType.CONNECTION_ENDED,
             access.requireStudent(actorId).getName() + " ended your study-buddy connection", NotificationResourceType.STUDENT,
             actorId, "connection:" + id + ":ended:" + connection.otherStudent(actorId).getId());

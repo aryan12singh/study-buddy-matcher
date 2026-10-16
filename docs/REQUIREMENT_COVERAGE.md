@@ -1,6 +1,6 @@
 # Requirement coverage
 
-Where the compulsory Team A, B and C requirements are implemented. This is a source and
+Where the compulsory Team A, B and C requirements and this branch's E2 extension are implemented. This is a source and
 acceptance map, not a professor, deployment or submission sign-off. Team A issues are
 [#1](https://github.com/aryan12singh/study-buddy-matcher/issues/1),
 [#2](https://github.com/aryan12singh/study-buddy-matcher/issues/2),
@@ -240,15 +240,51 @@ latest-Figma/design check, physical-projector check and integrated demo rehearsa
 accepted contact/learning-style contract is recorded; it does not assert professor approval.
 The coverage file does not itself close or alter GitHub issues.
 
+## Collaborative study experience (E2 #16)
+
+PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) now targets
+the full selected E2 feature. The earlier foundation-only plan has been superseded
+by the owner's completion request, including an expressly approved weather enhancement.
+Source coverage below is separate from the verification record in
+[E2_TESTING.md](E2_TESTING.md), actual client imports, hosted CI and deployment.
+
+| Requirement / acceptance | Backend | Frontend / evidence boundary |
+| --- | --- | --- |
+| Private group room, accepted active members, join/leave and participant focus/break state | `StudyRoomService`, `RoomAccess`, expiring `RoomPresence` | `StudyRoomPage`, `useStudyRoom`; room HTTP/browser walkthrough |
+| Last-seat concurrency, multiple tabs count once, expiry requires explicit fresh admission | Group locking, presence query and capacity checks | `StudyRoomHttpTest`; two-browser expiry/capacity checks |
+| Removed/readmitted members cannot revive a lease/role; closure/deactivation cleanup | Transactional `RoomLifecycle`, group and account collaborators | Removal/replacement/readmission regression and access-loss UI/audio stop |
+| Leader role assignment; present host/co-host controls and configuration; leader recovery | `StudyRoomService`, observed version and role-preservation checks | `RoomSettingsForm`, timer controls; unauthorized/stale/invalid-setting cases |
+| Authoritative shared Pomodoro with focus/break phases and start/pause/resume/reset | Immutable `PomodoroTimer`, durable timestamp state | `RoomTimerPanel`, timer helper; pure timer tests and measured two-browser tolerance |
+| Independent shared music/ambient selections and play state; local consent/volume/mute | Layered `RoomAudioDto` and validated presets | Original `RoomAudioEngine`, `RoomAudioPanel`; silent failure and exit/revocation checks |
+| Group and connected-buddy dated series with title/timezone/optional agenda/location/link | `StudySessionService`, `SessionAccess`, `SessionDetails`, `StudySession` | `SessionsPage`, `SessionFormPage`, `SessionDetailPage`, `Sessions.test.tsx` |
+| Bounded weekly recurrence, correct wall-time/UTC mapping, invalid/DST endpoint rejection | Immutable `SessionSchedule`, typed `SessionSettings` | Schedule unit tests; frontend field validation and raw API rejection |
+| Group leader/buddy-participant management, current relationship authorization and stale-write rejection | Parent/session row locking, DTO assembler and version checks | `StudySessionHttpTest`; invalid/stranger/admin/member/ended-parent checks |
+| Actual mutual availability without invented attendance or new scoring rules | `SessionAvailability` reuses Team A `WeeklyAvailability.sharedSlotsWith` | Form suggestions and empty-state/manual-time workflow |
+| Session update/cancel/lifecycle events reach recipients and cannot leave partial writes | `SessionEvents`, `StudySessionLifecycle`, current recipient rules | HTTP transaction/lifecycle regressions; actual notification navigation |
+| Real dated data in Home and group/buddy agendas | Authorized mine/parent-session endpoints | `UpcomingSessions`, `GroupSessionAgenda`, connection entry links; browser save/edit/cancel walkthrough |
+| Accurate current/next session labels and safe direct room navigation | Existing authorized occurrence list and validated links; no new endpoint | One view clock follows start/end boundaries, weekly advancement and tab recovery; cancelled/completed plans have no shortcut |
+| Duration-aware suggestions with manual fallback | Existing campus-local shared overlap and unchanged save/DST validation | Positive whole-minute choice fills only a fitting overlap; too-short/invalid choices preserve dates and manual scheduling |
+| Accessible phase cue and remembered local mixer | Existing authoritative timer and independent shared audio state | Polite phase-only announcement without reconnect replay; safe browser-local volume/mute persistence with explicit playback enable retained |
+| Private single/bounded weekly calendar snapshot with stable occurrence IDs and UTC events | `SessionCalendar`, authenticated controller attachment | `CalendarButton`; export unit/HTTP checks, times compared to API occurrences |
+| Correct imports and documented update/cancel limitations | Expanded explicit UTC events, escaped/folded RFC 5545 output | Google/Apple single, weekly DST and cancellation imports verified; Outlook acceptance deferred by owner (school MFA), recorded in E2_TESTING |
+| Optional campus weather, stale/unavailable fallback and original selectable pixel scenes | `WeatherClient`/`OpenMeteoClient`, bounded `WeatherService` cache and DTO assembler | `RoomWeatherPanel`, theme CSS/helpers, reduced motion; source/CC BY attribution, service/UI tests |
+| Backend-only database and documented repeatable rollout | Room/audio/session forward SQL, constraints, RLS and revoked browser grants | `DatabaseBoundaryTest`; ordered migration/adoption checks and reviewed deployment gate |
+
+E2 does not implement E1 AI explanations, public rooms/chat, badge tracking, notes/task
+boards, calendar OAuth/two-way sync or an automated reminder scheduler. Exporting a
+cancelled event cannot remove a previously imported offline copy, and a revoked
+relationship cannot still download the old calendar. Manual weather scenes are
+decoration, not forecasts. No shared hosted E2 rollout is claimed by source changes.
+
 ## Selected extras and delivery
 
 The team has recorded both E1 and E2 as its selected required extras. They extend the
-compulsory baseline and remain separate work; this completion pass implements neither.
+compulsory baseline. This PR implements E2; E1 remains separate work.
 
 | Tracked scope | Current baseline status | Remaining gate |
 | --- | --- | --- |
 | E1 AI match explanation (#15) | Pending on merged main; explanations are deterministic | Agreed provider/owner, privacy-safe inputs, fallback/cache/version/usage checks and actual API/UI/docs/demo evidence |
-| E2 collaborative study room/Pomodoro/music/calendar (#16) | Pending on merged main; PR #52 is a separate draft foundation | Room lease lifecycle fix and current-main integration; dated sessions/calendar exports, two-browser/audio/capacity/reconnect and calendar import acceptance |
+| E2 collaborative study room/Pomodoro/music/calendar (#16) | Full source scope in current PR #52, including the approved weather enhancement; see the map above | Local suites, 23 browser checks, restart proof and independent audit passed; Outlook import acceptance deferred by owner, cross-team review/merge and reviewed deployment remain |
 | README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
 | Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |
 | AI disclosure (#43) and demo data/integrated acceptance (#44) | Known retained use recorded; repeatable core evidence exists | Every member confirms their retained use; final demo states and deployed/extras acceptance |

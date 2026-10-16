@@ -15,6 +15,8 @@ import com.studybuddy.notification.NotificationType;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.studygroup.*;
+import com.studybuddy.studyroom.RoomLifecycle;
+import com.studybuddy.studysession.StudySessionLifecycle;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
 import com.studybuddy.user.UserNotFoundException;
@@ -49,6 +51,8 @@ class AdminUserServiceTest {
     @Mock private AccountCreation creation;
     @Mock private AccountAccess access;
     @Mock private StudentDeletion deletion;
+    @Mock private RoomLifecycle roomLifecycle;
+    @Mock private StudySessionLifecycle sessionLifecycle;
     private AdminUserService service;
     private User admin;
     private User bobUser;
@@ -66,8 +70,8 @@ class AdminUserServiceTest {
         lenient().when(students.findById(BOB_ID)).thenReturn(Optional.of(bob));
         lenient().when(access.lockAdminTarget(anyLong(),anyLong())).thenAnswer(call -> users.findById(call.getArgument(1)).orElseThrow(() -> new UserNotFoundException(call.getArgument(1))));
         lenient().when(access.lockLifecycle(anyLong(),anyLong())).thenAnswer(call -> users.findById(call.getArgument(1)).orElseThrow(() -> new UserNotFoundException(call.getArgument(1))));
-        var closure = new GroupClosure(applications, memberships, notifications);
-        var deactivation = new StudentDeactivation(connections, requests, applications, groups, memberships, closure, notifications);
+        var closure = new GroupClosure(applications, memberships, notifications, roomLifecycle, sessionLifecycle);
+        var deactivation = new StudentDeactivation(connections, requests, applications, groups, memberships, closure, notifications, roomLifecycle, sessionLifecycle);
         var counter = new UserUsageCounter(connections, requests, groups, memberships);
         service = new AdminUserService(users,students,studentNames,new AdminUserAssembler(),counter,deactivation,deletion,creation,access);
     }
@@ -214,6 +218,8 @@ class AdminUserServiceTest {
         assertFalse(group.isActive());
         // Only the open group is left; the leader stays in the group they led, and closed groups keep history.
         verify(memberships).deleteAll(List.of(openMembership));
+        verify(roomLifecycle).revokeStudent(BOB_ID);
+        verify(roomLifecycle).close(5L);
         verify(access).lockLifecycle(ADMIN_ID,BOB_ID);
     }
 

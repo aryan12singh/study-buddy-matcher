@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <title>Study groups</title>
+  <rect width="32" height="32" rx="4" fill="#1c3348" />
+  <path d="M13 5h6v6h-6zM5 9h5v5H5zM22 9h5v5h-5zM11 13h10v9H11zM3 16h7v7H3zM22 16h7v7h-7z" fill="#fff6dc" />
+  <path d="M11 24h10v3H11z" fill="#efc36b" />
+</svg>

@@ -19,11 +19,11 @@ not rules from the brief.
 | Usage | Last successful sign-in, unended connections, current accepted membership in open groups including leader; separately labelled history metrics | Online status and guessed scores are not usage evidence; #14 |
 | Request context | PROFILE or MATCHING with optional known course/goal; retain and validate supplied context | Do not invent a search course from profile preferences; #10/#3 |
 | Group capacity | Accepted members including leader count; pending requests do not. Group row serializes approval, edit, remove and close | Separate pre-counts allow over-capacity commits; #12 |
-| Group closure | One-way closed record; pending applicants rejected, other accepted members notified; no new requests/approval/edit | Student leave, leader transfer, reopen and dated sessions are separate scope; #12 |
+| Group closure | One-way closed record; pending applicants rejected, other accepted members notified; no new requests/approval/edit. E2 also revokes room leases and cancels scheduled sessions | Student leave, leader transfer and reopen remain separate proposals; #12/#16 |
 | Optional group data | Preserve existing acceptance of absent goals/mode/weekly slots; always require name/course/capacity >=2 | Inventing compulsory choices changes a graded field requirement; #12 |
-| Weekly times | Whole minutes, same-day start before end, Asia/Singapore. Group schedules may be empty or overlap; a student's own schedule rejects same-day overlap | Group meeting slots and personal availability have distinct validation contracts; dated sessions and overnight splitting remain separate scope; #8/#12 |
+| Weekly times | Whole minutes, same-day start before end, Asia/Singapore. Group schedules may be empty or overlap; a student's own schedule rejects same-day overlap | Group meeting slots and personal availability have distinct validation contracts; E2 dated sessions use their own service; automatic overnight splitting remains outside the weekly contract; #8/#12/#16 |
 | Event times | Java Instant + PostgreSQL timestamptz + Z API timestamps; legacy local values explicitly converted from Asia/Singapore | Relabelling timestamp without conversion shifts recorded moments; matching-owned timestamps untouched |
-| Notifications | One service, safe summary/resource metadata, recipient scope, persistent read state and transaction/event-key deduplication | Email/SMS/push/reminders and session events deferred; #13 |
+| Notifications | One service, safe summary/resource metadata, recipient scope, persistent read state and transaction/event-key deduplication; E2 adds actual session change events | Email/SMS/push and scheduled reminder delivery remain separate proposals; #13/#16 |
 | Database access | Backend JDBC owner writes; browser table/sequence grants revoked, RLS enabled with no browser policies | Supabase Auth/RLS browser access is a different architecture from application JWTs; #11 |
 | Cross-instance write order | Shared transaction advisory guard for domain writes; exclusive for account lifecycle/seed; sorted user rows before group/request rows; actor version rechecked | Process mutex alone fails multiple instances; exclusive all writes unnecessarily blocks independent work |
 | Windows | Decorative title bars and conventional routes; shared retro components are the implemented baseline | Movable stacking manager adds no OO value. The existence of an implemented screen does not certify latest-Figma acceptance; #9/#41 |
@@ -79,9 +79,11 @@ matching preview is a narrow integration in that dashboard, described below; Tea
 not own those profile editors.
 
 Global online status, group-score recommendations and richer notes/task boards remain proposals.
-The selected E1 AI-explanation and E2 room/session/calendar work is still pending on merged
-main; PR #52 is a separate draft foundation. Agenda displays the actual recurring schedule and
-goals. The compulsory UI does not infer presence, progress or dated-session data. See the
+E1 AI explanations remain separate from this E2 implementation. PR #52 now extends the
+room foundation with dated group/buddy sessions, calendar export and real agenda/dashboard
+events. Weather themes were subsequently approved as a room enhancement. The compulsory
+baseline records describe their original merged state; this branch adds E2 without changing
+matching semantics or claiming a shared deployment. See the
 [selected-extra map](REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
 
 ## Schedule and submission record
@@ -110,6 +112,52 @@ a local build/export proves submission. No LMS confirmation is claimed here.
 | Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No made-up percentage or online indicator |
 | Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
 | Nested dialogs | Scroll remains locked until the last modal closes, even when a route exit removes dialogs out of order; each dialog retains its keyboard focus/Escape handling |
+
+## Collaborative study experience (E2 #16)
+
+The project owner expanded PR #52 from a room foundation to the complete selected
+E2 scope. Original retro components and built-in audio were already approved;
+weather visuals and an optional live campus-weather provider were approved during
+completion. E1 AI explanations and other discussion proposals remain separate.
+
+| Question | Accepted choice and reason | Limits / alternative |
+| --- | --- | --- |
+| Room access | Active accepted members of an open group only; server rechecks on every request | Pending applicants/admins/public visitors gain no access; group membership never reveals private contact |
+| Shared transport | Existing authenticated HTTP with configured polling, server timestamps and local countdown rendering | No Socket.IO/new dependency; this is small-dataset synchronization, not sample-synchronized streaming |
+| Presence lease | 90 seconds by default. Browsers can slow timers in long-hidden tabs to one run a minute, so a shorter lease dropped students who switched tabs | A tab that crashes without leaving holds its place for up to 90 seconds. The earlier 30-second lease expired during ordinary background-tab use and forced a rejoin |
+| Host disconnect | Timer continues from durable state; co-host or leader can recover. Delegated control requires current presence; leader control remains available without a lease | Disconnection is not a timer pause or leadership transfer |
+| Roles/settings | Leader alone assigns host/co-host. Present assigned hosts/co-hosts may change durations/capacity while preserving roles; durations change only from IDLE | Role reassignment by a delegated host is rejected; capacity cannot drop below present students or exceed the group |
+| Revocation/readmission | `RoomLifecycle` deletes leases and revokes roles in the membership/deactivation/closure transaction | A restored membership/account does not restore an old lease or role; fresh join must satisfy capacity |
+| Audio | Separate music and ambient selections/play state, with original native Web Audio synthesis; independent local volume/mute and intentional enable | No external music account/licensed asset; failure is silent and does not block the room; playback positions are local |
+| Local mixer preferences | Remember only browser-local music/ambience volume and mute; validate stored types, clamp gains and use safe defaults when storage fails | No playback-enable flag or private session/account data is stored; re-entry still requires an explicit enable gesture |
+| Phase cue | Announce a continuously observed automatic focus/break transition once through a polite atomic status; the changing countdown has live announcements off | Initial entry, reset, discontinuous snapshots, hidden-tab gaps and reconnect do not replay historical cues; this is not a background alarm |
+| Session model | Separate `studysession` feature, with exactly one open-group or active-connection parent, DTO assembler and parent-row locking | Weekly preference schedules remain unchanged; room presence is independent of a dated booking |
+| Session authority | Group leader manages group series; both participants manage their connection's buddy series; accepted group members/connected buddies can read/export | Every read rechecks current eligibility; old relationship IDs never confer renewed access |
+| Local time/recurrence | Whole-minute local start/end plus IANA zone; one or up to configured 52 weekly occurrences; each occurrence preserves local wall time | Reject every missing/ambiguous DST endpoint and invalid duration; no silent timezone fallback or unlimited recurrence |
+| Availability | Reuse Team A's canonical weekly intersections across current accepted members or the two buddies; return campus-local suggestions | Empty availability stays empty; no guessed attendance, reservations or enforced mutual-time booking |
+| Suggested duration | Default to 60 positive whole minutes; fit the chosen duration at the beginning of each sufficiently long returned campus-local overlap | Only selecting a suggestion changes dated fields; invalid/no-fit suggestions do not block a manually entered plan or alter Team A's intersection logic |
+| Session presentation | Derive current/next occurrence and Ongoing/Upcoming/Past labels from authorized occurrence timestamps, with one clock per view and focus/visibility recovery | Relative group room paths and validated HTTPS links are shortcuts only for scheduled current/future plans; joining and backend authorization remain explicit |
+| JDBC civil-time mapping | Use direct local-time/local-date-time JDBC mappings for personal/group weekly slots and dated session civil fields | The E2 availability check reproduced a Singapore-JVM time shift; four narrow Team B slot-field annotations correct round trips without changing Team A maths or schema |
+| Series mutation | Whole-series PUT and cancellation require observed version; notification writes share the transaction | No individual occurrence editor or invitations/RSVP workflow; cancelled series cannot be edited |
+| Parent lifecycle | Ended buddy connection/closed group/deactivated account invalidates access and cancels affected scheduled series; parent deletion cascades records | Reactivation/reconnection does not resurrect schedules; surviving participants receive safe cancellation notices |
+| Calendar representation | Expand the bounded series to independent UTC events with stable series UID/occurrence index and revision | No RRULE/VTIMEZONE/client-side series-edit promise; explicit dates preserve intended wall time across DST |
+| Calendar privacy/import | Export title, agenda, location and validated room link; omit attendee email/contact/token payloads. Download through authenticated API | Snapshot imports can duplicate/ignore changes; shorter/cancelled series never removes offline copies automatically; no OAuth/two-way sync |
+| Weather themes | Original CSS pixel scenes, selectable clear/cloudy/rain/storm/snow/fog and automatic day/night; reduced motion stops animation | Manual theme selection is decorative, never a weather observation or forecast |
+| Live weather | Approved Open-Meteo current campus conditions through the backend: configured coordinates, no student data/device location/key; bounded timeout/cache with silent selectable fallback | External outage does not affect room access/timer/audio; stale/unavailable state and source attribution remain visible |
+
+Open-Meteo is a service addition, with no new Java/npm library. The project's
+non-commercial use and data attribution follow the provider's
+[documentation](https://open-meteo.com/en/docs) and
+[terms](https://open-meteo.com/en/terms); its weather data is attributed under
+CC BY 4.0. Original room art/audio remains the team's own work. The fixed campus
+weather request contains no account identity, contact, schedule, token or room data.
+The test profile disables outbound weather requests. Provider/API and configuration
+details belong in the README and [API contract](API_CONTRACT.md).
+
+Implementation, local automated results, two-browser evidence, real calendar-client
+imports, hosted checks, cross-team review and deployment are separate gates in
+[E2_TESTING.md](E2_TESTING.md). A passing export-format test does not claim Google,
+Apple or Outlook import acceptance. E2 does not fulfill E1's AI-integration work.
 
 ## Matching decisions (Team A)
 

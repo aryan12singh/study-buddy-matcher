@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <title>Connections and privacy</title>
+  <rect width="32" height="32" rx="4" fill="#1c3348" />
+  <path d="M10 6h12v2h2v8h-4V10h-8v6H8V8h2z" fill="#fff6dc" />
+  <path d="M6 16h20v12H6z" fill="#fff6dc" />
+  <path d="M15 20h2v4h-2z" fill="#1c3348" />
+  <path d="M14 19h4v2h-4z" fill="#efc36b" />
+</svg>

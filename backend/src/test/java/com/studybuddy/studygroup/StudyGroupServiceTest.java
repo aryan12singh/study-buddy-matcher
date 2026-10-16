@@ -10,6 +10,8 @@ import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
+import com.studybuddy.studyroom.RoomLifecycle;
+import com.studybuddy.studysession.StudySessionLifecycle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,6 +80,8 @@ class StudyGroupServiceTest {
     private NotificationService notificationService;
 
     @Mock private com.studybuddy.common.AccountAccess access;
+    @Mock private RoomLifecycle roomLifecycle;
+    @Mock private StudySessionLifecycle sessionLifecycle;
 
     private StudyGroupService service;
     private Student alice;
@@ -90,7 +94,8 @@ class StudyGroupServiceTest {
         service = new StudyGroupService(studyGroupRepository, groupMembershipRepository,
                 groupAvailabilitySlotRepository, groupJoinRequestRepository, courseRepository, new StudyGroupLookup(studyGroupRepository), new StudyGroupAssembler(),
                 new GroupViewerAssembler(groupMembershipRepository, groupJoinRequestRepository),
-                new GroupClosure(groupJoinRequestRepository, groupMembershipRepository, notificationService), notificationService, access);
+                new GroupClosure(groupJoinRequestRepository, groupMembershipRepository, notificationService, roomLifecycle, sessionLifecycle),
+                notificationService, access, roomLifecycle);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
         is442 = course(IS442_ID, "IS442");
@@ -366,6 +371,7 @@ class StudyGroupServiceTest {
         assertFalse(dto.active());
         assertFalse(group.isActive());
         assertEquals(GroupJoinRequestStatus.REJECTED, bobsRequest.getStatus());
+        verify(roomLifecycle).close(GROUP_ID);
         verify(notificationService).notify(eq(bob), eq(NotificationType.GROUP_JOIN_REQUEST_REJECTED),
                 contains("closed"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
@@ -401,6 +407,7 @@ class StudyGroupServiceTest {
         service.removeMember(GROUP_ID, ALICE_ID, BOB_ID);
 
         verify(groupMembershipRepository).delete(bobsMembership);
+        verify(roomLifecycle).revokeMember(GROUP_ID, BOB_ID);
         verify(notificationService).notify(eq(bob), eq(NotificationType.GROUP_MEMBER_REMOVED),
                 contains("Midterm crammers"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }

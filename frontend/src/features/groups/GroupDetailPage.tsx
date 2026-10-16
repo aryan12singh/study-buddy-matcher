@@ -13,6 +13,7 @@ import ApplyGroupDialog from './ApplyGroupDialog'
 import PersonCard from '../../shared/components/PersonCard'
 import CapacityMeter from '../../shared/components/CapacityMeter'
 import CopyButton from '../../shared/components/CopyButton'
+import GroupSessionAgenda from '../sessions/GroupSessionAgenda'
 
 export default function GroupDetailPage() {
   const { id } = useParams(),
@@ -75,6 +76,9 @@ export default function GroupDetailPage() {
             </div>
             <div className="actions">
               <Button onClick={() => setAgenda(true)}>View agenda</Button>
+              {group.active && group.viewer.member && (
+                <Link className="retro-button primary" to={`/groups/${group.id}/room`}>Open study room</Link>
+              )}
               {group.viewer.leader && group.active && (
                 <Link className="retro-button primary" to={`/groups/${group.id}/manage`}>Manage group</Link>
               )}
@@ -100,6 +104,7 @@ export default function GroupDetailPage() {
               <p className="muted">Your previous application was rejected. You may send a new request if a place is available.</p>
             ) : null}
           </section>
+          {group.active && group.viewer.member && <GroupSessionAgenda groupId={group.id} leader={group.viewer.leader} />}
           <section className="detail-panel">
             <h2>Weekly meeting schedule</h2>
             <WeeklySchedule slots={group.availability} />
@@ -132,6 +137,7 @@ export default function GroupDetailPage() {
         />}
       {agenda && group && (
         <Dialog title={`${group.name} agenda`} onClose={() => setAgenda(false)}>
+          <div className="actions">{group.active && group.viewer.member && <Link className="retro-button primary" to={`/groups/${group.id}/sessions`}>View dated session agenda</Link>}</div>
           <h3>Study goals</h3>
           {group.studyGoals.length ? (
             <ul>{group.studyGoals.map(goal => (

@@ -1,0 +1,9 @@
+.room-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; margin-bottom: 1.25rem; }
+.room-layout > .detail-panel { margin: 0; }
+.room-entry { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; }
+.room-timer-panel { text-align: center; background: #f1f7f6; }
+.room-timer-panel .actions { justify-content: center; }
+.room-clock { font-family: ui-monospace, monospace; font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.06em; color: #193c3d; margin: .6rem 0; }
+.room-participants { list-style: none; padding: 0; display: grid; gap: .65rem; }
+.room-participants .tag-list { margin-top: .6rem; }
+@media (max-width: 800px) { .room-layout { grid-template-columns: 1fr; }.room-entry { flex-direction: column; align-items: stretch; } }

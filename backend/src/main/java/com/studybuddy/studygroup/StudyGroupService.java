@@ -8,6 +8,7 @@ import com.studybuddy.course.CourseRepository;
 import com.studybuddy.notification.NotificationResourceType;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
+import com.studybuddy.studyroom.RoomLifecycle;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -26,13 +27,14 @@ public class StudyGroupService {
     private final StudyGroupAssembler assembler;
     private final GroupViewerAssembler viewers;
     private final GroupClosure closure;
+    private final RoomLifecycle roomLifecycle;
     private final NotificationService notifications;
     private final AccountAccess access;
 
     public StudyGroupService(StudyGroupRepository groups, GroupMembershipRepository memberships,
         GroupAvailabilitySlotRepository availability, GroupJoinRequestRepository requests, CourseRepository courses, StudyGroupLookup lookup,
         StudyGroupAssembler assembler, GroupViewerAssembler viewers, GroupClosure closure,
-        NotificationService notifications, AccountAccess access) {
+        NotificationService notifications, AccountAccess access, RoomLifecycle roomLifecycle) {
         this.groups = groups;
         this.memberships = memberships;
         this.availability = availability;
@@ -42,6 +44,7 @@ public class StudyGroupService {
         this.assembler = assembler;
         this.viewers = viewers;
         this.closure = closure;
+        this.roomLifecycle = roomLifecycle;
         this.notifications = notifications;
         this.access = access;
     }
@@ -119,6 +122,7 @@ public class StudyGroupService {
             throw new StudyGroupActionNotAllowedException("The leader cannot be removed; close the group instead");
         }
         var membership = memberships.findByStudyGroupIdAndStudentId(id, memberId).orElseThrow(() -> new StudyGroupActionNotAllowedException("This student is not a member of the group"));
+        roomLifecycle.revokeMember(id, memberId);
         memberships.delete(membership);
         notifications.notify(membership.getStudent(), NotificationType.GROUP_MEMBER_REMOVED, "You were removed from " + group.getName(),
             NotificationResourceType.GROUP, id, "membership:" + membership.getId() + ":removed");

@@ -23,6 +23,7 @@ const activeData: Record<string, unknown> = {
     { id: 5, name: 'OOP study crew', courseId: 1, courseCode: 'IS442', courseName: 'Object Oriented Programming', leaderId: 2, leaderName: 'Jamie Lee',
       preferredStudyMode: null, studyGoals: [], maxGroupSize: 5, memberCount: 3, active: true, viewer: { leader: false, member: true, requestId: null, requestStatus: null } }
   ],
+  '/sessions/mine': [],
   '/notifications': [
     { id: 11, type: 'MATCH_REQUEST_RECEIVED', message: 'Jamie Lee sent you a study buddy request.', read: false, createdAt: '2026-10-08T06:20:00Z',
       resourceType: 'MATCH_REQUEST', resourceId: 7, eventKey: null, requestDirection: 'INCOMING' }
@@ -31,7 +32,7 @@ const activeData: Record<string, unknown> = {
 const newStudentData: Record<string, unknown> = {
   '/profile/me': { ...completeProfile, coursesTaken: [], preferredStudyMode: null, availability: [], targetCourse: null },
   '/students/me/summary': { activeConnections: 0, pendingIncoming: 0, pendingOutgoing: 0, acceptedGroups: 0 },
-  '/match-requests/incoming': [], '/groups/mine': [], '/notifications': []
+  '/match-requests/incoming': [], '/groups/mine': [], '/notifications': [], '/sessions/mine': []
 }
 
 function serve(data: Record<string, unknown>, failing?: string) {

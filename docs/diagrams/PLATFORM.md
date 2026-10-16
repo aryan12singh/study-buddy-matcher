@@ -2,8 +2,9 @@
 
 These diagrams connect the compulsory Team B authentication/profile/data foundation with
 Team A matching and Team C requests, privacy, groups, notifications and administration.
-They describe the implemented system, including the confirmed completion fixes. E1 and E2
-are tracked extensions and are not shown as shipped application features.
+They describe the compulsory implementation and this branch's E2 integration.
+E1 AI explanations remain a separate extension. Source diagrams do not establish
+that E2 has been deployed or accepted by the team.
 
 Detailed OO and transaction diagrams remain in [TEAM_A.md](TEAM_A.md) and [TEAM_C.md](TEAM_C.md).
 The [API contract](../API_CONTRACT.md), [decisions](../DESIGN_DECISIONS.md),
@@ -94,6 +95,61 @@ controllers do not inject repositories and services do not return entities to th
 ordered SQL migrations define project-specific integrity/adoption/access rules beyond the
 mapped DDL that Hibernate may update.
 
+## E2 experience and external boundaries
+
+```mermaid
+flowchart LR
+    Member[Accepted active group member]
+    Buddy[Participant in active buddy connection]
+    Leader[Group leader]
+    Host[Present assigned host or co-host]
+    subgraph E2[Authenticated E2 application]
+        Room[Private group room and live presence]
+        Timer[Authoritative shared Pomodoro]
+        Audio[Shared music and ambient selection]
+        LocalAudio[Local consent volume and mute]
+        Sessions[Dated group and buddy sessions]
+        Suggestions[Mutual weekly availability]
+        Home[Actual Home and agenda data]
+        Events[Recipient session notifications]
+        Calendar[Private UTC calendar snapshot]
+        Weather[Cached campus-weather DTO]
+        Theme[Original local pixel atmosphere]
+    end
+    Member --> Room
+    Member --> Sessions
+    Buddy --> Sessions
+    Leader -->|assign roles| Host
+    Leader -->|manage group series| Sessions
+    Host --> Timer
+    Host --> Audio
+    Room --> Timer
+    Audio --> LocalAudio
+    Sessions --> Suggestions
+    Sessions --> Home
+    Sessions --> Events
+    Sessions --> Calendar
+    Calendar --> Offline[Independent calendar import]
+    OpenMeteo[Open-Meteo service] --> Weather
+    Weather --> Theme
+    Theme --> Room
+```
+
+Room leases, durable timer/audio state and dated sessions have distinct lifecycles.
+The browser reconciles authenticated HTTP snapshots; original native audio runs
+locally after consent. Session availability reuses Team A's interval maths and
+does not modify matching rankings. Calendar downloads contain no attendee/contact/
+token payload and provide no OAuth/live client sync. The optional weather request
+sends only fixed configured campus coordinates/options from the backend, with
+bounded timeout/cache and local selectable fallback; no student's device location
+or profile is sent to the provider.
+
+Membership removal, closed groups, ended connections and inactive accounts are
+server authorization boundaries on every room/session request. Lifecycle changes
+also revoke leases/roles and cancel affected future schedules; prior offline
+calendar copies cannot be revoked. E2 test/deployment/import acceptance remains
+separate in [E2_TESTING.md](../E2_TESTING.md).
+
 ## Identity, profile and cross-team domain relationships
 
 ```mermaid
@@ -145,6 +201,9 @@ classDiagram
     }
     class MatchingConfig
     class MatchingConfigService
+    class StudyRoom
+    class RoomPresence
+    class StudySession
     Student "0..1" --> "1" User : shared MapsId identity
     Student "*" --> "*" Course : courses taken
     Student "*" --> "0..1" Course : target course
@@ -159,6 +218,11 @@ classDiagram
     GroupJoinRequest "*" --> "1" StudyGroup
     GroupJoinRequest "*" --> "1" Student : applicant
     Notification "*" --> "1" Student : recipient
+    StudyGroup "1" --> "0..1" StudyRoom : private room
+    StudyRoom "1" --> "0..*" RoomPresence : tab leases
+    RoomPresence "*" --> "1" Student : authenticated owner
+    StudySession "*" --> "0..1" StudyGroup : group parent
+    StudySession "*" --> "0..1" Connection : buddy parent
     MatchingConfigService ..> MatchingStrategySetting : singleton revision and enabled set
     MatchingConfigService ..> MatchingConfig : weights per strategy and criterion
 ```

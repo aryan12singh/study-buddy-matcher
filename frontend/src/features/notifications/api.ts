@@ -6,7 +6,7 @@ export type Notification = {
   message: string
   read: boolean
   createdAt: string
-  resourceType: 'MATCH_REQUEST' | 'GROUP' | 'STUDENT' | null
+  resourceType: 'MATCH_REQUEST' | 'GROUP' | 'STUDENT' | 'SESSION' | null
   resourceId: number | null
   eventKey: string | null
   requestDirection?: 'INCOMING' | 'OUTGOING' | null
@@ -28,6 +28,7 @@ export function notificationLink(notification: Notification) {
       ? { to: `/groups/${notification.resourceId}/manage`, label: 'Review applications' }
       : { to: `/groups/${notification.resourceId}`, label: 'View group' }
   }
+  if (notification.resourceType === 'SESSION') return { to: `/sessions/${notification.resourceId}`, label: 'View study session' }
   if (notification.resourceType === 'STUDENT') return { to: `/students/${notification.resourceId}`, label: 'View profile' }
   if (notification.resourceType === 'MATCH_REQUEST') {
     const direction = notification.requestDirection === undefined

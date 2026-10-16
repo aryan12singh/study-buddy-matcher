@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <title>Libraries and assets</title>
+  <rect width="32" height="32" rx="4" fill="#1c3348" />
+  <path d="M6 9h20v17H6z" fill="#fff6dc" />
+  <path d="M8 5h16v4H8zM14 9h4v6h-4z" fill="#efc36b" />
+  <path d="M13 15h6v2h-6z" fill="#1c3348" />
+</svg>

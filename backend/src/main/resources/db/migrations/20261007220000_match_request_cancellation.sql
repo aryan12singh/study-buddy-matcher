@@ -5,7 +5,9 @@ ALTER TABLE public.match_requests ADD CONSTRAINT match_requests_status_check CHE
     'PENDING','ACCEPTED','DECLINED','CANCELLED'));
 
 ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+-- Historical enum subsets must not reject newer saved events during a full repeat run.
+-- The final session migration validates the complete current enum in this same transaction.
 ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK(type IN (
     'MATCH_REQUEST_RECEIVED','MATCH_REQUEST_ACCEPTED','MATCH_REQUEST_DECLINED','MATCH_REQUEST_CANCELLED',
     'CONNECTION_ENDED','GROUP_JOIN_REQUEST_RECEIVED','GROUP_JOIN_REQUEST_ACCEPTED',
-    'GROUP_JOIN_REQUEST_REJECTED','GROUP_MEMBER_REMOVED','GROUP_CLOSED'));
+    'GROUP_JOIN_REQUEST_REJECTED','GROUP_MEMBER_REMOVED','GROUP_CLOSED')) NOT VALID;

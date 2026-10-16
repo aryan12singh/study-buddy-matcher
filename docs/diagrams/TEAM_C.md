@@ -30,6 +30,121 @@ by a participant. Leader authority is checked against the URL's particular group
 authority does not bypass profile contact privacy. Server checks remain necessary when
 the UI hides or disables unavailable actions.
 
+## E2 room and session boundaries
+
+```mermaid
+classDiagram
+    StudyGroup "1" --> "0..1" StudyRoom
+    StudyRoom --> PomodoroTimer : reconstructs immutable value
+    StudyRoom "1" --> "0..*" RoomPresence
+    RoomPresence --> Student : authenticated owner
+    StudyRoom --> Student : optional host and coHost
+    StudyRoomController --> StudyRoomService
+    StudyRoomService --> RoomAccess
+    StudyRoomService --> RoomAssembler
+    StudyRoomService --> StudyRoomRepository
+    StudyRoomService --> RoomPresenceRepository
+    RoomAccess --> AccountAccess
+    RoomAccess --> StudyGroupLookup
+    RoomAccess --> GroupMembershipRepository
+    RoomAssembler --> StudyRoomDto
+    StudyGroupService --> RoomLifecycle : revoke member leases and roles
+    GroupClosure --> RoomLifecycle : close room
+    StudentDeactivation --> RoomLifecycle : revoke account leases and roles
+    RoomLifecycle --> RoomPresenceRepository
+    RoomLifecycle --> StudyRoomRepository
+    StudyGroup "0..1" --> "0..*" StudySession
+    Connection "0..1" --> "0..*" StudySession
+    StudySession --> SessionSchedule : immutable local-time series
+    StudySessionController --> StudySessionService
+    StudySessionService --> SessionAccess
+    StudySessionService --> SessionAssembler
+    StudySessionService --> SessionAvailability
+    StudySessionService --> SessionCalendar
+    StudySessionService --> SessionEvents
+    StudySessionService --> StudySessionRepository
+    SessionAssembler --> SessionDto
+    SessionAvailability --> WeeklyAvailability : reuse Team A intersection
+    SessionEvents --> NotificationService
+    StudySessionLifecycle --> StudySessionRepository
+    StudySessionLifecycle --> SessionEvents
+    class SessionSchedule {
+        LocalDateTime startLocal
+        LocalDateTime endLocal
+        String timeZone
+        int occurrenceCount
+        occurrences()
+    }
+    class PomodoroTimer {
+        Duration focusDuration
+        Duration breakDuration
+        TimerPhase phase
+        TimerStatus status
+        Duration remainingAtAnchor
+        Instant anchor
+        snapshot(now)
+        start(now)
+        pause(now)
+        resume(now)
+        reset()
+    }
+```
+
+Room controls persist a versioned timer snapshot; presence heartbeats update
+separate expiring leases. All access takes the established account-before-group
+locks and rechecks active membership. Assemblers expose only DTOs. The leader
+retains controls, delegated hosts must be present, and distinct students count
+toward capacity. Membership/account/closure operations revoke leases and roles
+within their existing transaction, so readmission needs a fresh join.
+
+Each dated session belongs to exactly one group or connection. Group leaders and
+the relevant buddy pair manage their own series; current parent eligibility gates
+detail, suggestions and calendar export. `SessionSchedule` generates bounded UTC
+occurrences from local civil time and an IANA zone; missing/ambiguous DST endpoints
+are rejected. Assemblers expose no private contact/email/token fields. E1 matching
+explanations remain separate work.
+
+## Session changes, events and calendar export
+
+```mermaid
+sequenceDiagram
+    actor Student
+    participant UI as Session screen
+    participant API as StudySessionController
+    participant Service as StudySessionService
+    participant Access as SessionAccess
+    participant Schedule as SessionSchedule
+    participant Events as SessionEvents
+    participant Calendar as SessionCalendar
+    participant DB as PostgreSQL
+    Student->>UI: save whole group or buddy series
+    UI->>API: input and expectedVersion plus JWT
+    API->>Service: validated input and principal ID
+    Service->>Access: lock current parent and verify manager
+    Access->>DB: accounts before group or connection
+    Service->>Schedule: validate zone and each weekly start/end
+    Schedule-->>Service: bounded UTC occurrences
+    Service->>DB: save observed-version change
+    Service->>Events: notify current active recipients
+    Events->>DB: revision/change/recipient event keys
+    Service-->>UI: SessionDto after successful transaction
+    Student->>UI: download calendar
+    UI->>API: authenticated export request
+    API->>Service: calendar(sessionId, principal ID)
+    Service->>Access: recheck current parent eligibility
+    Service->>Calendar: export authorized session
+    Calendar-->>UI: private single/bounded UTC event snapshot
+    Note over UI,Calendar: Stable occurrence UIDs; no contact payload or automatic client sync
+    Note over Service,DB: Notification failure rolls back the saved session change
+```
+
+Parent closure/connection end/deactivation cancels affected future schedules and
+revokes access; a notification link does not restore authorization. Cancellation
+files are available only while the parent remains accessible. Offline imported
+events are independent copies, so shortening/cancellation/revocation cannot erase
+them. Re-export/import limitations and real-client acceptance are in
+[E2_TESTING.md](../E2_TESTING.md).
+
 ## Domain and OO boundaries
 
 ```mermaid
@@ -184,6 +299,11 @@ erDiagram
     study_groups ||--o{ group_join_requests : requests
     students ||--o{ group_join_requests : applicant
     students ||--o{ notifications : recipient
+    study_groups ||--o| study_rooms : private_room
+    study_rooms ||--o{ room_presences : tab_leases
+    students ||--o{ room_presences : owner
+    study_groups o|--o{ study_sessions : group_parent
+    connections o|--o{ study_sessions : buddy_parent
     users {
         bigint id PK
         varchar email UK
@@ -224,6 +344,38 @@ erDiagram
         bigint resource_id
         varchar event_key
     }
+    study_rooms {
+        bigint id PK
+        bigint study_group_id FK
+        bigint version
+        bigint host_id FK
+        bigint co_host_id FK
+        varchar music_preset
+        boolean music_playing
+        varchar ambient_preset
+        boolean ambient_playing
+    }
+    room_presences {
+        bigint id PK
+        bigint study_room_id FK
+        bigint student_id FK
+        uuid client_id
+        timestamptz expires_at
+    }
+    study_sessions {
+        bigint id PK
+        bigint version
+        uuid calendar_uid UK
+        bigint study_group_id FK
+        bigint connection_id FK
+        timestamp start_local
+        timestamp end_local
+        varchar time_zone
+        integer occurrence_count
+        timestamptz start_at
+        timestamptz end_at
+        varchar status
+    }
 ```
 
 Natural collection keys are `(student_id,course_id)`, `(student_id,study_goal)` and
@@ -233,6 +385,9 @@ group/applicant pairs while allowing terminal history. Non-null recipient/event 
 unique. Notification resource IDs are safe navigation metadata, not cascading foreign keys;
 permanent account cleanup explicitly removes links to deleted records. Matching config/
 strategy tables exist in the baseline but are omitted from C's ER view.
+E2 sessions require exactly one non-null group/connection parent. Room/student tab
+leases are unique by `(study_room_id,student_id,client_id)`; distinct students,
+not lease rows, determine current capacity.
 
 ## Request acceptance and contact disclosure
 
@@ -330,6 +485,7 @@ sequenceDiagram
         Service->>Cleanup: StudentDeactivation.apply()
         Cleanup->>DB: end connections; cancel pending buddy requests
         Cleanup->>DB: close led groups; reject pending applications; leave open groups
+        Cleanup->>DB: revoke room leases and roles; cancel affected future sessions
         Service->>DB: inactive + increment token version
     else delete permanently
         Service->>Cleanup: StudentDeletion.apply()

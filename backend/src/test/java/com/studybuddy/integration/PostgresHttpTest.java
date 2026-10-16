@@ -95,7 +95,8 @@ abstract class PostgresHttpTest {
                 request.method(method, HttpRequest.BodyPublishers.noBody());
             }
             HttpResponse<String> response = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
-            JsonNode payload = response.body().isBlank() ? json.nullNode() : json.readTree(response.body());
+            JsonNode payload = response.body().isBlank() || response.headers().firstValue("content-type").orElse("").startsWith("text/calendar")
+                    ? json.nullNode() : json.readTree(response.body());
             return new Reply(response.statusCode(), payload, response.body(),
                     response.headers().firstValue("content-type").orElse(""));
         } catch (Exception error) {

@@ -40,6 +40,7 @@ class ConnectionServiceTest {
     private NotificationService notificationService;
 
     @Mock private com.studybuddy.common.AccountAccess access;
+    @Mock private com.studybuddy.studysession.StudySessionLifecycle sessions;
 
     private ConnectionService service;
     private Student alice;
@@ -48,7 +49,7 @@ class ConnectionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ConnectionService(connectionRepository, new ConnectionAssembler(), notificationService, access);
+        service = new ConnectionService(connectionRepository, new ConnectionAssembler(), notificationService, access, sessions);
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
         carol = student(CAROL_ID, "Carol");
@@ -101,6 +102,7 @@ class ConnectionServiceTest {
         service.end(CONNECTION_ID, ALICE_ID);
 
         assertFalse(connection.isActive());
+        verify(sessions).cancelForConnection(CONNECTION_ID);
     }
 
     @Test
