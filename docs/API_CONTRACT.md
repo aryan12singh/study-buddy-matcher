@@ -846,6 +846,26 @@ instead of making an unqualified discovery call. It displays the same active str
 configuration revision and result data as Find buddies. Home sends no hard-coded `limit=3`: it
 uses the configured default result limit and displays up to three students from that response.
 
+## Match explanation (E1)
+
+Student only. `GET /api/matches/{candidateId}/explanation` returns a short explanation of one
+match, fetched only when the student clicks **Explain this match**. It accepts the same
+`courseId`, `studyGoal`, `studyMode`, `groupSize`, `minSharedHours` and `minQuality` parameters
+as `GET /api/matches` (no `sort` or `limit`) and validates them the same way, so it explains the
+score on the card that was clicked.
+
+```json
+{ "candidateId": 42, "text": "You both take IS442 ...", "source": "AI" }
+```
+
+`source` is `AI` when Gemini wrote the text from anonymous evidence, or `STANDARD` when the
+matching engine's own explanation is returned. Standard is returned when the feature is off,
+the daily call limit is reached, or Gemini fails, times out or answers unusably. Errors:
+401 signed out, 403 not a student, 400 invalid search, 404 for an unknown, inactive or own
+candidate. Only the fields of `ExplanationEvidence` (quality, total, per-criterion scores,
+strategy, shared hours, course code and name, shared goals, both study modes and group sizes)
+are ever sent to Gemini. Never names, IDs, contact details, school, year or schedules.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview

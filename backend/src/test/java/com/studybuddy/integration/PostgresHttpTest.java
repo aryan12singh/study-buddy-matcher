@@ -49,7 +49,7 @@ abstract class PostgresHttpTest {
         assertEquals("studybuddy_test", database.queryForObject("select current_database()", String.class),
                 "Fixture deletion must never run against the shared project database");
         database.execute("alter table notifications drop constraint if exists test_notification_failure");
-        database.execute("truncate users, courses, matching_configs, matching_strategy_settings restart identity cascade");
+        database.execute("truncate users, courses, matching_configs, matching_strategy_settings, match_explanations restart identity cascade");
         if (passwordHash == null) {
             passwordHash = passwords.encode(fixturePassword);
         }
