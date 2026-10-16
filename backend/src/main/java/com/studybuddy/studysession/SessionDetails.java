@@ -6,11 +6,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public record SessionDetails(String title, SessionSchedule schedule, String agenda, String location, String roomLink) {
+    /** Matches the room_link column length. */
+    private static final int ROOM_LINK_LIMIT = 2048;
+
     public static SessionDetails validate(SessionInput input, SessionSettings settings, Long groupId) {
         String title = InputRules.required(input.title(), "Title", InputRules.TEXT_LIMIT);
         String agenda = InputRules.optional(input.agenda(), "Agenda", InputRules.DESCRIPTION_LIMIT);
         String location = InputRules.optional(input.location(), "Location", InputRules.TEXT_LIMIT);
-        String link = InputRules.optional(input.roomLink(), "roomLink", 2048);
+        String link = InputRules.optional(input.roomLink(), "roomLink", ROOM_LINK_LIMIT);
         if (link != null) validateLink(link, groupId);
         if (title.indexOf('\0') >= 0 || (agenda != null && agenda.indexOf('\0') >= 0)
             || (location != null && location.indexOf('\0') >= 0)) {

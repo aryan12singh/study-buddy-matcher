@@ -5,9 +5,12 @@ import com.studybuddy.notification.NotificationResourceType;
 import java.time.Clock;
 import java.util.List;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Called after existing parent/account locks, before memberships disappear or connections end. */
 @Component
+@Transactional(propagation = Propagation.MANDATORY)
 public class StudySessionLifecycle {
     private final StudySessionRepository sessions;
     private final SessionEvents events;

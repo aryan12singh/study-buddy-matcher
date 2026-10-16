@@ -12,6 +12,10 @@ import tools.jackson.databind.json.JsonMapper;
 /** Fixed provider host and server-configured campus coordinates; never sends user input. */
 @Component
 public class OpenMeteoClient implements WeatherClient {
+    /** Plausible surface air temperatures; anything outside is a corrupt provider reply. */
+    private static final double MIN_PLAUSIBLE_CELSIUS = -100;
+    private static final double MAX_PLAUSIBLE_CELSIUS = 70;
+
     private final WeatherSettings settings;
     private final HttpClient http;
 
@@ -39,7 +43,7 @@ public class OpenMeteoClient implements WeatherClient {
             }
             double temperature = current.path("temperature_2m").asDouble();
             int day = current.path("is_day").asInt();
-            if (!Double.isFinite(temperature) || temperature < -100 || temperature > 70 || (day != 0 && day != 1)) {
+            if (!Double.isFinite(temperature) || temperature < MIN_PLAUSIBLE_CELSIUS || temperature > MAX_PLAUSIBLE_CELSIUS || (day != 0 && day != 1)) {
                 throw new IOException("Weather provider returned invalid conditions");
             }
             return new WeatherSample(WeatherCondition.fromWmo(current.path("weather_code").asInt()), temperature,

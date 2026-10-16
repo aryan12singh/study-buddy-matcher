@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 /** One bounded, shared cache prevents individual room polls from hitting the provider. */
 @Service
 public class WeatherService {
+    /** Tolerated provider clock drift before an observation counts as from the future. */
+    private static final Duration MAX_PROVIDER_CLOCK_SKEW = Duration.ofMinutes(5);
+
     private final WeatherClient client;
     private final WeatherSettings settings;
     private final WeatherAssembler assembler;
@@ -40,7 +43,7 @@ public class WeatherService {
     private void refresh(Instant now) {
         try {
             WeatherSample sample = client.fetch();
-            if (sample.observedAt().isAfter(now.plus(Duration.ofMinutes(5)))
+            if (sample.observedAt().isAfter(now.plus(MAX_PROVIDER_CLOCK_SKEW))
                 || !sample.observedAt().isAfter(now.minus(settings.maximumStaleAge()))) {
                 throw new IOException("Weather observation is outside its validity window");
             }
