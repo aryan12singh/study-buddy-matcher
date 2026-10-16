@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <title>Collaborative study room</title>
+  <rect width="32" height="32" rx="4" fill="#1c3348" />
+  <path d="M10 4h12v3H10zM8 7h16v2H8zM6 9h20v16H6zM8 25h16v2H8z" fill="#fff6dc" />
+  <path d="M15 11h2v7h-2zM17 17h5v2h-5z" fill="#1c3348" />
+  <path d="M14 2h4v2h-4z" fill="#efc36b" />
+</svg>
