@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,6 +30,28 @@ class WeatherServiceTest {
         assertTrue(service.current().available());
         verify(client, times(2)).fetch();
         assertFalse(service.current().available());
+    }
+
+    @Test void slowProviderDoesNotBlockOtherReaders() throws Exception {
+        WeatherClient client = mock(WeatherClient.class);
+        var fetching = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        when(client.fetch()).thenAnswer(call -> {
+            fetching.countDown();
+            release.await();
+            return new WeatherSample(WeatherCondition.CLEAR, 30, true, now);
+        });
+        var service = new WeatherService(client, settings, new WeatherAssembler(), Clock.fixed(now, java.time.ZoneOffset.UTC));
+        var slow = CompletableFuture.supplyAsync(service::current);
+        try {
+            assertTrue(fetching.await(5, TimeUnit.SECONDS));
+            var other = CompletableFuture.supplyAsync(service::current).get(2, TimeUnit.SECONDS);
+            assertFalse(other.available(), "Readers see the cache while the provider is slow");
+        } finally {
+            release.countDown();
+        }
+        assertTrue(slow.get(5, TimeUnit.SECONDS).available());
+        verify(client, times(1)).fetch();
     }
 
     @Test void disabledWeatherMakesNoProviderRequest() {
