@@ -140,11 +140,15 @@ describe('private room screen', () => {
     const closesAfterJoin = engine.close.mock.calls.length
     fireEvent(window, new Event('focus'))
     await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText(/Reconnecting to the room/)).toBeInTheDocument()
     fireEvent(window, new Event('focus'))
     await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(2))
     expect(screen.getByRole('button', { name: 'Leave room' })).toBeInTheDocument()
     expect(screen.getByRole('timer')).toBeInTheDocument()
     expect(engine.close).toHaveBeenCalledTimes(closesAfterJoin)
+    fireEvent(window, new Event('focus'))
+    await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(3))
+    await waitFor(() => expect(screen.queryByText(/Reconnecting to the room/)).not.toBeInTheDocument())
   })
 
   it('keeps audio silent until consent and applies volume/mute only locally', async () => {

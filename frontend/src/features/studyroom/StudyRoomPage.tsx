@@ -114,6 +114,7 @@ function RoomPage({ groupId }: { groupId: number }) {
             : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
         </div>
       </section>
+      {resource.reconnecting && <p className="privacy-note" role="status">Connection lost. Reconnecting to the room; the shared timer keeps running.</p>}
       {!room.hostOnline && <p className="privacy-note">The host is away. The leader retains controls, and a present co-host can keep the session going.</p>}
       <RoomWeatherPanel liveEnabled onChange={setWeatherTheme} />
       <div className="room-environment" data-weather={weatherTheme.toLowerCase()}>

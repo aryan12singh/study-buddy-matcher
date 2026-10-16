@@ -13,6 +13,7 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
   const [state, setState] = useState<{ snapshot?: RoomSnapshot; error?: string; loading: boolean }>({ loading: valid })
   const [joinedHere, setJoinedHere] = useState(false)
   const [pollInterval, setPollInterval] = useState<number>()
+  const [reconnecting, setReconnecting] = useState(false)
   const joined = useRef(false)
   const presence = useRef<PresenceState>('PRESENT')
   const request = useRef<AbortController | null>(null)
@@ -24,6 +25,7 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
   const accept = useCallback((snapshot: RoomSnapshot) => {
     cancelPending()
     setState({ snapshot, loading: false })
+    setReconnecting(false)
     setPollInterval(snapshot.room.pollIntervalMillis)
   }, [cancelPending])
   const markJoined = useCallback((value: boolean) => {
@@ -41,14 +43,16 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
         ? await heartbeatRoom(groupId, clientId, presence.current, controller.signal)
         : await getRoom(groupId, controller.signal)
       if (!controller.signal.aborted && generation === sequence.current) {
-        setState({ snapshot, loading: false }); setPollInterval(snapshot.room.pollIntervalMillis)
+        setState({ snapshot, loading: false }); setReconnecting(false); setPollInterval(snapshot.room.pollIntervalMillis)
       }
     } catch (error) {
       if (!controller.signal.aborted && generation === sequence.current && !axios.isCancel(error)) {
         if (isTransient(error)) {
           // Keep the room until the server itself rejects the lease; the next poll retries.
           setState(previous => previous.snapshot ? previous : { loading: false, error: errorMessage(error) })
+          setReconnecting(true)
         } else {
+          setReconnecting(false)
           markJoined(false)
           setState({ loading: false, error: errorMessage(error) })
         }
@@ -77,5 +81,5 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
     return () => window.clearInterval(interval)
   }, [pollInterval, refresh])
 
-  return { ...state, joinedHere, markJoined, accept, refresh, setPresence: (value: PresenceState) => { presence.current = value } }
+  return { ...state, reconnecting, joinedHere, markJoined, accept, refresh, setPresence: (value: PresenceState) => { presence.current = value } }
 }
