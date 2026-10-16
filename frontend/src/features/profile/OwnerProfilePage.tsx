@@ -38,9 +38,12 @@ export default function OwnerProfilePage({ id }: { id: number }) {
   }, true, false)
   const courses = useResource(`courses:${id}`, signal => readForEditor(getCourses, signal), true, false)
 
-  useEffect(() => {
+  // Adopt the loaded pair whenever either read changes; a purge stays cleared until a read changes again.
+  const [seen, setSeen] = useState<{ profile?: MyProfile; courses?: Course[] }>({})
+  if (seen.profile !== profile.data || seen.courses !== courses.data) {
+    setSeen({ profile: profile.data, courses: courses.data })
     if (profile.data && courses.data) setEditor({ profile: profile.data, courses: courses.data })
-  }, [profile.data, courses.data])
+  }
   useEffect(() => {
     const onChange = (event: Event) => {
       if ((event as CustomEvent<{ purge: boolean }>).detail?.purge) setEditor(undefined)
