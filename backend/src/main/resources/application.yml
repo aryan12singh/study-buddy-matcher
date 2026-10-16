@@ -42,7 +42,9 @@ app:
     default-break-minutes: ${ROOM_DEFAULT_BREAK_MINUTES:5}
     max-focus-minutes: ${ROOM_MAX_FOCUS_MINUTES:180}
     max-break-minutes: ${ROOM_MAX_BREAK_MINUTES:60}
-    lease-lifetime: ${ROOM_LEASE_LIFETIME:30s}
+    # Longer than the one-minute timer floor browsers apply to long-hidden tabs, so a student
+    # reading in another tab keeps their place. Closing the tab still leaves immediately.
+    lease-lifetime: ${ROOM_LEASE_LIFETIME:90s}
     poll-interval: ${ROOM_POLL_INTERVAL:2s}
   auth:
     secret: ${jwt.secret}
