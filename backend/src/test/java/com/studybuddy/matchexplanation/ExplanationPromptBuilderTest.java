@@ -2,6 +2,7 @@ package com.studybuddy.matchexplanation;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -24,5 +25,15 @@ class ExplanationPromptBuilderTest {
 
         assertTrue(prompt.contains("{\"explanation\""), prompt);
         assertTrue(prompt.contains("probability"), prompt);
+    }
+
+    @Test
+    void tellsTheModelThatAnUnsharedPreferenceIsNotAMismatch() {
+        String prompt = builder.build(new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation()));
+
+        assertEquals("v2", ExplanationPromptBuilder.PROMPT_VERSION);
+        assertTrue(prompt.contains("\"known\": false"), prompt);
+        assertTrue(prompt.contains("never as a weak or poor match"), prompt);
+        assertTrue(prompt.contains("\"known\":true"), prompt);
     }
 }

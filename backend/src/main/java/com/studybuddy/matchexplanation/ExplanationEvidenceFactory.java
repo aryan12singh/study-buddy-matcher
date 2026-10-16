@@ -21,7 +21,8 @@ public class ExplanationEvidenceFactory {
     public ExplanationEvidence from(MatchEvaluation evaluation) {
         MatchResultDto result = evaluation.result();
         List<CriterionEvidence> criteria = result.breakdown().stream()
-                .map(score -> new CriterionEvidence(score.criterion(), round(score.score(), SCORE_PRECISION), score.enabled()))
+                .map(score -> new CriterionEvidence(score.criterion(), round(score.score(), SCORE_PRECISION), score.enabled(),
+                        score.known()))
                 .toList();
         CourseEvidence course = result.relevantCourse() == null ? null
                 : new CourseEvidence(result.relevantCourse().code(), result.relevantCourse().name());
