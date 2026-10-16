@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
 import { deferred, renderPage, response } from '../../test/renderApp'
 import StudyRoomPage from './StudyRoomPage'
@@ -124,6 +125,26 @@ describe('private room screen', () => {
     expect(screen.queryByText('Priya (you)')).not.toBeInTheDocument()
     expect(screen.queryByRole('timer')).not.toBeInTheDocument()
     expect(engine.close).toHaveBeenCalled()
+  })
+
+  it('stays in the room when a heartbeat fails on the network or server', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
+    const heartbeat = vi.spyOn(api, 'put')
+      .mockRejectedValueOnce(new AxiosError('Network Error', 'ERR_NETWORK'))
+      .mockRejectedValueOnce(new AxiosError('Unavailable', 'ERR_BAD_RESPONSE', undefined, undefined,
+        { status: 503, statusText: 'Unavailable', data: {}, headers: {}, config: { headers: new AxiosHeaders() } }))
+      .mockResolvedValue(response(joinedRoom()))
+    open()
+    await joinStudyRoom()
+    await screen.findByRole('button', { name: 'Leave room' })
+    const closesAfterJoin = engine.close.mock.calls.length
+    fireEvent(window, new Event('focus'))
+    await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(1))
+    fireEvent(window, new Event('focus'))
+    await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(2))
+    expect(screen.getByRole('button', { name: 'Leave room' })).toBeInTheDocument()
+    expect(screen.getByRole('timer')).toBeInTheDocument()
+    expect(engine.close).toHaveBeenCalledTimes(closesAfterJoin)
   })
 
   it('keeps audio silent until consent and applies volume/mute only locally', async () => {

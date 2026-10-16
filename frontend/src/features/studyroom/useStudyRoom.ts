@@ -4,6 +4,11 @@ import { errorMessage } from '../../shared/api/client'
 import { getRoom, heartbeatRoom } from './api'
 import type { PresenceState, RoomSnapshot } from './api'
 
+/** A dropped connection, timeout or server fault says nothing about room access. */
+function isTransient(error: unknown) {
+  return axios.isAxiosError(error) && (!error.response || error.response.status >= 500)
+}
+
 export function useStudyRoom(groupId: number, clientId: string, valid: boolean) {
   const [state, setState] = useState<{ snapshot?: RoomSnapshot; error?: string; loading: boolean }>({ loading: valid })
   const [joinedHere, setJoinedHere] = useState(false)
@@ -40,8 +45,13 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
       }
     } catch (error) {
       if (!controller.signal.aborted && generation === sequence.current && !axios.isCancel(error)) {
-        markJoined(false)
-        setState({ loading: false, error: errorMessage(error) })
+        if (isTransient(error)) {
+          // Keep the room until the server itself rejects the lease; the next poll retries.
+          setState(previous => previous.snapshot ? previous : { loading: false, error: errorMessage(error) })
+        } else {
+          markJoined(false)
+          setState({ loading: false, error: errorMessage(error) })
+        }
       }
     } finally { if (request.current === controller) request.current = null }
   }, [groupId, clientId, valid, markJoined])
