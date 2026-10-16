@@ -26,9 +26,18 @@ public class RoomAccess {
     public StudyGroup lockMember(Long groupId, Long actorId, Long... targets) {
         Long[] ids = Stream.concat(Stream.of(actorId), Stream.of(targets)).filter(Objects::nonNull).toArray(Long[]::new);
         accounts.lockStudents(actorId, ids);
-        StudyGroup group = groups.findGroupForUpdate(groupId);
+        return requireOpenMembership(groups.findGroupForUpdate(groupId), actorId);
+    }
+
+    /** Lock-free check for polled reads, so members' polls do not queue on the group row. */
+    public StudyGroup readMember(Long groupId, Long actorId) {
+        accounts.requireStudent(actorId);
+        return requireOpenMembership(groups.findGroup(groupId), actorId);
+    }
+
+    private StudyGroup requireOpenMembership(StudyGroup group, Long actorId) {
         if (!group.isActive()) throw new ConflictException("This group is closed; its study room is unavailable");
-        if (!memberships.existsByStudyGroupIdAndStudentId(groupId, actorId)) {
+        if (!memberships.existsByStudyGroupIdAndStudentId(group.getId(), actorId)) {
             throw new ForbiddenActionException("Only accepted group members can access this room");
         }
         return group;

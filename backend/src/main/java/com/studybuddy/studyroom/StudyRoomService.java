@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,8 +39,9 @@ public class StudyRoomService {
         this.clock = clock;
     }
 
+    @Transactional(readOnly = true)
     public StudyRoomDto state(Long groupId, Long actorId) {
-        StudyGroup group = access.lockMember(groupId, actorId);
+        StudyGroup group = access.readMember(groupId, actorId);
         StudyRoom room = rooms.findByStudyGroupId(groupId).orElseGet(() -> new StudyRoom(group, settings));
         return detail(room, actorId);
     }
@@ -63,16 +65,28 @@ public class StudyRoomService {
         return detail(room, actorId);
     }
 
+    /**
+     * Renews only an existing lease, so it skips the group lock that join needs for capacity.
+     * A removal that deletes the lease first makes the renewal match no row, reported as expired.
+     */
     public StudyRoomDto heartbeat(Long groupId, Long actorId, RoomHeartbeatInput input) {
-        StudyGroup group = access.lockMember(groupId, actorId);
-        StudyRoom room = persistedRoom(group);
+        access.readMember(groupId, actorId);
         Instant now = clock.instant();
+        StudyRoom room = rooms.findByStudyGroupId(groupId).orElseThrow(this::expiredPresence);
         var lease = presences.findByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, input.clientId())
             .filter(p -> p.getExpiresAt().isAfter(now))
-            .orElseThrow(() -> new ConflictException("Your room presence expired; join the room again"));
+            .orElseThrow(this::expiredPresence);
         lease.renew(input.presence(), now, now.plus(settings.leaseLifetime()));
-        presences.flush();
+        try {
+            presences.flush();
+        } catch (ObjectOptimisticLockingFailureException removedMeanwhile) {
+            throw expiredPresence();
+        }
         return detail(room, actorId);
+    }
+
+    private ConflictException expiredPresence() {
+        return new ConflictException("Your room presence expired; join the room again");
     }
 
     public void leave(Long groupId, Long actorId, UUID clientId) {

@@ -1,8 +1,11 @@
 package com.studybuddy.integration;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
@@ -94,6 +97,28 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         join(other, UUID.randomUUID());
         expect(call("POST", path() + "/join", member, Map.of("clientId", tab)), 409);
         assertEquals(1, count("select count(*) from room_presences"), "Expired leases are pruned on join");
+    }
+
+    @Test
+    void pollingDoesNotWaitForAHeldGroupLock() throws Exception {
+        UUID tab = UUID.randomUUID();
+        join(member, tab);
+        try (Connection holder = database.getDataSource().getConnection()) {
+            holder.setAutoCommit(false);
+            try (var lock = holder.prepareStatement("select id from study_groups where id = ? for update")) {
+                lock.setLong(1, groupId);
+                lock.executeQuery();
+            }
+            try {
+                var read = CompletableFuture.supplyAsync(() -> call("GET", path(), other, null));
+                var heartbeat = CompletableFuture.supplyAsync(() ->
+                    call("PUT", path() + "/presence", member, Map.of("clientId", tab, "presence", "FOCUS")));
+                expect(read.get(5, TimeUnit.SECONDS), 200);
+                expect(heartbeat.get(5, TimeUnit.SECONDS), 200);
+            } finally {
+                holder.rollback();
+            }
+        }
     }
 
     @Test
