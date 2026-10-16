@@ -1,9 +1,11 @@
 package com.studybuddy.matchexplanation;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 /**
  * Counts AI provider calls per day, so a busy demo falls back to the standard explanation
@@ -17,9 +19,18 @@ public class ExplanationQuota {
     private LocalDate day;
     private int used;
 
-    public ExplanationQuota(AiExplanationProperties properties, Clock explanationQuotaClock) {
+    /**
+     * The day boundary follows the students' time zone, not the server's. The clock is built here
+     * rather than as a shared bean, so it never competes with the application's UTC clock.
+     */
+    @Autowired
+    public ExplanationQuota(AiExplanationProperties properties) {
+        this(properties, Clock.system(ZoneId.of(properties.quotaZone())));
+    }
+
+    ExplanationQuota(AiExplanationProperties properties, Clock clock) {
         this.dailyLimit = properties.dailyCallLimit();
-        this.clock = explanationQuotaClock;
+        this.clock = clock;
     }
 
     public synchronized boolean tryAcquire() {
