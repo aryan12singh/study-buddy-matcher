@@ -5,7 +5,8 @@ SDK or Supabase Auth policies. This branch's complete migration set defines 20 m
 application tables: the 17 baseline tables plus `study_rooms`, `room_presences` and
 `study_sessions`, together with their sequences/default privileges and
 browser grants; provider-managed schemas are untouched. This describes the schema after
-applying the complete ordered migration set, not the current hosted deployment state.
+applying the complete ordered migration set. The shared project received the full set on
+16 October 2026; see the [E2 rollout record](#e2-rollout--16-october-2026).
 
 ## Ordered migrations
 
@@ -219,13 +220,53 @@ the seed finished. The historical 7 October shared run recorded 10 courses, 50 s
 51 users and a second startup without identity/password/creation changes. These counts
 are historical evidence, not a fresh hosted count for the current branch.
 
+### E2 rollout — 16 October 2026
+
+PR #52 (E2 collaborative study) merged to `main` as `66d121a`. Before anything ran against
+shared Supabase, the shared project `tagmkcbjespzgljdafiv` was checked directly. It still had
+the 18 pre-E2 public tables (the 17 mapped baseline tables plus an unmapped, empty,
+RLS-protected `match_explanations` table from the separate E1 branch), with 53 accounts,
+52 student profiles, 4 groups, 26 notifications and 3 connections. Its
+`notifications_type_check` did not yet allow session notification types.
+
+Dry run first. A schema-only copy of the shared `public` schema was restored into a
+disposable PostgreSQL 17 database with the provider roles created for ACL restoration. The
+complete ordered SQL set from the merged source applied successfully twice (proving it is
+safe to repeat), and the packaged Java 21 application then started against the copy with
+`ddl-auto=validate`. The disposable database was deleted afterwards.
+
+Rollout. A private PostgreSQL 17 custom-format backup of the shared `public` schema and data
+was captured outside tracked source and test-restored into an isolated database, where its
+row counts matched the live project exactly. `scripts/migrate-database.sh` from `66d121a`
+was then run through the project's IPv4 session pooler (the direct database host is
+IPv6-only), as one transaction under the exclusive application advisory lock with bounded
+lock and statement timeouts. Because this used the repository runner rather than the hosted
+MCP runner, no MCP migration-history entry exists for this rollout; this section is the record.
+No application table was truncated, seeded or reset.
+
+Post-rollout checks confirmed:
+
+- 21 public tables: the 20 mapped application tables plus the unmapped E1 table above.
+- `study_rooms`, `room_presences` and `study_sessions` have RLS enabled and deny anon and
+  authenticated SELECT, with 11, 2 and 5 check constraints respectively, including
+  `occurrence_count` between 1 and 52.
+- `notifications_type_check` includes the six group/buddy session types and is validated.
+- No public table is readable by anon or authenticated, and none has RLS disabled.
+- 53 accounts, 52 student profiles, 4 groups, 26 notifications and 3 connections remained.
+- The packaged application from `66d121a` started against the shared database with
+  `ddl-auto=validate`, demo seeding and live weather disabled. This was a temporary
+  schema/wiring check, not a persistent hosted deployment.
+
+Restore path if needed: the backup is a `pg_restore`-compatible custom-format dump kept
+privately by the operator. It must not be attached to a PR or committed.
+
 ## Privacy and access verification
 
 After this branch's complete migration set, all 20 application tables have RLS enabled;
 PUBLIC/anon/authenticated grants are revoked and there are no browser policies. This
 baseline boundary, including enabled criteria, passed the 13 October disposable tests.
-The room/session boundary belongs to the E2 completion verification and must be checked
-after its reviewed hosted rollout. The backend owner is intentionally not FORCE-RLS, so
+The room/session boundary was checked on the shared project after the
+[16 October E2 rollout](#e2-rollout--16-october-2026). The backend owner is intentionally not FORCE-RLS, so
 JDBC still works. Revocation of browser sequence and future default table/sequence/function
 privileges prevents an alternate direct API data path. Do not add a permissive policy to make
 the dashboard's advisor INFO notice disappear.
@@ -275,7 +316,8 @@ References: [PostgreSQL partial indexes](https://www.postgresql.org/docs/17/inde
 ## PR #52 E2 upgrade
 
 The ordered set now includes the original room migration and two forward E2 migrations.
-This document does not claim they were applied to shared Supabase. Do not revise an
+They were applied to shared Supabase on 16 October 2026; see the
+[E2 rollout record](#e2-rollout--16-october-2026). Do not revise an
 already-applied room migration or use Hibernate `update` as a substitute for the
 audio adoption and security constraints. Inspect actual target history/schema first;
 the historical compulsory rollout above remains a baseline-only record.
