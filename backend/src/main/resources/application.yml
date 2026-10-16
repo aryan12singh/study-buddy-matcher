@@ -27,7 +27,6 @@ app:
   study-session:
     maximum-occurrences: ${SESSION_MAXIMUM_OCCURRENCES:52}
     maximum-duration-hours: ${SESSION_MAXIMUM_DURATION_HOURS:24}
-    availability-time-zone: Asia/Singapore
   weather:
     enabled: ${WEATHER_ENABLED:true}
     latitude: ${WEATHER_LATITUDE:1.297}

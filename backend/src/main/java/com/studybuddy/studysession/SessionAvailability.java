@@ -13,11 +13,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SessionAvailability {
+    /** Weekly availability is stored as Singapore campus time, so suggestions are too. */
+    private static final String AVAILABILITY_TIME_ZONE = "Asia/Singapore";
+
     private final AvailabilitySlotRepository slots;
     private final GroupMembershipRepository memberships;
-    private final SessionSettings settings;
-    public SessionAvailability(AvailabilitySlotRepository slots, GroupMembershipRepository memberships, SessionSettings settings) {
-        this.slots = slots; this.memberships = memberships; this.settings = settings;
+    public SessionAvailability(AvailabilitySlotRepository slots, GroupMembershipRepository memberships) {
+        this.slots = slots; this.memberships = memberships;
     }
     public SessionAvailabilityDto forGroup(StudyGroup group) {
         return intersect(memberships.findByStudyGroupId(group.getId()).stream().map(GroupMembership::getStudent)
@@ -32,7 +34,7 @@ public class SessionAvailability {
             WeeklyAvailability next = WeeklyAvailability.from(slots.findByStudentId(students.get(index).getId()));
             shared = index == 0 ? next : new WeeklyAvailability(shared.sharedSlotsWith(next));
         }
-        return new SessionAvailabilityDto(settings.availabilityTimeZone(), students.size(), shared.slots().stream()
+        return new SessionAvailabilityDto(AVAILABILITY_TIME_ZONE, students.size(), shared.slots().stream()
             .map(slot -> new SharedSlotDto(slot.day(), slot.start(), slot.end())).toList(), shared.totalMinutes());
     }
 }

@@ -10,10 +10,15 @@ import java.util.List;
 
 /** Each weekly occurrence preserves wall time; gaps and repeated local times require an explicit different time. */
 public record SessionSchedule(LocalDateTime startLocal, LocalDateTime endLocal, String timeZone, int occurrenceCount) {
+    /** Hard ceiling, mirrored by the occurrence_count CHECK in the study_sessions migration. */
+    public static final int MAX_OCCURRENCES = 52;
+
     public SessionSchedule {
         if (startLocal == null || endLocal == null) invalid("startLocal", "Start and end are required");
         if (timeZone == null || !ZoneId.getAvailableZoneIds().contains(timeZone)) invalid("timeZone", "Choose a valid IANA timezone");
-        if (occurrenceCount < 1 || occurrenceCount > 52) invalid("occurrenceCount", "Use between 1 and 52 weekly occurrences");
+        if (occurrenceCount < 1 || occurrenceCount > MAX_OCCURRENCES) {
+            invalid("occurrenceCount", "Use between 1 and " + MAX_OCCURRENCES + " weekly occurrences");
+        }
         if (startLocal.getSecond() != 0 || startLocal.getNano() != 0 || endLocal.getSecond() != 0 || endLocal.getNano() != 0) {
             invalid("startLocal", "Session times must use whole minutes");
         }

@@ -357,7 +357,6 @@ or the property in `application-local.yml`.
 | `ROOM_POLL_INTERVAL` / `app.study-room.poll-interval` | `2s` | Shared room refresh interval |
 | `SESSION_MAXIMUM_OCCURRENCES` / `app.study-session.maximum-occurrences` | `52` (1 to 52) | Most weekly occurrences; 1 means one-off |
 | `SESSION_MAXIMUM_DURATION_HOURS` / `app.study-session.maximum-duration-hours` | `24` | Longest single occurrence |
-| `app.study-session.availability-time-zone` | `Asia/Singapore` (fixed) | Timezone of weekly availability used for suggestions |
 | `WEATHER_ENABLED` / `app.weather.enabled` | `true` (`false` in tests) | Turns the campus weather provider on |
 | `WEATHER_LATITUDE` / `WEATHER_LONGITUDE` | `1.297` / `103.849` | Campus coordinates sent to the provider |
 | `WEATHER_LOCATION` / `app.weather.location` | `SMU campus` | Display label for those coordinates |

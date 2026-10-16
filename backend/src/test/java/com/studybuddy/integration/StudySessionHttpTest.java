@@ -1,5 +1,6 @@
 package com.studybuddy.integration;
 
+import com.studybuddy.studysession.SessionSchedule;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -10,6 +11,11 @@ import tools.jackson.databind.JsonNode;
 import static org.junit.jupiter.api.Assertions.*;
 
 class StudySessionHttpTest extends PostgresHttpTest {
+    @Test void databaseOccurrenceLimitMatchesTheDomainLimit() {
+        String check = database.queryForObject("select pg_get_constraintdef(oid) from pg_constraint"
+            + " where conrelid = 'study_sessions'::regclass and pg_get_constraintdef(oid) like '%occurrence_count%'", String.class);
+        assertTrue(check.contains("occurrence_count <= " + SessionSchedule.MAX_OCCURRENCES), check);
+    }
     @Test void groupLeaderSchedulesMembersReadAndExportAndOutsidersCannotAccess() {
         var people = people();
         long group = group(people.leaderToken, 3);

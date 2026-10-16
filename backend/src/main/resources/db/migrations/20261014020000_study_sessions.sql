@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     start_at timestamptz NOT NULL,
     end_at timestamptz NOT NULL,
     time_zone varchar(100) NOT NULL,
+    -- Upper bound must stay equal to SessionSchedule.MAX_OCCURRENCES.
     occurrence_count integer NOT NULL CHECK (occurrence_count BETWEEN 1 AND 52),
     agenda varchar(4000),
     location varchar(255),

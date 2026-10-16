@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SessionScheduleTest {
-    private final SessionSettings settings = new SessionSettings(52, 24, "Asia/Singapore");
+    private final SessionSettings settings = new SessionSettings(52, 24);
     @Test void weeklyDatesPreserveWallTimeAcrossDst() {
         var schedule = new SessionSchedule(LocalDateTime.parse("2026-10-25T10:00"), LocalDateTime.parse("2026-10-25T11:00"), "America/New_York", 3);
         assertEquals(Instant.parse("2026-10-25T14:00:00Z"), schedule.occurrences().get(0).startAt());
@@ -31,7 +31,7 @@ class SessionScheduleTest {
         assertThrows(InvalidInputException.class, () -> SessionSchedule.validate(input("2026-11-01T10:00", "2026-11-01T11:00", "Asia/Singapore", 0), settings));
     }
     @Test void configurableLimitIsUsedRatherThanOnlyDatabaseMaximum() {
-        assertThrows(InvalidInputException.class, () -> SessionSchedule.validate(input("2026-11-01T10:00", "2026-11-01T11:00", "Asia/Singapore", 3), new SessionSettings(2, 24, "Asia/Singapore")));
+        assertThrows(InvalidInputException.class, () -> SessionSchedule.validate(input("2026-11-01T10:00", "2026-11-01T11:00", "Asia/Singapore", 3), new SessionSettings(2, 24)));
     }
     @Test void safeLinksAllowOnlyOwnRoomOrCredentialFreeHttps() {
         SessionInput original = input("2026-11-01T10:00", "2026-11-01T11:00", "Asia/Singapore", 1);
