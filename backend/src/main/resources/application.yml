@@ -58,7 +58,8 @@ app:
     default-result-limit: 20
     max-result-limit: 50
     # Every strategy has all five weights; omitted values are zero. Enabled weights add up to 1.
-    # Priority defaults are zero, but administrators can give them weight too.
+    # A priority strategy gives its own criterion the largest share, so the score and label
+    # on a card always reflect what the list is ranked by.
     default-weights:
       balanced:
         course: 0.30
@@ -67,18 +68,34 @@ app:
         study-goal: 0.10
         group-size: 0.10
       availability-first:
-        course: 0.40
-        study-mode: 0.30
-        study-goal: 0.15
-        group-size: 0.15
-      course-first:
+        course: 0.25
         availability: 0.40
-        study-mode: 0.30
-        study-goal: 0.15
-        group-size: 0.15
+        study-mode: 0.15
+        study-goal: 0.10
+        group-size: 0.10
+      course-first:
+        course: 0.40
+        availability: 0.25
+        study-mode: 0.15
+        study-goal: 0.10
+        group-size: 0.10
+    # Priority strategies rank by bands of their criterion first, then by score within a band.
+    # The list is the lower bound of every band but the last, best first. Course-first has no
+    # setting: its bands are 1.0 and scoring.takes-course-score, so they always match the scorer.
+    priority-tiers:
+      # 3 h or more, 1 to 3 h, under 1 h of shared time per week.
+      availability-hours: [3.0, 1.0]
     quality:
       strong: 0.75
       good: 0.50
+    scoring:
+      # What a criterion is worth when either student left it empty. 0 means missing
+      # data never outranks real compatibility; the card shows it as "not shared".
+      unknown-score: 0.0
+      # Course score for a candidate who takes the course in focus but wants a buddy for another.
+      takes-course-score: 0.5
+      # Shortest shared block that counts as time to meet; shorter overlaps are ignored.
+      min-session-minutes: 60
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

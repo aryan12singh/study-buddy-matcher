@@ -8,8 +8,8 @@ const is442 = { id: 4, code: 'IS442', name: 'Object Oriented Programming' }
 const is216 = { id: 3, code: 'IS216', name: 'Web Application Development' }
 const myProfile = { id: 1, coursesTaken: [is442, is216], targetCourse: is442, preferredStudyMode: 'ONLINE', availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '11:00' }] }
 const breakdown = (course: number, availability: number) => [
-  { criterion: 'COURSE', score: course, enabled: true }, { criterion: 'AVAILABILITY', score: availability, enabled: true },
-  { criterion: 'STUDY_MODE', score: 1, enabled: true }, { criterion: 'STUDY_GOAL', score: 0, enabled: true }, { criterion: 'GROUP_SIZE', score: 0.5, enabled: true }
+  { criterion: 'COURSE', score: course, enabled: true, known: true }, { criterion: 'AVAILABILITY', score: availability, enabled: true, known: true },
+  { criterion: 'STUDY_MODE', score: 1, enabled: true, known: true }, { criterion: 'STUDY_GOAL', score: 0, enabled: true, known: true }, { criterion: 'GROUP_SIZE', score: 0.5, enabled: true, known: true }
 ]
 const jamie = {
   studentId: 2, name: 'Jamie Lee', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, studyMode: 'ONLINE',
@@ -75,7 +75,7 @@ describe('Find buddies page', () => {
   it('names the ranking strategy the admin chose', async () => {
     mockApi(() => Promise.resolve(response(ranked([jamie], 'AVAILABILITY_FIRST'))))
     openPage()
-    expect(await screen.findByText(/Ranked by Availability first matching\. Ranks by availability overlap/)).toBeInTheDocument()
+    expect(await screen.findByText(/Ranked by Availability first matching\. Groups students by how much time they share each week/)).toBeInTheDocument()
   })
 
   it.each(['AVAILABILITY_FIRST', 'COURSE_FIRST', 'BALANCED'])('preserves the %s response order across match qualities', async strategy => {
@@ -422,7 +422,7 @@ describe('Find buddies page', () => {
     else expect(screen.getByText(new RegExp(`Sorted by ${sort === 'MOST_SHARED_HOURS' ? 'Most shared hours' : 'Same year first'}\\. Balanced matching breaks ties`))).toBeInTheDocument()
   })
 
-  it('shows exact server compatibility, explanation, relevant course and disabled bars', async () => {
+  it('shows exact server compatibility, relevant course and disabled bars without the raw explanation', async () => {
     const match = { ...jamie, totalScore: 0.747, explanation: 'Course aligned; study goals disabled.',
       breakdown: jamie.breakdown.map(item => ({ ...item, enabled: item.criterion !== 'STUDY_GOAL' })) }
     mockApi(() => Promise.resolve(response(ranked([match]))))
@@ -430,7 +430,7 @@ describe('Find buddies page', () => {
     const row = await card('Jamie Lee')
     expect(within(row).getByText('74.7% compatibility')).toBeInTheDocument()
     expect(within(row).getByText('A comparison of study preferences, not a probability of success.')).toBeInTheDocument()
-    expect(within(row).getByText('Course aligned; study goals disabled.')).toBeInTheDocument()
+    expect(within(row).queryByText('Course aligned; study goals disabled.')).not.toBeInTheDocument()
     expect(within(row).getByText('Relevant course: IS442 Object Oriented Programming')).toBeInTheDocument()
     expect(within(row).getByRole('meter', { name: 'Study goal score' })).toHaveAttribute('aria-valuetext', 'Disabled by administrator')
     expect(screen.getByText(/Configuration version 2/)).toBeInTheDocument()

@@ -162,15 +162,53 @@ Add runtime `DEMO_SEED_ENABLED=true`, `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PA
 or corresponding `app.demo-seed` keys in ignored backend config. Both passwords obey the
 normal eight-character / 72-UTF-8-byte rules. Run backend once and then disable seeding.
 
-The transactional seed takes the exclusive write guard and adds missing course codes and
-identities. It supplies 10 courses, 50 synthetic varied profiles and one admin. Existing
-course names, profiles and password hashes are preserved. It neither resets nor repairs
-existing user data, and does not reseed relations or reactivate an existing identity. If an
-operator deletes a seeded identity, a later explicitly enabled seed can recreate it as a new
-identity; leave seeding disabled during normal account-lifecycle demonstrations.
+The transactional seed takes the exclusive write guard and reads
+`backend/src/main/resources/demo-seed/demo-data.json`. It adds missing course codes and
+identities: 14 courses, 50 synthetic students and one admin. Students are created through
+`AccountCreation` and `ProfileService`, so the normal validation applies.
 
-Initial handles: priya, jamie, alex, student04 through student50 and admin, all under
-`@demo.example.test`. The operator privately supplies passwords. On this machine,
+When **none** of the 50 demo students existed beforehand, it then replays the demo history
+through the real services: match requests, connections (one ended), four groups (one full,
+one closed) and one administrator deactivation. Notifications are produced exactly as in live
+use. This is the only case where it writes relations.
+
+Existing course names, profiles and password hashes are preserved. It neither resets nor
+repairs existing user data, and does not reseed relations or reactivate an existing identity.
+If an operator deletes a seeded identity, a later explicitly enabled seed can recreate it as a
+new identity; leave seeding disabled during normal account-lifecycle demonstrations.
+
+**Moving a shared database from the earlier seed.** A database seeded before October 2026 still
+holds the old `student04`–`student50` identities. The new seed adds its students alongside them
+but skips the history, because `priya`, `jamie` and `alex` already exist. To get the full demo
+state, an approved operator does a one-off reset:
+
+1. **Stop every backend** pointed at the database, and tell the team. Anything done with demo
+   accounts (requests, groups, edits) will be lost.
+2. **Run the whole of [`scripts/sql/reset-demo-data.sql`](../scripts/sql/reset-demo-data.sql)**
+   once, in the Supabase SQL editor or with `psql --set=ON_ERROR_STOP=1 --file=...`. Run the
+   full file, not a selection.
+   - It deletes every `@demo.example.test` account and everything depending on it in a single
+     `DO` statement, so it is atomic however the client sends it: an error changes nothing. It
+     ends by printing `demo_accounts_remaining = 0`.
+   - An earlier version kept its working lists in temporary tables across several statements and
+     failed in the Supabase SQL editor with `relation "demo_students" does not exist`, before any
+     delete ran. If you saw that error, nothing was removed; run the current file.
+   - Courses, matching configuration and non-demo accounts are kept. A non-demo account only
+     loses its own requests, connections, memberships and applications that involved demo
+     accounts.
+3. **Start one backend with seeding enabled**, then **wait for the seed to finish** before
+   stopping it: the seed runs after startup and is rolled back if the app stops mid-way. It is
+   complete when `select count(*) from study_groups where name = 'IS212 Sprint Retro'` returns 1.
+4. **Disable seeding** again and sign in as `priya@demo.example.test` to check the demo state.
+
+The full sequence (old seed with a non-demo account interacting with demo accounts, then the
+reset script, then the new seed) was rehearsed on a disposable local PostgreSQL. It produced
+14 courses, 50 demo students plus the untouched non-demo account, one admin, one deactivated
+student and the four demo groups.
+<!-- REVIEW (Team B): agree who performs the shared-database reset and when, before running it. -->
+
+Handles include priya, jamie, alex, appendix.a, appendix.b, hannah, ethan, ryan and admin, all
+under `@demo.example.test`; the full list is in `demo-data.json`. The operator privately supplies passwords. On this machine,
 `.env.demo.local` holds the shared demo passwords; source it only for intentional seed use.
 Never paste it into a frontend env file, commit it or attach it to a PR.
 

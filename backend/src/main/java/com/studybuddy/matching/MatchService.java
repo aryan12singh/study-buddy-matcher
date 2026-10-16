@@ -8,7 +8,6 @@ import com.studybuddy.matching.availability.WeeklyAvailability;
 import com.studybuddy.matching.config.MatchingConfigService;
 import com.studybuddy.matching.config.MatchingProperties;
 import com.studybuddy.matching.config.MatchingConfigSnapshot;
-import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingProfile;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
 import com.studybuddy.matching.strategy.MatchingStrategy;
@@ -21,9 +20,10 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
-import java.util.Objects;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -66,23 +66,24 @@ public class MatchService {
     public MatchSearchResultDto search(MatchSearchCriteria search, Long actorId) {
         Student self = access.requireStudent(actorId);
         validate(search);
-        Map<Long, WeeklyAvailability> availability = availabilityByStudent();
+        List<Long> eligible = access.eligibleStudentIds();
+        List<Student> pool = students.findWithMatchingDetailsByIdIn(eligible);
+        Map<Long, WeeklyAvailability> availability = availabilityOf(eligible, self.getId());
         MatchingProfile searcher = profileOf(self, availability);
         MatchingConfigSnapshot settings = config.snapshot();
         MatchingStrategy strategy = settings.strategy();
-        QualityThresholds thresholds = properties.quality();
         MatchQuality minimum = search.minQuality() == null ? MatchQuality.FAIR : search.minQuality();
         Map<Long, RelationshipState> standing = relationships.of(self.getId());
 
         MatchSort sort = search.sort() == null ? MatchSort.BEST_MATCH : search.sort();
         int limit = search.limit() == null ? properties.defaultResultLimit() : search.limit();
-        List<ScoredCandidate> ranked = students.findAllById(access.eligibleStudentIds()).stream()
+        List<ScoredCandidate> ranked = pool.stream()
                 .filter(student -> !student.getId().equals(self.getId()))
                 .filter(student -> standing.get(student.getId()) != RelationshipState.CONNECTED)
                 .map(student -> profileOf(student, availability))
                 .filter(candidate -> filter.accepts(search, searcher, candidate))
                 .map(candidate -> new ScoredCandidate(candidate, scorer.score(searcher, candidate, search, settings.weights(),
-                        settings.enabledCriteria(), thresholds)))
+                        settings.enabledCriteria())))
                 .filter(scored -> scored.score().total() >= settings.minScore())
                 .filter(scored -> scored.score().quality().isAtLeast(minimum))
                 .sorted(ordering(sort, searcher, settings))
@@ -94,19 +95,16 @@ public class MatchService {
         return new MatchSearchResultDto(strategy.type(), settings.version(), sort, limit, ranked.size(), matches);
     }
 
+    /**
+     * The student's sort first, then the strategy, then more shared hours, then name and id
+     * so that equal matches always appear in the same order.
+     */
     private static Comparator<ScoredCandidate> ordering(MatchSort sort, MatchingProfile searcher,
             MatchingConfigSnapshot settings) {
-        Comparator<ScoredCandidate> ranking = Comparator.comparing(ScoredCandidate::score,
-                settings.strategy().ranking(settings.enabledCriteria()));
-        if (sort == MatchSort.MOST_SHARED_HOURS) {
-            ranking = Comparator.comparingDouble((ScoredCandidate candidate) -> candidate.score().sharedHoursPerWeek())
-                    .reversed().thenComparing(ranking);
-        } else if (sort == MatchSort.SAME_YEAR_FIRST) {
-            ranking = Comparator.comparing((ScoredCandidate candidate) -> searcher.student().getYearOfStudy() != null
-                    && Objects.equals(searcher.student().getYearOfStudy(), candidate.profile().student().getYearOfStudy()))
-                    .reversed().thenComparing(ranking);
-        }
-        return ranking.thenComparing(candidate -> candidate.profile().student().getName(), String.CASE_INSENSITIVE_ORDER)
+        return sort.before(searcher)
+                .thenComparing(ScoredCandidate::score, settings.strategy().ranking(settings.enabledCriteria()))
+                .thenComparing(Comparator.comparingDouble((ScoredCandidate candidate) -> candidate.score().sharedHoursPerWeek()).reversed())
+                .thenComparing(candidate -> candidate.profile().student().getName(), String.CASE_INSENSITIVE_ORDER)
                 .thenComparing(candidate -> candidate.profile().student().getId());
     }
 
@@ -128,17 +126,16 @@ public class MatchService {
         }
     }
 
-    /** Loads every student's slots in one query instead of one query per candidate. */
-    private Map<Long, WeeklyAvailability> availabilityByStudent() {
-        return availabilitySlots.findAll().stream()
+    /** Loads the searcher's and every eligible student's slots in one query; inactive students' are never read. */
+    private Map<Long, WeeklyAvailability> availabilityOf(List<Long> eligible, Long selfId) {
+        Set<Long> ids = new HashSet<>(eligible);
+        ids.add(selfId);
+        return availabilitySlots.findByStudentIdIn(ids).stream()
                 .collect(Collectors.groupingBy(slot -> slot.getStudent().getId(),
                         Collectors.collectingAndThen(Collectors.toList(), WeeklyAvailability::from)));
     }
 
     private static MatchingProfile profileOf(Student student, Map<Long, WeeklyAvailability> availability) {
         return new MatchingProfile(student, availability.getOrDefault(student.getId(), new WeeklyAvailability(List.<TimeSlot>of())));
-    }
-
-    private record ScoredCandidate(MatchingProfile profile, MatchScore score) {
     }
 }

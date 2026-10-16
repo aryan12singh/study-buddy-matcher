@@ -26,7 +26,8 @@ import static org.mockito.Mockito.*;
 class MatchingConfigServiceTest {
     private static final long ADMIN_ID = 1L;
     private static final Set<MatchingCriterion> ALL = EnumSet.allOf(MatchingCriterion.class);
-    private static final List<MatchingStrategy> STRATEGIES = List.of(new BalancedStrategy(), new AvailabilityFirstStrategy(), new CourseFirstStrategy());
+    private static final List<MatchingStrategy> STRATEGIES = List.of(new BalancedStrategy(), new AvailabilityFirstStrategy(MatchingFixtures.tiers()),
+            new CourseFirstStrategy(MatchingFixtures.rules()));
     @Mock private MatchingConfigRepository weightRows;
     @Mock private MatchingStrategySettingRepository strategyRows;
     @Mock private AccountAccess access;
@@ -88,7 +89,7 @@ class MatchingConfigServiceTest {
         weights.get(BALANCED).put(MatchingCriterion.COURSE, 0.2001);
         var defaults = MatchingFixtures.properties();
         service = new MatchingConfigService(weightRows, strategyRows,
-                new MatchingProperties(BALANCED, weights, defaults.quality(), ALL, 0, 20, 50), STRATEGIES,
+                new MatchingProperties(BALANCED, weights, defaults.quality(), defaults.scoring(), defaults.priorityTiers(), ALL, 0, 20, 50), STRATEGIES,
                 new MatchingConfigAssembler(), access);
         assertEquals(0.2001, service.snapshot().weights().weightOf(MatchingCriterion.COURSE));
     }

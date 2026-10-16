@@ -14,12 +14,12 @@ public class StudyModeScorer implements CriterionScorer {
     }
 
     @Override
-    public double score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
+    public CriterionResult score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
         StudyMode mine = searcher.student().getPreferredStudyMode();
         StudyMode theirs = candidate.student().getPreferredStudyMode();
         if (mine == null || theirs == null) {
-            return NEUTRAL_SCORE;
+            return CriterionResult.unknown();
         }
-        return mine == theirs || mine == StudyMode.EITHER || theirs == StudyMode.EITHER ? 1.0 : 0.0;
+        return CriterionResult.of(mine == theirs || mine == StudyMode.EITHER || theirs == StudyMode.EITHER ? 1.0 : 0.0);
     }
 }

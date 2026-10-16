@@ -5,6 +5,7 @@ import com.studybuddy.matching.availability.TimeSlot;
 import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingProfile;
+import com.studybuddy.matching.scoring.ScoringRules;
 import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.Student;
 import org.springframework.stereotype.Component;
@@ -16,20 +17,30 @@ import java.util.stream.Stream;
 
 @Component
 public class MatchResultAssembler {
+
+    private final ScoringRules rules;
+    private final MatchExplainer explainer;
+
+    public MatchResultAssembler(ScoringRules rules, MatchExplainer explainer) {
+        this.rules = rules;
+        this.explainer = explainer;
+    }
+
     public MatchResultDto toDto(MatchingProfile searcher, MatchingProfile candidate, MatchScore score,
             MatchSearchCriteria search, Set<MatchingCriterion> enabled, RelationshipState relationship) {
         Student student = candidate.student();
-        List<TimeSlot> shared = searcher.availability().sharedSlotsWith(candidate.availability());
+        List<TimeSlot> shared = searcher.availability().sharedSessionsWith(candidate.availability(), rules.minSessionMinutes());
         return new MatchResultDto(student.getId(), student.getName(), student.getSchool(), student.getProgramme(),
                 student.getYearOfStudy(), student.getPreferredStudyMode(), student.getStudyGoals().stream().sorted().toList(),
-                score.quality(), score.total(), score.explanation(), relevantCourse(searcher.student(), student, search),
+                score.quality(), score.total(), explainer.explain(score, enabled), relevantCourse(searcher.student(), student, search),
                 breakdownOf(score, enabled), score.sharedHoursPerWeek(), shared.stream().map(MatchResultAssembler::toDto).toList(),
                 relationship);
     }
 
     private static List<CriterionScoreDto> breakdownOf(MatchScore score, Set<MatchingCriterion> enabled) {
         return Arrays.stream(MatchingCriterion.values())
-                .map(criterion -> new CriterionScoreDto(criterion, score.scoreFor(criterion), enabled.contains(criterion)))
+                .map(criterion -> new CriterionScoreDto(criterion, score.scoreFor(criterion), enabled.contains(criterion),
+                        score.isKnown(criterion)))
                 .toList();
     }
 
