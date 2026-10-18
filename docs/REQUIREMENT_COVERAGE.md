@@ -242,11 +242,11 @@ The coverage file does not itself close or alter GitHub issues.
 
 ## Collaborative study experience (E2 #16)
 
-PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) now targets
-the full selected E2 feature. The earlier foundation-only plan has been superseded
-by the owner's completion request, including an expressly approved weather enhancement.
-Source coverage below is separate from the verification record in
-[E2_TESTING.md](E2_TESTING.md), actual client imports, hosted CI and deployment.
+PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) merged the full
+selected E2 feature, including the expressly approved weather enhancement. Its schema
+rollout is recorded on [16 October](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026).
+Source coverage below is separate from the dated verification record in
+[E2_TESTING.md](E2_TESTING.md), actual client imports and persistent application hosting.
 
 | Requirement / acceptance | Backend | Frontend / evidence boundary |
 | --- | --- | --- |
@@ -274,7 +274,29 @@ E2 does not implement E1 AI explanations, public rooms/chat, badge tracking, not
 boards, calendar OAuth/two-way sync or an automated reminder scheduler. Exporting a
 cancelled event cannot remove a previously imported offline copy, and a revoked
 relationship cannot still download the old calendar. Manual weather scenes are
-decoration, not forecasts. No shared hosted E2 rollout is claimed by source changes.
+decoration, not forecasts. The recorded database rollout does not establish a persistent
+hosted backend/frontend or new calendar-client acceptance.
+
+## Selected extras and delivery
+
+The team has recorded both E1 and E2 as its selected required extras. They extend the
+compulsory baseline. The 18 October source snapshot at `9592fd2` contains E2; PR #61
+carries E1's separate contract and evidence.
+
+| Tracked scope | Status at the checked revision/date | Acceptance or delivery evidence to complete |
+| --- | --- | --- |
+| E1 AI match explanation (#15) | Separate [PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61); `9592fd2` returns deterministic API text | Use E1's own contract/testing record for subsequent fixes, provider-backed reviewed examples, CI/review/merge and rollout evidence |
+| E2 collaborative study room/Pomodoro/music/calendar (#16) | Merged in #52 with weather; schema rollout recorded 16 October | Outlook import acceptance remains owner-deferred. Existing local/browser evidence is dated; team/device/projector acceptance and persistent hosting remain separate |
+| README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Baseline/E2 diagram sources and scalable SVG exports on [#62](https://github.com/aryan12singh/study-buddy-matcher/pull/62); E1 companion on #61 | Final cross-team source review, slide selection and physical-projector legibility; include E1's companion view when presenting that extension |
+| Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |
+| AI disclosure (#43) and demo data/integrated acceptance (#44) | Known retained use recorded; repeatable core evidence exists | Every member confirms their retained use; final demo states and deployed/extras acceptance |
+| Presentation/slides (#45) and rehearsal/submission (#46) | Unverified in the inspected repository | Editable deck/PDF backup; timed 12-minute demo + 8-minute Q&A; actual hardware/network/audio, verified LMS deadline/receipt and private peer evaluations |
+
+The internal freeze is 24 October; extras/integration delivery targets 25 October, materials
+and rehearsal target 8 November, and final handoff targets 15 November 2026 23:59 SGT.
+The formal brief states Week 13; verify the actual LMS deadline. Source availability or a
+saved/exported document does not prove submission. See the
+[schedule record](DESIGN_DECISIONS.md#schedule-and-submission-record).
 
 ## AI match explanation (E1, #15)
 
@@ -289,23 +311,3 @@ acceptance. [E1_TESTING.md](E1_TESTING.md) is the current regression and demo gu
 | Apply bounded output checks and state their limits | Prompt v3; evidence-aware course/numeric checks; current length policy for fresh/cached text | AI accuracy cue; literal text rendering | `ExplanationOutputValidatorTest`, prompt tests, panel rendering tests; live examples are separate acceptance |
 | Fall back on provider/cache failures without hiding core errors | Provider timeout/error handling; quota; separate cache-read/write `DataAccessException` boundaries | Standard explanation and ordinary retry states | Provider loopback, service and quota tests; no live provider required |
 | Reuse equivalent evidence without confusing it with card identity | Separate semantic hash; prompt/model versioning; unique cache row | — | `ExplanationHasherTest`, `MatchExplanationHttpTest`; cache-hit policy tests |
-
-## Selected extras and delivery
-
-The team has recorded both E1 and E2 as its selected required extras. They extend the
-compulsory baseline. This PR implements E2; E1 remains separate work.
-
-| Tracked scope | Current baseline status | Remaining gate |
-| --- | --- | --- |
-| E1 AI match explanation (#15) | Implemented on `feat/team-c/e1-ai-match-explanation` (Gemini, owner Charlize); regression/acceptance record in `E1_TESTING.md` | Live Gemini STRONG/GOOD/FAIR examples, cross-team review and merge remain distinct gates |
-| E2 collaborative study room/Pomodoro/music/calendar (#16) | Full source scope in current PR #52, including the approved weather enhancement; see the map above | Local suites, 23 browser checks, restart proof and independent audit passed; Outlook import acceptance deferred by owner, cross-team review/merge and reviewed deployment remain |
-| README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
-| Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |
-| AI disclosure (#43) and demo data/integrated acceptance (#44) | Known retained use recorded; repeatable core evidence exists | Every member confirms their retained use; final demo states and deployed/extras acceptance |
-| Presentation/slides (#45) and rehearsal/submission (#46) | Unverified in the inspected repository | Editable deck/PDF backup; timed 12-minute demo + 8-minute Q&A; actual hardware/network/audio, verified LMS deadline/receipt and private peer evaluations |
-
-The internal freeze is 24 October; extras/integration delivery targets 25 October, materials
-and rehearsal target 8 November, and final handoff targets 15 November 2026 23:59 SGT.
-The formal brief states Week 13; verify the actual LMS deadline. Source availability or a
-saved/exported document does not prove submission. See the
-[schedule record](DESIGN_DECISIONS.md#schedule-and-submission-record).
