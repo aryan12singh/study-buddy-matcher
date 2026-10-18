@@ -71,3 +71,5 @@ DO $$ BEGIN
 END $$;
 SQL
 printf 'Legacy upgrade, preflight rollback and repeat migration checks passed.\n'
+"${task_psql[@]}" --file="$task_repo_root/scripts/sql/test-reset-demo-data.sql"
+printf 'Mixed demo reset and repeat-reset preservation checks passed.\n'

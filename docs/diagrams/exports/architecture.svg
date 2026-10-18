@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1130" viewBox="0 0 1600 1130" role="img" aria-labelledby="title description">
+<title id="title">Architecture and privacy boundaries</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1600" height="1130" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="455" y="170" width="720" height="795" rx="12" fill="#eff4f7" stroke="#bdccd5" stroke-width="1.5" />
+<polyline points="44,1076 1556,1076" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="375,285 425,285 425,280 505,280" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="650,335 650,390" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="785,445 845,445" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="930,500 930,580" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="880,500 880,540 645,540 645,580" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1125,650 1240,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1125,420 1240,420" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1095,500 1150,500 1150,862 1125,862" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="505,862 215,862 215,545" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="45" y="260" width="330" height="285" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="45" y="260" width="330" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="505" y="230" width="620" height="105" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="505" y="230" width="620" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="505" y="390" width="280" height="110" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="505" y="390" width="280" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="845" y="390" width="280" height="110" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="845" y="390" width="280" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="505" y="580" width="280" height="140" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="505" y="580" width="280" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="845" y="580" width="280" height="140" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="845" y="580" width="280" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="505" y="800" width="620" height="126" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="505" y="800" width="620" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="1240" y="290" width="315" height="170" rx="6" fill="#fff5e5" stroke="#8a5a1a" stroke-width="1.5" data-node="box"/>
+<rect x="1240" y="290" width="315" height="6" rx="0" fill="#8a5a1a" stroke="none" stroke-width="1.5" />
+<rect x="1240" y="590" width="315" height="170" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="1240" y="590" width="315" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="45" y="990" width="1510" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">Architecture and privacy boundaries</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">The browser reaches application data only through the authenticated Spring API.</text>
+<text x="46" y="1103" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1554" y="1103" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/architecture.svg</text>
+<text x="477" y="201" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">SPRING BOOT BACKEND</text>
+<text x="63" y="295" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">React + Vite</text>
+<text x="63" y="329" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Feature screens and route guards</text>
+<text x="63" y="356" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Shared authenticated API client</text>
+<text x="63" y="383" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Local drafts and audio consent</text>
+<text x="63" y="410" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Calendar snapshot download</text>
+<text x="63" y="437" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">No database client / browser grant</text>
+<text x="523" y="265" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Spring Security</text>
+<text x="523" y="299" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">JWT signature · active account · role · token version</text>
+<text x="523" y="425" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Controllers</text>
+<text x="523" y="459" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Validate typed input</text>
+<text x="523" y="486" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Delegate one service call</text>
+<text x="863" y="425" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Application services</text>
+<text x="863" y="459" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Authorize current actor</text>
+<text x="863" y="486" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Coordinate domain rules</text>
+<text x="523" y="615" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Domain and values</text>
+<text x="523" y="649" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Entities retain state rules</text>
+<text x="523" y="676" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Scorers / strategies</text>
+<text x="523" y="703" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Immutable time / score values</text>
+<text x="863" y="615" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">JPA repositories</text>
+<text x="863" y="649" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Read and persist entities</text>
+<text x="863" y="676" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Ordered transition locks</text>
+<text x="863" y="703" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Database constraints</text>
+<text x="523" y="835" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">DTO assemblers</text>
+<text x="523" y="869" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">ProfileViewAssembler chooses the permitted response shape.</text>
+<text x="523" y="896" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">PublicProfileDto has no contact number; ConnectedProfileDto does.</text>
+<text x="1258" y="325" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Open-Meteo</text>
+<text x="1258" y="359" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Optional campus weather</text>
+<text x="1258" y="386" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Fixed coordinates only</text>
+<text x="1258" y="413" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Timeout / cache / fallback</text>
+<text x="1258" y="625" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">PostgreSQL</text>
+<text x="1258" y="659" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Managed by Supabase</text>
+<text x="1258" y="686" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Backend JDBC access</text>
+<text x="1258" y="713" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">RLS; browser grants revoked</text>
+<rect x="344.5" y="236" width="97.0" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="393" y="251" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">JWT + JSON</text>
+<rect x="1154.72" y="613" width="50.56" height="26" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1180" y="629" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">JDBC</text>
+<rect x="1145.65" y="370" width="72.7" height="45" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1182" y="385" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">weather</text>
+<text x="1182" y="405" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">request</text>
+<rect x="1109.6" y="765" width="80.80000000000001" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1150" y="780" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">assemble</text>
+<rect x="234.51999999999998" y="821" width="190.96" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="330" y="839" font-size="18" fill="#176c63" font-weight="400" text-anchor="middle">JSON response DTOs</text>
+<text x="62" y="1018" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Contact is returned only to its owner or an active accepted buddy. Group membership and admin authority do not grant it.</text>
+<text x="62" y="1043" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">E1 provider calls have a separate companion view; they are outside this baseline + E2 architecture at 9592fd2.</text>
+</g></svg>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1170" viewBox="0 0 1600 1170" role="img" aria-labelledby="title description">
+<title id="title">UML use cases — collaborative study (E2)</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1600" height="1170" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="230" y="170" width="1280" height="820" rx="8" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polyline points="44,1116 1556,1116" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="138,495 300,290" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="890,290 935,290" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="138,495 300,405" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="890,405 935,405" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="138,495 300,520" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="890,520 935,520" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="138,495 300,635" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="890,635 935,635" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="138,495 300,750" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="890,750 935,750" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="138,495 300,865" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="890,865 935,865" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<circle cx="100" cy="450" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
+<polyline points="100,469 100,534" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="62,495 138,495" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="66,570 100,534 134,570" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<ellipse cx="595" cy="290" rx="295.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<ellipse cx="595" cy="405" rx="295.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<ellipse cx="595" cy="520" rx="295.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<ellipse cx="595" cy="635" rx="295.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<ellipse cx="595" cy="750" rx="295.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<ellipse cx="595" cy="865" rx="295.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<rect x="45" y="1020" width="1510" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML use cases — collaborative study (E2)</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Selected extension merged with PR #52; this panel supplements the compulsory use cases.</text>
+<text x="46" y="1143" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1554" y="1143" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/e2-use-cases.svg</text>
+<text x="255" y="206" font-size="19" fill="#176c63" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER / E2</text>
+<text x="100" y="600" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
+<text x="595" y="284" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Join / leave private room</text>
+<text x="595" y="308" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and view current participants</text>
+<text x="955" y="282" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Accepted active group member;</text>
+<text x="955" y="307" font-size="18" fill="#506474" font-weight="400" text-anchor="start">distinct students count toward capacity.</text>
+<text x="595" y="399" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Control Pomodoro, shared</text>
+<text x="595" y="423" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">audio and room configuration</text>
+<text x="955" y="397" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Group leader or present assigned host/co-host;</text>
+<text x="955" y="422" font-size="18" fill="#506474" font-weight="400" text-anchor="start">only the leader assigns host roles.</text>
+<text x="595" y="514" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Choose local volume / mute</text>
+<text x="595" y="538" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and enable browser audio</text>
+<text x="955" y="512" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Intentional per-browser consent;</text>
+<text x="955" y="537" font-size="18" fill="#506474" font-weight="400" text-anchor="start">playback position and volume stay local.</text>
+<text x="595" y="629" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Plan / edit / cancel</text>
+<text x="595" y="653" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">group or buddy sessions</text>
+<text x="955" y="627" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Group leader or active buddy participant;</text>
+<text x="955" y="652" font-size="18" fill="#506474" font-weight="400" text-anchor="start">other accepted group members may view.</text>
+<text x="595" y="744" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">View mutual availability</text>
+<text x="595" y="768" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and export calendar snapshot</text>
+<text x="955" y="742" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Current parent relationship required;</text>
+<text x="955" y="767" font-size="18" fill="#506474" font-weight="400" text-anchor="start">suggestions do not confirm attendance.</text>
+<text x="595" y="859" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Choose room atmosphere</text>
+<text x="595" y="883" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and view campus weather</text>
+<text x="955" y="857" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Selectable original scenes; optional</text>
+<text x="955" y="882" font-size="18" fill="#506474" font-weight="400" text-anchor="start">cached Open-Meteo campus conditions.</text>
+<text x="62" y="1048" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No global online status, public room, chat, calendar synchronization or RSVP workflow is implied. Calendar files are private snapshots.</text>
+<text x="62" y="1073" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">E1 explanations have a separate companion view. Human/device and external-client acceptance require their own evidence.</text>
+</g></svg>

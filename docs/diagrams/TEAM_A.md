@@ -8,6 +8,7 @@ Matching algorithm, discovery API/page and admin configuration for issues
 These diagrams describe the implemented matching boundary. Team B's profile/security/data
 and Team C's request/privacy collaborators are dependencies, not duplicated matching logic.
 Use [TEAM_C.md](TEAM_C.md) for the request/contact-disclosure and account-lifecycle diagrams.
+Presentation exports and source/notation guidance are in the [diagram index](README.md).
 
 ## Use cases and permissions
 
@@ -282,6 +283,7 @@ sequenceDiagram
         Service->>Scoring: score enabled criteria with configured weights
         Scoring-->>Service: immutable score, quality, unknown criteria and shared session hours
     end
+    Service->>Service: filter total >= admin minScore and quality >= requested minQuality
     Service->>Strategy: order filtered scores with enabled priorities
     Strategy-->>Service: comparator
     Service->>Service: selected sort, shared-hours/name/ID ties, pre-limit count, then limit
@@ -342,5 +344,6 @@ sequenceDiagram
 
 A failure rolls back the whole config mutation. Concurrent first saves also meet the same
 singleton lock; stale edits cannot overwrite another administrator's changes. Stored
-settings/version survive restart. Future E1 wording can key caches by this revision and
-search/profile inputs; E1 never supplies ranks or compatibility numbers.
+settings/version survive restart. The E1 provider path on PR #61 adds wording after
+deterministic matching; that path is outside these baseline/E2 views of `9592fd2`. It must not
+supply ranks or compatibility numbers.

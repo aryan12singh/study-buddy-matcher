@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1240" viewBox="0 0 1800 1240" role="img" aria-labelledby="title description">
+<title id="title">UML classes — immutable values and private response shapes</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1800" height="1240" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="45" y="170" width="830" height="850" rx="12" fill="#eaf1f7" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="905" y="170" width="850" height="850" rx="12" fill="#eaf5f1" stroke="#bdccd5" stroke-width="1.5" />
+<polyline points="44,1186 1756,1186" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="460,504 460,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1330,330 1330,465" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1128,720 1128,660 1220,660 1220,581" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<polyline points="1543,720 1543,660 1440,660 1440,581" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<rect x="100" y="240" width="720" height="240" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="WeeklyAvailability"/>
+<rect x="100" y="240" width="720" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="100,310 820,310" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="100,356 820,356" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="100" y="650" width="720" height="240" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="TimeSlot"/>
+<rect x="100" y="650" width="720" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="100,720 820,720" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="100,792 820,792" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="460,480 452,492 460,504 468,492" fill="#647b88" stroke="#647b88"/>
+<rect x="955" y="235" width="750" height="95" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="ProfileViewAssembler"/>
+<rect x="955" y="235" width="750" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="955,284 1705,284" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1090" y="465" width="480" height="116" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="ProfileDto"/>
+<rect x="1090" y="465" width="480" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="1090,535 1570,535" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="935" y="720" width="385" height="194" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="PublicProfileDto"/>
+<rect x="935" y="720" width="385" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="935,790 1320,790" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1350" y="720" width="385" height="220" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="ConnectedProfileDto"/>
+<rect x="1350" y="720" width="385" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="1350,790 1735,790" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="45" y="1060" width="1710" height="99" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML classes — immutable values and private response shapes</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Value objects protect interval rules; a sealed DTO boundary keeps contact disclosure on the server.</text>
+<text x="46" y="1213" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1754" y="1213" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/values-and-privacy.svg</text>
+<text x="67" y="201" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">IMMUTABLE WEEKLY TIME VALUES</text>
+<text x="927" y="201" font-size="18" fill="#176c63" font-weight="700" text-anchor="start">PROFILE RESPONSE POLICY</text>
+<text x="460.0" y="265" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«record»</text>
+<text x="460.0" y="294" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">WeeklyAvailability</text>
+<text x="116" y="339" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">slots: List&lt;TimeSlot&gt;</text>
+<text x="116" y="385" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ totalMinutes(): long</text>
+<text x="116" y="411" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ sharedMinutesWith(other: WeeklyAvailability): long</text>
+<text x="116" y="437" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ sharedSlotsWith(other: WeeklyAvailability): List&lt;TimeSlot&gt;</text>
+<text x="116" y="463" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ sharedSessionsWith(other, minimumSessionMinutes): List&lt;TimeSlot&gt;</text>
+<text x="460.0" y="675" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«record»</text>
+<text x="460.0" y="704" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">TimeSlot</text>
+<text x="116" y="749" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">day: DayOfWeek</text>
+<text x="116" y="775" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">start, end: LocalTime</text>
+<text x="116" y="821" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ durationMinutes(): long</text>
+<text x="116" y="847" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ overlapMinutes(other: TimeSlot): long</text>
+<text x="116" y="873" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ intersection(other: TimeSlot): Optional&lt;TimeSlot&gt;</text>
+<rect x="472.14" y="507" width="25.72" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="485" y="525" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="474.56" y="607" width="54.88" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="502" y="625" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="337.25" y="558" width="245.50000000000003" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="460" y="575" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">slots (value composition)</text>
+<text x="1330.0" y="268" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">ProfileViewAssembler</text>
+<text x="971" y="313" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">+ assemble(subject: Student, viewerId: Long): ProfileDto</text>
+<text x="1330.0" y="490" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«sealed interface»</text>
+<text x="1330.0" y="519" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">ProfileDto</text>
+<text x="1106" y="564" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ id(): Long</text>
+<rect x="1156.76" y="388" width="346.48" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1330" y="405" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">creates one permitted response shape</text>
+<text x="1127.5" y="745" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«record»</text>
+<text x="1127.5" y="774" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">PublicProfileDto</text>
+<text x="951" y="819" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">id: Long</text>
+<text x="951" y="845" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">name: String</text>
+<text x="951" y="871" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">availability: List&lt;...&gt;</text>
+<text x="951" y="897" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">relationship: ProfileRelationshipDto</text>
+<text x="1542.5" y="745" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«record»</text>
+<text x="1542.5" y="774" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">ConnectedProfileDto</text>
+<text x="1366" y="819" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">id: Long</text>
+<text x="1366" y="845" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">name: String</text>
+<text x="1366" y="871" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">contactNumber: String</text>
+<text x="1366" y="897" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">availability: List&lt;...&gt;</text>
+<text x="1366" y="923" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">relationship: ProfileRelationshipDto</text>
+<rect x="1000.69" y="619" width="98.62" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1050" y="636" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">otherwise</text>
+<rect x="1523.56" y="619" width="162.88" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1605" y="636" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">SELF / CONNECTED</text>
+<text x="62" y="1088" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">WeeklyAvailability canonicalizes duplicate/overlapping/adjacent blocks, then intersects unique time. Half-open intervals that only touch share no minutes.</text>
+<text x="62" y="1113" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">PublicProfileDto has no contactNumber field. ConnectedProfileDto includes it only for the owner or an active accepted buddy; groups/admin status do not qualify.</text>
+<text x="62" y="1138" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Selected members are shown. Both profile records implement ProfileDto independently; ConnectedProfileDto does not inherit PublicProfileDto.</text>
+</g></svg>

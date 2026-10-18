@@ -102,8 +102,10 @@ shared foundation, reused by matching.
    links to preferences; it must not issue `GET /api/matches` without a context.
 2. Open Find buddies. Select only a course and search; repeat with only a study goal.
    Selecting a course different from the saved target must score the selected course.
-3. Confirm names/programme/year, relevant course/goals, total/quality, explanation and
-   criterion bars match the API payload. Check the shared-hours total against the heatmap.
+3. Confirm names/programme/year, relevant course/goals, total/quality and criterion bars
+   match the API payload. Check the shared-hours total against the heatmap. The main API
+   still returns a deterministic explanation, but the main card does not render it;
+   provider-assisted wording belongs to separate PR #61.
 4. With a saved target or goal, Home displays up to three results from the same endpoint,
    configuration revision and server ranking. Open the link to preserve that search context.
 5. Confirm incomplete preferences have clear setup guidance and show as "Not shared"; neither

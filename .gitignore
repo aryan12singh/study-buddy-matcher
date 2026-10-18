@@ -20,6 +20,10 @@ node_modules/
 dist/
 .vite/
 
+# Local diagram tooling
+__pycache__/
+*.pyc
+
 # ---------------------------------------------------------------------------
 # Environment (never commit real credentials)
 # ---------------------------------------------------------------------------

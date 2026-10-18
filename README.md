@@ -50,6 +50,11 @@
 A group leader is a student with authority over one group, not a separate account role.
 Compulsory scope and the selected E1/E2 extensions are mapped in the
 [requirement coverage map](docs/REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
+The baseline and E2 design views are checked against revision `9592fd2` (18 October 2026).
+E1 AI explanations have a separate contract and delivery record on
+[PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61).
+The [16 October E2 database rollout](docs/DATABASE_OPERATIONS.md#e2-rollout--16-october-2026)
+is recorded; team acceptance and persistent application hosting are separate from that record.
 
 ---
 
@@ -185,26 +190,15 @@ one service method; services apply domain rules and return DTOs built by assembl
 Controllers never touch repositories, and entities never leave the service layer. This is
 also the privacy mechanism: a contact number is withheld by choosing a DTO, not hidden in React.
 
-```mermaid
-flowchart LR
-    UI[React screens] --> Client[Shared API client]
-    Client --> Security[JWT and role checks]
-    Security --> Controller[Controllers]
-    Controller --> Service[Application services]
-    Service --> Domain[Domain models]
-    Service --> Repository[Repositories]
-    Repository --> DB[(PostgreSQL)]
-    Service --> Assembler[DTO assemblers]
-    Assembler --> Controller
-```
+[![Application architecture and privacy boundaries](docs/diagrams/exports/architecture.svg)](docs/diagrams/exports/architecture.svg)
 
 | Design point | How it is applied |
 | --- | --- |
-| Composition | `Student` composes `User` through a shared `@MapsId` identity |
+| Composition over account inheritance | `Student` references `User` through a one-to-one `@MapsId` association; a group leader is an ordinary student |
 | Immutable values | `TimeSlot` and `MatchScore` have no setters |
 | Polymorphism over `switch` | Independent `CriterionScorer` implementations and `MatchingStrategy` implementations |
 | Externalised configuration | Weights, limits and timings bind to typed configuration objects |
-| Concurrency | Relationship and account changes follow a documented lock order; room and session edits use optimistic versions |
+| Concurrency | Relationship/room/session transitions follow the account-before-parent lock order and observed versions; room polling and existing-lease renewal avoid group-row locks |
 | Database access | The browser never reads application tables; Supabase browser roles are revoked |
 
 ```text
@@ -214,8 +208,9 @@ scripts/    Migration runner and disposable PostgreSQL test harness
 docs/       API contract, decisions, coverage, diagrams and verification records
 ```
 
-Class and sequence diagrams: [platform](docs/diagrams/PLATFORM.md),
-[matching](docs/diagrams/TEAM_A.md) and [connections, groups and study](docs/diagrams/TEAM_C.md).
+The [diagram index](docs/diagrams/README.md) contains the scalable architecture, UML
+use-case, class and matching-sequence exports, editable sources and rebuild instructions.
+Detailed E2 and database views remain separate so each diagram stays readable.
 
 ---
 
@@ -251,8 +246,9 @@ the searcher's focus, so they can differ by direction.
 An unknown priority criterion always ranks in the lowest band, and disabling it falls back to
 the total. Alternative sorts start with shared hours or same-year preference. Remaining ties
 break on shared hours, then name and ID. The server filters and sorts before applying the
-result limit. Each match's one-sentence explanation comes from a `MatchExplainer` that sees
-only the score, never a profile.
+result limit. The API's deterministic explanation comes from a `MatchExplainer` that sees
+only the score and enabled criteria. Main cards show compatibility, criterion bars and
+shared time; they do not currently render that explanation sentence.
 
 Weekly slots use recurring Asia/Singapore time with half-open boundaries, so touching slots
 share no minutes. The categorical group-size choice maps to ranges: one-to-one 2–2, small group
@@ -416,7 +412,7 @@ cd backend
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-Current results and regression evidence are recorded in
+Dated results and regression evidence are recorded in
 [baseline verification](docs/BASELINE_VERIFICATION.md) and [E2 verification](docs/E2_TESTING.md).
 
 ---
@@ -432,11 +428,13 @@ Current results and regression evidence are recorded in
 | [Database operations](docs/DATABASE_OPERATIONS.md) | Migrations, seeding, access and recovery |
 | [Matching engine changes](docs/MATCHING_ENGINE_CHANGES.md) | Matching fixes and the decisions behind them |
 | [E2 verification](docs/E2_TESTING.md) | Room, session, audio, weather and calendar checks |
-| [Diagrams](docs/diagrams/PLATFORM.md) | System, class and sequence diagrams for each area |
+| [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
 | [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |
 
 ---
+
+<a id="libraries"></a>
 
 ## Libraries and assets
 
@@ -505,8 +503,8 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 
 Within Team C, Charlize built the group and join-request rules, queries, DTOs and services.
 Aryan built requests, connections, profile privacy, notifications, admin accounts and their
-controllers, screens, migrations and tests, and the E2 collaborative study extension. Every
-member confirms their retained contributions and can explain the implementation in the viva.
+controllers, screens, migrations and tests, and the E2 collaborative study extension. Each
+member must confirm their retained contributions and be able to explain the implementation in the viva.
 
 **Contributing.** Read [AGENTS.md](AGENTS.md), branch from an up-to-date `main` and keep commits
 focused. Open a pull request with the related issue, test evidence and any shared-file effects,
@@ -520,5 +518,5 @@ untracked.
 | Materials and rehearsal | 8 November |
 | Final handoff | 15 November 2026, 23:59 SGT (team target; the brief specifies Week 13) |
 
-The confirmed LMS deadline is kept in the
+The exact LMS deadline and submission receipt remain unconfirmed in the
 [schedule record](docs/DESIGN_DECISIONS.md#schedule-and-submission-record).

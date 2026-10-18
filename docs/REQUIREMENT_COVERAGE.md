@@ -1,6 +1,6 @@
 # Requirement coverage
 
-Where the compulsory Team A, B and C requirements and this branch's E2 extension are implemented. This is a source and
+Where the compulsory Team A, B and C requirements and merged E2 extension are implemented. This is a source and
 acceptance map, not a professor, deployment or submission sign-off. Team A issues are
 [#1](https://github.com/aryan12singh/study-buddy-matcher/issues/1),
 [#2](https://github.com/aryan12singh/study-buddy-matcher/issues/2),
@@ -21,13 +21,28 @@ Backend classes are under `backend/src/main/java/com/studybuddy/`, screens under
 `frontend/src/features/`, and HTTP tests under `backend/src/test/java/com/studybuddy/integration/`.
 API paths are listed in [API_CONTRACT.md](API_CONTRACT.md).
 
-The compulsory baseline covers #1–14 across all three teams. The baseline closure pass
-starts from merged main `fc1f6fb0526726d06c07a8bbf780b5a61c07399c`, fixes the two reproduced
-authentication/profile recovery defects and implements the accepted contact contract.
-Current checks and the issue-completion matrix are in [BASELINE_VERIFICATION.md](BASELINE_VERIFICATION.md).
-Earlier [Team A](TEAM_A_TESTING.md) and [Team C](TEAM_C_TESTING.md) records remain dated
-historical evidence. Source coverage, passing tests and issue closure do not assert grading
+The compulsory baseline covers #1–14 across all three teams. The dated baseline closure
+pass started from `fc1f6fb0526726d06c07a8bbf780b5a61c07399c`, corrected authentication/profile
+recovery and implemented the accepted contact contract; its evidence is preserved in
+[BASELINE_VERIFICATION.md](BASELINE_VERIFICATION.md). [Team A](TEAM_A_TESTING.md),
+[Team C](TEAM_C_TESTING.md) and [E2](E2_TESTING.md) records describe their named dates and
+source versions. Source coverage, passing tests and issue closure do not assert grading
 acceptance, a member's understanding or actual submission.
+
+## Scope and evidence status
+
+The following implementation snapshot was checked against revision `9592fd2` on
+18 October 2026. Later feature records, including E1's own contract and tests, supplement
+this baseline/E2 map without changing the dates of historical evidence.
+
+| Category | Authority and scope at the checked revision |
+| --- | --- |
+| Compulsory baseline | Formal brief: accounts/profiles, weekly availability, matching, requests/contact privacy, groups and admin management; implemented in the source map below |
+| Accepted team interpretations | Contact normalization, categorical group-size intervals, learning style through the defined study preferences, and separate deactivation/deletion; see the [baseline contract](DESIGN_DECISIONS.md#baseline-requirement-contract). These do not assert professor confirmation |
+| Selected extensions | Revision `9592fd2` includes E2 and optional campus weather. E1 is tracked separately on [PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61) and has its own implementation/evidence record |
+| Recorded rollout | E2 schema applied on 16 October; see [database operations](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026). A database rollout is distinct from a persistent hosted application |
+| Human acceptance | Outlook import remains owner-deferred; cross-team source walkthrough, latest Figma, physical-device/projector checks, rehearsal, LMS deadline and submission receipt require their own evidence |
+| Unselected ideas | Public rooms/chat, badges, shared notes/task boards, global online status and AI roadmap/helper proposals are outside the agreed implementation |
 
 ## Platform and repeatable setup (#5)
 
@@ -98,7 +113,7 @@ checks belong in the PR's verified evidence, not a permanently fixed count here.
 | Balanced / availability-first / course-first priorities and disabled priority fallback | `MatchingStrategy` implementations; enabled set applied to scoring/ranking | Active strategy named; backend order retained across qualities | `MatchingStrategyRankingTest`, `PriorityTiersTest`, `MatchServiceTest`, `AppendixAMatchingTest`, `FindBuddiesPage.test.tsx` |
 | One-to-one / small-group / either and consistent Either compatibility | Numeric range `GroupSizeScorer`, `MatchSearchFilter`; `StudyModeScorer` | Group/mode filter controls | `CriterionScorersTest`, `MatchSearchFilterTest` |
 | Unique weekly overlap; full/partial/none/touching/different-day/duplicate/overlapping inputs | Immutable `TimeSlot`, canonical `WeeklyAvailability` | Shared-hours label and overlap heatmap | `TimeSlotTest`, `MatchServiceTest` |
-| Score value includes total, criterion breakdown, shared time, deterministic explanation and quality | `MatchScore`, `MatchResultAssembler` | `MatchCard`, `ScoreBreakdown`, `SharedHoursHeatmap` | `MatchScoreTest`, `MatchingHttpTest`, `FindBuddiesPage.test.tsx` |
+| Score value includes total, criterion breakdown, shared time and quality; assembler adds deterministic API explanation | `MatchScore`, `MatchResultAssembler`, `MatchExplainer` | Main `MatchCard` shows score/quality, `ScoreBreakdown` and `SharedHoursHeatmap`; explanation text is not rendered | `MatchScoreTest`, `MatchingHttpTest`, `FindBuddiesPage.test.tsx` |
 | Active configuration changes rankings without scorer edits; disabled criteria contribute nothing | `MatchingConfigService`, `WeightedMatchScorer`, strategies | Admin enabled criteria and weights; disabled bars identified | `MatchingConfigServiceTest`, `MatchingStrategyRankingTest`, `MatchingHttpTest` |
 
 ## Find matches and matching API (#2)
@@ -118,7 +133,7 @@ checks belong in the PR's verified evidence, not a permanently fixed count here.
 | Requirement / acceptance | Implementation | Automated evidence / demo |
 | --- | --- | --- |
 | Live course-or-goal results; no AI or fabricated fallback matches | `FindBuddiesPage`, `FindBuddiesPanel`, matching API module | `FindBuddiesPage.test.tsx`; test/demo guide scenario 1 |
-| Name/programme/year/relevant course/goals, quality, total compatibility and deterministic explanation | `MatchCard`, API DTO | Matching rendered tests; scenario 1 |
+| Name/programme/year/relevant course/goals, quality and total compatibility; deterministic explanation remains in the API only | `MatchCard`, `MatchResultDto` | Matching rendered tests; scenario 1 |
 | Criterion bars, shared totals and overlap heatmap agree with backend | `ScoreBreakdown`, `SharedHoursHeatmap`, immutable score/assembler | Frontend score/presentation tests, `MatchingHttpTest`; scenario 1 |
 | All filter types, removable selections/reset and all three sort controls | `MatchFilters`, `matchSearchForm` | `FindBuddiesPage.test.tsx`; scenario 2 |
 | Public profile navigation and optional-message request reuse Team C boundaries | `MatchCard`, `SendRequestDialog`, existing profile/request endpoints | Matching frontend tests and `BuddyHttpTest`; scenario 3 |
@@ -242,11 +257,11 @@ The coverage file does not itself close or alter GitHub issues.
 
 ## Collaborative study experience (E2 #16)
 
-PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) now targets
-the full selected E2 feature. The earlier foundation-only plan has been superseded
-by the owner's completion request, including an expressly approved weather enhancement.
-Source coverage below is separate from the verification record in
-[E2_TESTING.md](E2_TESTING.md), actual client imports, hosted CI and deployment.
+PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) merged the full
+selected E2 feature, including the expressly approved weather enhancement. Its schema
+rollout is recorded on [16 October](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026).
+Source coverage below is separate from the dated verification record in
+[E2_TESTING.md](E2_TESTING.md), actual client imports and persistent application hosting.
 
 | Requirement / acceptance | Backend | Frontend / evidence boundary |
 | --- | --- | --- |
@@ -274,18 +289,20 @@ E2 does not implement E1 AI explanations, public rooms/chat, badge tracking, not
 boards, calendar OAuth/two-way sync or an automated reminder scheduler. Exporting a
 cancelled event cannot remove a previously imported offline copy, and a revoked
 relationship cannot still download the old calendar. Manual weather scenes are
-decoration, not forecasts. No shared hosted E2 rollout is claimed by source changes.
+decoration, not forecasts. The recorded database rollout does not establish a persistent
+hosted backend/frontend or new calendar-client acceptance.
 
 ## Selected extras and delivery
 
 The team has recorded both E1 and E2 as its selected required extras. They extend the
-compulsory baseline. This PR implements E2; E1 remains separate work.
+compulsory baseline. The 18 October source snapshot at `9592fd2` contains E2; PR #61
+carries E1's separate contract and evidence.
 
-| Tracked scope | Current baseline status | Remaining gate |
+| Tracked scope | Status at the checked revision/date | Acceptance or delivery evidence to complete |
 | --- | --- | --- |
-| E1 AI match explanation (#15) | Pending on merged main; explanations are deterministic | Agreed provider/owner, privacy-safe inputs, fallback/cache/version/usage checks and actual API/UI/docs/demo evidence |
-| E2 collaborative study room/Pomodoro/music/calendar (#16) | Full source scope in current PR #52, including the approved weather enhancement; see the map above | Local suites, 23 browser checks, restart proof and independent audit passed; Outlook import acceptance deferred by owner, cross-team review/merge and reviewed deployment remain |
-| README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
+| E1 AI match explanation (#15) | Separate [PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61); `9592fd2` returns deterministic API text | Use E1's own contract/testing record for subsequent fixes, provider-backed reviewed examples, CI/review/merge and rollout evidence |
+| E2 collaborative study room/Pomodoro/music/calendar (#16) | Merged in #52 with weather; schema rollout recorded 16 October | Outlook import acceptance remains owner-deferred. Existing local/browser evidence is dated; team/device/projector acceptance and persistent hosting remain separate |
+| README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Baseline/E2 diagram sources and scalable SVG exports on [#62](https://github.com/aryan12singh/study-buddy-matcher/pull/62); E1 companion on #61 | Final cross-team source review, slide selection and physical-projector legibility; include E1's companion view when presenting that extension |
 | Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |
 | AI disclosure (#43) and demo data/integrated acceptance (#44) | Known retained use recorded; repeatable core evidence exists | Every member confirms their retained use; final demo states and deployed/extras acceptance |
 | Presentation/slides (#45) and rehearsal/submission (#46) | Unverified in the inspected repository | Editable deck/PDF backup; timed 12-minute demo + 8-minute Q&A; actual hardware/network/audio, verified LMS deadline/receipt and private peer evaluations |

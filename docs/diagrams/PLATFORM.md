@@ -2,17 +2,23 @@
 
 These diagrams connect the compulsory Team B authentication/profile/data foundation with
 Team A matching and Team C requests, privacy, groups, notifications and administration.
-They describe the compulsory implementation and this branch's E2 integration.
-E1 AI explanations remain a separate extension. Source diagrams do not establish
-that E2 has been deployed or accepted by the team.
+They describe the compulsory implementation and E2 integration at revision
+`9592fd2`, checked on 18 October 2026. The E1 provider path on PR #61 has its own
+companion view and is outside this revision-scoped set. E2's schema rollout is recorded in
+[database operations](../DATABASE_OPERATIONS.md#e2-rollout--16-october-2026).
 
 Detailed OO and transaction diagrams remain in [TEAM_A.md](TEAM_A.md) and [TEAM_C.md](TEAM_C.md).
 The [API contract](../API_CONTRACT.md), [decisions](../DESIGN_DECISIONS.md),
 [coverage map](../REQUIREMENT_COVERAGE.md) and [baseline test record](../BASELINE_VERIFICATION.md) explain fields,
-validation choices and verification limits. Export these diagrams legibly and review them
-with the team before using them in the presentation.
+validation choices and verification limits. The [diagram index](README.md) provides
+scalable presentation exports, UML notation and rebuild instructions. These detailed
+Mermaid views remain editable supporting sources; source review and physical-projector
+acceptance are separate gates.
 
-## Compulsory use cases and system boundary
+## Compulsory capability map
+
+This flowchart is a navigation map. The presentation [UML use-case view](exports/use-cases.svg)
+uses actors, associations, use-case ellipses and a system boundary.
 
 ```mermaid
 flowchart LR
