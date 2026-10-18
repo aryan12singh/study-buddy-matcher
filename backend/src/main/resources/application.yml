@@ -102,7 +102,7 @@ app:
       # Off unless application-local.yml sets enabled: true and api-key. Never put the key here.
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
-      model: gemini-2.5-flash
+      model: gemini-3.5-flash
       timeout: 5s
       max-output-tokens: 200
       max-characters: 600

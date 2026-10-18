@@ -361,7 +361,7 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.enabled` | `false` | Turns on Gemini match explanations; also needs `api-key`. Off means the standard explanation is always used |
 | `app.ai.explanation.api-key` | none; set only in `application-local.yml` | Gemini API key. Never committed, logged or sent to the browser |
 | `app.ai.explanation.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
-| `app.ai.explanation.model` | `gemini-2.5-flash` | Gemini model ID; part of the explanation cache key |
+| `app.ai.explanation.model` | `gemini-3.5-flash` | Gemini model ID; part of the explanation cache key. `gemini-2.5-flash` returns 404 for new projects |
 | `app.ai.explanation.timeout` | `5s` | Connect and read timeout before falling back to the standard explanation |
 | `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
 | `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |

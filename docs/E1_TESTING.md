@@ -65,6 +65,24 @@ then record reviewed live STRONG/GOOD/FAIR outputs before marking provider accep
 Changing model families also requires checking their generation/thinking configuration;
 metadata visibility alone is insufficient.
 
+### Model switch and readable wording: 18 October
+
+The 404s above were the model, not the network: Google limits `gemini-2.5-flash` to projects
+with prior use. A direct generation request for `gemini-3.5-flash` with E1's exact settings
+(JSON reply, `maxOutputTokens: 200`, `thinkingBudget: 0`) finished with `STOP` and a complete
+explanation (54 reply tokens). Without `thinkingBudget: 0` the same request stopped at
+`MAX_TOKENS` after 189 thinking tokens, so disabling thinking remains required. The default model
+is now `gemini-3.5-flash`.
+
+Prompt v4 sends readable values (`ExplanationVocabulary`: "exam preparation", "meeting mode",
+"one to one") instead of enum names, and the validator rejects code-style words such as
+`ONE_TO_ONE` or `STRONG`, so they fall back rather than reach the screen. Six live v4 samples
+contained no code-style words; one draft rule ("lowercase words") made sentences start in
+lower case and was reworded to require normal capitalisation. About 13 calls within a few
+minutes then returned HTTP 429 (per-minute free-tier limit); the application falls back to the
+standard explanation in that case. Reviewed STRONG/GOOD/FAIR examples from the running app are
+still to be recorded in `AI_USAGE.md`.
+
 Run from the repository root:
 
 ```bash

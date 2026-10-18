@@ -18,7 +18,7 @@ Development assistance is separate from the application's E1 AI match-explanatio
 
 The application's E1 feature, separate from development assistance above.
 
-- **Provider:** Google Gemini API, free tier, model `gemini-2.5-flash` (`app.ai.explanation.model`). Called only when a student clicks **Explain this match**, at most `daily-call-limit` times a day.
+- **Provider:** Google Gemini API, free tier, model `gemini-3.5-flash` (`app.ai.explanation.model`; `gemini-2.5-flash` until 18 October). Called only when a student clicks **Explain this match**, at most `daily-call-limit` times a day.
 - **Sent:** only `ExplanationEvidence`: quality, total score, strategy, each criterion's rounded score, enabled flag and whether both students shared that preference (`known`), shared hours (nearest half hour), course code and name, shared goals, both study modes and both group-size preferences.
 - **Never sent:** names, student or account IDs, emails, contact numbers, school, programme, year, messages, availability slots, connections or group memberships. `ExplanationEvidenceFactoryTest` and `ExplanationPromptBuilderTest` check this.
 - **Request settings:** thinking is turned off (`thinkingBudget: 0`) so the short JSON reply is not cut off by the output-token limit.
