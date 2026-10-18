@@ -29,6 +29,8 @@ import java.util.List;
  */
 @Component
 public class MatchEvaluationFingerprint {
+    /** Bump when the fingerprinted inputs change, so old card IDs can never match new ones. */
+    private static final String FINGERPRINT_VERSION = "v1";
     private final JsonMapper json;
 
     public MatchEvaluationFingerprint(JsonMapper json) {
@@ -44,7 +46,7 @@ public class MatchEvaluationFingerprint {
         // Sort and limit change discovery order, not the evaluation of this candidate.
         MatchSearchCriteria context = new MatchSearchCriteria(search.courseId(), search.studyGoal(), search.studyMode(),
                 search.groupSize(), search.minSharedHours(), search.minQuality());
-        EvaluationInput input = new EvaluationInput("v1", profile(searcher), profile(candidate), context,
+        EvaluationInput input = new EvaluationInput(FINGERPRINT_VERSION, profile(searcher), profile(candidate), context,
                 settings.strategy().type(), settings.version(), settings.minScore(), criteria, rules,
                 score.total(), score.quality(), score.sharedHoursPerWeek());
         try {
