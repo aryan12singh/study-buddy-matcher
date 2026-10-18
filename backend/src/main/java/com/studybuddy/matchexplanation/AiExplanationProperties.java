@@ -24,7 +24,15 @@ public record AiExplanationProperties(
         @Positive int maxOutputTokens,
         @Positive int maxCharacters,
         @PositiveOrZero int dailyCallLimit,
-        @NotBlank String quotaZone) {
+        @NotBlank String quotaZone,
+        @NotNull Duration rateLimitCooldown) {
+
+    public AiExplanationProperties {
+        // A zero timeout makes the HTTP client fail at startup with an unclear error.
+        if (timeout != null && (timeout.isZero() || timeout.isNegative())) {
+            throw new IllegalArgumentException("app.ai.explanation.timeout must be positive");
+        }
+    }
 
     /** True only when the feature is switched on and a key is configured. */
     public boolean ready() {

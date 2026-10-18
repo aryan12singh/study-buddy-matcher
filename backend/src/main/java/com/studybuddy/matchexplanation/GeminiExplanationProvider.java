@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.core.JacksonException;
@@ -24,18 +25,21 @@ import java.util.Optional;
 public class GeminiExplanationProvider implements ExplanationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GeminiExplanationProvider.class);
     /**
-     * Gemini 2.5 models think by default and the thinking tokens count against the output limit,
-     * which would truncate a short JSON reply. Wording a known score needs no reasoning step.
+     * Gemini thinks by default and thinking tokens count against the output limit: on
+     * gemini-3.5-flash a 200-token reply stopped after 189 thinking tokens. Wording a known score
+     * needs no reasoning step.
      */
     private static final int NO_THINKING = 0;
 
     private final AiExplanationProperties properties;
     private final JsonMapper json;
+    private final ExplanationQuota quota;
     private final RestClient client;
 
-    public GeminiExplanationProvider(AiExplanationProperties properties, JsonMapper json) {
+    public GeminiExplanationProvider(AiExplanationProperties properties, JsonMapper json, ExplanationQuota quota) {
         this.properties = properties;
         this.json = json;
+        this.quota = quota;
         HttpClient http = HttpClient.newBuilder().connectTimeout(properties.timeout()).build();
         JdkClientHttpRequestFactory requests = new JdkClientHttpRequestFactory(http);
         requests.setReadTimeout(properties.timeout());
@@ -53,6 +57,11 @@ public class GeminiExplanationProvider implements ExplanationProvider {
                     .retrieve()
                     .body(String.class);
             return textOf(reply);
+        } catch (HttpClientErrorException.TooManyRequests rateLimited) {
+            // Free tiers limit calls per minute; retrying at once would only fail again.
+            quota.pauseAfterRateLimit();
+            LOG.warn("Gemini explanation rate limited; pausing calls for {}", properties.rateLimitCooldown());
+            return Optional.empty();
         } catch (RestClientException | JacksonException failure) {
             LOG.warn("Gemini explanation unavailable: {}", failure.getClass().getSimpleName());
             return Optional.empty();

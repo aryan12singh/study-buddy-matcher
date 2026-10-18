@@ -362,11 +362,12 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.api-key` | none; set only in `application-local.yml` | Gemini API key. Never committed, logged or sent to the browser |
 | `app.ai.explanation.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `app.ai.explanation.model` | `gemini-3.5-flash` | Gemini model ID; part of the explanation cache key. `gemini-2.5-flash` returns 404 for new projects |
-| `app.ai.explanation.timeout` | `5s` | Connect and read timeout before falling back to the standard explanation |
+| `app.ai.explanation.timeout` | `3s` | Connect timeout and read timeout, each; the worst-case wait is about twice this before falling back to the standard explanation |
 | `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
 | `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |
 | `app.ai.explanation.daily-call-limit` | `200` | Per-process daily provider-call budget; restart resets it, so this is not a durable or multi-instance billing cap |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
+| `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
 
 The cache uses rounded anonymous evidence plus prompt version (`v3`) and model, separately
 from the exact card evaluation ID. Two evaluations may reuse equivalent wording after each

@@ -103,11 +103,12 @@ app:
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
       model: gemini-3.5-flash
-      timeout: 5s
+      timeout: 3s
       max-output-tokens: 200
       max-characters: 600
       daily-call-limit: 200
       quota-zone: Asia/Singapore
+      rate-limit-cooldown: 60s
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

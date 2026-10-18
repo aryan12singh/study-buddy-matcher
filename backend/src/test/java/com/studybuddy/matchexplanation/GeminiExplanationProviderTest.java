@@ -21,6 +21,7 @@ class GeminiExplanationProviderTest {
     private static final String REPLY = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"explanation\\\":\\\"You both take IS442.\\\"}\"}]}}]}";
 
     private HttpServer server;
+    private ExplanationQuota quota;
     private final AtomicReference<String> requestBody = new AtomicReference<>();
     private final AtomicReference<String> requestKey = new AtomicReference<>();
     private final AtomicReference<String> requestPath = new AtomicReference<>();
@@ -61,9 +62,11 @@ class GeminiExplanationProviderTest {
 
     /** The real base URL carries a version path, as Gemini's does. */
     private GeminiExplanationProvider provider(String basePath) {
-        return new GeminiExplanationProvider(new AiExplanationProperties(true,
+        AiExplanationProperties properties = new AiExplanationProperties(true,
                 "http://127.0.0.1:" + server.getAddress().getPort() + basePath, "test-model", "test-key",
-                Duration.ofMillis(500), 200, 600, 10, "UTC"), ExplanationFixtures.JSON);
+                Duration.ofMillis(500), 200, 600, 10, "UTC", Duration.ofSeconds(60));
+        quota = new ExplanationQuota(properties);
+        return new GeminiExplanationProvider(properties, ExplanationFixtures.JSON, quota);
     }
 
     @Test
@@ -85,6 +88,14 @@ class GeminiExplanationProviderTest {
         assertTrue(body.contains("\"maxOutputTokens\":200"), body);
         assertTrue(body.contains("\"thinkingBudget\":0"), body);
         assertFalse(body.contains("test-key"), body);
+    }
+
+    @Test
+    void rateLimitReturnsEmptyAndPausesFurtherCalls() {
+        status = 429;
+
+        assertTrue(provider().explain("PROMPT").isEmpty());
+        assertFalse(quota.tryAcquire());
     }
 
     @Test

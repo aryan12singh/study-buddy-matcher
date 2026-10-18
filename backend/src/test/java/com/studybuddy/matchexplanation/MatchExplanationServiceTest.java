@@ -47,7 +47,7 @@ class MatchExplanationServiceTest {
 
     private MatchExplanationService service(boolean ready) {
         AiExplanationProperties properties = new AiExplanationProperties(ready, "http://localhost", "test-model",
-                ready ? "key" : null, Duration.ofSeconds(1), 200, 600, 10, "UTC");
+                ready ? "key" : null, Duration.ofSeconds(1), 200, 600, 10, "UTC", Duration.ofSeconds(60));
         return new MatchExplanationService(matches, evidence, hasher, cache, quota,
                 new ExplanationPromptBuilder(ExplanationFixtures.JSON), provider,
                 new ExplanationOutputValidator(600, ExplanationFixtures.JSON), new MatchExplanationAssembler(), properties);
