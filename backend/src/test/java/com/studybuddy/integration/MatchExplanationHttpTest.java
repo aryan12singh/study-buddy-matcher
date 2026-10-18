@@ -1,6 +1,11 @@
 package com.studybuddy.integration;
 
+import com.studybuddy.matchexplanation.CriterionEvidence;
 import com.studybuddy.matchexplanation.ExplanationCache;
+import com.studybuddy.matchexplanation.ExplanationEvidence;
+import com.studybuddy.matching.MatchQuality;
+import com.studybuddy.matching.scoring.MatchingCriterion;
+import com.studybuddy.matching.strategy.MatchingStrategyType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -18,19 +23,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** AI explanation cache and endpoint, over real PostgreSQL and HTTP. */
 class MatchExplanationHttpTest extends PostgresHttpTest {
-    private static final String HASH = "a".repeat(64);
+    /** Minimal anonymous evidence; the cache keys rows by its hash. */
+    private static final ExplanationEvidence EVIDENCE = new ExplanationEvidence(MatchQuality.GOOD, 0.7,
+            MatchingStrategyType.BALANCED, List.of(new CriterionEvidence(MatchingCriterion.COURSE, 1.0, 1.0, true, true)),
+            2.0, null, null, null, List.of(), null, null, null, null);
 
     @Autowired
     private ExplanationCache cache;
 
     @Test
     void savingTheSameEvidenceTwiceKeepsOneRow() {
-        assertTrue(cache.find(HASH).isEmpty());
+        assertTrue(cache.find(EVIDENCE).isEmpty());
 
-        cache.save(HASH, "v1", "test-model", "First answer.");
-        cache.save(HASH, "v1", "test-model", "Second answer.");
+        cache.save(EVIDENCE, "First answer.");
+        cache.save(EVIDENCE, "Second answer.");
 
-        assertEquals(Optional.of("First answer."), cache.find(HASH));
+        assertEquals(Optional.of("First answer."), cache.find(EVIDENCE));
         assertEquals(1, count("select count(*) from match_explanations"));
     }
 

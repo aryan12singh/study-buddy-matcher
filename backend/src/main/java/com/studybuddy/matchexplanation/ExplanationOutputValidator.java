@@ -1,5 +1,7 @@
 package com.studybuddy.matchexplanation;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -17,6 +19,7 @@ import java.util.stream.Stream;
  * course/number references. These bounded checks are a guardrail, not a guarantee of factual
  * correctness. The same text policy applies to fresh provider replies and cached answers.
  */
+@Component
 public class ExplanationOutputValidator {
     /** Wording that presents a compatibility score as a prediction. */
     private static final Pattern SUCCESS_CLAIM = Pattern.compile("probabilit|guarantee|success|succeed|likel|chance|%",
@@ -40,7 +43,12 @@ public class ExplanationOutputValidator {
     private final int maxCharacters;
     private final JsonMapper json;
 
-    public ExplanationOutputValidator(int maxCharacters, JsonMapper json) {
+    @Autowired
+    public ExplanationOutputValidator(AiExplanationProperties properties, JsonMapper json) {
+        this(properties.maxCharacters(), json);
+    }
+
+    ExplanationOutputValidator(int maxCharacters, JsonMapper json) {
         this.maxCharacters = maxCharacters;
         this.json = json;
     }
