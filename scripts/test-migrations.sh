@@ -55,6 +55,9 @@ INSERT INTO study_sessions(id,study_group_id,created_by,title,start_local,end_lo
 INSERT INTO notifications(created_at,message,read,type,recipient_id,resource_type,resource_id,event_key) VALUES
  ('2026-10-01 01:15+00','Retained cancellation',false,'MATCH_REQUEST_CANCELLED',10,'MATCH_REQUEST',40,'fixture:cancelled'),
  ('2026-10-01 01:15+00','Retained session event',false,'GROUP_SESSION_CREATED',11,'SESSION',91,'fixture:session');
+-- Reproduce a database that previously ran both Hibernate update and the old migration.
+-- Replay must remove its legacy duplicate without deleting the retained cache row.
+ALTER TABLE match_explanations ADD CONSTRAINT uk37l18h6kex7l6fcxxjpv5g7jq UNIQUE (evidence_hash);
 SQL
 "$task_repo_root/scripts/migrate-database.sh"
 "${task_psql[@]}" --file="$task_repo_root/scripts/sql/assert-migrated-legacy.sql"

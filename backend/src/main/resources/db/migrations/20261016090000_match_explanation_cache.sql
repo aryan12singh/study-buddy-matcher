@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS public.match_explanations (
     explanation_text text NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now()
 );
+-- Hibernate's former unnamed @Column(unique=true) created this duplicate on local databases.
+-- The entity now declares the same canonical name as this migration.
+ALTER TABLE public.match_explanations DROP CONSTRAINT IF EXISTS uk37l18h6kex7l6fcxxjpv5g7jq;
 ALTER TABLE public.match_explanations DROP CONSTRAINT IF EXISTS match_explanations_evidence_hash_key;
 ALTER TABLE public.match_explanations ADD CONSTRAINT match_explanations_evidence_hash_key UNIQUE (evidence_hash);
 ALTER TABLE public.match_explanations DROP CONSTRAINT IF EXISTS match_explanations_hash_format_check;
