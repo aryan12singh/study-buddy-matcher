@@ -49,10 +49,10 @@ class ExplanationEvidenceFactoryTest {
         MatchEvaluation unshared = new MatchEvaluation(evaluation.strategy(),
                 new MatchResultDto(result.studentId(), result.name(), result.school(), result.programme(),
                         result.yearOfStudy(), result.studyMode(), result.studyGoals(), result.quality(),
-                        result.totalScore(), result.explanation(), result.relevantCourse(), breakdown,
+                        result.totalScore(), result.explanation(), result.evaluationId(), result.relevantCourse(), breakdown,
                         result.sharedHoursPerWeek(), result.sharedSlots(), result.relationship()),
-                evaluation.searcherStudyMode(), evaluation.searcherStudyGoals(), evaluation.searcherGroupSize(),
-                evaluation.candidateGroupSize());
+                evaluation.searcherStudyMode(), evaluation.effectiveStudyGoals(), evaluation.searchedGoal(), evaluation.searcherGroupSize(),
+                evaluation.candidateGroupSize(), evaluation.scoringCourse(), evaluation.sharedCourse());
 
         List<CriterionEvidence> criteria = factory.from(unshared).criteria();
 
@@ -65,7 +65,7 @@ class ExplanationEvidenceFactoryTest {
         String json = ExplanationFixtures.JSON.writeValueAsString(factory.from(ExplanationFixtures.evaluation()));
 
         for (String forbidden : new String[] {"Jamie", "SCIS", "Information Systems", "424242", "studentId",
-                "yearOfStudy", "school", "programme", "MONDAY", "09:00", "relationship", "good match: same course"}) {
+                "evaluationId", ExplanationFixtures.EVALUATION_ID, "yearOfStudy", "school", "programme", "MONDAY", "09:00", "relationship", "good match: same course"}) {
             assertFalse(json.contains(forbidden), forbidden + " leaked into " + json);
         }
     }
@@ -77,11 +77,12 @@ class ExplanationEvidenceFactoryTest {
         MatchEvaluation withoutCourse = new MatchEvaluation(evaluation.strategy(),
                 new MatchResultDto(result.studentId(), result.name(), result.school(), result.programme(),
                         result.yearOfStudy(), result.studyMode(), result.studyGoals(), result.quality(),
-                        result.totalScore(), result.explanation(), null, result.breakdown(), result.sharedHoursPerWeek(),
+                        result.totalScore(), result.explanation(), result.evaluationId(), null, result.breakdown(), result.sharedHoursPerWeek(),
                         result.sharedSlots(), result.relationship()),
-                evaluation.searcherStudyMode(), evaluation.searcherStudyGoals(), evaluation.searcherGroupSize(),
-                evaluation.candidateGroupSize());
+                evaluation.searcherStudyMode(), evaluation.effectiveStudyGoals(), evaluation.searchedGoal(), evaluation.searcherGroupSize(),
+                evaluation.candidateGroupSize(), null, null);
 
-        assertNull(factory.from(withoutCourse).course());
+        assertNull(factory.from(withoutCourse).scoringCourse());
+        assertNull(factory.from(withoutCourse).sharedCourse());
     }
 }

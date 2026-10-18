@@ -1,5 +1,8 @@
 package com.studybuddy.matchexplanation;
 
+import com.studybuddy.matching.MatchEvaluation;
+import com.studybuddy.student.StudyGoal;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,5 +36,21 @@ class ExplanationHasherTest {
         assertNotEquals(base, hasher.hash(factory.from(ExplanationFixtures.evaluation(0.9)), "v1", "model-a"));
         assertNotEquals(base, hasher.hash(evidence, "v2", "model-a"));
         assertNotEquals(base, hasher.hash(evidence, "v1", "model-b"));
+    }
+    @Test
+    void exactCardIdentityDoesNotPreventEquivalentWordingFromBeingReused() {
+        assertEquals(hasher.hash(factory.from(ExplanationFixtures.evaluation(0.7234, "a".repeat(64))), "v3", "m"),
+                hasher.hash(factory.from(ExplanationFixtures.evaluation(0.7189, "b".repeat(64))), "v3", "m"));
+    }
+
+    @Test
+    void searchedGoalRemainsPartOfSemanticIdentityEvenWhenSharedGoalsAreTheSame() {
+        MatchEvaluation saved = ExplanationFixtures.evaluation();
+        MatchEvaluation searched = new MatchEvaluation(saved.strategy(), saved.result(), saved.searcherStudyMode(),
+                saved.effectiveStudyGoals(), StudyGoal.EXAM_PREPARATION, saved.searcherGroupSize(), saved.candidateGroupSize(),
+                saved.scoringCourse(), saved.sharedCourse());
+
+        assertEquals(factory.from(saved).sharedGoals(), factory.from(searched).sharedGoals());
+        assertNotEquals(hasher.hash(factory.from(saved), "v3", "m"), hasher.hash(factory.from(searched), "v3", "m"));
     }
 }

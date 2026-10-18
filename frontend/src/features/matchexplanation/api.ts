@@ -2,12 +2,12 @@ import { api } from '../../shared/api/client'
 import type { MatchSearch } from '../matching/api'
 
 export type ExplanationSource = 'AI' | 'STANDARD'
-export type MatchExplanation = { candidateId: number; text: string; source: ExplanationSource }
+export type MatchExplanation = { candidateId: number; evaluationId: string; text: string; source: ExplanationSource }
 
-/** Sends the search context that produced the card, so the explanation describes the same score. */
-export async function fetchMatchExplanation(candidateId: number, search: MatchSearch, signal?: AbortSignal) {
+/** Sends the server-issued card identity and search context; the server rejects stale evaluations. */
+export async function fetchMatchExplanation(candidateId: number, evaluationId: string, search: MatchSearch, signal?: AbortSignal) {
   const { courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality } = search
-  const params = Object.fromEntries(Object.entries({ courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality })
+  const params = Object.fromEntries(Object.entries({ evaluationId, courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality })
     .filter(([, value]) => value !== undefined))
   return (await api.get<MatchExplanation>(`/matches/${candidateId}/explanation`, { params, signal })).data
 }

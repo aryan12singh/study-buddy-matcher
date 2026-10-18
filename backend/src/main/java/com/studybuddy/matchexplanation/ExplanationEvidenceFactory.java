@@ -2,6 +2,7 @@ package com.studybuddy.matchexplanation;
 
 import com.studybuddy.matching.MatchEvaluation;
 import com.studybuddy.matching.MatchResultDto;
+import com.studybuddy.matching.RelevantCourseDto;
 import com.studybuddy.student.StudyGoal;
 import org.springframework.stereotype.Component;
 
@@ -24,16 +25,19 @@ public class ExplanationEvidenceFactory {
                 .map(score -> new CriterionEvidence(score.criterion(), round(score.score(), SCORE_PRECISION), score.enabled(),
                         score.known()))
                 .toList();
-        CourseEvidence course = result.relevantCourse() == null ? null
-                : new CourseEvidence(result.relevantCourse().code(), result.relevantCourse().name());
         List<StudyGoal> sharedGoals = result.studyGoals().stream()
-                .filter(evaluation.searcherStudyGoals()::contains)
+                .filter(evaluation.effectiveStudyGoals()::contains)
                 .sorted()
                 .toList();
         return new ExplanationEvidence(result.quality(), round(result.totalScore(), SCORE_PRECISION),
-                evaluation.strategy(), criteria, round(result.sharedHoursPerWeek(), HOURS_PRECISION), course, sharedGoals,
+                evaluation.strategy(), criteria, round(result.sharedHoursPerWeek(), HOURS_PRECISION),
+                course(evaluation.scoringCourse()), course(evaluation.sharedCourse()), evaluation.searchedGoal(), sharedGoals,
                 evaluation.searcherStudyMode(), result.studyMode(), evaluation.searcherGroupSize(),
                 evaluation.candidateGroupSize());
+    }
+
+    private static CourseEvidence course(RelevantCourseDto course) {
+        return course == null ? null : new CourseEvidence(course.code(), course.name());
     }
 
     private static double round(double value, double precision) {

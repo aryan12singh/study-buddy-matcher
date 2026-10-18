@@ -1,8 +1,11 @@
 package com.studybuddy.matchexplanation;
 
+import com.studybuddy.common.error.ApiException;
 import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.MatchService;
 import com.studybuddy.student.StudentNotFoundException;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +19,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -27,6 +32,7 @@ import static org.mockito.Mockito.when;
 class MatchExplanationServiceTest {
     private static final long ME = 1L;
     private static final long PEER = ExplanationFixtures.CANDIDATE_ID;
+    private static final String EVALUATION_ID = ExplanationFixtures.EVALUATION_ID;
     private static final MatchSearchCriteria SEARCH = new MatchSearchCriteria(4L, null, null, null, null, null);
     private static final String GOOD_REPLY = "{\"explanation\":\"You both take IS442.\"}";
 
@@ -58,9 +64,9 @@ class MatchExplanationServiceTest {
 
     @Test
     void disabledFeatureReturnsTheStandardTextWithoutCallingAnything() {
-        MatchExplanationDto result = service(false).explain(SEARCH, ME, PEER);
+        MatchExplanationDto result = service(false).explain(SEARCH, ME, PEER, EVALUATION_ID);
 
-        assertEquals(new MatchExplanationDto(PEER, "good match: same course", ExplanationSource.STANDARD), result);
+        assertEquals(new MatchExplanationDto(PEER, EVALUATION_ID, "good match: same course", ExplanationSource.STANDARD), result);
         verifyNoInteractions(cache, quota, provider);
     }
 
@@ -68,13 +74,13 @@ class MatchExplanationServiceTest {
     void cacheHitSkipsTheProvider() {
         when(cache.find(hash)).thenReturn(Optional.of("Cached answer."));
 
-        assertEquals(new MatchExplanationDto(PEER, "Cached answer.", ExplanationSource.AI), service(true).explain(SEARCH, ME, PEER));
+        assertEquals(new MatchExplanationDto(PEER, EVALUATION_ID, "Cached answer.", ExplanationSource.AI), service(true).explain(SEARCH, ME, PEER, EVALUATION_ID));
         verifyNoInteractions(provider, quota);
     }
 
     @Test
     void aGoodAnswerIsReturnedAndCached() {
-        assertEquals(new MatchExplanationDto(PEER, "You both take IS442.", ExplanationSource.AI), service(true).explain(SEARCH, ME, PEER));
+        assertEquals(new MatchExplanationDto(PEER, EVALUATION_ID, "You both take IS442.", ExplanationSource.AI), service(true).explain(SEARCH, ME, PEER, EVALUATION_ID));
         verify(cache).save(hash, ExplanationPromptBuilder.PROMPT_VERSION, "test-model", "You both take IS442.");
     }
 
@@ -82,7 +88,7 @@ class MatchExplanationServiceTest {
     void noAnswerFallsBackAndCachesNothing() {
         when(provider.explain(anyString())).thenReturn(Optional.empty());
 
-        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER).source());
+        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER, EVALUATION_ID).source());
         verify(cache, never()).save(anyString(), anyString(), anyString(), anyString());
     }
 
@@ -90,7 +96,7 @@ class MatchExplanationServiceTest {
     void aRejectedAnswerFallsBackAndCachesNothing() {
         when(provider.explain(anyString())).thenReturn(Optional.of("{\"explanation\":\"A 90% chance of success.\"}"));
 
-        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER).source());
+        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER, EVALUATION_ID).source());
         verify(cache, never()).save(anyString(), anyString(), anyString(), anyString());
     }
 
@@ -98,7 +104,7 @@ class MatchExplanationServiceTest {
     void anExhaustedQuotaFallsBackWithoutCallingTheProvider() {
         when(quota.tryAcquire()).thenReturn(false);
 
-        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER).source());
+        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER, EVALUATION_ID).source());
         verifyNoInteractions(provider);
     }
 
@@ -106,6 +112,60 @@ class MatchExplanationServiceTest {
     void searchErrorsPassThrough() {
         when(matches.evaluate(SEARCH, ME, 9L)).thenThrow(new StudentNotFoundException(9L));
 
-        assertThrows(StudentNotFoundException.class, () -> service(true).explain(SEARCH, ME, 9L));
+        assertThrows(StudentNotFoundException.class, () -> service(true).explain(SEARCH, ME, 9L, EVALUATION_ID));
+    }
+    @Test
+    void staleCardIsRejectedBeforeAnyOptionalWorkEvenWhenAiIsOff() {
+        for (boolean ready : new boolean[] {false, true}) {
+            StaleMatchEvaluationException error = assertThrows(StaleMatchEvaluationException.class,
+                    () -> service(ready).explain(SEARCH, ME, PEER, "b".repeat(64)));
+            assertEquals("STALE_MATCH_EVALUATION", error.getCode());
+        }
+        verifyNoInteractions(cache, quota, provider);
+    }
+
+    @Test
+    void missingOrMalformedCardIdentityIsRejected() {
+        for (String id : new String[] {null, "", "not-a-fingerprint"}) {
+            ApiException error = assertThrows(ApiException.class, () -> service(true).explain(SEARCH, ME, PEER, id));
+            assertEquals("INVALID_INPUT", error.getCode());
+        }
+        verifyNoInteractions(cache, quota, provider);
+    }
+
+    @Test
+    void cacheReadFailureReturnsStandardWithoutSpendingQuota() {
+        when(cache.find(hash)).thenThrow(new DataAccessResourceFailureException("cache unavailable"));
+
+        assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER, EVALUATION_ID).source());
+        verifyNoInteractions(quota, provider);
+    }
+
+    @Test
+    void cacheWriteFailureStillReturnsTheValidatedAnswer() {
+        doThrow(new DataIntegrityViolationException("cache write unavailable"))
+                .when(cache).save(hash, ExplanationPromptBuilder.PROMPT_VERSION, "test-model", "You both take IS442.");
+
+        assertEquals(new MatchExplanationDto(PEER, EVALUATION_ID, "You both take IS442.", ExplanationSource.AI),
+                service(true).explain(SEARCH, ME, PEER, EVALUATION_ID));
+    }
+
+    @Test
+    void cacheHitsAreRevalidatedAgainstCurrentEvidenceAndLengthPolicy() {
+        for (String cached : new String[] {"Study LAW999 together.", "You share 20 hours per week.", "a".repeat(601)}) {
+            when(cache.find(hash)).thenReturn(Optional.of(cached));
+            assertEquals(ExplanationSource.STANDARD, service(true).explain(SEARCH, ME, PEER, EVALUATION_ID).source());
+        }
+        verifyNoInteractions(quota, provider);
+    }
+
+    @Test
+    void coreMatchingDatabaseErrorsStillPassThrough() {
+        DataAccessResourceFailureException failure = new DataAccessResourceFailureException("matching unavailable");
+        when(matches.evaluate(SEARCH, ME, PEER)).thenThrow(failure);
+
+        assertSame(failure, assertThrows(DataAccessResourceFailureException.class,
+                () -> service(true).explain(SEARCH, ME, PEER, EVALUATION_ID)));
+        verifyNoInteractions(cache, quota, provider);
     }
 }

@@ -1,8 +1,13 @@
 package com.studybuddy.matchexplanation;
 
+import com.studybuddy.common.error.ApiException;
 import com.studybuddy.matching.MatchEvaluation;
 import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.MatchService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,6 +20,7 @@ import java.util.Optional;
  */
 @Service
 public class MatchExplanationService {
+    private static final Logger LOG = LoggerFactory.getLogger(MatchExplanationService.class);
     private final MatchService matches;
     private final ExplanationEvidenceFactory evidenceFactory;
     private final ExplanationHasher hasher;
@@ -42,26 +48,54 @@ public class MatchExplanationService {
         this.properties = properties;
     }
 
-    public MatchExplanationDto explain(MatchSearchCriteria search, Long actorId, Long candidateId) {
+    public MatchExplanationDto explain(MatchSearchCriteria search, Long actorId, Long candidateId, String evaluationId) {
         MatchEvaluation evaluation = matches.evaluate(search, actorId, candidateId);
+        requireCurrentEvaluation(evaluationId, evaluation.result().evaluationId());
         String standardText = evaluation.result().explanation();
         if (!properties.ready()) {
-            return assembler.standard(candidateId, standardText);
+            return assembler.standard(candidateId, evaluationId, standardText);
         }
         ExplanationEvidence evidence = evidenceFactory.from(evaluation);
         String hash = hasher.hash(evidence, ExplanationPromptBuilder.PROMPT_VERSION, properties.model());
-        Optional<String> cached = cache.find(hash);
+        Optional<String> cached;
+        try {
+            cached = cache.find(hash);
+        } catch (DataAccessException failure) {
+            logCacheFailure("read", failure);
+            return assembler.standard(candidateId, evaluationId, standardText);
+        }
         if (cached.isPresent()) {
-            return assembler.ai(candidateId, cached.get());
+            // Apply today's evidence and length policy even to previously accepted text.
+            return validator.validateText(cached.get(), evidence)
+                    .map(text -> assembler.ai(candidateId, evaluationId, text))
+                    .orElseGet(() -> assembler.standard(candidateId, evaluationId, standardText));
         }
         if (!quota.tryAcquire()) {
-            return assembler.standard(candidateId, standardText);
+            return assembler.standard(candidateId, evaluationId, standardText);
         }
-        Optional<String> written = provider.explain(prompts.build(evidence)).flatMap(validator::validate);
+        Optional<String> written = provider.explain(prompts.build(evidence)).flatMap(raw -> validator.validate(raw, evidence));
         if (written.isEmpty()) {
-            return assembler.standard(candidateId, standardText);
+            return assembler.standard(candidateId, evaluationId, standardText);
         }
-        cache.save(hash, ExplanationPromptBuilder.PROMPT_VERSION, properties.model(), written.get());
-        return assembler.ai(candidateId, written.get());
+        try {
+            cache.save(hash, ExplanationPromptBuilder.PROMPT_VERSION, properties.model(), written.get());
+        } catch (DataAccessException failure) {
+            logCacheFailure("write", failure);
+        }
+        return assembler.ai(candidateId, evaluationId, written.get());
+    }
+
+    private static void requireCurrentEvaluation(String requested, String current) {
+        if (requested == null || !requested.matches("[0-9a-f]{64}")) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "A valid card evaluation ID is required");
+        }
+        if (!requested.equals(current)) {
+            throw new StaleMatchEvaluationException();
+        }
+    }
+
+    private static void logCacheFailure(String operation, DataAccessException failure) {
+        // Exception messages can contain SQL and data. Record only the operation and class.
+        LOG.warn("Optional explanation cache {} failed: {}", operation, failure.getClass().getSimpleName());
     }
 }

@@ -11,7 +11,7 @@ import { returnToState } from '../../shared/navigation/returnTo'
 import MatchExplanationPanel from '../matchexplanation/MatchExplanationPanel'
 
 /** One search result: who the student is, why they match, and when you are both free. */
-export default function MatchCard({ match, search, onSendRequest }: { match: MatchResult; search: MatchSearch; onSendRequest: () => void }) {
+export default function MatchCard({ match, search, onSendRequest, onRefreshMatches }: { match: MatchResult; search: MatchSearch; onSendRequest: () => void; onRefreshMatches: () => void }) {
   const location = useLocation()
   const backToSearch = returnToState(`${location.pathname}${location.search}`, 'Back to find buddies')
   return (
@@ -26,8 +26,7 @@ export default function MatchCard({ match, search, onSendRequest }: { match: Mat
         </div>
         <p className="match-compatibility"><strong>{new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 1 }).format(match.totalScore)} compatibility</strong><span className="field-hint">A comparison of study preferences, not a probability of success.</span></p>
         {match.relevantCourse && <p className="row-meta">Relevant course: {match.relevantCourse.code} {match.relevantCourse.name}</p>}
-        {/* <p className="match-explanation">{match.explanation}</p> */}
-        <MatchExplanationPanel candidateId={match.studentId} search={search} />
+        <MatchExplanationPanel candidateId={match.studentId} evaluationId={match.evaluationId} search={search} onRefreshMatches={onRefreshMatches} />
         <ScoreBreakdown match={match} />
         <div className="match-card-footer">
           <p className="row-meta">{match.relationship === 'CONNECTED' ?

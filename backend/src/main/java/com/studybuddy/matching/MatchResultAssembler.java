@@ -2,6 +2,7 @@ package com.studybuddy.matching;
 
 import com.studybuddy.course.Course;
 import com.studybuddy.matching.availability.TimeSlot;
+import com.studybuddy.matching.config.MatchingConfigSnapshot;
 import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingProfile;
@@ -20,19 +21,23 @@ public class MatchResultAssembler {
 
     private final ScoringRules rules;
     private final MatchExplainer explainer;
+    private final MatchEvaluationFingerprint fingerprints;
 
-    public MatchResultAssembler(ScoringRules rules, MatchExplainer explainer) {
+    public MatchResultAssembler(ScoringRules rules, MatchExplainer explainer, MatchEvaluationFingerprint fingerprints) {
         this.rules = rules;
         this.explainer = explainer;
+        this.fingerprints = fingerprints;
     }
 
     public MatchResultDto toDto(MatchingProfile searcher, MatchingProfile candidate, MatchScore score,
-            MatchSearchCriteria search, Set<MatchingCriterion> enabled, RelationshipState relationship) {
+            MatchSearchCriteria search, MatchingConfigSnapshot settings, RelationshipState relationship) {
         Student student = candidate.student();
+        Set<MatchingCriterion> enabled = settings.enabledCriteria();
         List<TimeSlot> shared = searcher.availability().sharedSessionsWith(candidate.availability(), rules.minSessionMinutes());
         return new MatchResultDto(student.getId(), student.getName(), student.getSchool(), student.getProgramme(),
                 student.getYearOfStudy(), student.getPreferredStudyMode(), student.getStudyGoals().stream().sorted().toList(),
-                score.quality(), score.total(), explainer.explain(score, enabled), relevantCourse(searcher.student(), student, search),
+                score.quality(), score.total(), explainer.explain(score, enabled),
+                fingerprints.create(searcher, candidate, search, settings, score, rules), relevantCourse(searcher.student(), student, search),
                 breakdownOf(score, enabled), score.sharedHoursPerWeek(), shared.stream().map(MatchResultAssembler::toDto).toList(),
                 relationship);
     }
@@ -45,12 +50,22 @@ public class MatchResultAssembler {
     }
 
     private static RelevantCourseDto relevantCourse(Student self, Student other, MatchSearchCriteria search) {
+        if (search.courseId() == null) {
+            return sharedCourse(self, other);
+        }
+        return coursesOf(other).filter(course -> course.getId().equals(search.courseId()))
+                .findFirst().map(MatchResultAssembler::courseDto).orElse(null);
+    }
+
+    static RelevantCourseDto sharedCourse(Student self, Student other) {
         List<Course> theirs = coursesOf(other).toList();
-        Stream<Course> relevant = search.courseId() == null
-                ? coursesOf(self).filter(course -> theirs.stream().anyMatch(peer -> peer.getId().equals(course.getId())))
-                : theirs.stream().filter(course -> course.getId().equals(search.courseId()));
-        return relevant.sorted(Comparator.comparing(Course::getCode).thenComparing(Course::getId)).findFirst()
-                .map(course -> new RelevantCourseDto(course.getId(), course.getCode(), course.getName())).orElse(null);
+        return coursesOf(self).filter(course -> theirs.stream().anyMatch(peer -> peer.getId().equals(course.getId())))
+                .sorted(Comparator.comparing(Course::getCode).thenComparing(Course::getId)).findFirst()
+                .map(MatchResultAssembler::courseDto).orElse(null);
+    }
+
+    static RelevantCourseDto courseDto(Course course) {
+        return course == null ? null : new RelevantCourseDto(course.getId(), course.getCode(), course.getName());
     }
 
     private static Stream<Course> coursesOf(Student student) {

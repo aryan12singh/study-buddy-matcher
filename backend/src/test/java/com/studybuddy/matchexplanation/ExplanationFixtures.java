@@ -23,6 +23,7 @@ import java.util.Set;
 final class ExplanationFixtures {
     static final JsonMapper JSON = JsonMapper.builder().build();
     static final long CANDIDATE_ID = 424242L;
+    static final String EVALUATION_ID = "a".repeat(64);
 
     private ExplanationFixtures() {
     }
@@ -32,9 +33,13 @@ final class ExplanationFixtures {
     }
 
     static MatchEvaluation evaluation(double totalScore) {
+        return evaluation(totalScore, EVALUATION_ID);
+    }
+
+    static MatchEvaluation evaluation(double totalScore, String evaluationId) {
         MatchResultDto result = new MatchResultDto(CANDIDATE_ID, "Jamie Lee", "SCIS", "Information Systems", 2,
                 StudyMode.EITHER, List.of(StudyGoal.EXAM_PREPARATION, StudyGoal.PROBLEM_SOLVING), MatchQuality.GOOD,
-                totalScore, "good match: same course", new RelevantCourseDto(4L, "IS442", "Object Oriented Programming"),
+                totalScore, "good match: same course", evaluationId, new RelevantCourseDto(4L, "IS442", "Object Oriented Programming"),
                 List.of(new CriterionScoreDto(MatchingCriterion.COURSE, 1.0, true, true),
                         new CriterionScoreDto(MatchingCriterion.AVAILABILITY, 0.3333, true, true),
                         new CriterionScoreDto(MatchingCriterion.STUDY_MODE, 1.0, true, true),
@@ -43,7 +48,7 @@ final class ExplanationFixtures {
                 3.4, List.of(new SharedSlotDto(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0))),
                 RelationshipState.STRANGER);
         return new MatchEvaluation(MatchingStrategyType.BALANCED, result, StudyMode.ONLINE,
-                Set.of(StudyGoal.EXAM_PREPARATION, StudyGoal.CONCEPT_REVIEW), GroupSizePreference.ONE_TO_ONE,
-                GroupSizePreference.EITHER);
+                Set.of(StudyGoal.EXAM_PREPARATION, StudyGoal.CONCEPT_REVIEW), null, GroupSizePreference.ONE_TO_ONE,
+                GroupSizePreference.EITHER, result.relevantCourse(), result.relevantCourse());
     }
 }

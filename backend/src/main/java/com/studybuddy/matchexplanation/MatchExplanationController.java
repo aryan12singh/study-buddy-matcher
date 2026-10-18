@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Explains one match on request. Takes the same search context as {@code GET /api/matches}
- * so the explanation describes exactly the score the student saw.
+ * and the card evaluation ID, rejecting a stale card before generating text.
  */
 @RestController
 @RequestMapping("/api/matches")
@@ -29,6 +29,7 @@ public class MatchExplanationController {
     @GetMapping("/{candidateId}/explanation")
     public MatchExplanationDto explain(@AuthenticationPrincipal AccountPrincipal actor,
             @PathVariable Long candidateId,
+            @RequestParam(required = false) String evaluationId,
             @RequestParam(required = false) Long courseId,
             @RequestParam(required = false) StudyGoal studyGoal,
             @RequestParam(required = false) StudyMode studyMode,
@@ -36,6 +37,6 @@ public class MatchExplanationController {
             @RequestParam(required = false) Integer minSharedHours,
             @RequestParam(required = false) MatchQuality minQuality) {
         return service.explain(new MatchSearchCriteria(courseId, studyGoal, studyMode, groupSize, minSharedHours, minQuality),
-                actor.id(), candidateId);
+                actor.id(), candidateId, evaluationId);
     }
 }

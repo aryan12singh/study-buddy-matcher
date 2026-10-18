@@ -12,12 +12,12 @@ const breakdown = (course: number, availability: number) => [
   { criterion: 'STUDY_MODE', score: 1, enabled: true, known: true }, { criterion: 'STUDY_GOAL', score: 0, enabled: true, known: true }, { criterion: 'GROUP_SIZE', score: 0.5, enabled: true, known: true }
 ]
 const jamie = {
-  studentId: 2, name: 'Jamie Lee', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, studyMode: 'ONLINE',
+  studentId: 2, evaluationId: 'a'.repeat(64), name: 'Jamie Lee', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, studyMode: 'ONLINE',
   studyGoals: ['EXAM_PREPARATION'], totalScore: 0.8, explanation: 'Same course and 2 shared hours per week.', relevantCourse: is442, quality: 'STRONG', breakdown: breakdown(1, 0.5), sharedHoursPerWeek: 2,
   sharedSlots: [{ dayOfWeek: 'MONDAY', startTime: '09:00:00', endTime: '11:00:00' }], relationship: 'STRANGER'
 }
 const alex = {
-  studentId: 5, name: 'Alex Tan', school: 'SOE', programme: 'Economics', yearOfStudy: 1, studyMode: null,
+  studentId: 5, evaluationId: 'c'.repeat(64), name: 'Alex Tan', school: 'SOE', programme: 'Economics', yearOfStudy: 1, studyMode: null,
   studyGoals: [], totalScore: 0.2, explanation: 'Different courses and no shared hours.', relevantCourse: null, quality: 'FAIR', breakdown: breakdown(0, 0), sharedHoursPerWeek: 0, sharedSlots: [], relationship: 'STRANGER'
 }
 afterEach(() => { vi.restoreAllMocks() })
@@ -483,4 +483,69 @@ describe('Find buddies page', () => {
     expect(screen.getByLabelText('Shared free time')).toHaveValue('4')
   })
 
+  it.each([false, true])('invalidates a changed evaluation after the real request-send refresh (in flight: %s)', async inFlight => {
+    let loads = 0
+    const pending = deferred<never>()
+    const oldText = 'Explanation for the original card.'
+    const changed = { ...jamie, evaluationId: 'b'.repeat(64), totalScore: 0.5, quality: 'GOOD', relationship: 'OUTGOING_PENDING' }
+    const get = vi.spyOn(api, 'get').mockImplementation(url => {
+      if (url === '/matches') return Promise.resolve(response(ranked([++loads === 1 ? jamie : changed])))
+      if (url === '/matches/2/explanation') return inFlight ? pending.promise : Promise.resolve(response({ candidateId: 2, evaluationId: jamie.evaluationId, text: oldText, source: 'AI' }))
+      return Promise.resolve(response(url === '/courses' ? [is442, is216] : myProfile))
+    })
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    const row = await card('Jamie Lee')
+    fireEvent.click(within(row).getByRole('button', { name: 'Explain this match' }))
+    if (!inFlight) await screen.findByText(oldText)
+    const signal = get.mock.calls.find(([url]) => url === '/matches/2/explanation')?.[1]?.signal
+
+    await sendRequest('Jamie Lee')
+    await screen.findByText('50% compatibility')
+    if (inFlight) await act(async () => pending.resolve(response({ candidateId: 2, evaluationId: jamie.evaluationId, text: oldText, source: 'AI' })))
+
+    expect(signal?.aborted).toBe(true)
+    expect(screen.queryByText(oldText)).not.toBeInTheDocument()
+    expect(within(row).getByRole('button', { name: 'Explain this match' })).toBeEnabled()
+  })
+
+  it('keeps an answer when only the relationship changes in the real request-send refresh', async () => {
+    let loads = 0
+    vi.spyOn(api, 'get').mockImplementation(url => {
+      if (url === '/matches') return Promise.resolve(response(ranked([{ ...jamie, relationship: ++loads === 1 ? 'STRANGER' : 'OUTGOING_PENDING' }])))
+      if (url === '/matches/2/explanation') return Promise.resolve(response({ candidateId: 2, evaluationId: jamie.evaluationId, text: 'Still the same evaluation.', source: 'AI' }))
+      return Promise.resolve(response(url === '/courses' ? [is442, is216] : myProfile))
+    })
+    vi.spyOn(api, 'post').mockResolvedValue(response({ id: 9 }))
+    openPage()
+    const row = await card('Jamie Lee')
+    fireEvent.click(within(row).getByRole('button', { name: 'Explain this match' }))
+    await screen.findByText('Still the same evaluation.')
+
+    await sendRequest('Jamie Lee')
+    await waitFor(() => expect(loads).toBe(2))
+
+    expect(screen.getByText('Still the same evaluation.')).toBeInTheDocument()
+  })
+
+  it('refreshes stale cards before requesting their new explanation', async () => {
+    let loads = 0
+    const get = vi.spyOn(api, 'get').mockImplementation((url, config) => {
+      if (url === '/matches') return Promise.resolve(response(ranked([++loads === 1 ? jamie : { ...jamie, evaluationId: 'b'.repeat(64), totalScore: 0.5 }])))
+      if (url === '/matches/2/explanation') {
+        if ((config?.params as { evaluationId?: string } | undefined)?.evaluationId === jamie.evaluationId) return Promise.reject({ isAxiosError: true, response: { status: 409, data: { code: 'STALE_MATCH_EVALUATION' } } })
+        return Promise.resolve(response({ candidateId: 2, evaluationId: 'b'.repeat(64), text: 'Current explanation.', source: 'AI' }))
+      }
+      return Promise.resolve(response(url === '/courses' ? [is442, is216] : myProfile))
+    })
+    openPage()
+    fireEvent.click(within(await card('Jamie Lee')).getByRole('button', { name: 'Explain this match' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Refresh matches' }))
+    await screen.findByText('50% compatibility')
+    expect(get.mock.calls.filter(([url]) => url === '/matches/2/explanation')).toHaveLength(1)
+    fireEvent.click(within(await card('Jamie Lee')).getByRole('button', { name: 'Explain this match' }))
+
+    expect(await screen.findByText('Current explanation.')).toBeInTheDocument()
+    expect(loads).toBe(2)
+  })
 })

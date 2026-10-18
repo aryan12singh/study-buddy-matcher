@@ -25,13 +25,16 @@ class ExplanationPromptBuilderTest {
 
         assertTrue(prompt.contains("{\"explanation\""), prompt);
         assertTrue(prompt.contains("probability"), prompt);
+        assertTrue(prompt.contains("scoringCourse"), prompt);
+        assertTrue(prompt.contains("sharedCourse"), prompt);
+        assertTrue(prompt.contains("searchedGoal"), prompt);
     }
 
     @Test
     void tellsTheModelThatAnUnsharedPreferenceIsNotAMismatch() {
         String prompt = builder.build(new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation()));
 
-        assertEquals("v2", ExplanationPromptBuilder.PROMPT_VERSION);
+        assertEquals("v3", ExplanationPromptBuilder.PROMPT_VERSION);
         assertTrue(prompt.contains("\"known\": false"), prompt);
         assertTrue(prompt.contains("never as a weak or poor match"), prompt);
         assertTrue(prompt.contains("\"known\":true"), prompt);

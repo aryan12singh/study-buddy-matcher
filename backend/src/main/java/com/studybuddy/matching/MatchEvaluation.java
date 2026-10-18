@@ -8,14 +8,14 @@ import com.studybuddy.student.StudyMode;
 import java.util.Set;
 
 /**
- * One candidate scored exactly as search scores them, plus the searcher's own preferences,
+ * One candidate scored exactly as search scores them, plus the effective search intent and course provenance,
  * for features that explain a match. Holds no entities, so nothing private can leak from it.
  */
 public record MatchEvaluation(MatchingStrategyType strategy, MatchResultDto result, StudyMode searcherStudyMode,
-        Set<StudyGoal> searcherStudyGoals, GroupSizePreference searcherGroupSize,
-        GroupSizePreference candidateGroupSize) {
+        Set<StudyGoal> effectiveStudyGoals, StudyGoal searchedGoal, GroupSizePreference searcherGroupSize,
+        GroupSizePreference candidateGroupSize, RelevantCourseDto scoringCourse, RelevantCourseDto sharedCourse) {
 
     public MatchEvaluation {
-        searcherStudyGoals = Set.copyOf(searcherStudyGoals);
+        effectiveStudyGoals = Set.copyOf(effectiveStudyGoals);
     }
 }

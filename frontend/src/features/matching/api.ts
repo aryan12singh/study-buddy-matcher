@@ -36,6 +36,8 @@ export type MatchResult = {
   quality: MatchQuality
   totalScore: number
   explanation: string
+  /** Opaque server identity of this evaluation; required to request a matching explanation. */
+  evaluationId: string
   relevantCourse: { id: number; code: string; name: string } | null
   /** Every criterion from 0 to 1, in the same order each time. `known` is false when either student left it empty. */
   breakdown: { criterion: MatchingCriterion; score: number; enabled: boolean; known: boolean }[]

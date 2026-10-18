@@ -10,7 +10,8 @@ import java.util.HexFormat;
 
 /**
  * The cache key for an explanation. Any change to the evidence, the prompt version or the model
- * produces a different key, so a stale explanation is never read again and needs no deletion.
+ * produces a different key. This semantic identity deliberately excludes student identity and
+ * exact card inputs; matching separately verifies the card fingerprint before any cache lookup.
  */
 @Component
 public class ExplanationHasher {

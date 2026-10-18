@@ -11,6 +11,7 @@ import com.studybuddy.matching.config.MatchingConfigSnapshot;
 import com.studybuddy.matching.scoring.MatchScore;
 import com.studybuddy.matching.scoring.MatchingProfile;
 import com.studybuddy.matching.scoring.WeightedMatchScorer;
+import com.studybuddy.matching.scoring.StudyGoalIntent;
 import com.studybuddy.matching.strategy.MatchingStrategy;
 import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.AvailabilitySlotRepository;
@@ -92,7 +93,7 @@ public class MatchService {
                 .sorted(ordering(sort, searcher, settings))
                 .toList();
         List<MatchResultDto> matches = ranked.stream().limit(limit)
-                .map(scored -> assembler.toDto(searcher, scored.profile(), scored.score(), search, settings.enabledCriteria(),
+                .map(scored -> assembler.toDto(searcher, scored.profile(), scored.score(), search, settings,
                         standing.getOrDefault(scored.profile().student().getId(), RelationshipState.STRANGER)))
                 .toList();
         return new MatchSearchResultDto(strategy.type(), settings.version(), sort, limit, ranked.size(), matches);
@@ -100,7 +101,8 @@ public class MatchService {
 
     /**
      * Scores one candidate with the same validation, settings snapshot and scorer as {@link #search},
-     * so an explanation always describes the score on the card the student clicked.
+     * returning the current evaluation identity for comparison with the card the student clicked.
+     * Discovery filters and relationship exclusions do not restrict this direct evaluation.
      */
     public MatchEvaluation evaluate(MatchSearchCriteria search, Long actorId, Long candidateId) {
         Student self = access.requireStudent(actorId);
@@ -116,10 +118,14 @@ public class MatchService {
         MatchScore score = scorer.score(searcher, candidate, search, settings.weights(), settings.enabledCriteria());
         RelationshipState relationship = relationships.of(self.getId())
                 .getOrDefault(candidateId, RelationshipState.STRANGER);
-        MatchResultDto result = assembler.toDto(searcher, candidate, score, search, settings.enabledCriteria(), relationship);
-        return new MatchEvaluation(settings.strategy().type(), result, self.getPreferredStudyMode(), self.getStudyGoals(),
+        MatchResultDto result = assembler.toDto(searcher, candidate, score, search, settings, relationship);
+        RelevantCourseDto scoringCourse = MatchResultAssembler.courseDto(search.courseId() == null ? self.getTargetCourse()
+                : courses.findById(search.courseId()).orElseThrow(() -> new CourseNotFoundException(search.courseId())));
+        return new MatchEvaluation(settings.strategy().type(), result, self.getPreferredStudyMode(),
+                StudyGoalIntent.effectiveGoals(self.getStudyGoals(), search.studyGoal()), search.studyGoal(),
                 GroupSizePreference.fromRange(self.getPreferredGroupSizeMin(), self.getPreferredGroupSizeMax()),
-                GroupSizePreference.fromRange(other.getPreferredGroupSizeMin(), other.getPreferredGroupSizeMax()));
+                GroupSizePreference.fromRange(other.getPreferredGroupSizeMin(), other.getPreferredGroupSizeMax()),
+                scoringCourse, MatchResultAssembler.sharedCourse(self, other));
     }
 
     /**

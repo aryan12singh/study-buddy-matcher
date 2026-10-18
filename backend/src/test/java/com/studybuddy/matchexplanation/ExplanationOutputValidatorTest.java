@@ -8,27 +8,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExplanationOutputValidatorTest {
+    private final ExplanationEvidence evidence = new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation());
     private final ExplanationOutputValidator validator = new ExplanationOutputValidator(120, ExplanationFixtures.JSON);
 
     @Test
     void acceptsAShortGroundedExplanationAndTrimsIt() {
         assertEquals(Optional.of("You both take IS442 and share 3.5 free hours a week."),
-                validator.validate("{\"explanation\": \"  You both take IS442 and share 3.5 free hours a week. \"}"));
+                validate("{\"explanation\": \"  You both take IS442 and share 3.5 free hours a week. \"}"));
     }
 
     @Test
     void rejectsMissingBlankOrNonJsonReplies() {
-        assertTrue(validator.validate(null).isEmpty());
-        assertTrue(validator.validate("").isEmpty());
-        assertTrue(validator.validate("You both take IS442.").isEmpty());
-        assertTrue(validator.validate("{\"explanation\": \"   \"}").isEmpty());
-        assertTrue(validator.validate("{\"text\": \"You both take IS442.\"}").isEmpty());
-        assertTrue(validator.validate("{\"explanation\": 42}").isEmpty());
+        assertTrue(validate(null).isEmpty());
+        assertTrue(validate("").isEmpty());
+        assertTrue(validate("You both take IS442.").isEmpty());
+        assertTrue(validate("{\"explanation\": \"   \"}").isEmpty());
+        assertTrue(validate("{\"text\": \"You both take IS442.\"}").isEmpty());
+        assertTrue(validate("{\"explanation\": 42}").isEmpty());
     }
 
     @Test
     void rejectsRepliesOverTheLengthLimit() {
-        assertTrue(validator.validate("{\"explanation\": \"" + "a".repeat(121) + "\"}").isEmpty());
+        assertTrue(validate("{\"explanation\": \"" + "a".repeat(121) + "\"}").isEmpty());
     }
 
     @Test
@@ -36,7 +37,27 @@ class ExplanationOutputValidatorTest {
         for (String claim : new String[] {"There is a high probability you will get along.",
                 "You have a good chance of success together.", "This pairing is guaranteed to work.",
                 "You are 72% compatible."}) {
-            assertTrue(validator.validate("{\"explanation\": \"" + claim + "\"}").isEmpty(), claim);
+            assertTrue(validate("{\"explanation\": \"" + claim + "\"}").isEmpty(), claim);
         }
+    }
+    @Test
+    void rejectsUnsupportedCourseCodesAndNumericClaims() {
+        for (String text : new String[] {"Study LAW999 together.", "You have 20 hours together.",
+                "You share 3 hours a week.", "You share -3.5 hours a week.", "Meet at 9 tomorrow.", "You will certainly succeed."}) {
+            assertTrue(validator.validateText(text, evidence).isEmpty(), text);
+        }
+    }
+
+    @Test
+    void acceptsVariedWordingAndOnlyChecksConcreteReferences() {
+        for (String text : new String[] {"Your study goals overlap, with room to compare meeting preferences.",
+                "IS442 is in focus; you have 3.5 hours per week to work together.",
+                "You have 3.50 free hours each week and compatible online preferences."}) {
+            assertEquals(Optional.of(text), validator.validateText(text, evidence));
+        }
+    }
+
+    private Optional<String> validate(String raw) {
+        return validator.validate(raw, evidence);
     }
 }

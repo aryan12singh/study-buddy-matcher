@@ -1,5 +1,5 @@
 package com.studybuddy.matchexplanation;
 
-/** The course the match was about. A course code is public catalogue data, not personal data. */
+/** Public catalogue data. Its field name distinguishes scoring focus from a course both profiles list. */
 public record CourseEvidence(String code, String name) {
 }

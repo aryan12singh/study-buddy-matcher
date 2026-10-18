@@ -14,7 +14,8 @@ import java.util.List;
  * API field. Names, IDs, contact details, school, year and schedules are deliberately absent.
  */
 public record ExplanationEvidence(MatchQuality quality, double totalScore, MatchingStrategyType strategy,
-        List<CriterionEvidence> criteria, double sharedHoursPerWeek, CourseEvidence course, List<StudyGoal> sharedGoals,
+        List<CriterionEvidence> criteria, double sharedHoursPerWeek, CourseEvidence scoringCourse, CourseEvidence sharedCourse,
+        StudyGoal searchedGoal, List<StudyGoal> sharedGoals,
         StudyMode searcherStudyMode, StudyMode candidateStudyMode, GroupSizePreference searcherGroupSize,
         GroupSizePreference candidateGroupSize) {
 

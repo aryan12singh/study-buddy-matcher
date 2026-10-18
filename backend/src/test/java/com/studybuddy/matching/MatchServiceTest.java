@@ -1,6 +1,9 @@
 package com.studybuddy.matching;
 
 import com.studybuddy.common.AccountAccess;
+import com.studybuddy.matchexplanation.ExplanationEvidence;
+import com.studybuddy.matchexplanation.ExplanationEvidenceFactory;
+import tools.jackson.databind.json.JsonMapper;
 import com.studybuddy.common.error.ForbiddenActionException;
 import com.studybuddy.connection.Connection;
 import com.studybuddy.connection.ConnectionRepository;
@@ -36,6 +39,8 @@ import com.studybuddy.student.StudyGoal;
 import com.studybuddy.student.StudyMode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,6 +58,7 @@ import static com.studybuddy.matching.MatchingFixtures.student;
 import static com.studybuddy.matching.MatchingFixtures.evenWeights;
 import static java.time.DayOfWeek.MONDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -85,7 +91,7 @@ class MatchServiceTest {
                 new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()), properties.quality(), properties.scoring());
         service = new MatchService(access, students, availabilitySlots, courses, config, properties,
                 new MatchSearchFilter(new ProfileProperties(5, 8), properties.scoring()), scorer,
-                new MatchResultAssembler(properties.scoring(), new TemplateMatchExplainer()),
+                new MatchResultAssembler(properties.scoring(), new TemplateMatchExplainer(), new MatchEvaluationFingerprint(JsonMapper.builder().build())),
                 new MatchRelationships(connections, requests));
 
         me = student(ME, "Priya");
@@ -104,6 +110,7 @@ class MatchServiceTest {
         when(access.eligibleStudentIds()).thenReturn(List.of(1L, 2L, 3L));
         when(students.findWithMatchingDetailsByIdIn(List.of(1L, 2L, 3L))).thenReturn(List.of(weak, me, strong));
         when(courses.existsById(4L)).thenReturn(true);
+        when(courses.findById(4L)).thenReturn(java.util.Optional.of(course(4, "IS442")));
         when(availabilitySlots.findByStudentIdIn(any())).thenReturn(List.of(
                 new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
                 new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)),
@@ -301,7 +308,7 @@ class MatchServiceTest {
         assertEquals(fromSearch, evaluation.result());
         assertEquals(MatchingStrategyType.BALANCED, evaluation.strategy());
         assertEquals(StudyMode.ONLINE, evaluation.searcherStudyMode());
-        assertEquals(java.util.Set.of(StudyGoal.EXAM_PREPARATION), evaluation.searcherStudyGoals());
+        assertEquals(java.util.Set.of(StudyGoal.EXAM_PREPARATION), evaluation.effectiveStudyGoals());
         assertEquals(GroupSizePreference.EITHER, evaluation.candidateGroupSize());
     }
 
@@ -320,5 +327,76 @@ class MatchServiceTest {
     void evaluatePassesOnIneligibleCandidateErrors() {
         when(access.eligibleStudent(9L)).thenThrow(new StudentNotFoundException(9L));
         assertThrows(StudentNotFoundException.class, () -> service.evaluate(courseSearch(null), ME, 9L));
+    }
+    @Test
+    void cardIdentityIgnoresSortAndLimitButChangesWithConfiguration() {
+        when(access.eligibleStudent(2L)).thenReturn(strong);
+        String cardId = service.search(new MatchSearchCriteria(4L, null, null, null, null, null,
+                MatchSort.SAME_YEAR_FIRST, 1), ME).matches().getFirst().evaluationId();
+        assertTrue(cardId.matches("[0-9a-f]{64}"));
+        assertEquals(cardId, service.evaluate(courseSearch(null), ME, 2L).result().evaluationId());
+
+        when(config.snapshot()).thenReturn(new MatchingConfigSnapshot(new BalancedStrategy(),
+                new MatchingWeights(evenWeights()), EnumSet.allOf(MatchingCriterion.class), 0, 1));
+        assertNotEquals(cardId, service.evaluate(courseSearch(null), ME, 2L).result().evaluationId());
+    }
+
+    @Test
+    void cardIdentityTracksBothProfilesAndTheirAvailabilityEvenWhenTheScoreIsUnchanged() {
+        when(access.eligibleStudent(2L)).thenReturn(strong);
+        String previous = service.evaluate(courseSearch(null), ME, 2L).result().evaluationId();
+        me.getStudyGoals().add(StudyGoal.PROBLEM_SOLVING);
+        String changed = service.evaluate(courseSearch(null), ME, 2L).result().evaluationId();
+        assertNotEquals(previous, changed);
+        previous = changed;
+        strong.setPreferredStudyMode(StudyMode.ONLINE);
+        changed = service.evaluate(courseSearch(null), ME, 2L).result().evaluationId();
+        assertNotEquals(previous, changed);
+        previous = changed;
+        strong.getCoursesTaken().add(course(9, "COR1305"));
+        changed = service.evaluate(courseSearch(null), ME, 2L).result().evaluationId();
+        assertNotEquals(previous, changed);
+        previous = changed;
+        when(availabilitySlots.findByStudentIdIn(any())).thenReturn(List.of(
+                new AvailabilitySlot(me, MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)),
+                new AvailabilitySlot(strong, MONDAY, LocalTime.of(9, 0), LocalTime.of(13, 0))));
+        assertNotEquals(previous, service.evaluate(courseSearch(null), ME, 2L).result().evaluationId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void evidenceUsesAnUnsavedSearchedGoalJustAsTheScorerDoes(boolean hasSavedGoal) {
+        when(access.eligibleStudent(2L)).thenReturn(strong);
+        me.getStudyGoals().clear();
+        if (hasSavedGoal) {
+            me.getStudyGoals().add(StudyGoal.CONCEPT_REVIEW);
+        }
+        MatchSearchCriteria search = new MatchSearchCriteria(null, StudyGoal.EXAM_PREPARATION, null, null, null, null);
+
+        MatchEvaluation evaluation = service.evaluate(search, ME, 2L);
+        ExplanationEvidence evidence = new ExplanationEvidenceFactory().from(evaluation);
+
+        assertEquals(1.0, evaluation.result().breakdown().stream()
+                .filter(criterion -> criterion.criterion() == MatchingCriterion.STUDY_GOAL).findFirst().orElseThrow().score());
+        assertEquals(StudyGoal.EXAM_PREPARATION, evidence.searchedGoal());
+        assertEquals(List.of(StudyGoal.EXAM_PREPARATION), evidence.sharedGoals());
+        assertEquals(hasSavedGoal ? java.util.Set.of(StudyGoal.CONCEPT_REVIEW) : java.util.Set.of(), me.getStudyGoals());
+    }
+
+    @Test
+    void evidenceDistinguishesTheScoredTargetFromAnotherSharedCourse() {
+        when(access.eligibleStudent(3L)).thenReturn(weak);
+        me.setTargetCourse(course(4, "IS442"));
+        me.getCoursesTaken().add(course(9, "COR1305"));
+        weak.getCoursesTaken().clear();
+        weak.getCoursesTaken().add(course(9, "COR1305"));
+        MatchEvaluation evaluation = service.evaluate(new MatchSearchCriteria(null, StudyGoal.PROBLEM_SOLVING,
+                null, null, null, null), ME, 3L);
+        ExplanationEvidence evidence = new ExplanationEvidenceFactory().from(evaluation);
+
+        assertEquals(0.0, evaluation.result().breakdown().getFirst().score());
+        assertEquals("IS442", evidence.scoringCourse().code());
+        assertEquals("COR1305", evidence.sharedCourse().code());
+        assertEquals("COR1305", evaluation.result().relevantCourse().code());
     }
 }

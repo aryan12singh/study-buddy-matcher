@@ -140,7 +140,7 @@ export default function FindBuddiesPanel() {
       />
       <div className="data-list" aria-label="Matching students">
         {matches?.map(match => (
-          <MatchCard key={match.studentId} match={match} search={search} onSendRequest={() => { setNotice(undefined); setSendingTo(match) }} />
+          <MatchCard key={match.studentId} match={match} search={search} onRefreshMatches={() => results.reload(true)} onSendRequest={() => { setNotice(undefined); setSendingTo(match) }} />
         ))}
       </div>
       {sendingTo && (
