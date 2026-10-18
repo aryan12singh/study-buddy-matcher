@@ -913,7 +913,7 @@ names, student/evaluation IDs, contact details, school, year, messages or schedu
 - `searchedGoal` records current intent. `sharedGoals` intersects the candidate's saved goals
   with the caller's saved goals **plus** that searched goal, using the scorer's shared helper.
 
-The semantic cache key is SHA-256 of evidence, prompt version (`v3`) and model. Scores are
+The semantic cache key is SHA-256 of evidence, prompt version (`v5`) and model. Scores are
 rounded to hundredths and hours to half-hours; the prompt describes hours as approximate.
 Equivalent anonymous evidence may reuse wording across students or exact card evaluations.
 Changed raw inputs still require a fresh card, even when rounded evidence stays equivalent.

@@ -106,7 +106,8 @@ app:
       timeout: 5s
       max-output-tokens: 200
       max-characters: 600
-      daily-call-limit: 200
+      # Google's free tier allows 20 generate requests per day per project and model.
+      daily-call-limit: 18
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
   demo-seed:

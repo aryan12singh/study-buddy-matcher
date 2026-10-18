@@ -365,7 +365,7 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.timeout` | `5s` | Connect timeout and read timeout, each; the worst-case wait is about twice this before falling back to the standard explanation. 3s was too short: a first call on a fresh connection took over 3s |
 | `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
 | `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |
-| `app.ai.explanation.daily-call-limit` | `200` | Per-process daily provider-call budget; restart resets it, so this is not a durable or multi-instance billing cap |
+| `app.ai.explanation.daily-call-limit` | `18` | Gemini calls per day before falling back; just under the free tier's 20 requests per day per project and model (checked 18 Oct). In memory and resets at Singapore midnight, while Google's limit resets on Pacific time, so they can drift apart. Usage is visible at https://ai.dev/rate-limit |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
 | `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
 

@@ -105,7 +105,7 @@
 <text x="573" y="621" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Use the current deterministic MatchExplainer text.</text>
 <text x="573" y="687" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">4  Reduce evidence and derive its cache key</text>
 <text x="573" y="718" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationEvidenceFactory → anonymous allowlist only.</text>
-<text x="573" y="742" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationHasher: SHA-256(evidence + v3 + model).</text>
+<text x="573" y="742" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationHasher: SHA-256(evidence + v5 + model).</text>
 <text x="573" y="766" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Rounded semantic key is separate from the exact card ID.</text>
 <text x="573" y="832" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">5  Look up and revalidate cached text</text>
 <text x="573" y="863" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationCache.find(hash); current validator on every hit.</text>
@@ -116,7 +116,7 @@
 <text x="573" y="1032" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Daily, synchronized and process-local; restart resets it.</text>
 <text x="573" y="1056" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Concurrent misses can make duplicate provider calls.</text>
 <text x="573" y="1122" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">7  Generate, validate, then attempt to cache</text>
-<text x="573" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v3 → ExplanationProvider → validate raw JSON/text.</text>
+<text x="573" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v5 → ExplanationProvider → validate raw JSON/text.</text>
 <text x="573" y="1177" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Unavailable/rejected output → STANDARD.</text>
 <text x="573" y="1201" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Validated output → AI, even if cache.save() fails.</text>
 <text x="1368" y="255" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">Provider evidence only</text>
@@ -135,7 +135,7 @@
 <text x="1368" y="770" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">PostgreSQL cache</text>
 <text x="1368" y="804" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">match_explanations</text>
 <text x="1368" y="831" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Unique evidence hash; no student FK.</text>
-<text x="1368" y="858" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">v3 + model + text + createdAt.</text>
+<text x="1368" y="858" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">v5 + model + text + createdAt.</text>
 <text x="1368" y="885" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Insert on conflict does nothing.</text>
 <text x="1368" y="912" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Browser roles cannot read rows.</text>
 <text x="1368" y="939" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Stored text passes current policy.</text>
@@ -146,7 +146,7 @@
 <text x="1368" y="1065" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">GeminiExplanationProvider</text>
 <text x="1368" y="1099" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Implements ExplanationProvider.</text>
 <text x="1368" y="1126" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Server HTTP call with timeouts.</text>
-<text x="1368" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v3 + allowlisted evidence.</text>
+<text x="1368" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v5 + allowlisted evidence.</text>
 <text x="1368" y="1180" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Error/empty/malformed reply</text>
 <text x="1368" y="1207" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">becomes the STANDARD path.</text>
 <rect x="1255.65" y="1105" width="72.7" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
