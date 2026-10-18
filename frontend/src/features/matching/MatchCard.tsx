@@ -25,6 +25,7 @@ export default function MatchCard({ match, onSendRequest }: { match: MatchResult
         </div>
         <p className="match-compatibility"><strong>{new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 1 }).format(match.totalScore)} compatibility</strong><span className="field-hint">A comparison of study preferences, not a probability of success.</span></p>
         {match.relevantCourse && <p className="row-meta">Relevant course: {match.relevantCourse.code} {match.relevantCourse.name}</p>}
+        {/* <p className="match-explanation">{match.explanation}</p> */}
         <ScoreBreakdown match={match} />
         <div className="match-card-footer">
           <p className="row-meta">{match.relationship === 'CONNECTED' ?
