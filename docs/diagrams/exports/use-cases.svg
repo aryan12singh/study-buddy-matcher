@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1350" viewBox="0 0 1600 1350" role="img" aria-labelledby="title description">
+<title id="title">UML use cases — compulsory baseline</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1600" height="1350" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="230" y="165" width="1120" height="1050" rx="8" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polyline points="44,1296 1556,1296" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,260" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,345" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,430" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,515" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,600" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,685" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,770" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,855" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,940" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="140,545 300,1050" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1447,545 1290,345 770,345" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1447,545 1307,520" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1447,545 1307,700" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1447,545 1307,880" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="102" cy="500" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
+<polyline points="102,519 102,584" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="64,545 140,545" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="68,620 102,584 136,620" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="1485" cy="500" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
+<polyline points="1485,519 1485,584" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="1447,545 1523,545" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="1451,620 1485,584 1519,620" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<ellipse cx="535" cy="260" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="345" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="430" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="515" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="600" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="685" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="770" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="855" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="940" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="535" cy="1050" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1090" cy="520" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1090" cy="700" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1090" cy="880" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<rect x="835" y="990" width="470" height="129" rx="6" fill="#eaf5f1" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="275" y="1130" width="1015" height="49" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="45" y="1240" width="1510" height="49" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML use cases — compulsory baseline</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Actors are account capabilities; group leadership is a relationship with one particular group.</text>
+<text x="46" y="1323" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1554" y="1323" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/use-cases.svg</text>
+<text x="255" y="200" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER</text>
+<text x="102" y="650" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
+<text x="1485" y="650" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Administrator</text>
+<text x="535" y="266" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Register student account</text>
+<text x="535" y="351" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Sign in</text>
+<text x="535" y="424" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Edit own profile</text>
+<text x="535" y="448" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and study preferences</text>
+<text x="535" y="509" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Replace / clear</text>
+<text x="535" y="533" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">weekly availability</text>
+<text x="535" y="594" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Find and compare</text>
+<text x="535" y="618" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">ranked buddies</text>
+<text x="535" y="691" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Read student profile</text>
+<text x="535" y="764" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Send / answer requests</text>
+<text x="535" y="788" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and view / end connections</text>
+<text x="535" y="849" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Browse, create and</text>
+<text x="535" y="873" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">apply to study groups</text>
+<text x="535" y="934" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Manage a led group</text>
+<text x="535" y="958" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and membership requests</text>
+<text x="535" y="1044" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Read / mark own</text>
+<text x="535" y="1068" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">notifications</text>
+<text x="1090" y="514" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Create / edit / delete</text>
+<text x="1090" y="538" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and activate / deactivate accounts</text>
+<text x="1090" y="694" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">View account status</text>
+<text x="1090" y="718" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and basic usage</text>
+<text x="1090" y="874" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Configure matching criteria,</text>
+<text x="1090" y="898" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">weights and active strategy</text>
+<text x="852" y="1018" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">Group-scoped authority</text>
+<text x="852" y="1048" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Leader operations require group.leader.id</text>
+<text x="852" y="1073" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">to equal the current student. No leader</text>
+<text x="852" y="1098" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">subclass or global leader role exists.</text>
+<text x="292" y="1158" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Profile reads enforce contact privacy. Registration and sign-in are public entry points; other actions require an active account.</text>
+<text x="62" y="1268" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Notation: actor association = solid line; ellipse = use case; rectangle = application boundary. E2 use cases are a separate panel.</text>
+</g></svg>

@@ -1,11 +1,12 @@
-# E2 implementation and delivery
+# E2 scope and delivery record
 
-PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52), branch
-`feat/team-c/collaborative-study-room`, now targets the complete selected
-[E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16).
-The earlier foundation deliberately left session/calendar work to teammates;
-the project owner has since authorized completing it in this PR. Latest merged
-baseline work is integrated without rewriting existing merge history.
+PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) merged the complete
+selected [E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16) as
+`66d121a`. The original room-only plan was expanded, with owner authorization, to
+sessions/calendar and the weather enhancement described below. The E2 schema was
+applied to shared Supabase on 16 October; the [rollout record](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026)
+contains the checks and limits. This file now records delivered scope and boundaries;
+it is not an active implementation checklist.
 
 ## Agreed scope
 
@@ -50,8 +51,10 @@ is complete.
 ## Design and integration
 
 Room and session controllers validate input and delegate to services. Assemblers
-return DTOs, with contacts/emails/tokens excluded. Membership/account locks precede
-group/connection locks, so changes serialize with lifecycle operations. Room
+return DTOs, with contacts/emails/tokens excluded. Transition writes take account
+locks before group/connection locks so admission and state changes serialize with
+lifecycle operations. Room reads and existing-lease heartbeats recheck membership
+without a group-row lock; renewal never creates an expired or deleted lease. Room
 leases are separate from the durable timer/audio state and from dated sessions.
 Removal, closure and deactivation clear leases/roles transactionally; readmission
 requires a new capacity-checked join. Session access always checks the current
@@ -81,10 +84,9 @@ imports may duplicate/ignore edits or cancellations. Reducing a series does not
 delete an old imported occurrence, and ending access never removes an offline copy.
 Real client-import acceptance remains distinct from automated format checks.
 
-Shared integration files include `application.yml`, routes, Home, connection/group
-entry points and notification enums/links. Their changes are additive and must be
-flagged in the PR. Scorers, ranking, privacy reveal and own-profile semantics are
-retained. The full contract is in [API_CONTRACT.md](API_CONTRACT.md), choices in
+Shared integration files included `application.yml`, routes, Home, connection/group
+entry points and notification enums/links. E2 retains the matching formulas, ranking,
+privacy reveal and own-profile semantics. The full contract is in [API_CONTRACT.md](API_CONTRACT.md), choices in
 [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md), and diagrams under `docs/diagrams/`.
 
 ## Verification and delivery gates
@@ -100,8 +102,8 @@ result. Verify two authenticated browsers, layered audio, membership revocation,
 dated-session dashboard/agenda/notification updates, export times and real imports
 into Google Calendar, Apple Calendar and Outlook. Record gaps honestly.
 
-The new room/audio/session migrations are not claimed applied to shared Supabase.
-Use the reviewed [database procedure](DATABASE_OPERATIONS.md) before running this
-branch against a hosted target. Source completion, local verification, hosted CI,
-human review, merge, deployment and presentation acceptance remain separate gates.
-Do not close #16 using an unavailable-client acceptance claim or mark E1 complete.
+The [database record](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026) documents the
+shared room/audio/session migrations and temporary schema/wiring check after merge.
+It does not claim a persistent hosted application. Outlook import remains
+owner-deferred because of school MFA. Final team/device/projector acceptance,
+rehearsal and submission retain their own evidence; E1 remains separate PR #61 work.

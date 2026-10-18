@@ -129,6 +129,9 @@ The later verification-record update does not change the reviewed runtime source
 
 ## Delivery gates
 
+This section records the gates at the original baseline audit. Later main source includes
+merged E2 and the diagram exports; see the [current coverage/status map](REQUIREMENT_COVERAGE.md#scope-and-evidence-status).
+
 Before publication, the owner reviews the proposed simple [AI usage](AI_USAGE.md) document.
 After publication, retain the PR's own hosted CI and cross-team review; use Squash and merge.
 The independent final audit checks the original brief, the accepted contracts, baseline
@@ -139,3 +142,48 @@ and member contribution/disclosure confirmation, stable integrated demo states, 
 projector acceptance, slides/rehearsal, official LMS deadline/receipt and private peer evaluation.
 The team's learning-style interpretation remains explicit; later professor-directed changes
 must be recorded and implemented rather than represented as an existing confirmation.
+
+## Audit cleanup — 18 October 2026
+
+The cleanup starts from main `9592fd2`. It corrects demo-reset notification cleanup,
+narrow weekly-editor containment and touch/keyboard access to matching's shared-hours
+details. It also reconciles current documentation with the merged source and adds the
+[controlled SVG diagram set](diagrams/README.md). No shared database reset or deployment
+was performed by these checks, and the existing AI disclosure was not edited.
+
+| Boundary | Targeted evidence |
+| --- | --- |
+| Demo reset | The new isolated SQL fixture fails against the original reset because group/buddy session notifications dangle. The fixed reset passes both parent scopes, resource-type ID collision, retained demo-created session and repeat-reset cases; every retained public-table row matches its pre-reset snapshot |
+| Migration/database boundary | Existing disposable PostgreSQL 17 harness passes migration preflight/rollback/replay and reset checks; `DatabaseBoundaryTest`: 3 passed, no failures/errors/skips |
+| Frontend regressions | 52 tests in 4 focused files pass: heatmap, matching page, weekly editor and dialog. Heatmap tests check same totals in compact table and expandable text, changed data and empty state |
+| Narrow layout and controls | 58 Chromium renders: 23 populated route/states at each of 360/390 px, plus profile/group/matching at 768/1024/1101/1440 px. No page exceptions, unexpected API requests, overflow or weekly-editor containment failures |
+| Touch/keyboard interactions | Both weekly editors' duplicate/remove/copy/dialog actions and heatmap tap/Enter/Space/focus pass at six widths. Final filter-chip sizing rechecked in 6 additional matching renders; tested button heights are at least 44 px and dialog close targets are 44×44 px |
+| Diagram/document checks | Nine deterministic SVGs parse as XML and match their editable source; referenced Java class names resolve. Exports were locally rasterized and visually inspected. API priority defaults now match YAML; E2 rollout, DTO privacy and room locking are described consistently |
+
+At 360 px, the weekly editor and parent both measure 301.62 px and the document is 360 px
+wide; at 390 px, both measure 331.62 px and the document is 390 px. The browser pass uses
+synthetic HTTP fixtures and validates layout/local interaction. It does not verify database
+writes or live external services. Full-suite and real-backend evidence must be recorded
+separately against the final combined changes.
+
+The complete cleanup branch subsequently passed the following checks on the same date:
+
+| Check | Observed result |
+| --- | --- |
+| `scripts/test-backend.sh` with Java 21 and disposable PostgreSQL 17 | 472 passed; zero failures/errors/skips, including fresh/legacy/repeat migration and demo-reset regression checks |
+| Frontend `npm test -- --maxWorkers=2` | 320 passed across 37 files |
+| Frontend lint, TypeScript and production build | Passed |
+| Packaged application against a fresh private migrated database | 15 runtime checks passed: seed, matching, profile/availability, accepted-request contact disclosure, buddy/group sessions and calendar, room/timer, restart preservation, demo reset and reseed |
+| Real Chromium with that backend | 10 checks passed: sign-in, saved weekly copy/reload, narrow profile/group/matching/room views, expandable shared-time details, timer/weather controls and saved session detail; no page exceptions |
+
+Reset/reseed retained non-demo accounts and E2 data, removed dangling demo-session
+notifications and rebuilt the expected 50-student dataset. A seeded restart preserved every
+application table's contents. All browser/runtime fixtures were synthetic; owned servers,
+browsers and disposable containers were removed afterwards. The initial local frontend run
+under concurrent Java/browser load exceeded asynchronous test timeouts; the unchanged suite
+passed with two workers. No timeout increase, test deletion or CI job was added.
+
+Physical iPhone/Safari and Android/Chrome checks remain for audio consent/interruption,
+background recovery, virtual keyboard, text zoom, clipboard and calendar import. The
+existing Outlook acceptance deferral remains. These targeted results do not establish
+latest-Figma approval, a physical-projector check, hosting, an LMS deadline or submission.

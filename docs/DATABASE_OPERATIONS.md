@@ -196,7 +196,10 @@ state, an approved operator does a one-off reset:
      delete ran. If you saw that error, nothing was removed; run the current file.
    - Courses, matching configuration and non-demo accounts are kept. A non-demo account only
      loses its own requests, connections, memberships and applications that involved demo
-     accounts.
+     accounts, plus notifications targeting the removed resources. The reset captures
+     affected group/buddy session IDs before parent cascades, then deletes only their
+     `SESSION` notifications. Unrelated notices and sessions under surviving parents are
+     retained, including a retained session originally created by a demo student.
 3. **Start one backend with seeding enabled**, then **wait for the seed to finish** before
    stopping it: the seed runs after startup and is rolled back if the app stops mid-way. It is
    complete when `select count(*) from study_groups where name = 'IS212 Sprint Retro'` returns 1.
@@ -262,7 +265,7 @@ privately by the operator. It must not be attached to a PR or committed.
 
 ## Privacy and access verification
 
-After this branch's complete migration set, all 20 application tables have RLS enabled;
+After the recorded merged E2 migration set, all 20 application tables had RLS enabled;
 PUBLIC/anon/authenticated grants are revoked and there are no browser policies. This
 baseline boundary, including enabled criteria, passed the 13 October disposable tests.
 The room/session boundary was checked on the shared project after the
@@ -348,7 +351,7 @@ Follow the populated-database preflight/rollback procedure above.
 
 After rollout, verify all three E2 tables and sequences deny `PUBLIC`, `anon` and
 `authenticated`, constraints/indexes are installed, the application starts with
-`ddl-auto=validate`, and the current PR's room/session workflow checks pass. Weather
+`ddl-auto=validate`, and the deployed source's room/session workflow checks pass. Weather
 uses a bounded in-memory backend cache and adds no database table or browser grant.
 Record the actual target/time/migration-history name separately from local results in
 [E2_TESTING.md](E2_TESTING.md).

@@ -25,7 +25,7 @@ not rules from the brief.
 | Event times | Java Instant + PostgreSQL timestamptz + Z API timestamps; legacy local values explicitly converted from Asia/Singapore | Relabelling timestamp without conversion shifts recorded moments; matching-owned timestamps untouched |
 | Notifications | One service, safe summary/resource metadata, recipient scope, persistent read state and transaction/event-key deduplication; E2 adds actual session change events | Email/SMS/push and scheduled reminder delivery remain separate proposals; #13/#16 |
 | Database access | Backend JDBC owner writes; browser table/sequence grants revoked, RLS enabled with no browser policies | Supabase Auth/RLS browser access is a different architecture from application JWTs; #11 |
-| Cross-instance write order | Shared transaction advisory guard for domain writes; exclusive for account lifecycle/seed; sorted user rows before group/request rows; actor version rechecked | Process mutex alone fails multiple instances; exclusive all writes unnecessarily blocks independent work |
+| Cross-instance write order | Shared transaction advisory guard for relationship/profile/room/session transitions; exclusive for account lifecycle/seed; sorted user rows before parent/request rows; actor version rechecked. Room reads and existing-lease renewals avoid the group lock | Process mutex alone fails multiple instances; serializing every poll unnecessarily blocks independent work |
 | Windows | Decorative title bars and conventional routes; shared retro components are the implemented baseline | Movable stacking manager adds no OO value. The existence of an implemented screen does not certify latest-Figma acceptance; #9/#41 |
 | Data freshness | Refetch on mutations/focus/visibility plus bounded poll; purge sensitive view state on disconnect/logout/401; forms preserve inputs | A saved/displayed number cannot be erased from someone else's memory; #11/#13 |
 | Seed | Explicit opt-in, runtime passwords, missing identities/courses only, no resets | Shared destructive reseeds and committed/default passwords unsafe; #5/#44 |
@@ -33,12 +33,15 @@ not rules from the brief.
 
 ## Transaction and database guarantees
 
-All domain writes acquire shared advisory transaction lock `4422026`. Account lifecycle
-and seed acquire it exclusively before reading affected data. User rows are locked in ID
-order; then the group/request row is locked and state/counts are rechecked. Any actor
-revoked during waiting fails authorization after locking. Group approval and capacity
-edit take the same group lock. Partial unique indexes protect unordered pending buddy
-pairs, active connection pairs, pending group/applicant pairs and recipient/event identities.
+Relationship/profile and room/session transition writes acquire shared advisory transaction
+lock `4422026`; account lifecycle and seed acquire it exclusively. Affected user rows are
+locked in ID order before parent/request rows and state/counts are rechecked. An actor
+revoked while waiting fails authorization after locking. Group approval and capacity edits
+take the same group lock. Polled room reads recheck active membership without row locks;
+heartbeats update only an existing unexpired tab lease without locking the group. Deletion
+or expiry cannot be reversed by a heartbeat: a new capacity-checked join is required.
+Partial unique indexes protect unordered pending buddy pairs, active connection pairs,
+pending group/applicant pairs and recipient/event identities.
 
 Application exceptions are mapped to safe RFC 9457 problems; SQL details remain internal.
 Notifications commit in the same transaction as the transition. Real HTTP tests inject a
@@ -79,11 +82,14 @@ matching preview is a narrow integration in that dashboard, described below; Tea
 not own those profile editors.
 
 Global online status, group-score recommendations and richer notes/task boards remain proposals.
-E1 AI explanations remain separate from this E2 implementation. PR #52 now extends the
-room foundation with dated group/buddy sessions, calendar export and real agenda/dashboard
-events. Weather themes were subsequently approved as a room enhancement. The compulsory
-baseline records describe their original merged state; this branch adds E2 without changing
-matching semantics or claiming a shared deployment. See the
+E2 merged through [PR #52](https://github.com/aryan12singh/study-buddy-matcher/pull/52),
+including dated group/buddy sessions, calendar export, agenda/dashboard events and the
+subsequently approved weather enhancement. The [16 October database rollout record](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026)
+records its schema application; it is not evidence of a persistent hosted application.
+The baseline/E2 implementation described here was checked against `9592fd2` on 18 October.
+E1 AI explanations have their own contract and evidence on
+[PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61). Historical verification records
+retain their original dates and scope. See the
 [selected-extra map](REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
 
 ## Schedule and submission record
@@ -185,7 +191,7 @@ complete the current issue scope; this entry does not assert professor or produc
 | Candidate eligibility | Exclude self, inactive/deleted accounts and active connections; retain pending candidates with incoming/outgoing state | Existing buddies belong on Connections; a pending request is still visible but cannot be resent; #2/#10 |
 | Results bound | Default 20, maximum 50, configured in YAML. Count eligible filtered results before limiting, sort before truncation | Full pagination is unnecessary for the bounded demonstration dataset; #2 |
 | Quality and threshold | Quality cut-offs remain YAML defaults; admin minimum total score and student minimum quality both apply | A user filter can narrow, never override a global threshold; #1/#2/#4 |
-| Explainability | Immutable score value includes bounded total, criterion breakdown, unique shared hours, deterministic explanation and quality. DTOs add enabled metadata from the same settings snapshot, relevant course and public profile data | Percent compatibility is not a success probability; AI wording never determines ranking; #1/#2/#15 |
+| Explainability | Immutable `MatchScore` holds bounded total, criterion breakdown, unique shared hours, unknown criteria and quality. `MatchResultAssembler` adds deterministic text from `MatchExplainer`, enabled metadata, relevant course and public profile data. At `9592fd2`, the card shows scores/bars/shared time; it does not render that text | Percent compatibility is not a success probability; wording does not determine ranking. E1's provider path and evidence are recorded separately on PR #61; #1/#2/#15 |
 | Default/override precedence | External startup defaults apply until saved overrides exist. Explicit restore clears overrides and reuses current external defaults; overrides persist across restarts | Silent reset on each startup loses admin settings; #4 |
 | Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
 | Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
