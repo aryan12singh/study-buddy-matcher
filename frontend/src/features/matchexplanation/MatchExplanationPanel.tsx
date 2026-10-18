@@ -48,12 +48,15 @@ function EvaluationExplanation({ candidateId, evaluationId, search, onRefreshMat
   // One live region for every state, so screen readers announce the answer when it arrives.
   return (
     <div className="match-explanation-panel" aria-live="polite" aria-busy={state.status === 'loading'}>
-      {panelContent(state, load, onRefreshMatches)}
+      <PanelContent state={state} onLoad={load} onRefreshMatches={onRefreshMatches} />
     </div>
   )
 }
 
-function panelContent(state: PanelState, load: () => void, onRefreshMatches: () => void) {
+type PanelContentProps = { state: PanelState; onLoad: () => void; onRefreshMatches: () => void }
+
+/** What the panel shows in each state; the live region around it stays mounted. */
+function PanelContent({ state, onLoad: load, onRefreshMatches }: PanelContentProps) {
   if (state.status === 'done' && state.explanation.source === 'AI') {
     return (
       <div className="match-ai-explanation">
