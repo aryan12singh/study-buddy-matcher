@@ -1,6 +1,8 @@
 package com.studybuddy.matchexplanation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Optional;
 
@@ -64,6 +66,75 @@ class ExplanationOutputValidatorTest {
                 "You have 3.50 free hours each week and compatible online preferences."}) {
             assertEquals(Optional.of(text), validator.validateText(text, evidence));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"IS442", "IS212", "IS210", "IS214", "IS216", "IS111", "IS112", "IS113", "IS114", "IS115",
+            "COR-STAT1202", "ACCT101", "ECON101", "FNCE101"})
+    void acceptsEverySeededCourseCodeWhenItIsTheEvidenceCourse(String code) {
+        String text = "You both focus on " + code + " and share about 3.5 hours per week.";
+
+        assertEquals(Optional.of(text), validator.validateText(text, withCourse(code)));
+    }
+
+    @Test
+    void acceptsOrdinaryAcronymsThatAreNotCodeNames() {
+        String text = "Your OOP and SQL course focus lines up well.";
+
+        assertEquals(Optional.of(text), validator.validateText(text, evidence));
+    }
+
+    @Test
+    void rejectsSoftenedSuccessClaims() {
+        for (String text : new String[] {"This would be a successful pairing.", "You are likely to work well together.",
+                "There is a decent chance you will click."}) {
+            assertTrue(validator.validateText(text, evidence).isEmpty(), text);
+        }
+    }
+
+    @Test
+    void checksSpelledOutHoursAgainstTheEvidence() {
+        assertTrue(validator.validateText("You share ten hours a week.", evidence).isEmpty());
+        String twoHours = "You share about two hours a week.";
+
+        assertEquals(Optional.of(twoHours), validator.validateText(twoHours, withHours(2.0)));
+    }
+
+    @Test
+    void acceptsHyphenatedHourCounts() {
+        String text = "You have a 3.5-hour weekly overlap.";
+
+        assertEquals(Optional.of(text), validator.validateText(text, evidence));
+    }
+
+    /**
+     * Real gemini-3.5-flash replies to prompt v4 (18 October), for evidence with IS442 and 2 shared
+     * hours. A change to the checks must keep accepting good provider wording.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "You and this student match strongly on course for IS442 Object Oriented Programming, meeting mode, and group preference. Your lowest matching score is for availability. You both share the study goal of exam preparation, and about two hours per week of shared time.",
+        "your strongest matches are course focus for IS442, meeting mode, and group preference for one to one study. study goals align on exam preparation, while your weakest match is availability with about 2 hours per week shared.",
+        "your strongest matches with this student are meeting mode, group preference, and course alignment for IS442 Object Oriented Programming, with shared goals including exam preparation and about 2 shared hours per week. your weakest match is availability."})
+    void acceptsRecordedLiveProviderReplies(String reply) {
+        ExplanationOutputValidator generous = new ExplanationOutputValidator(600, ExplanationFixtures.JSON);
+
+        assertEquals(Optional.of(reply), generous.validateText(reply, withHours(2.0)));
+    }
+
+    private ExplanationEvidence withCourse(String code) {
+        CourseEvidence course = new CourseEvidence(code, "A course");
+        return new ExplanationEvidence(evidence.quality(), evidence.totalScore(), evidence.strategy(), evidence.criteria(),
+                evidence.sharedHoursPerWeek(), course, course, evidence.searchedGoal(), evidence.sharedGoals(),
+                evidence.searcherStudyMode(), evidence.candidateStudyMode(), evidence.searcherGroupSize(),
+                evidence.candidateGroupSize());
+    }
+
+    private ExplanationEvidence withHours(double hours) {
+        return new ExplanationEvidence(evidence.quality(), evidence.totalScore(), evidence.strategy(), evidence.criteria(),
+                hours, evidence.scoringCourse(), evidence.sharedCourse(), evidence.searchedGoal(), evidence.sharedGoals(),
+                evidence.searcherStudyMode(), evidence.candidateStudyMode(), evidence.searcherGroupSize(),
+                evidence.candidateGroupSize());
     }
 
     private Optional<String> validate(String raw) {
