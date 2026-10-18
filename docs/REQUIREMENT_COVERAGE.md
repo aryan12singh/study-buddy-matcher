@@ -278,14 +278,17 @@ decoration, not forecasts. No shared hosted E2 rollout is claimed by source chan
 
 ## AI match explanation (E1, #15)
 
-| Requirement | Backend | Screen | Tests |
+Implementation on the E1 branch is distinct from cross-team review, merge and live-provider
+acceptance. [E1_TESTING.md](E1_TESTING.md) is the current regression and demo guide.
+
+| Requirement / acceptance | Backend | Frontend | Evidence |
 | --- | --- | --- | --- |
-| Explain an existing match without changing scores or ranking | `MatchService.evaluate`, `MatchExplanationService` | `matchexplanation/MatchExplanationPanel` on `MatchCard` | `MatchServiceTest`, `MatchExplanationHttpTest` |
-| Send only an allowlisted summary; no names, contacts, emails, IDs, messages or schedules | `ExplanationEvidence`, `ExplanationEvidenceFactory`, `ExplanationPromptBuilder` | — | `ExplanationEvidenceFactoryTest`, `ExplanationPromptBuilderTest`, `GeminiExplanationProviderTest` |
-| Ground wording in evidence; no probability claims | Prompt v2 (unshared preferences are not mismatches), `ExplanationOutputValidator` | AI label states scores are separate | `ExplanationOutputValidatorTest`; live examples still to be recorded in `AI_USAGE.md` |
-| Fall back on failure, timeout or unusable output; matching stays available | `GeminiExplanationProvider`, `ExplanationQuota`, `MatchExplanationService` | "Standard explanation" label; error with retry | `GeminiExplanationProviderTest`, `MatchExplanationServiceTest`, `ExplanationQuotaTest` |
-| Cache repeated inputs; invalidate on preference, score, config, prompt or model change | `ExplanationHasher`, `ExplanationCache`, `match_explanations` | — | `ExplanationHasherTest`, `MatchExplanationHttpTest` |
-| Authorisation and safe rendering | Same rules as search | Text rendered as plain text | `MatchExplanationHttpTest`, `MatchExplanationPanel.test.tsx` |
+| Explain a current card without changing scores/ranking | `MatchEvaluationFingerprint`, `MatchService.evaluate`, `MatchExplanationService`; stale 409 before optional work | `evaluationId` request/response check and Refresh matches action | `MatchServiceTest`, `MatchExplanationHttpTest` config/profile/availability drift |
+| Clear old answers on real refreshes | Candidate/evaluation ID identifies the result | Keyed panel lifecycle, abort/ignore late replies; unchanged relationship-only updates retain answers | `MatchExplanationPanel.test.tsx`, `FindBuddiesPage.test.tsx` completed/in-flight post-send cases |
+| Send only allowlisted anonymous evidence with accurate search intent | `ExplanationEvidenceFactory`, shared `StudyGoalIntent`; scoring/shared-course distinction | AI label and existing score breakdown | Evidence/privacy tests and goal/course regressions in `MatchServiceTest` |
+| Apply bounded output checks and state their limits | Prompt v3; evidence-aware course/numeric checks; current length policy for fresh/cached text | AI accuracy cue; literal text rendering | `ExplanationOutputValidatorTest`, prompt tests, panel rendering tests; live examples are separate acceptance |
+| Fall back on provider/cache failures without hiding core errors | Provider timeout/error handling; quota; separate cache-read/write `DataAccessException` boundaries | Standard explanation and ordinary retry states | Provider loopback, service and quota tests; no live provider required |
+| Reuse equivalent evidence without confusing it with card identity | Separate semantic hash; prompt/model versioning; unique cache row | — | `ExplanationHasherTest`, `MatchExplanationHttpTest`; cache-hit policy tests |
 
 ## Selected extras and delivery
 
@@ -294,7 +297,7 @@ compulsory baseline. This PR implements E2; E1 remains separate work.
 
 | Tracked scope | Current baseline status | Remaining gate |
 | --- | --- | --- |
-| E1 AI match explanation (#15) | Implemented on `feat/team-c/e1-ai-match-explanation` (Gemini, owner Charlize); see the E1 section above | Live Gemini STRONG/GOOD/FAIR examples, cross-team review and merge |
+| E1 AI match explanation (#15) | Implemented on `feat/team-c/e1-ai-match-explanation` (Gemini, owner Charlize); regression/acceptance record in `E1_TESTING.md` | Live Gemini STRONG/GOOD/FAIR examples, cross-team review and merge remain distinct gates |
 | E2 collaborative study room/Pomodoro/music/calendar (#16) | Full source scope in current PR #52, including the approved weather enhancement; see the map above | Local suites, 23 browser checks, restart proof and independent audit passed; Outlook import acceptance deferred by owner, cross-team review/merge and reviewed deployment remain |
 | README/setup (#17), class/use-case/matching sequence diagrams (#18-20) | Compulsory setup and A/B/C diagrams documented | Verify the final setup; export readable whole-system diagrams; team review; integrate extras when shipped |
 | Decisions/coverage and library/service/asset inventory (#41/#42) | Baseline choices and source map documented | Final external service/audio inventory, human contribution verification and any later professor-directed contract change |

@@ -193,14 +193,21 @@ complete the current issue scope; this entry does not assert professor or produc
 ## AI match explanation decisions (E1)
 
 Choices for [#15](https://github.com/aryan12singh/study-buddy-matcher/issues/15), recorded
-16 October 2026. Team A agreed the `MatchService.evaluate` addition and the `MatchCard` button.
+16 October and corrected after the 18 October evaluation/lifecycle audit. Team A agreed the
+`MatchService.evaluate` addition and `MatchCard` button. The current
+[API contract](API_CONTRACT.md#match-explanation-e1) and [test guide](E1_TESTING.md) supersede
+the historical planning documents.
 
 | Question | Implemented choice and reason | Alternative / affected work |
 | --- | --- | --- |
-| When is AI called? | Only when a student clicks **Explain this match**. Keeps search fast, stays inside free-tier rate limits and sends data only when wanted | Explaining every card on search multiplies calls per search and slows results; #3 |
-| What is cached? | Text keyed by a SHA-256 of the evidence, prompt version and model. Any change produces a new key, so stale rows are never read and the table stores no student IDs | Per-student keys would need cleanup on account deletion and explicit invalidation on config changes; #14/#4 |
-| What happens on failure? | Every failure (off, over quota, timeout, error, unusable reply) returns the matching engine's own explanation labelled "Standard explanation"; the endpoint fails only for search's own reasons | Surfacing AI errors would make matching look broken whenever Gemini is down; #2 |
-| Which score is explained? | `MatchService.evaluate` scores one candidate with search's validation, snapshot and scorer, so the text describes the clicked card | A client-sent breakdown could be forged and drift from search; #1/#2 |
+| When is AI called? | Only after **Explain this match**, a current evaluation check, a cache miss and an available per-process quota slot | Automatic explanations multiply requests and delay search; #3 |
+| Which score is explained? | The server recomputes matching and compares the card's fingerprint over exact scoring inputs/output and settings. Stale cards return 409 and refresh before another request | Matching filters alone cannot reproduce an earlier evaluation; no trusted client scores or search-session table; #1/#2 |
+| What is cached? | Anonymous wording keyed by rounded evidence, prompt v3 and model. This semantic key is distinct from exact card identity; equivalent wording may be shared after freshness verification | Per-student cache keys add unnecessary personal data and deletion work; #14/#4 |
+| What happens during a card refresh? | Completed/in-flight answers belong to candidate and evaluation ID; changed IDs remount the panel and abort/ignore old responses. Relationship-only changes preserve matching text | Request-send refreshes retain mounted cards, so filter/unmount handling alone is insufficient |
+| Which facts reach Gemini? | Explicit scoring-course versus shared-course provenance and effective goal intent; `StudyGoalIntent` is shared with the scorer. All fields are allowlisted anonymous evidence | A search goal need not be a saved profile goal; a shared course may not be the scored target |
+| What happens on failure? | Off/quota/provider/validation/cache-read failures use standard text. Cache-write failure retains validated text. Core auth/matching errors propagate | Optional caching must not make an available explanation fail; no broad exception suppression |
+| How is output checked? | Fresh and cached answers pass current length and bounded evidence-reference checks; UI cautions that text may be inaccurate | This is not a complete factual validator or a guarantee against hallucination |
+| How is cost bounded? | Configured daily quota is local to one process, resets on restart; concurrent misses may still make separate provider calls | No durable multi-instance quota or single-flight guarantee; no new infrastructure for this scope |
 
 ## Baseline requirement contract
 

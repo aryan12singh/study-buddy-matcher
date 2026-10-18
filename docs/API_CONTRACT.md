@@ -746,8 +746,9 @@ does not remove the required course-or-goal discovery context.
 
 The admin screen loads these fields, separates unsaved edits from the saved revision,
 validates near each input, confirms restore, and reloads the returned saved state. The same
-version is exposed to matching and future E1 consumers; a cached explanation must key by
-configuration version plus search and profile inputs, rather than reuse stale wording.
+version is exposed to matching and E1 consumers. E1's card identity covers configuration
+and scoring inputs; its separate anonymous evidence cache may reuse equivalent wording only
+after the current card identity has been checked (see the E1 contract below).
 
 ## Match search (Team A)
 
@@ -798,6 +799,7 @@ MatchResultDto {
   relevantCourse: {id,code,name} | null,
   totalScore: number in [0,1],
   explanation: deterministic string from the configured MatchExplainer,
+  evaluationId: opaque lowercase SHA-256 string for this card evaluation,
   quality: STRONG | GOOD | FAIR,
   breakdown: {criterion,score:number in [0,1],enabled:boolean,known:boolean}[],
   sharedHoursPerWeek: number,
@@ -848,23 +850,90 @@ uses the configured default result limit and displays up to three students from 
 
 ## Match explanation (E1)
 
-Student only. `GET /api/matches/{candidateId}/explanation` returns a short explanation of one
-match, fetched only when the student clicks **Explain this match**. It accepts the same
-`courseId`, `studyGoal`, `studyMode`, `groupSize`, `minSharedHours` and `minQuality` parameters
-as `GET /api/matches` (no `sort` or `limit`) and validates them the same way, so it explains the
-score on the card that was clicked.
+Student only. `GET /api/matches/{candidateId}/explanation` is fetched when the student clicks
+**Explain this match**. Send the card's required `evaluationId` and the same `courseId`,
+`studyGoal`, `studyMode`, `groupSize`, `minSharedHours` and `minQuality` values that produced
+it. `sort` and `limit` affect discovery only and are omitted.
 
 ```json
-{ "candidateId": 42, "text": "You both take IS442 ...", "source": "AI" }
+{
+  "candidateId": 42,
+  "evaluationId": "7c88b58d646046a112c832edfc6ea2d93c81715bef3fbe92e1aef7768cc01849",
+  "text": "Your course preferences align, with about 2 hours per week in common.",
+  "source": "AI"
+}
 ```
 
-`source` is `AI` when Gemini wrote the text from anonymous evidence, or `STANDARD` when the
-matching engine's own explanation is returned. Standard is returned when the feature is off,
-the daily call limit is reached, or Gemini fails, times out or answers unusably. Errors:
-401 signed out, 403 not a student, 400 invalid search, 404 for an unknown, inactive or own
-candidate. Only the fields of `ExplanationEvidence` (quality, total, per-criterion scores,
-strategy, shared hours, course code and name, shared goals, both study modes and group sizes)
-are ever sent to Gemini. Never names, IDs, contact details, school, year or schedules.
+`source` is `AI` for validated Gemini wording and `STANDARD` for the matching engine's own
+explanation. Both carry the matching evaluation ID. The frontend renders text literally,
+labels AI as potentially inaccurate and keeps numeric scores independent of wording.
+
+### Card freshness and lifecycle
+
+Search and direct evaluation compute the same deterministic fingerprint from explicit,
+ordered inputs: both students' IDs, catalogue courses/target, goals, study mode, group-size
+ranges and normalized weekly availability; the six search fields above; strategy, saved
+configuration revision, minimum score and ordered criterion weights/enabled flags; scoring
+rules; and exact total, quality, criterion scores/known flags and shared hours. Only the
+opaque digest goes to the browser; the fingerprint input is never provider evidence.
+Relationship state, names, contact details, sort and result limit are not fingerprint inputs.
+
+Before cache, quota or provider work, the service recomputes the evaluation server-side.
+A mismatched fingerprint returns **409 `STALE_MATCH_EVALUATION`**, with no explanation text.
+The UI offers **Refresh matches**, fetches current cards, and lets the student request their
+explanation again. A completed or in-flight panel belongs to its candidate and evaluation ID;
+a different ID clears its text and aborts/ignores the old response, including a nonpurging
+post-request refresh. A relationship-only update retains the answer when scoring is unchanged.
+No client-supplied scores or persisted search-session records are used.
+
+The fingerprint is a freshness check, not an authorization token or discovery-membership
+proof. Direct evaluation retains its existing contract: authenticated active student,
+valid search and active non-self candidate. Discovery filters, minimum score/quality and
+connected-candidate exclusion do not independently restrict this direct operation.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Invalid search, or missing/malformed evaluation ID (64 lowercase hexadecimal characters required) |
+| 401 / 403 | Signed out / not an eligible student actor |
+| 404 | Unknown course, or unknown, inactive, deleted or self candidate |
+| 409 `STALE_MATCH_EVALUATION` | Scoring inputs changed since the card was issued; refresh matches |
+
+### Provider evidence and cache policy
+
+Only `ExplanationEvidence` goes to Gemini: rounded total/criterion scores, quality, strategy,
+enabled/known flags, rounded weekly shared hours, explicit scoring/shared course code and
+name, searched goal/shared effective goals, study modes and categorical group sizes. Never
+names, student/evaluation IDs, contact details, school, year, messages or schedules.
+
+- `scoringCourse` is the searched course, otherwise the caller's saved target. Null means
+  course scoring compares course sets; a non-null focus does not imply the candidate takes it.
+- `sharedCourse` is the first course actually listed as targeted/taken by both profiles,
+  ordered by code then ID. It may differ from the scoring focus and cannot explain that
+  criterion's score by itself. The card's existing `relevantCourse` display contract is unchanged.
+- `searchedGoal` records current intent. `sharedGoals` intersects the candidate's saved goals
+  with the caller's saved goals **plus** that searched goal, using the scorer's shared helper.
+
+The semantic cache key is SHA-256 of evidence, prompt version (`v3`) and model. Scores are
+rounded to hundredths and hours to half-hours; the prompt describes hours as approximate.
+Equivalent anonymous evidence may reuse wording across students or exact card evaluations.
+Changed raw inputs still require a fresh card, even when rounded evidence stays equivalent.
+Changed evidence, prompt version or model uses another cache row. No student IDs are stored.
+
+Fresh output and cached text use the same current length/content policy: reject malformed
+JSON, obvious success/percentage claims, unsupported code-shaped course references and numeric
+literals other than the supplied weekly hours. These bounded checks do not verify every
+natural-language assertion. Rejected cached text returns standard wording without consuming
+quota or calling Gemini; it is not served merely because an earlier policy accepted it.
+
+Disabled/unconfigured AI, exhausted quota, provider failure/timeout, unusable output and
+cache-read `DataAccessException` return standard wording. A cache-write `DataAccessException`
+returns the already validated AI answer. Optional cache logs contain only operation and
+exception class. Authentication, matching, unavailable-candidate and core database failures
+retain their normal error behavior. The provider wait holds no matching database transaction.
+
+Quota is a per-process daily budget, reset on restart; it is not a durable multi-instance
+billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
+duplicate cache rows only. See [E1 testing](E1_TESTING.md) for evidence and remaining acceptance.
 
 ## UI use of the existing contract
 

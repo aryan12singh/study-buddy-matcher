@@ -254,6 +254,15 @@ break on shared hours, then name and ID. The server filters and sorts before app
 result limit. Each match's one-sentence explanation comes from a `MatchExplainer` that sees
 only the score, never a profile.
 
+**Explain this match** optionally asks Gemini to word anonymous matching evidence. A
+server-issued evaluation ID ties the answer to the clicked card; changed scoring inputs
+require a refresh first. Search and numeric scores do not depend on Gemini. Disabled AI,
+quota exhaustion, provider failure, rejected output or a cache-read failure show the labelled
+standard explanation. A cache-write failure retains the already validated AI answer. AI text
+is labelled as potentially inaccurate; bounded output checks do not prove every statement.
+The [E1 contract](docs/API_CONTRACT.md#match-explanation-e1) and
+[test guide](docs/E1_TESTING.md) describe identity, privacy, cache policy and acceptance.
+
 Weekly slots use recurring Asia/Singapore time with half-open boundaries, so touching slots
 share no minutes. The categorical group-size choice maps to ranges: one-to-one 2–2, small group
 3–maximum, either 2–maximum. The brief's undefined "learning style" is interpreted through the
@@ -355,9 +364,15 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.model` | `gemini-2.5-flash` | Gemini model ID; part of the explanation cache key |
 | `app.ai.explanation.timeout` | `5s` | Connect and read timeout before falling back to the standard explanation |
 | `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
-| `app.ai.explanation.max-characters` | `600` | Longest explanation shown; longer replies fall back |
-| `app.ai.explanation.daily-call-limit` | `200` | Gemini calls per day before falling back; in memory, so a restart resets it |
+| `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |
+| `app.ai.explanation.daily-call-limit` | `200` | Per-process daily provider-call budget; restart resets it, so this is not a durable or multi-instance billing cap |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
+
+The cache uses rounded anonymous evidence plus prompt version (`v3`) and model, separately
+from the exact card evaluation ID. Two evaluations may reuse equivalent wording after each
+has passed the freshness check. Cache hits are revalidated against current evidence and the
+length policy; rejected cached text falls back without a provider call. Simultaneous misses
+may each call Gemini; unique insertion prevents duplicate rows, not duplicate provider calls.
 
 </details>
 
