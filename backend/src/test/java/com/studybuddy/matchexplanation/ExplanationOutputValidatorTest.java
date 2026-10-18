@@ -49,6 +49,15 @@ class ExplanationOutputValidatorTest {
     }
 
     @Test
+    void rejectsCodeStyleIdentifiersButKeepsCourseCodes() {
+        for (String text : new String[] {"You both prefer ONE_TO_ONE study.", "Your EXAM_PREPARATION goal matches.",
+                "This is a STRONG match overall.", "Your STUDY_MODE lines up."}) {
+            assertTrue(validator.validateText(text, evidence).isEmpty(), text);
+        }
+        assertEquals(Optional.of("You both focus on IS442."), validator.validateText("You both focus on IS442.", evidence));
+    }
+
+    @Test
     void acceptsVariedWordingAndOnlyChecksConcreteReferences() {
         for (String text : new String[] {"Your study goals overlap, with room to compare meeting preferences.",
                 "IS442 is in focus; you have 3.5 hours per week to work together.",

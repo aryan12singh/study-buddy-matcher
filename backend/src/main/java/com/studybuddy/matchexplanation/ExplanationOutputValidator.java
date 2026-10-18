@@ -20,6 +20,11 @@ import java.util.stream.Stream;
 public class ExplanationOutputValidator {
     private static final Pattern SUCCESS_CLAIM = Pattern.compile("probabilit|guarantee|\\bsuccess\\b|\\bsucceed|%",
             Pattern.CASE_INSENSITIVE);
+    /**
+     * A code-style word such as EXAM_PREPARATION or STRONG, which reads as a glitch to a student.
+     * Course codes contain digits, so IS442 does not match.
+     */
+    private static final Pattern CODE_STYLE = Pattern.compile("\\b[A-Z][A-Z_]{2,}\\b");
     private static final Pattern COURSE_CODE = Pattern.compile("\\b[a-z]{2,}-?\\d{2,}[a-z0-9]*\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern NUMBER = Pattern.compile("(?<![\\w.])[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?![\\w.])");
     private static final Pattern HOURS_UNIT = Pattern.compile("^\\s+(?:(?:shared|free)\\s+)?(?:hours?|hrs?)\\b", Pattern.CASE_INSENSITIVE);
@@ -52,6 +57,7 @@ public class ExplanationOutputValidator {
         }
         String text = raw.strip();
         if (text.isEmpty() || text.length() > maxCharacters || SUCCESS_CLAIM.matcher(text).find()
+                || CODE_STYLE.matcher(text).find()
                 || !hasSupportedConcreteReferences(text, evidence)) {
             return Optional.empty();
         }

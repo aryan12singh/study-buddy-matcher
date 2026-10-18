@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
  */
 @Component
 public class ExplanationPromptBuilder {
-    public static final String PROMPT_VERSION = "v3";
+    public static final String PROMPT_VERSION = "v4";
     private static final String TEMPLATE_PATH = "prompts/match-explanation-" + PROMPT_VERSION + ".txt";
     private static final String EVIDENCE_SLOT = "{{evidence}}";
 
@@ -28,7 +28,7 @@ public class ExplanationPromptBuilder {
     }
 
     public String build(ExplanationEvidence evidence) {
-        return template.replace(EVIDENCE_SLOT, json.writeValueAsString(evidence));
+        return template.replace(EVIDENCE_SLOT, json.writeValueAsString(ExplanationVocabulary.describe(evidence)));
     }
 
     private static String loadTemplate() {
