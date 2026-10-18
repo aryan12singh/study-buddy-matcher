@@ -7,6 +7,7 @@ import com.studybuddy.matching.MatchResultDto;
 import com.studybuddy.matching.RelevantCourseDto;
 import com.studybuddy.matching.SharedSlotDto;
 import com.studybuddy.matching.scoring.MatchingCriterion;
+import com.studybuddy.matching.scoring.MatchingWeights;
 import com.studybuddy.matching.strategy.MatchingStrategyType;
 import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.GroupSizePreference;
@@ -17,6 +18,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /** A fully populated match evaluation, including every private field the evidence must drop. */
@@ -24,6 +26,10 @@ final class ExplanationFixtures {
     static final JsonMapper JSON = JsonMapper.builder().build();
     static final long CANDIDATE_ID = 424242L;
     static final String EVALUATION_ID = "a".repeat(64);
+    /** Group size is disabled in the fixture breakdown, so its weight is zero. */
+    static final MatchingWeights WEIGHTS = new MatchingWeights(Map.of(MatchingCriterion.COURSE, 0.3,
+            MatchingCriterion.AVAILABILITY, 0.3, MatchingCriterion.STUDY_MODE, 0.2, MatchingCriterion.STUDY_GOAL, 0.2,
+            MatchingCriterion.GROUP_SIZE, 0.0));
 
     private ExplanationFixtures() {
     }
@@ -49,6 +55,6 @@ final class ExplanationFixtures {
                 RelationshipState.STRANGER);
         return new MatchEvaluation(MatchingStrategyType.BALANCED, result, StudyMode.ONLINE,
                 Set.of(StudyGoal.EXAM_PREPARATION, StudyGoal.CONCEPT_REVIEW), null, GroupSizePreference.ONE_TO_ONE,
-                GroupSizePreference.EITHER, result.relevantCourse(), result.relevantCourse());
+                GroupSizePreference.EITHER, result.relevantCourse(), result.relevantCourse(), WEIGHTS);
     }
 }

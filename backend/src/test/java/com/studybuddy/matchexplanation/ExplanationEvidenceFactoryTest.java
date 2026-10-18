@@ -52,7 +52,7 @@ class ExplanationEvidenceFactoryTest {
                         result.totalScore(), result.explanation(), result.evaluationId(), result.relevantCourse(), breakdown,
                         result.sharedHoursPerWeek(), result.sharedSlots(), result.relationship()),
                 evaluation.searcherStudyMode(), evaluation.effectiveStudyGoals(), evaluation.searchedGoal(), evaluation.searcherGroupSize(),
-                evaluation.candidateGroupSize(), evaluation.scoringCourse(), evaluation.sharedCourse());
+                evaluation.candidateGroupSize(), evaluation.scoringCourse(), evaluation.sharedCourse(), evaluation.weights());
 
         List<CriterionEvidence> criteria = factory.from(unshared).criteria();
 
@@ -80,9 +80,17 @@ class ExplanationEvidenceFactoryTest {
                         result.totalScore(), result.explanation(), result.evaluationId(), null, result.breakdown(), result.sharedHoursPerWeek(),
                         result.sharedSlots(), result.relationship()),
                 evaluation.searcherStudyMode(), evaluation.effectiveStudyGoals(), evaluation.searchedGoal(), evaluation.searcherGroupSize(),
-                evaluation.candidateGroupSize(), null, null);
+                evaluation.candidateGroupSize(), null, null, evaluation.weights());
 
         assertNull(factory.from(withoutCourse).scoringCourse());
         assertNull(factory.from(withoutCourse).sharedCourse());
+    }
+
+    @Test
+    void carriesEachCriterionsWeightSoTheModelKnowsWhatMattered() {
+        List<CriterionEvidence> criteria = factory.from(ExplanationFixtures.evaluation()).criteria();
+
+        assertEquals(0.3, criteria.stream().filter(c -> c.criterion() == MatchingCriterion.COURSE).findFirst().orElseThrow().weight());
+        assertEquals(0.0, criteria.stream().filter(c -> c.criterion() == MatchingCriterion.GROUP_SIZE).findFirst().orElseThrow().weight());
     }
 }

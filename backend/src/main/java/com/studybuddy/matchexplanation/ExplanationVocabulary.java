@@ -15,12 +15,14 @@ public final class ExplanationVocabulary {
     private ExplanationVocabulary() {
     }
 
-    /** The evidence with the same fields, in the same order, but every enum written as plain words. */
+    /**
+     * The evidence with the same fields, in the same order, but every enum written as plain words.
+     * The matching strategy is left out: it is admin vocabulary that means nothing to a student.
+     */
     public static Map<String, Object> describe(ExplanationEvidence evidence) {
         Map<String, Object> words = new LinkedHashMap<>();
         words.put("quality", words(evidence.quality()));
         words.put("totalScore", evidence.totalScore());
-        words.put("strategy", evidence.strategy() == null ? null : evidence.strategy().label());
         words.put("criteria", evidence.criteria().stream().map(ExplanationVocabulary::describe).toList());
         words.put("sharedHoursPerWeek", evidence.sharedHoursPerWeek());
         words.put("scoringCourse", evidence.scoringCourse());
@@ -38,6 +40,7 @@ public final class ExplanationVocabulary {
         Map<String, Object> words = new LinkedHashMap<>();
         words.put("criterion", criterion.criterion().label());
         words.put("score", criterion.score());
+        words.put("weight", criterion.weight());
         words.put("enabled", criterion.enabled());
         words.put("known", criterion.known());
         return words;

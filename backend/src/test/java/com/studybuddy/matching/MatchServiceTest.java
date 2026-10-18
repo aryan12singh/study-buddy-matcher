@@ -307,6 +307,7 @@ class MatchServiceTest {
 
         assertEquals(fromSearch, evaluation.result());
         assertEquals(MatchingStrategyType.BALANCED, evaluation.strategy());
+        assertEquals(new MatchingWeights(evenWeights()), evaluation.weights());
         assertEquals(StudyMode.ONLINE, evaluation.searcherStudyMode());
         assertEquals(java.util.Set.of(StudyGoal.EXAM_PREPARATION), evaluation.effectiveStudyGoals());
         assertEquals(GroupSizePreference.EITHER, evaluation.candidateGroupSize());

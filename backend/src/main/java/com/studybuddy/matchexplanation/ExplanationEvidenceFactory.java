@@ -22,7 +22,8 @@ public class ExplanationEvidenceFactory {
     public ExplanationEvidence from(MatchEvaluation evaluation) {
         MatchResultDto result = evaluation.result();
         List<CriterionEvidence> criteria = result.breakdown().stream()
-                .map(score -> new CriterionEvidence(score.criterion(), round(score.score(), SCORE_PRECISION), score.enabled(),
+                .map(score -> new CriterionEvidence(score.criterion(), round(score.score(), SCORE_PRECISION),
+                        round(evaluation.weights().weightOf(score.criterion()), SCORE_PRECISION), score.enabled(),
                         score.known()))
                 .toList();
         List<StudyGoal> sharedGoals = result.studyGoals().stream()

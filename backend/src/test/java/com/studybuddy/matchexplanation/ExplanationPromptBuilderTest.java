@@ -36,7 +36,7 @@ class ExplanationPromptBuilderTest {
     void tellsTheModelThatAnUnsharedPreferenceIsNotAMismatch() {
         String prompt = builder.build(new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation()));
 
-        assertEquals("v4", ExplanationPromptBuilder.PROMPT_VERSION);
+        assertEquals("v5", ExplanationPromptBuilder.PROMPT_VERSION);
         assertTrue(prompt.contains("\"known\": false"), prompt);
         assertTrue(prompt.contains("never as a weak or poor match"), prompt);
         assertTrue(prompt.contains("\"known\":true"), prompt);
@@ -55,7 +55,6 @@ class ExplanationPromptBuilderTest {
         assertTrue(evidence.contains("\"sharedGoals\":[\"exam preparation\"]"), evidence);
         assertTrue(evidence.contains("\"searcherGroupSize\":\"one to one\""), evidence);
         assertTrue(evidence.contains("\"quality\":\"good\""), evidence);
-        assertTrue(evidence.contains("\"strategy\":\"Balanced\""), evidence);
         assertTrue(evidence.contains("IS442"), evidence);
     }
 
@@ -66,5 +65,24 @@ class ExplanationPromptBuilderTest {
         assertTrue(prompt.contains("plain words"), prompt);
         assertTrue(prompt.contains("normal sentence capitalisation"), prompt);
         assertFalse(prompt.contains("lowercase"), prompt);
+    }
+
+    @Test
+    void sendsWeightsButNotTheAdminStrategyName() {
+        String prompt = builder.build(new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation()));
+        String evidence = prompt.substring(prompt.indexOf("Evidence:"));
+
+        assertTrue(evidence.contains("\"weight\":0.3"), evidence);
+        assertFalse(evidence.contains("strategy"), evidence);
+        assertFalse(evidence.contains("Balanced"), evidence);
+    }
+
+    @Test
+    void givesTheModelAnExampleReplyAndGroupedRules() {
+        String prompt = builder.build(new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation()));
+
+        assertTrue(prompt.contains("Example reply"), prompt);
+        assertTrue(prompt.contains("You must"), prompt);
+        assertTrue(prompt.contains("You must not"), prompt);
     }
 }

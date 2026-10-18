@@ -48,7 +48,7 @@ class ExplanationHasherTest {
         MatchEvaluation saved = ExplanationFixtures.evaluation();
         MatchEvaluation searched = new MatchEvaluation(saved.strategy(), saved.result(), saved.searcherStudyMode(),
                 saved.effectiveStudyGoals(), StudyGoal.EXAM_PREPARATION, saved.searcherGroupSize(), saved.candidateGroupSize(),
-                saved.scoringCourse(), saved.sharedCourse());
+                saved.scoringCourse(), saved.sharedCourse(), saved.weights());
 
         assertEquals(factory.from(saved).sharedGoals(), factory.from(searched).sharedGoals());
         assertNotEquals(hasher.hash(factory.from(saved), "v3", "m"), hasher.hash(factory.from(searched), "v3", "m"));

@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
  */
 @Component
 public class ExplanationPromptBuilder {
-    public static final String PROMPT_VERSION = "v4";
+    public static final String PROMPT_VERSION = "v5";
     private static final String TEMPLATE_PATH = "prompts/match-explanation-" + PROMPT_VERSION + ".txt";
     private static final String EVIDENCE_SLOT = "{{evidence}}";
 

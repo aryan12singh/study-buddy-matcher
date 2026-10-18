@@ -125,7 +125,7 @@ public class MatchService {
                 StudyGoalIntent.effectiveGoals(self.getStudyGoals(), search.studyGoal()), search.studyGoal(),
                 GroupSizePreference.fromRange(self.getPreferredGroupSizeMin(), self.getPreferredGroupSizeMax()),
                 GroupSizePreference.fromRange(other.getPreferredGroupSizeMin(), other.getPreferredGroupSizeMax()),
-                scoringCourse, MatchResultAssembler.sharedCourse(self, other));
+                scoringCourse, MatchResultAssembler.sharedCourse(self, other), settings.weights());
     }
 
     /**

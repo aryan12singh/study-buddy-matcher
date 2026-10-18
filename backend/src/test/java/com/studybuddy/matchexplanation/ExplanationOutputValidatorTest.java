@@ -122,6 +122,22 @@ class ExplanationOutputValidatorTest {
         assertEquals(Optional.of(reply), generous.validateText(reply, withHours(2.0)));
     }
 
+    /** Real gemini-3.5-flash replies to prompt v5 (18 October) for COR-STAT1202 with 2 shared hours. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "You match best on COR-STAT1202 Introductory Statistics, meeting mode, and group preference, which are your strongest shared areas with high priority. Your study goals also overlap on exam preparation, while availability is your weakest alignment, with about 2 hours per week in common.",
+        "You and this student match best on course focus for COR-STAT1202 Introductory Statistics and meeting mode, which carry the highest weight in this result. You both share the goal of exam preparation, while availability is your weakest area with about 2 hours per week in common."})
+    void acceptsRecordedLiveRepliesForAHyphenatedCourse(String reply) {
+        ExplanationOutputValidator generous = new ExplanationOutputValidator(600, ExplanationFixtures.JSON);
+        ExplanationEvidence statistics = withCourse("COR-STAT1202");
+        ExplanationEvidence evidence = new ExplanationEvidence(statistics.quality(), statistics.totalScore(),
+                statistics.strategy(), statistics.criteria(), 2.0, statistics.scoringCourse(), statistics.sharedCourse(),
+                statistics.searchedGoal(), statistics.sharedGoals(), statistics.searcherStudyMode(),
+                statistics.candidateStudyMode(), statistics.searcherGroupSize(), statistics.candidateGroupSize());
+
+        assertEquals(Optional.of(reply), generous.validateText(reply, evidence));
+    }
+
     private ExplanationEvidence withCourse(String code) {
         CourseEvidence course = new CourseEvidence(code, "A course");
         return new ExplanationEvidence(evidence.quality(), evidence.totalScore(), evidence.strategy(), evidence.criteria(),
