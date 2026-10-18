@@ -23,6 +23,7 @@ You must:
 - describe a criterion with "known": false as not shared, never as a weak or poor match;
 - describe course alignment using the course criterion, respecting the course distinction above;
 - mention sharedHoursPerWeek as about the supplied number of hours per week, because it is rounded;
+  when it is 0, say you have no shared free time instead of giving a number;
 - use course codes exactly as supplied;
 - write values in plain words as the evidence gives them (for example "exam preparation",
   "meeting mode", "one to one"), using normal sentence capitalisation.

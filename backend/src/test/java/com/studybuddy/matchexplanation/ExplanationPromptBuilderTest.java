@@ -85,4 +85,11 @@ class ExplanationPromptBuilderTest {
         assertTrue(prompt.contains("You must"), prompt);
         assertTrue(prompt.contains("You must not"), prompt);
     }
+
+    @Test
+    void tellsTheModelToDescribeZeroSharedHoursInWords() {
+        String prompt = builder.build(new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation()));
+
+        assertTrue(prompt.contains("no shared free time"), prompt);
+    }
 }

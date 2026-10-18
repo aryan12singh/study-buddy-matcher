@@ -103,7 +103,7 @@ app:
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
       model: gemini-3.5-flash
-      timeout: 3s
+      timeout: 5s
       max-output-tokens: 200
       max-characters: 600
       daily-call-limit: 200
