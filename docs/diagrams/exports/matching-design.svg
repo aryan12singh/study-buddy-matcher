@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1330" viewBox="0 0 1800 1330" role="img" aria-labelledby="title description">
+<title id="title">UML classes — scoring and ranking</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1800" height="1330" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="45" y="170" width="840" height="780" rx="12" fill="#eaf1f7" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="915" y="170" width="840" height="780" rx="12" fill="#eaf1f7" stroke="#bdccd5" stroke-width="1.5" />
+<polyline points="44,1276 1756,1276" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="485,515 455,515" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="485,597 455,597" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="485,679 455,679" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="485,761 455,761" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="485,843 455,843" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="455,843 455,415 655,415 655,393" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<polyline points="425,315 485,315" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="248,366 248,520" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1115,495 1115,430 1240,430 1240,367" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<polyline points="1538,465 1538,430 1440,430 1440,367" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<polyline points="1130,790 1130,735 1480,735 1480,659" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#triangle)"/>
+<polyline points="1545,790 1545,659" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#triangle)"/>
+<polyline points="575,1070 635,1070" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="310,990 310,973 1480,973 1480,990" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="75" y="245" width="350" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="WeightedMatchScorer"/>
+<rect x="75" y="245" width="350" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="75,294 425,294" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="485" y="225" width="370" height="168" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="CriterionScorer"/>
+<rect x="485" y="225" width="370" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="485,295 855,295" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="75" y="520" width="350" height="272" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchScore"/>
+<rect x="75" y="520" width="350" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="75,590 425,590" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="485" y="490" width="370" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="CourseScorer"/>
+<rect x="485" y="490" width="370" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="485" y="572" width="370" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AvailabilityOverlapScorer"/>
+<rect x="485" y="572" width="370" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="485" y="654" width="370" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyModeScorer"/>
+<rect x="485" y="654" width="370" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="485" y="736" width="370" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyGoalScorer"/>
+<rect x="485" y="736" width="370" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="485" y="818" width="370" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupSizeScorer"/>
+<rect x="485" y="818" width="370" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="1125" y="225" width="430" height="142" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchingStrategy"/>
+<rect x="1125" y="225" width="430" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1125,295 1555,295" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="945" y="495" width="340" height="95" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="BalancedStrategy"/>
+<rect x="945" y="495" width="340" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="945,544 1285,544" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1355" y="465" width="365" height="194" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="PriorityTierStrategy"/>
+<rect x="1355" y="465" width="365" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1355,535 1720,535" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="955" y="790" width="350" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AvailabilityFirstStrategy"/>
+<rect x="955" y="790" width="350" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="1370" y="790" width="350" height="49" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="CourseFirstStrategy"/>
+<rect x="1370" y="790" width="350" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<rect x="945" y="875" width="775" height="49" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="45" y="990" width="530" height="165" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="45" y="990" width="530" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="635" y="990" width="510" height="165" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="635" y="990" width="510" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="1205" y="990" width="550" height="165" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="1205" y="990" width="550" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="45" y="1190" width="1710" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML classes — scoring and ranking</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Independent scoring, ordering and wording responsibilities keep the matching engine explainable.</text>
+<text x="46" y="1303" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1754" y="1303" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/matching-design.svg</text>
+<text x="67" y="201" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">SCORING: PURE COLLABORATORS</text>
+<text x="937" y="201" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">RANKING: STRATEGY + TEMPLATE METHOD</text>
+<text x="250.0" y="278" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">WeightedMatchScorer</text>
+<text x="91" y="323" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ score(searcher, candidate, search,</text>
+<text x="91" y="349" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  weights, enabled): MatchScore</text>
+<text x="670.0" y="250" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«interface»</text>
+<text x="670.0" y="279" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">CriterionScorer</text>
+<text x="501" y="324" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ criterion(): MatchingCriterion</text>
+<text x="501" y="350" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ score(searcher, candidate,</text>
+<text x="501" y="376" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  search): CriterionResult</text>
+<text x="250.0" y="545" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«record»</text>
+<text x="250.0" y="574" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">MatchScore</text>
+<text x="91" y="619" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">breakdown:</text>
+<text x="91" y="645" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  Map&lt;MatchingCriterion, Double&gt;</text>
+<text x="91" y="671" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">total: double</text>
+<text x="91" y="697" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">sharedHoursPerWeek: double</text>
+<text x="91" y="723" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">quality: MatchQuality</text>
+<text x="91" y="749" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">unknownCriteria:</text>
+<text x="91" y="775" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  Set&lt;MatchingCriterion&gt;</text>
+<text x="670.0" y="523" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">CourseScorer</text>
+<text x="670.0" y="605" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AvailabilityOverlapScorer</text>
+<text x="670.0" y="687" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">StudyModeScorer</text>
+<text x="670.0" y="769" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">StudyGoalScorer</text>
+<text x="670.0" y="851" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">GroupSizeScorer</text>
+<rect x="429.8" y="267" width="48.400000000000006" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="454" y="282" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">uses</text>
+<rect x="207.87" y="433" width="80.26" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="248" y="450" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">creates</text>
+<text x="1340.0" y="250" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«interface»</text>
+<text x="1340.0" y="279" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">MatchingStrategy</text>
+<text x="1141" y="324" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ type(): MatchingStrategyType</text>
+<text x="1141" y="350" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ ranking(enabled): Comparator&lt;MatchScore&gt;</text>
+<text x="1115.0" y="528" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">BalancedStrategy</text>
+<text x="961" y="573" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ ranking(enabled)</text>
+<text x="1537.5" y="490" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«abstract»</text>
+<text x="1537.5" y="519" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">PriorityTierStrategy</text>
+<text x="1371" y="564" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ tierOf(score): int</text>
+<text x="1371" y="590" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ ranking(enabled)</text>
+<text x="1371" y="616" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start"># priority(): MatchingCriterion</text>
+<text x="1371" y="642" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start"># priorityValue(score): double</text>
+<text x="1130.0" y="823" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AvailabilityFirstStrategy</text>
+<text x="1545.0" y="823" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">CourseFirstStrategy</text>
+<text x="962" y="903" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Priority bands first, then total; a disabled priority falls back to total.</text>
+<text x="63" y="1025" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">MatchService</text>
+<text x="63" y="1059" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">search(criteria, actorId): MatchSearchResultDto</text>
+<text x="63" y="1086" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">One configuration snapshot; filter, score,</text>
+<text x="63" y="1113" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">threshold, order, limit and assemble.</text>
+<text x="653" y="1025" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">MatchingConfigService</text>
+<text x="653" y="1059" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">snapshot(): MatchingConfigSnapshot</text>
+<text x="653" y="1086" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Strategy + weights + enabled criteria</text>
+<text x="653" y="1113" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ minimum score + persistent version</text>
+<text x="1223" y="1025" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">MatchResultAssembler</text>
+<text x="1223" y="1059" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">toDto(...): MatchResultDto</text>
+<text x="1223" y="1086" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Uses MatchExplainer / TemplateMatchExplainer</text>
+<text x="1223" y="1113" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">for deterministic text; exposes no contact.</text>
+<text x="62" y="1218" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Dashed line + hollow triangle = interface implementation; solid line + hollow triangle = class inheritance. Ordinary arrows are dependencies.</text>
+<text x="62" y="1243" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Signatures omit repeated generic/parameter types for readability. CriterionResult records score + known; immutable interval values appear in the detailed matching source.</text>
+</g></svg>

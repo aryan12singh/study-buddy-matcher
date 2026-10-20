@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1390" viewBox="0 0 1600 1390" role="img" aria-labelledby="title description">
+<title id="title">UML classes — relationships and group authority</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1600" height="1390" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<polyline points="44,1336 1556,1336" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="175,451 175,515 600,620" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="365,451 365,490 600,654" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1235,425 1235,500 1000,620" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1445,425 1445,545 1000,654" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="470,725 600,690" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1130,725 1000,690" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="800,706 800,950" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="265,812 265,1060 600,1060" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1335,884 1335,1060 1000,1060" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<rect x="60" y="200" width="410" height="271" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchRequest"/>
+<rect x="60" y="200" width="410" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="60,249 470,249" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="60,373 470,373" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1130" y="200" width="410" height="245" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="Connection"/>
+<rect x="1130" y="200" width="410" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1130,249 1540,249" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1130,321 1540,321" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="600" y="585" width="400" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="Student"/>
+<rect x="600" y="585" width="400" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="600,634 1000,634" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="60" y="665" width="410" height="147" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupMembership"/>
+<rect x="60" y="665" width="410" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="60,714 470,714" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1130" y="665" width="410" height="219" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupJoinRequest"/>
+<rect x="1130" y="665" width="410" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1130,714 1540,714" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1130,812 1540,812" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="600" y="950" width="400" height="245" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyGroup"/>
+<rect x="600" y="950" width="400" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="600,999 1000,999" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="600,1123 1000,1123" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="45" y="1240" width="1510" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML classes — relationships and group authority</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Requests hold decision history; active connections and accepted memberships are distinct domain objects.</text>
+<text x="46" y="1363" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1554" y="1363" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/relationship-domain.svg</text>
+<text x="265.0" y="233" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">MatchRequest</text>
+<text x="76" y="278" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- sender, receiver: Student</text>
+<text x="76" y="304" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- message: String</text>
+<text x="76" y="330" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- status: MatchRequestStatus</text>
+<text x="76" y="356" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- respondedAt: Instant</text>
+<text x="76" y="402" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ accept(): void</text>
+<text x="76" y="428" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ decline(): void</text>
+<text x="76" y="454" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ cancel(): void</text>
+<text x="1335.0" y="233" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Connection</text>
+<text x="1146" y="278" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">- studentA, studentB: Student</text>
+<text x="1146" y="304" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">- endedAt: Instant</text>
+<text x="1146" y="350" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">+ isActive(): boolean</text>
+<text x="1146" y="376" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">+ involves(studentId: Long): boolean</text>
+<text x="1146" y="402" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">+ otherStudent(studentId: Long): Student</text>
+<text x="1146" y="428" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">+ end(): void</text>
+<text x="800.0" y="618" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Student</text>
+<text x="616" y="663" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id: Long</text>
+<text x="616" y="689" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- name: String</text>
+<text x="265.0" y="698" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">GroupMembership</text>
+<text x="76" y="743" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- studyGroup: StudyGroup</text>
+<text x="76" y="769" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- student: Student</text>
+<text x="76" y="795" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- joinedAt: Instant</text>
+<text x="1335.0" y="698" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">GroupJoinRequest</text>
+<text x="1146" y="743" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- studyGroup: StudyGroup</text>
+<text x="1146" y="769" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- student: Student</text>
+<text x="1146" y="795" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- status: GroupJoinRequestStatus</text>
+<text x="1146" y="841" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ accept(): void</text>
+<text x="1146" y="867" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ reject(): void</text>
+<text x="800.0" y="983" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">StudyGroup</text>
+<text x="616" y="1028" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- leader: Student</text>
+<text x="616" y="1054" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- course: Course [1]</text>
+<text x="616" y="1080" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- maxGroupSize: Integer</text>
+<text x="616" y="1106" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- active: boolean</text>
+<text x="616" y="1152" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ isLeader(studentId: Long): boolean</text>
+<text x="616" y="1178" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ close(): void</text>
+<rect x="133.64" y="473" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="160" y="490" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="343.64" y="457" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="370" y="474" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="369.46" y="523" width="71.08000000000001" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="405" y="540" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">sender</text>
+<rect x="430.28" y="567" width="89.44" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="475" y="584" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">receiver</text>
+<rect x="562.41" y="600" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="575" y="617" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="562.41" y="639" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="575" y="656" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="1188.64" y="455" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1215" y="472" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="1428.64" y="478" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1455" y="495" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="1090.28" y="524" width="89.44" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1135" y="541" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">studentA</text>
+<rect x="1130.28" y="578" width="89.44" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1175" y="595" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">studentB</text>
+<rect x="1011.41" y="600" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1024" y="617" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="1011.41" y="641" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1024" y="658" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="478.64" y="687" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="505" y="704" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="565.41" y="696" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="578" y="713" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="1065.64" y="687" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1092" y="704" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="1009.41" y="697" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1022" y="714" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="812.14" y="726" width="25.72" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="825" y="744" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="805.56" y="903" width="54.88" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="833" y="921" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="762.84" y="797" width="74.32000000000001" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="800" y="815" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">leader</text>
+<rect x="263.64" y="840" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="290" y="857" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="552.41" y="1026" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="565" y="1043" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="349.1" y="1026" width="107.80000000000001" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="403" y="1043" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">studyGroup</text>
+<rect x="1333.64" y="959" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1360" y="976" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<rect x="1017.41" y="1026" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1030" y="1043" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="1141.1" y="1026" width="107.80000000000001" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1195" y="1043" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">studyGroup</text>
+<text x="62" y="1268" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Each group has exactly one student leader who also has an accepted membership. The capacity rule counts the leader.</text>
+<text x="62" y="1293" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Each request/connection has two distinct students. Connections are active exactly while endedAt is null; accepted group membership has no request status.</text>
+</g></svg>

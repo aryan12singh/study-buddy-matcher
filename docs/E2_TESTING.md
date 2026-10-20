@@ -1,11 +1,16 @@
 # E2 testing and acceptance
 
-This guide verifies PR [#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52)
-against [E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16).
+This guide documents the repeatable checks and dated evidence for merged PR
+[#52](https://github.com/aryan12singh/study-buddy-matcher/pull/52) against
+[E2 #16](https://github.com/aryan12singh/study-buddy-matcher/issues/16).
 Its contract is in [API_CONTRACT.md](API_CONTRACT.md); design limits are in
 [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md#collaborative-study-experience-e2-16).
 Baseline evidence in [BASELINE_VERIFICATION.md](BASELINE_VERIFICATION.md) remains
-historical baseline evidence, not proof of these new workflows.
+historical baseline evidence, not proof of the E2 workflows. The
+[16 October database rollout](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026)
+supersedes earlier pending-schema status. It does not establish a persistent hosted
+application or complete the owner-deferred Outlook import check. The 14 October
+verification record below remains evidence for that source/date, not a new main run.
 
 ## Automated checks
 

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1380" viewBox="0 0 1800 1380" role="img" aria-labelledby="title description">
+<title id="title">UML collaborators — rooms, sessions and weather</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1800" height="1380" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="45" y="170" width="560" height="1000" rx="12" fill="#eaf5f1" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="625" y="170" width="560" height="1000" rx="12" fill="#eaf5f1" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="1205" y="170" width="550" height="1000" rx="12" fill="#eaf5f1" stroke="#bdccd5" stroke-width="1.5" />
+<polyline points="44,1326 1756,1326" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="325,435 325,505" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="325,724 325,795" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="905,362 905,460" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="905,711 905,825" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1480,330 1480,455" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1480,685 1480,571" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<polyline points="1480,780 1480,915" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="85" y="235" width="480" height="199" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="StudyRoomService"/>
+<rect x="85" y="235" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="85,284 565,284" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="85" y="505" width="480" height="219" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="StudyRoom"/>
+<rect x="85" y="505" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="85,554 565,554" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="85,652 565,652" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="85" y="795" width="480" height="219" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="RoomPresence"/>
+<rect x="85" y="795" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="85,844 565,844" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="85,968 565,968" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="75" y="1065" width="500" height="74" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="665" y="235" width="480" height="147" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="StudySessionService"/>
+<rect x="665" y="235" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="665,284 1145,284" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="460" width="480" height="271" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="StudySession"/>
+<rect x="665" y="460" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="665,509 1145,509" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="665,633 1145,633" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="825" width="480" height="214" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="SessionSchedule"/>
+<rect x="665" y="825" width="480" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="665,895 1145,895" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="665,993 1145,993" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="655" y="1090" width="500" height="74" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="1245" y="235" width="470" height="95" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="WeatherService"/>
+<rect x="1245" y="235" width="470" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="1245,284 1715,284" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="455" width="470" height="116" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="WeatherClient"/>
+<rect x="1245" y="455" width="470" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="1245,525 1715,525" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="685" width="470" height="95" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="OpenMeteoClient"/>
+<rect x="1245" y="685" width="470" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<polyline points="1245,734 1715,734" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="915" width="470" height="135" rx="6" fill="#fff5e5" stroke="#8a5a1a" stroke-width="1.5" data-node="box"/>
+<rect x="1245" y="915" width="470" height="6" rx="0" fill="#8a5a1a" stroke="none" stroke-width="1.5" />
+<rect x="45" y="1210" width="1710" height="99" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML collaborators — rooms, sessions and weather</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Three bounded E2 responsibilities; room presence, durable shared state and dated plans have separate lifecycles.</text>
+<text x="46" y="1353" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1754" y="1353" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/collaborative-study.svg</text>
+<text x="67" y="201" font-size="18" fill="#176c63" font-weight="700" text-anchor="start">PRIVATE GROUP ROOM</text>
+<text x="647" y="201" font-size="18" fill="#176c63" font-weight="700" text-anchor="start">DATED GROUP / BUDDY SESSIONS</text>
+<text x="1227" y="201" font-size="18" fill="#176c63" font-weight="700" text-anchor="start">OPTIONAL CAMPUS WEATHER</text>
+<text x="325.0" y="268" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">StudyRoomService</text>
+<text x="101" y="313" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ state(groupId, actorId): StudyRoomDto</text>
+<text x="101" y="339" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ join(...), heartbeat(...): StudyRoomDto</text>
+<text x="101" y="365" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ leave(...): void</text>
+<text x="101" y="391" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ controlTimer(...), audio(...),</text>
+<text x="101" y="417" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  configure(...): StudyRoomDto</text>
+<text x="325.0" y="538" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">StudyRoom</text>
+<text x="101" y="583" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- studyGroup: StudyGroup [1]</text>
+<text x="101" y="609" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- host, coHost: Student [0..1 each]</text>
+<text x="101" y="635" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- version: long</text>
+<text x="101" y="681" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ timer(): PomodoroTimer</text>
+<text x="101" y="707" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ applyTimer(timer): void</text>
+<text x="325.0" y="828" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">RoomPresence</text>
+<text x="101" y="873" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- studyRoom: StudyRoom [1]</text>
+<text x="101" y="899" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- student: Student [1]</text>
+<text x="101" y="925" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- clientId: UUID</text>
+<text x="101" y="951" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- expiresAt, observedAt: Instant</text>
+<text x="101" y="997" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ renew(presence, now, expiresAt): void</text>
+<rect x="266.51" y="460" width="116.98" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="325" y="477" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">coordinates</text>
+<rect x="336.41" y="731" width="25.18" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="349" y="748" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="334.64" y="762" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="361" y="779" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
+<text x="92" y="1093" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Read / renew: membership check; no group lock.</text>
+<text x="92" y="1118" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Join / control: account locks → group lock.</text>
+<text x="905.0" y="268" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">StudySessionService</text>
+<text x="681" y="313" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ createGroup(...), createBuddy(...)</text>
+<text x="681" y="339" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ edit(...), cancel(...): SessionDto</text>
+<text x="681" y="365" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ calendar(id, actorId): CalendarExportDto</text>
+<text x="905.0" y="493" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">StudySession</text>
+<text x="681" y="538" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- group: StudyGroup [0..1]</text>
+<text x="681" y="564" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- connection: Connection [0..1]</text>
+<text x="681" y="590" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- version: long</text>
+<text x="681" y="616" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- status: SessionStatus</text>
+<text x="681" y="662" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ schedule(): SessionSchedule</text>
+<text x="681" y="688" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ edit(details, now): void</text>
+<text x="681" y="714" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ cancel(now): void</text>
+<text x="905.0" y="850" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«record»</text>
+<text x="905.0" y="879" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">SessionSchedule</text>
+<text x="681" y="924" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">startLocal, endLocal: LocalDateTime</text>
+<text x="681" y="950" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">timeZone: String</text>
+<text x="681" y="976" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">occurrenceCount: int</text>
+<text x="681" y="1022" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ occurrences(): List&lt;SessionOccurrenceDto&gt;</text>
+<rect x="768.48" y="399" width="273.04" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="905" y="416" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">authorizes via SessionAccess</text>
+<rect x="777.66" y="769" width="254.68" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="905" y="786" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">constructs immutable value</text>
+<text x="672" y="1118" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Exactly one parent: group XOR connection.</text>
+<text x="672" y="1143" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">SessionCalendar emits private UTC snapshots.</text>
+<text x="1480.0" y="268" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">WeatherService</text>
+<text x="1261" y="313" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ current(): WeatherDto</text>
+<text x="1480.0" y="480" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«interface»</text>
+<text x="1480.0" y="509" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">WeatherClient</text>
+<text x="1261" y="554" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ fetch(): WeatherSample</text>
+<text x="1480.0" y="718" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">OpenMeteoClient</text>
+<text x="1261" y="763" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">+ fetch(): WeatherSample</text>
+<rect x="1375.61" y="384" width="208.78" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1480" y="401" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">bounded cache / retry</text>
+<text x="1263" y="950" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Open-Meteo API</text>
+<text x="1263" y="984" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Fixed campus coordinates and weather fields.</text>
+<text x="1263" y="1011" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No student identity, location or schedule.</text>
+<rect x="1352.66" y="839" width="254.68" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1480" y="856" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">Java HTTP client + timeout</text>
+<text x="62" y="1238" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler return DTOs.</text>
+<text x="62" y="1263" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">PomodoroTimer is an immutable server-time value. SessionAvailability reuses WeeklyAvailability; SessionEvents writes recipient notifications transactionally.</text>
+<text x="62" y="1288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Detailed E2 transaction and ER diagrams remain in TEAM_C.md. E1 has its own companion view outside this baseline + E2 model.</text>
+</g></svg>

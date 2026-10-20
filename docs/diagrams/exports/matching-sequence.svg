@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1390" viewBox="0 0 1800 1390" role="img" aria-labelledby="title description">
+<title id="title">UML sequence — deterministic match discovery</title>
+<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1800" height="1390" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="45" y="310" width="1710" height="94" rx="0" fill="#ffffff" stroke="#a7bac5" stroke-width="1.5" />
+<rect x="45" y="310" width="80" height="29" rx="0" fill="#eaf1f7" stroke="#a7bac5" stroke-width="1.5" />
+<rect x="45" y="462" width="1710" height="95" rx="0" fill="#ffffff" stroke="#a7bac5" stroke-width="1.5" />
+<rect x="45" y="462" width="80" height="29" rx="0" fill="#eaf1f7" stroke="#a7bac5" stroke-width="1.5" />
+<rect x="45" y="715" width="1710" height="155" rx="0" fill="#ffffff" stroke="#a7bac5" stroke-width="1.5" />
+<rect x="45" y="715" width="80" height="29" rx="0" fill="#eaf1f7" stroke="#a7bac5" stroke-width="1.5" />
+<polyline points="44,1336 1756,1336" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="150,240 150,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="440,240 440,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="760,240 760,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1085,240 1085,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1390,240 1390,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1660,240 1660,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="150,285 440,285" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="440,375 150,375" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="440,440 760,440" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="760,515 440,515" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="440,545 150,545" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="760,627 1085,627" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1085,650 760,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="760,785 1390,785" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1390,842 760,842" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="760,1060 1660,1060" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1660,1110 760,1110" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="760,1160 440,1160" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="440,1210 150,1210" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<rect x="28" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="318" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="638" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="963" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1268" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1538" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="565" y="900" width="605" height="118" rx="5" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<rect x="45" y="1250" width="1710" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — deterministic match discovery</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">GET /api/matches: source-ordered filtering and ranking, safe DTO output, explicit failure and empty-result paths.</text>
+<text x="46" y="1363" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
+<text x="1754" y="1363" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/matching-sequence.svg</text>
+<text x="150" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Find buddies /</text>
+<text x="150" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Home preview</text>
+<text x="440" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Security +</text>
+<text x="440" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">MatchController</text>
+<text x="760" y="211" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">MatchService</text>
+<text x="1085" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">AccountAccess / config</text>
+<text x="1085" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">/ repositories</text>
+<text x="1390" y="211" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">WeightedMatchScorer</text>
+<text x="1660" y="211" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">MatchResultAssembler</text>
+<rect x="153.89" y="255" width="282.22" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="295.0" y="272" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">course / goal + filters + JWT</text>
+<text x="57" y="331" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">break</text>
+<text x="141" y="331" font-size="17" fill="#506474" font-weight="400" text-anchor="start">[missing / invalid authentication or wrong role]</text>
+<rect x="135.53" y="345" width="318.94" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="295.0" y="362" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">401 / 403; no matching evaluation</text>
+<rect x="477.25" y="410" width="245.50000000000003" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="600.0" y="427" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">search(criteria, actorId)</text>
+<text x="57" y="483" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">break</text>
+<text x="141" y="483" font-size="17" fill="#506474" font-weight="400" text-anchor="start">[invalid context / limit / filter or unknown course; active student rechecked]</text>
+<rect x="435.94" y="485" width="328.12" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="600.0" y="502" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">400 / 404 (or revoked-account 401)</text>
+<rect x="190.61" y="515" width="208.78" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="295.0" y="532" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">safe problem response</text>
+<rect x="699.22" y="569" width="401.56" height="49" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="900" y="586" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">requireStudent; eligible profiles + slots;</text>
+<text x="900" y="608" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">config.snapshot(); relationships.of(actor)</text>
+<rect x="748.16" y="668" width="335.68" height="26" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="916" y="684" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">one repeatable-read database snapshot</text>
+<text x="57" y="736" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">loop</text>
+<text x="141" y="736" font-size="17" fill="#506474" font-weight="400" text-anchor="start">[each active candidate except self / current buddies, accepted by MatchSearchFilter]</text>
+<rect x="828.3199999999999" y="755" width="493.36" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1075.0" y="772" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">score(searcher, candidate, search, weights, enabled)</text>
+<rect x="800.78" y="812" width="548.44" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1075.0" y="829" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchScore: total, quality, unknown criteria, shared hours</text>
+<text x="585" y="930" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Keep total ≥ admin minScore and quality ≥ minQuality.</text>
+<text x="585" y="959" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Apply selected sort → strategy ranking → shared hours → name → ID.</text>
+<text x="585" y="988" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Record totalMatches, then apply the result limit.</text>
+<rect x="944.96" y="1030" width="530.08" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1210.0" y="1047" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">toDto(public profile, score, shared time, request state)</text>
+<rect x="986.27" y="1080" width="447.46000000000004" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1210.0" y="1097" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchResultDto list; template explanation added</text>
+<rect x="394.63" y="1130" width="410.74" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="600.0" y="1147" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchSearchResultDto + configurationVersion</text>
+<rect x="71.26999999999998" y="1180" width="447.46000000000004" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="295.0" y="1197" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">200: ordered matches, or [] with totalMatches=0</text>
+<text x="62" y="1278" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No contact, email, credential, token or persistence entity is returned in discovery. At 9592fd2 the card renders scores, bars and shared time, not the template sentence.</text>
+<text x="62" y="1303" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Grouped lifelines are named collaborators, not additional classes. The optional E1 provider request has a separate companion view.</text>
+</g></svg>

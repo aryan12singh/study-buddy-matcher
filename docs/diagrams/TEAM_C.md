@@ -2,10 +2,12 @@
 
 These diagrams describe the implemented composition/DTO/transaction model. The earlier
 discussion's Student Leader inheritance sketch is not the implementation: `Student`
-composes `User` with `@MapsId`, and `StudyGroup.leader` refers to an ordinary student.
+has a one-to-one `User` association with a shared `@MapsId` identity, and
+`StudyGroup.leader` refers to an ordinary student.
 `Role` contains only STUDENT and ADMIN. Matching strategies/scorers remain Team A scope.
 The [API contract](../API_CONTRACT.md) contains full DTO fields/endpoints and the
 [decisions](../DESIGN_DECISIONS.md) explain privacy, lifecycle and locking choices.
+Use the [diagram index](README.md) for the controlled SVG exports and review status.
 
 ## Use cases and permissions
 
@@ -91,11 +93,13 @@ classDiagram
 ```
 
 Room controls persist a versioned timer snapshot; presence heartbeats update
-separate expiring leases. All access takes the established account-before-group
-locks and rechecks active membership. Assemblers expose only DTOs. The leader
-retains controls, delegated hosts must be present, and distinct students count
-toward capacity. Membership/account/closure operations revoke leases and roles
-within their existing transaction, so readmission needs a fresh join.
+separate expiring leases. State reads use `RoomAccess.readMember` without row locks.
+Heartbeats use that same authorization check and renew only an existing unexpired
+lease; concurrent deletion fails renewal. Join/leave and timer/audio/configuration
+changes use `lockMember`: account locks precede the group lock, followed by a current
+membership check. Assemblers expose only DTOs. The leader retains controls, delegated
+hosts must be present, and distinct students count toward capacity. Membership/account/
+closure operations revoke leases and roles transactionally, so readmission needs a fresh join.
 
 Each dated session belongs to exactly one group or connection. Group leaders and
 the relevant buddy pair manage their own series; current parent eligibility gates

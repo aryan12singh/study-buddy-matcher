@@ -362,7 +362,12 @@ to the authenticated actor, not an authorization credential.
 
 Each heartbeat extends its lease by the configured lifetime. An unknown/expired
 lease returns 409 and requires an explicit join; it cannot bypass capacity by
-renewing. Inactive/removed members are excluded immediately; closed groups return
+renewing. Polled state reads use `RoomAccess.readMember` without a group-row lock.
+Heartbeats use the same authorization check and update only an existing, unexpired
+tab lease; a concurrently deleted lease fails renewal. Join, leave, timer/audio
+control and configuration use `lockMember`, taking account locks before the group
+lock. This serializes admission and shared-state transitions without queuing every
+poll or lease renewal on the group row. Inactive/removed members are excluded; closed groups return
 409. The timer continues across disconnects and repeating focus/break phases.
 A removed/deactivated member loses all tab leases and assigned roles within the
 membership/account transaction; later readmission/reactivation cannot revive an
@@ -659,12 +664,15 @@ revoked cannot finish a privileged mutation. All cleanup, notifications and iden
 
 ## Database transaction protocol
 
-Every application write takes the shared PostgreSQL transaction advisory lock `4422026` before
-reading mutable account/resource state. Account lifecycle and opt-in seed take its exclusive
-variant. This prevents lifecycle cleanup racing with a new relationship in another process.
-Ordinary writes then lock affected user rows in ascending ID order, followed by group and
-request/connection rows, and revalidate state after waiting. Group capacity edits/removal/
-closure and approval share the group lock. No JVM-only locks stand in for this protocol.
+Relationship, profile and room/session transition writes use the shared PostgreSQL
+transaction advisory lock `4422026`. Account lifecycle and opt-in seed use its exclusive
+variant, so cleanup cannot race with admission of a new relationship in another process.
+Affected user rows are locked in ascending ID order before group and request/connection
+rows, with authorization/state rechecked after waiting. Group capacity edits, removal,
+closure and approval share the group lock. Room state reads and existing-lease heartbeat
+renewals deliberately do not take that lock; they recheck access, and renewal cannot
+create a deleted or expired lease. The protocol does not claim that every read or minor
+update takes every lock. No JVM-only lock replaces the cross-instance transition protocol.
 
 Login locks the normalized email lookup before loading the account. If an administrator's
 email edit commits while that lookup waits, the old email is rejected and cannot overwrite the
@@ -694,8 +702,8 @@ Example default read:
   "activeStrategy": "BALANCED",
   "weights": {
     "BALANCED": { "COURSE": 0.3, "AVAILABILITY": 0.3, "STUDY_MODE": 0.2, "STUDY_GOAL": 0.1, "GROUP_SIZE": 0.1 },
-    "AVAILABILITY_FIRST": { "COURSE": 0.4, "AVAILABILITY": 0, "STUDY_MODE": 0.3, "STUDY_GOAL": 0.15, "GROUP_SIZE": 0.15 },
-    "COURSE_FIRST": { "COURSE": 0, "AVAILABILITY": 0.4, "STUDY_MODE": 0.3, "STUDY_GOAL": 0.15, "GROUP_SIZE": 0.15 }
+    "AVAILABILITY_FIRST": { "COURSE": 0.25, "AVAILABILITY": 0.4, "STUDY_MODE": 0.15, "STUDY_GOAL": 0.1, "GROUP_SIZE": 0.1 },
+    "COURSE_FIRST": { "COURSE": 0.4, "AVAILABILITY": 0.25, "STUDY_MODE": 0.15, "STUDY_GOAL": 0.1, "GROUP_SIZE": 0.1 }
   },
   "enabledCriteria": ["COURSE", "AVAILABILITY", "STUDY_MODE", "STUDY_GOAL", "GROUP_SIZE"],
   "minScore": 0,
