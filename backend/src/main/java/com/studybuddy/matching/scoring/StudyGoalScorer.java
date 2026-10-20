@@ -4,7 +4,6 @@ import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.student.StudyGoal;
 import org.springframework.stereotype.Component;
 
-import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -24,11 +23,7 @@ public class StudyGoalScorer implements CriterionScorer {
     public CriterionResult score(MatchingProfile searcher, MatchingProfile candidate, MatchSearchCriteria search) {
         // The filter already guarantees a searched goal, so the searcher's other saved goals
         // are what tell candidates apart.
-        Set<StudyGoal> mine = EnumSet.noneOf(StudyGoal.class);
-        mine.addAll(searcher.student().getStudyGoals());
-        if (search.studyGoal() != null) {
-            mine.add(search.studyGoal());
-        }
+        Set<StudyGoal> mine = StudyGoalIntent.effectiveGoals(searcher.student().getStudyGoals(), search.studyGoal());
         Set<StudyGoal> theirs = candidate.student().getStudyGoals();
         if (mine.isEmpty() || theirs.isEmpty()) {
             return CriterionResult.unknown();

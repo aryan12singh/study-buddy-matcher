@@ -20,6 +20,7 @@ public record MatchResultDto(
         MatchQuality quality,
         double totalScore,
         String explanation,
+        String evaluationId,
         RelevantCourseDto relevantCourse,
         List<CriterionScoreDto> breakdown,
         double sharedHoursPerWeek,

@@ -250,6 +250,15 @@ result limit. The API's deterministic explanation comes from a `MatchExplainer` 
 only the score and enabled criteria. Main cards show compatibility, criterion bars and
 shared time; they do not currently render that explanation sentence.
 
+**Explain this match** optionally asks Gemini to word anonymous matching evidence. A
+server-issued evaluation ID ties the answer to the clicked card; changed scoring inputs
+require a refresh first. Search and numeric scores do not depend on Gemini. Disabled AI,
+quota exhaustion, provider failure, rejected output or a cache-read failure show the labelled
+standard explanation. A cache-write failure retains the already validated AI answer. AI text
+is labelled as potentially inaccurate; bounded output checks do not prove every statement.
+The [E1 contract](docs/API_CONTRACT.md#match-explanation-e1) and
+[test guide](docs/E1_TESTING.md) describe identity, privacy, cache policy and acceptance.
+
 Weekly slots use recurring Asia/Singapore time with half-open boundaries, so touching slots
 share no minutes. The categorical group-size choice maps to ranges: one-to-one 2–2, small group
 3–maximum, either 2–maximum. The brief's undefined "learning style" is interpreted through the
@@ -335,6 +344,32 @@ or the property in `application-local.yml`.
 | `app.matching.scoring.unknown-score` | `0.0` | Score for a criterion either student left empty |
 | `app.matching.scoring.takes-course-score` | `0.5` | Course score when the candidate takes the course but wants a buddy for another; also the lower Course-first band |
 | `app.matching.scoring.min-session-minutes` | `60` | Shortest shared block that counts as time to meet |
+
+</details>
+
+<details>
+<summary><strong>AI match explanations</strong></summary>
+
+<br />
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `app.ai.explanation.enabled` | `false` | Turns on Gemini match explanations; also needs `api-key`. Off means the standard explanation is always used |
+| `app.ai.explanation.api-key` | none; set only in `application-local.yml` | Gemini API key. Never committed, logged or sent to the browser |
+| `app.ai.explanation.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
+| `app.ai.explanation.model` | `gemini-3.5-flash` | Gemini model ID; part of the explanation cache key. `gemini-2.5-flash` returns 404 for new projects |
+| `app.ai.explanation.timeout` | `5s` | Connect timeout and read timeout, each; the worst-case wait is about twice this before falling back to the standard explanation. 3s was too short: a first call on a fresh connection took over 3s |
+| `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
+| `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |
+| `app.ai.explanation.daily-call-limit` | `18` | Gemini calls per day before falling back; just under the free tier's 20 requests per day per project and model (checked 18 Oct). In memory and resets at Singapore midnight, while Google's limit resets on Pacific time, so they can drift apart. Usage is visible at https://ai.dev/rate-limit |
+| `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
+| `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
+
+The cache uses rounded anonymous evidence plus prompt version (`v5`) and model, separately
+from the exact card evaluation ID. Two evaluations may reuse equivalent wording after each
+has passed the freshness check. Cache hits are revalidated against current evidence and the
+length policy; rejected cached text falls back without a provider call. Simultaneous misses
+may each call Gemini; unique insertion prevents duplicate rows, not duplicate provider calls.
 
 </details>
 
@@ -468,6 +503,7 @@ table may be added without team agreement.
 | @types/node / react / react-dom | 24.13.6 / 19.3.0 / 19.3.0 | Type declarations | MIT, [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
 | source-map-js (transitive) | 1.2.2 | Source maps; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
 | Supabase | Hosted service | Managed PostgreSQL, reached only by backend JDBC; no browser SDK | [Supabase](https://supabase.com/) |
+| Google Gemini API (free tier) | model set by `app.ai.explanation.model` | Optional AI wording of match explanations (E1); off without a key | Google [Gemini API terms](https://ai.google.dev/gemini-api/terms). On the free tier Google uses submitted content to improve its products and human reviewers may read it, so only anonymous `ExplanationEvidence` is sent. Users must be 18 or older |
 | Open-Meteo | Hosted API | Campus weather for the study room; no SDK or key | CC BY 4.0 data, non-commercial; [documentation](https://open-meteo.com/en/docs), [terms](https://open-meteo.com/en/terms) |
 
 </details>

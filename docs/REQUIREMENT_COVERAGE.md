@@ -312,3 +312,17 @@ and rehearsal target 8 November, and final handoff targets 15 November 2026 23:5
 The formal brief states Week 13; verify the actual LMS deadline. Source availability or a
 saved/exported document does not prove submission. See the
 [schedule record](DESIGN_DECISIONS.md#schedule-and-submission-record).
+
+## AI match explanation (E1, #15)
+
+Implementation on the E1 branch is distinct from cross-team review, merge and live-provider
+acceptance. [E1_TESTING.md](E1_TESTING.md) is the current regression and demo guide.
+
+| Requirement / acceptance | Backend | Frontend | Evidence |
+| --- | --- | --- | --- |
+| Explain a current card without changing scores/ranking | `MatchEvaluationFingerprint`, `MatchService.evaluate`, `MatchExplanationService`; stale 409 before optional work | `evaluationId` request/response check and Refresh matches action | `MatchServiceTest`, `MatchExplanationHttpTest` config/profile/availability drift |
+| Clear old answers on real refreshes | Candidate/evaluation ID identifies the result | Keyed panel lifecycle, abort/ignore late replies; unchanged relationship-only updates retain answers | `MatchExplanationPanel.test.tsx`, `FindBuddiesPage.test.tsx` completed/in-flight post-send cases |
+| Send only allowlisted anonymous evidence with accurate search intent | `ExplanationEvidenceFactory`, shared `StudyGoalIntent`; scoring/shared-course distinction | AI label and existing score breakdown | Evidence/privacy tests and goal/course regressions in `MatchServiceTest` |
+| Apply bounded output checks and state their limits | Prompt v5 with plain-word evidence and weights; evidence-aware course, number and code-name checks; current length policy for fresh/cached text | AI accuracy cue; literal text rendering | `ExplanationOutputValidatorTest`, prompt tests, panel rendering tests; live examples are separate acceptance |
+| Fall back on provider/cache failures without hiding core errors | Provider timeout/error handling; quota; separate cache-read/write `DataAccessException` boundaries | Standard explanation and ordinary retry states | Provider loopback, service and quota tests; no live provider required |
+| Reuse equivalent evidence without confusing it with card identity | Separate semantic hash; prompt/model versioning; unique cache row | — | `ExplanationHasherTest`, `MatchExplanationHttpTest`; cache-hit policy tests |

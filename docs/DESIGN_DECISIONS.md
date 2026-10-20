@@ -196,6 +196,30 @@ complete the current issue scope; this entry does not assert professor or produc
 | Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
 | Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
 
+## AI match explanation decisions (E1)
+
+Choices for [#15](https://github.com/aryan12singh/study-buddy-matcher/issues/15), recorded
+16 October and corrected after the 18 October evaluation/lifecycle audit. Team A agreed the
+`MatchService.evaluate` addition and `MatchCard` button. The current
+[API contract](API_CONTRACT.md#match-explanation-e1) and [test guide](E1_TESTING.md) supersede
+the historical planning documents.
+
+| Question | Implemented choice and reason | Alternative / affected work |
+| --- | --- | --- |
+| When is AI called? | Only after **Explain this match**, a current evaluation check, a cache miss and an available per-process quota slot | Automatic explanations multiply requests and delay search; #3 |
+| Which score is explained? | The server recomputes matching and compares the card's fingerprint over exact scoring inputs/output and settings. Stale cards return 409 and refresh before another request | Matching filters alone cannot reproduce an earlier evaluation; no trusted client scores or search-session table; #1/#2 |
+| What is cached? | Anonymous wording keyed by rounded evidence, prompt v5 and model. This semantic key is distinct from exact card identity; equivalent wording may be shared after freshness verification | Per-student cache keys add unnecessary personal data and deletion work; #14/#4 |
+| What happens during a card refresh? | Completed/in-flight answers belong to candidate and evaluation ID; changed IDs remount the panel and abort/ignore old responses. Relationship-only changes preserve matching text | Request-send refreshes retain mounted cards, so filter/unmount handling alone is insufficient |
+| Which facts reach Gemini? | Explicit scoring-course versus shared-course provenance and effective goal intent; `StudyGoalIntent` is shared with the scorer. All fields are allowlisted anonymous evidence | A search goal need not be a saved profile goal; a shared course may not be the scored target |
+| What happens on failure? | Off/quota/provider/validation/cache-read failures use standard text. Cache-write failure retains validated text. Core auth/matching errors propagate | Optional caching must not make an available explanation fail; no broad exception suppression |
+| How is output checked? | Fresh and cached answers pass current length and bounded evidence-reference checks; UI cautions that text may be inaccurate | This is not a complete factual validator or a guarantee against hallucination |
+| How is cost bounded? | Configured daily quota is local to one process, resets on restart; after a provider 429 no calls are made for `rate-limit-cooldown` (60s). Concurrent misses may still make separate provider calls | No durable multi-instance quota or single-flight guarantee; no new infrastructure for this scope |
+| Is the quota per student? | No. One process-wide daily allowance: a single student clicking many uncached cards can use it up for everyone. Accepted at coursework scale; the cache makes repeat clicks free | A per-student counter adds state for little benefit with one demo account |
+| How is evidence worded for the model? | `ExplanationVocabulary` sends plain words ("exam preparation", "meeting mode") and each criterion's weight; the admin strategy name is not sent. The validator rejects leftover code names (`ONE_TO_ONE`, `STRONG`) | Raw enum names were copied into student-facing text; without weights the model could lead with a criterion that barely counts |
+| Why are there two hashes? | The card `evaluationId` proves the clicked card is still current; the evidence hash lets identical anonymous facts reuse wording without storing who the students are | One hash cannot do both: exact identity would stop reuse, rounded evidence cannot detect a changed card |
+| What do status codes reveal? | Evaluation runs before the ID comparison, so an unknown or ineligible candidate gets 404 while an eligible one with a wrong ID gets 409. Low risk: any student can already see eligible candidates in search | Reordering is impossible: the current ID only exists after evaluation |
+| Is `evaluationId` sensitive? | It is an unsalted SHA-256 of scoring inputs (including IDs and availability). Only the digest reaches the browser and the input space is large, so it is treated as low risk | An HMAC with a server secret would remove even guessing attacks; not needed at this scope |
+
 ## Baseline requirement contract
 
 The following choices were accepted by the project owner for compulsory delivery on

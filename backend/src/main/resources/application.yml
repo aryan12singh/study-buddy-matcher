@@ -97,6 +97,19 @@ app:
       takes-course-score: 0.5
       # Shortest shared block that counts as time to meet; shorter overlaps are ignored.
       min-session-minutes: 60
+  ai:
+    explanation:
+      # Off unless application-local.yml sets enabled: true and api-key. Never put the key here.
+      enabled: false
+      base-url: https://generativelanguage.googleapis.com/v1beta
+      model: gemini-3.5-flash
+      timeout: 5s
+      max-output-tokens: 200
+      max-characters: 600
+      # Google's free tier allows 20 generate requests per day per project and model.
+      daily-call-limit: 18
+      quota-zone: Asia/Singapore
+      rate-limit-cooldown: 60s
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

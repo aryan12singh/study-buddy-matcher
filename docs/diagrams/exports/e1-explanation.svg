@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1640" viewBox="0 0 1800 1640" role="img" aria-labelledby="title description">
+<title id="title">E1: a current match, explained on demand</title>
+<desc id="description">Standalone editable SVG source for E1 on PR 61, checked against base 5377900 plus the 18 October 2026 evaluation, cache and lifecycle corrections. Numbered flow follows MatchExplanationService.explain. Supporting source trace and Mermaid diagrams: docs/diagrams/E1.md. The diagram does not assert successful live generation or acceptance.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1800" height="1640" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="45" y="165" width="420" height="1115" rx="12" fill="#edf4f5" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="515" y="165" width="760" height="1115" rx="12" fill="#eff4f7" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="1325" y="165" width="430" height="1115" rx="12" fill="#edf4f5" stroke="#bdccd5" stroke-width="1.5" />
+<polyline points="44,1586 1756,1586" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="440,290 555,290" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="895,350 895,365" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="895,495 895,510" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="895,640 895,655" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="895,785 895,800" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="895,930 895,945" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="895,1075 895,1090" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1235,860 1350,860" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1235,1195 1300,1195 1300,935 1350,935" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1235,1135 1350,1135" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="70" y="220" width="370" height="235" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="70" y="220" width="370" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="70" y="500" width="370" height="330" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="70" y="500" width="370" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="70" y="875" width="370" height="335" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="70" y="875" width="370" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="555" y="220" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="220" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="555" y="365" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="365" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="555" y="510" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="510" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="555" y="655" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="655" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="555" y="800" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="800" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="555" y="945" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="945" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="555" y="1090" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="1090" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="1350" y="220" width="380" height="405" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="1350" y="220" width="380" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="1350" y="735" width="380" height="245" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="1350" y="735" width="380" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="1350" y="1030" width="380" height="210" rx="6" fill="#fff5e5" stroke="#8a5a1a" stroke-width="1.5" data-node="box"/>
+<rect x="1350" y="1030" width="380" height="6" rx="0" fill="#8a5a1a" stroke="none" stroke-width="1.5" />
+<rect x="45" y="1345" width="545" height="180" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
+<rect x="45" y="1345" width="545" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
+<rect x="625" y="1345" width="550" height="180" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" data-node="box"/>
+<rect x="625" y="1345" width="550" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
+<rect x="1210" y="1345" width="545" height="180" rx="6" fill="#fff5e5" stroke="#8a5a1a" stroke-width="1.5" data-node="box"/>
+<rect x="1210" y="1345" width="545" height="6" rx="0" fill="#8a5a1a" stroke="none" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">E1: a current match, explained on demand</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Scores and ranks remain deterministic. Freshness is checked before optional cache, quota or provider work.</text>
+<text x="1754" y="1613" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/e1-explanation.svg</text>
+<text x="46" y="1613" font-size="15" fill="#506474" font-weight="400" text-anchor="start">PR #61 · base 5377900 + 18 October 2026 corrections · see E1_TESTING.md for observed acceptance</text>
+<text x="67" y="196" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">BROWSER  /  ONE CARD</text>
+<text x="537" y="196" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">SPRING API  /  MatchExplanationService.explain</text>
+<text x="1347" y="196" font-size="18" fill="#176c63" font-weight="700" text-anchor="start">DATA AND EXTERNAL BOUNDARIES</text>
+<text x="88" y="255" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">MatchExplanationPanel</text>
+<text x="88" y="289" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Click “Explain this match”.</text>
+<text x="88" y="316" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Send candidate, scoring search</text>
+<text x="88" y="343" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">and the card’s evaluationId.</text>
+<text x="88" y="370" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No automatic provider request.</text>
+<text x="88" y="397" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">JWT-authenticated API call.</text>
+<rect x="469.85" y="255" width="40.3" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="490" y="270" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">GET</text>
+<text x="88" y="535" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">Exact card identity</text>
+<text x="88" y="569" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">MatchResultAssembler delegates</text>
+<text x="88" y="596" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">to MatchEvaluationFingerprint.</text>
+<text x="88" y="623" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">SHA-256 over ordered inputs:</text>
+<text x="88" y="650" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">both profiles and availability,</text>
+<text x="88" y="677" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">scoring search + config/rules,</text>
+<text x="88" y="704" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">strategy and exact score data.</text>
+<text x="88" y="731" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Only the digest reaches the UI.</text>
+<text x="88" y="758" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Sort, limit and relationship-only</text>
+<text x="88" y="785" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">state do not change the score ID.</text>
+<text x="88" y="812" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Freshness is not authorization.</text>
+<text x="88" y="910" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">Panel lifecycle</text>
+<text x="88" y="944" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Key: candidateId + evaluationId.</text>
+<text x="88" y="971" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Changed evaluation remounts:</text>
+<text x="88" y="998" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">clear text and abort old request.</text>
+<text x="88" y="1025" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Ignore aborted late responses.</text>
+<text x="88" y="1052" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Stale 409 / mismatched reply:</text>
+<text x="88" y="1079" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">show “Refresh matches”.</text>
+<text x="88" y="1106" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Valid relationship-only refresh</text>
+<text x="88" y="1133" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">may retain the existing text.</text>
+<text x="88" y="1160" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Render literal text + source label.</text>
+<text x="573" y="252" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">1  Reevaluate the current candidate</text>
+<text x="573" y="283" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">MatchService.evaluate → MatchEvaluation + evaluationId</text>
+<text x="573" y="307" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Same Java scoring; active/non-self candidate contract.</text>
+<text x="573" y="331" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Core validation, authorization and eligibility errors propagate.</text>
+<text x="573" y="397" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">2  Require the same evaluation</text>
+<text x="573" y="428" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Missing/malformed ID → 400 INVALID_INPUT.</text>
+<text x="573" y="452" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Changed ID → 409 STALE_MATCH_EVALUATION.</text>
+<text x="573" y="476" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Stop before optional work, including when AI is off.</text>
+<text x="573" y="542" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">3  Check provider configuration</text>
+<text x="573" y="573" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">AiExplanationProperties.ready() must be true.</text>
+<text x="573" y="597" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Disabled or incomplete configuration → STANDARD.</text>
+<text x="573" y="621" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Use the current deterministic MatchExplainer text.</text>
+<text x="573" y="687" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">4  Reduce evidence and derive its cache key</text>
+<text x="573" y="718" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationEvidenceFactory → anonymous allowlist only.</text>
+<text x="573" y="742" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationHasher: SHA-256(evidence + v5 + model).</text>
+<text x="573" y="766" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Rounded semantic key is separate from the exact card ID.</text>
+<text x="573" y="832" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">5  Look up and revalidate cached text</text>
+<text x="573" y="863" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationCache.find(hash); current validator on every hit.</text>
+<text x="573" y="887" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Valid hit → AI. Invalid hit or read failure → STANDARD.</text>
+<text x="573" y="911" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Only a cache miss continues; no quota spent on a hit/error.</text>
+<text x="573" y="977" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">6  Acquire quota for this cache miss</text>
+<text x="573" y="1008" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationQuota.tryAcquire(); unavailable → STANDARD.</text>
+<text x="573" y="1032" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Daily, synchronized and process-local; restart resets it.</text>
+<text x="573" y="1056" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Concurrent misses can make duplicate provider calls.</text>
+<text x="573" y="1122" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">7  Generate, validate, then attempt to cache</text>
+<text x="573" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v5 → ExplanationProvider → validate raw JSON/text.</text>
+<text x="573" y="1177" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Unavailable/rejected output → STANDARD.</text>
+<text x="573" y="1201" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Validated output → AI, even if cache.save() fails.</text>
+<text x="1368" y="255" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">Provider evidence only</text>
+<text x="1368" y="289" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Quality, strategy and criteria:</text>
+<text x="1368" y="316" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">rounded scores + known/enabled.</text>
+<text x="1368" y="343" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Approximate shared weekly hours.</text>
+<text x="1368" y="370" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">scoringCourse and sharedCourse:</text>
+<text x="1368" y="397" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">separate roles; values may match.</text>
+<text x="1368" y="424" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">searchedGoal + effective sharedGoals.</text>
+<text x="1368" y="451" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Study modes and group-size ranges.</text>
+<text x="1368" y="478" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start"></text>
+<text x="1368" y="505" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">No names, IDs, email/contact,</text>
+<text x="1368" y="532" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">school/year, exact schedules,</text>
+<text x="1368" y="559" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">messages, credentials or card ID.</text>
+<text x="1368" y="586" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Provider key stays on the backend.</text>
+<text x="1368" y="770" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">PostgreSQL cache</text>
+<text x="1368" y="804" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">match_explanations</text>
+<text x="1368" y="831" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Unique evidence hash; no student FK.</text>
+<text x="1368" y="858" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">v5 + model + text + createdAt.</text>
+<text x="1368" y="885" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Insert on conflict does nothing.</text>
+<text x="1368" y="912" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Browser roles cannot read rows.</text>
+<text x="1368" y="939" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Stored text passes current policy.</text>
+<rect x="1267.8" y="830" width="48.400000000000006" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1292" y="845" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">find</text>
+<rect x="1272.8" y="1025" width="48.400000000000006" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1297" y="1040" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">save</text>
+<text x="1368" y="1065" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">GeminiExplanationProvider</text>
+<text x="1368" y="1099" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Implements ExplanationProvider.</text>
+<text x="1368" y="1126" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Server HTTP call with timeouts.</text>
+<text x="1368" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v5 + allowlisted evidence.</text>
+<text x="1368" y="1180" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Error/empty/malformed reply</text>
+<text x="1368" y="1207" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">becomes the STANDARD path.</text>
+<rect x="1255.65" y="1105" width="72.7" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1292" y="1120" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">explain</text>
+<text x="48" y="1320" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">ONE DTO SHAPE; THREE CLEAR OUTCOMES</text>
+<text x="63" y="1380" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">AI  /  HTTP 200</text>
+<text x="63" y="1414" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Validated fresh or cached text.</text>
+<text x="63" y="1441" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">{candidateId, evaluationId, text, source: AI}</text>
+<text x="63" y="1468" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">The UI labels it and asks the student to check</text>
+<text x="63" y="1495" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">the score breakdown. No score or rank changes.</text>
+<text x="643" y="1380" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">STANDARD  /  HTTP 200</text>
+<text x="643" y="1414" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Current deterministic explanation + same IDs.</text>
+<text x="643" y="1441" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Provider unavailable, quota, rejected text,</text>
+<text x="643" y="1468" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">cache read failure or configuration not ready.</text>
+<text x="643" y="1495" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">A cache write failure still returns valid AI text.</text>
+<text x="1228" y="1380" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">PROBLEM  /  HTTP 4xx</text>
+<text x="1228" y="1414" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Core matching errors retain their contract.</text>
+<text x="1228" y="1441" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">400 for malformed/missing evaluation identity.</text>
+<text x="1228" y="1468" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">409 STALE_MATCH_EVALUATION for a stale card.</text>
+<text x="1228" y="1495" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">These errors are not hidden by AI fallback.</text>
+<text x="48" y="1562" font-size="17" fill="#506474" font-weight="400" text-anchor="start">The orchestration holds no database transaction across the external call. Bounded output checks do not prove every sentence factual; live-provider acceptance is separate.</text>
+</g></svg>
