@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({AuthProperties.class, LoginThrottleProperties.class})
 public class SecurityConfiguration {
     @Bean
     FilterRegistrationBean<JwtAuthenticationFilter> disableDuplicateFilterRegistration(JwtAuthenticationFilter filter) {

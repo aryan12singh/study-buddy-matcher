@@ -5,6 +5,7 @@ import com.studybuddy.common.DatabaseMutationLock;
 import com.studybuddy.common.InputRules;
 import com.studybuddy.common.error.ApiException;
 import com.studybuddy.security.JwtTokenService;
+import com.studybuddy.security.LoginThrottle;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
@@ -26,10 +27,11 @@ public class AuthService {
     private final AccountAssembler assembler;
     private final AccountAccess access;
     private final DatabaseMutationLock mutationLock;
+    private final LoginThrottle loginThrottle;
 
     public AuthService(UserRepository users, StudentRepository students, PasswordEncoder passwords,
         JwtTokenService tokens, AccountCreation creation, AccountAssembler assembler,
-        AccountAccess access, DatabaseMutationLock mutationLock) {
+        AccountAccess access, DatabaseMutationLock mutationLock, LoginThrottle loginThrottle) {
         this.users = users;
         this.students = students;
         this.passwords = passwords;
@@ -38,17 +40,21 @@ public class AuthService {
         this.assembler = assembler;
         this.access = access;
         this.mutationLock = mutationLock;
+        this.loginThrottle = loginThrottle;
     }
 
     public AuthResultDto login(LoginRequest request) {
-        mutationLock.shared();
         String email = InputRules.email(request.email());
+        loginThrottle.requireAllowed(email);
+        mutationLock.shared();
         // Lock the identity lookup itself so a waiting login cannot retain an older managed User.
-        User user = users.findByEmailForUpdate(email).orElseThrow(AuthService::invalidCredentials);
-        if (request.password().getBytes(StandardCharsets.UTF_8).length > InputRules.MAX_PASSWORD_LENGTH
+        User user = users.findByEmailForUpdate(email).orElse(null);
+        if (user == null || request.password().getBytes(StandardCharsets.UTF_8).length > InputRules.MAX_PASSWORD_LENGTH
                 || !passwords.matches(request.password(), user.getPasswordHash())) {
+            loginThrottle.recordFailure(email);
             throw invalidCredentials();
         }
+        loginThrottle.recordSuccess(email);
         // Checked after the password, so only the account holder learns why they cannot sign in
         if (!user.isActive()) {
             throw new ApiException(HttpStatus.FORBIDDEN, "ACCOUNT_DEACTIVATED",
