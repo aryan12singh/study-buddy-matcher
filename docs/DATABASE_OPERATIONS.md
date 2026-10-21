@@ -129,10 +129,9 @@ table enables RLS and revokes `PUBLIC`/`anon`/`authenticated` access in the same
    Asia/Singapore; the conversion uses `AT TIME ZONE 'Asia/Singapore'` only while the column
    is still timestamp-without-time-zone. Changing timezone assumptions needs a reviewed
    migration, not a runtime flag.
-5. Apply files in order and verify mappings, constraints and access. The app runs with
-   `ddl-auto: update`, but schema update does not replace the project's migration preflight,
-   data adoption, partial indexes or browser access rules. Migrations remain required; tests
-   use `validate`.
+5. Apply files in order and verify mappings, constraints and access. The app and tests run
+   with `ddl-auto: validate`, so Hibernate never alters a database: a missing migration stops
+   startup with the missing table or column named instead of silently changing the schema.
 
 The historical 7 October shared upgrade preflight found the mapped database empty. An
 ignored private schema snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,

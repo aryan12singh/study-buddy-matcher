@@ -9,7 +9,9 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      # The SQL migrations own the schema; Hibernate only checks the mappings against it.
+      # For a throwaway local database, override this in application-local.yml.
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
