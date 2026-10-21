@@ -324,7 +324,7 @@ or the property in `application-local.yml`.
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
 | `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three keys above | Typed authentication settings (`AuthProperties`) |
 | `LOGIN_MAX_FAILURES` / `app.auth.login-throttle.max-failures` | `5` | Wrong passwords in a row for one email before its sign-in pauses |
-| `LOGIN_LOCKOUT` / `app.auth.login-throttle.lockout` | `15m` | How long sign-in for that email is refused, counted from its last wrong password. Kept in memory, so a restart clears it |
+| `LOGIN_LOCKOUT` / `app.auth.login-throttle.lockout` | `15m` | How long sign-in for that email is refused, counted from its last unsuccessful attempt. Kept in memory, so a restart clears it |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (minimum `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list |
 

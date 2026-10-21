@@ -33,9 +33,10 @@ class LoginThrottleTest {
         @Override public Instant instant() { return now; }
     }
 
+    /** Unsuccessful attempts: each one is begun and never followed by a success. */
     private void fail(int times) {
         for (int attempt = 0; attempt < times; attempt++) {
-            throttle.recordFailure(EMAIL);
+            throttle.beginAttempt(EMAIL);
         }
     }
 
@@ -43,14 +44,14 @@ class LoginThrottleTest {
     void allowsSignInBelowTheFailureLimit() {
         fail(2);
 
-        assertDoesNotThrow(() -> throttle.requireAllowed(EMAIL));
+        assertDoesNotThrow(() -> throttle.beginAttempt(EMAIL));
     }
 
     @Test
     void refusesSignInOnceTheLimitIsReached() {
         fail(3);
 
-        var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.requireAllowed(EMAIL));
+        var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
         assertEquals("Too many incorrect sign-in attempts. Try again in 15 minutes.", refused.getMessage());
     }
 
@@ -59,7 +60,7 @@ class LoginThrottleTest {
         fail(3);
         clock.advance(Duration.ofMinutes(14).plusSeconds(30));
 
-        var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.requireAllowed(EMAIL));
+        var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
         assertEquals("Too many incorrect sign-in attempts. Try again in 1 minute.", refused.getMessage());
     }
 
@@ -68,7 +69,7 @@ class LoginThrottleTest {
         fail(3);
         clock.advance(Duration.ofMinutes(15));
 
-        assertDoesNotThrow(() -> throttle.requireAllowed(EMAIL));
+        assertDoesNotThrow(() -> throttle.beginAttempt(EMAIL));
     }
 
     @Test
@@ -77,7 +78,7 @@ class LoginThrottleTest {
         clock.advance(Duration.ofMinutes(15));
         fail(2);
 
-        assertDoesNotThrow(() -> throttle.requireAllowed(EMAIL));
+        assertDoesNotThrow(() -> throttle.beginAttempt(EMAIL));
     }
 
     @Test
@@ -86,14 +87,43 @@ class LoginThrottleTest {
         throttle.recordSuccess(EMAIL);
         fail(2);
 
-        assertDoesNotThrow(() -> throttle.requireAllowed(EMAIL));
+        assertDoesNotThrow(() -> throttle.beginAttempt(EMAIL));
+    }
+
+    @Test
+    void refusedAttemptsDoNotExtendTheLockout() {
+        fail(3);
+        clock.advance(Duration.ofMinutes(10));
+        assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
+        clock.advance(Duration.ofMinutes(5));
+
+        assertDoesNotThrow(() -> throttle.beginAttempt(EMAIL));
+    }
+
+    @Test
+    void attemptsStillBeingCheckedCountTowardsTheLimit() {
+        // Three requests arrive together; none has finished checking its password yet.
+        throttle.beginAttempt(EMAIL);
+        throttle.beginAttempt(EMAIL);
+        throttle.beginAttempt(EMAIL);
+
+        assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
+    }
+
+    @Test
+    void neverReportsAZeroMinuteWait() {
+        fail(3);
+        clock.advance(Duration.ofMinutes(15).minusNanos(1));
+
+        var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
+        assertEquals("Too many incorrect sign-in attempts. Try again in 1 minute.", refused.getMessage());
     }
 
     @Test
     void countsEachEmailSeparately() {
         fail(3);
 
-        assertDoesNotThrow(() -> throttle.requireAllowed("someone-else@example.test"));
+        assertDoesNotThrow(() -> throttle.beginAttempt("someone-else@example.test"));
     }
 
     @Test

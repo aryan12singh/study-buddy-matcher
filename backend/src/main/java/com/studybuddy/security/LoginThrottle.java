@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Limits password guessing. After {@code maxFailures} wrong passwords in a row for one email,
- * sign-in for that email is refused for {@code lockout}, even with the right password. Refused
- * attempts are not counted, so the lock always ends one lockout after the last real failure.
+ * Limits password guessing. Each sign-in attempt for an email is reserved before the password is
+ * checked, and only a successful sign-in gives it back, so {@code maxFailures} unsuccessful attempts
+ * in a row lock that email for {@code lockout}, even for the right password. Reserving first means
+ * parallel requests cannot all slip past the limit while their passwords are being checked.
+ * Refused attempts are not counted, so the lock always ends one lockout after the last real attempt.
  * Unknown emails are counted the same way, so the response never reveals whether an account
  * exists. Kept in memory: a restart clears it, which suits a single coursework instance.
  */
@@ -20,9 +22,10 @@ public class LoginThrottle {
     private final int maxFailures;
     private final Duration lockout;
     private final Clock clock;
-    private final Map<String, Failures> failuresByEmail = new HashMap<>();
+    private final Map<String, Attempts> attemptsByEmail = new HashMap<>();
+    private Instant nextCleanup = Instant.MIN;
 
-    private record Failures(int count, Instant lastFailure) {
+    private record Attempts(int count, Instant last) {
     }
 
     @Autowired
@@ -36,35 +39,38 @@ public class LoginThrottle {
         this.clock = clock;
     }
 
-    /** Throws when the email is locked; call with the normalized email before checking the password. */
-    public synchronized void requireAllowed(String email) {
-        Failures failures = current(email, clock.instant());
-        if (failures != null && failures.count() >= maxFailures) {
-            Duration remaining = Duration.between(clock.instant(), failures.lastFailure().plus(lockout));
-            throw new TooManyLoginAttemptsException(minutesRoundedUp(remaining));
-        }
-    }
-
-    public synchronized void recordFailure(String email) {
+    /**
+     * Counts one attempt for the normalized email, or throws when it is locked. Call before checking
+     * the password; the attempt stays counted as a failure unless {@link #recordSuccess} follows.
+     */
+    public synchronized void beginAttempt(String email) {
         Instant now = clock.instant();
-        // Forget expired entries so guesses at many different emails cannot grow the map forever.
-        failuresByEmail.values().removeIf(failures -> isExpired(failures, now));
-        Failures previous = failuresByEmail.get(email);
-        int count = previous == null ? 1 : previous.count() + 1;
-        failuresByEmail.put(email, new Failures(count, now));
+        forgetExpired(now);
+        Attempts previous = attemptsByEmail.get(email);
+        if (previous != null && isExpired(previous, now)) {
+            previous = null;
+        }
+        if (previous != null && previous.count() >= maxFailures) {
+            throw new TooManyLoginAttemptsException(minutesRoundedUp(Duration.between(now, previous.last().plus(lockout))));
+        }
+        attemptsByEmail.put(email, new Attempts(previous == null ? 1 : previous.count() + 1, now));
     }
 
     public synchronized void recordSuccess(String email) {
-        failuresByEmail.remove(email);
+        attemptsByEmail.remove(email);
     }
 
-    private Failures current(String email, Instant now) {
-        Failures failures = failuresByEmail.get(email);
-        return failures == null || isExpired(failures, now) ? null : failures;
+    /** At most once per lockout, so guesses at many different emails neither grow the map nor rescan it every time. */
+    private void forgetExpired(Instant now) {
+        if (now.isBefore(nextCleanup)) {
+            return;
+        }
+        attemptsByEmail.values().removeIf(attempts -> isExpired(attempts, now));
+        nextCleanup = now.plus(lockout);
     }
 
-    private boolean isExpired(Failures failures, Instant now) {
-        return !now.isBefore(failures.lastFailure().plus(lockout));
+    private boolean isExpired(Attempts attempts, Instant now) {
+        return !now.isBefore(attempts.last().plus(lockout));
     }
 
     private static long minutesRoundedUp(Duration remaining) {

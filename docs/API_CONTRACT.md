@@ -30,7 +30,8 @@ otherwise-valid input exceeding the UTF-8 byte limit gets the same 401 `INVALID_
 as a wrong password before BCrypt comparison. Malformed/over-character-limit fields still
 return 400. After `app.auth.login-throttle.max-failures` wrong passwords in a row for one
 normalized email, known or unknown, login for it returns 429 `TOO_MANY_LOGIN_ATTEMPTS` for
-`app.auth.login-throttle.lockout` after the last failure; a successful login clears the count. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
+`app.auth.login-throttle.lockout` after the last attempt; a successful login clears the count.
+Each attempt is counted before its password is checked, so parallel guesses cannot exceed it. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
 request, connection, group and notification responses.
 
 Contact input accepts local Singapore 8-digit numbers beginning 6/8/9, or `+` followed by

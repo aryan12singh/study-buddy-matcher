@@ -45,13 +45,12 @@ public class AuthService {
 
     public AuthResultDto login(LoginRequest request) {
         String email = InputRules.email(request.email());
-        loginThrottle.requireAllowed(email);
+        loginThrottle.beginAttempt(email);
         mutationLock.shared();
         // Lock the identity lookup itself so a waiting login cannot retain an older managed User.
         User user = users.findByEmailForUpdate(email).orElse(null);
         if (user == null || request.password().getBytes(StandardCharsets.UTF_8).length > InputRules.MAX_PASSWORD_LENGTH
                 || !passwords.matches(request.password(), user.getPasswordHash())) {
-            loginThrottle.recordFailure(email);
             throw invalidCredentials();
         }
         loginThrottle.recordSuccess(email);

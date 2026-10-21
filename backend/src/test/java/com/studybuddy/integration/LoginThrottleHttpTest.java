@@ -43,4 +43,26 @@ class LoginThrottleHttpTest extends PostgresHttpTest {
 
         expect(attemptLogin("mixed@example.test", true), 429);
     }
+
+    @Test
+    void passwordOverTheByteLimitCountsAsAWrongPassword() {
+        student("overlong@example.test", "Overlong", "91234570");
+        String overlong = "界".repeat(25); // 25 characters pass @Size, 75 UTF-8 bytes do not
+        for (int attempt = 0; attempt < 2; attempt++) {
+            expect(call("POST", "/auth/login", null, Map.of("email", "overlong@example.test", "password", overlong)), 401);
+        }
+
+        expect(attemptLogin("overlong@example.test", true), 429);
+    }
+
+    @Test
+    void deactivatedAccountWithTheRightPasswordStillLearnsWhyAndClearsItsCount() {
+        long id = student("paused@example.test", "Paused", "91234571");
+        database.update("update users set active=false where id=?", id);
+        expect(attemptLogin("paused@example.test", false), 401);
+
+        assertEquals("ACCOUNT_DEACTIVATED", expect(attemptLogin("paused@example.test", true), 403).path("code").asString());
+        expect(attemptLogin("paused@example.test", false), 401);
+        assertEquals("ACCOUNT_DEACTIVATED", expect(attemptLogin("paused@example.test", true), 403).path("code").asString());
+    }
 }
