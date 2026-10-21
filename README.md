@@ -117,8 +117,9 @@ scripts/migrate-database.sh
 ```
 
 The migrations own the schema. The backend runs with `ddl-auto: validate`, so it never
-changes the database and refuses to start, naming the missing table or column, until every
-migration is applied. For the shared database, follow the
+changes the database and refuses to start if a mapped table or column is missing. Validation
+does not check constraints, indexes or row-level security, so always apply every migration
+first. For the shared database, follow the
 [deployment and recovery record](docs/DATABASE_OPERATIONS.md) and never reset it for tests.
 
 ### 4. Run

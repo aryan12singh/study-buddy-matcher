@@ -10,7 +10,7 @@ spring:
   jpa:
     hibernate:
       # The SQL migrations own the schema; Hibernate only checks the mappings against it.
-      # For a throwaway local database, override this in application-local.yml.
+      # Run scripts/migrate-database.sh against every database, local ones included; do not override this.
       ddl-auto: validate
     open-in-view: false
     properties:

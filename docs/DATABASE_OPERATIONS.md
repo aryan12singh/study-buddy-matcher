@@ -130,8 +130,9 @@ table enables RLS and revokes `PUBLIC`/`anon`/`authenticated` access in the same
    is still timestamp-without-time-zone. Changing timezone assumptions needs a reviewed
    migration, not a runtime flag.
 5. Apply files in order and verify mappings, constraints and access. The app and tests run
-   with `ddl-auto: validate`, so Hibernate never alters a database: a missing migration stops
-   startup with the missing table or column named instead of silently changing the schema.
+   with `ddl-auto: validate`, so Hibernate never alters a database and startup stops, naming
+   it, when a mapped table or column is missing. Validation does not check constraints,
+   indexes, primary keys or row-level security, so every migration is still required.
 
 The historical 7 October shared upgrade preflight found the mapped database empty. An
 ignored private schema snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,
