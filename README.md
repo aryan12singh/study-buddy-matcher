@@ -364,6 +364,22 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.daily-call-limit` | `18` | Gemini calls per day before falling back; just under the free tier's 20 requests per day per project and model (checked 18 Oct). In memory and resets at Singapore midnight, while Google's limit resets on Pacific time, so they can drift apart. Usage is visible at https://ai.dev/rate-limit |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
 | `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
+| `app.ambient.api-key` | none; set only in `application-local.yml` | Freesound API key for the Music tab. Without it a sound request returns 503 `AMBIENT_UNAVAILABLE`. Never committed, logged or sent to the browser |
+| `app.ambient.base-url` | `https://freesound.org/apiv2` | Freesound API base URL |
+| `app.ambient.timeout` | `5s` | Connect and read timeout for Freesound |
+| `app.ambient.candidate-count` | `15` | Search results a random sound is picked from |
+| `app.ambient.min-duration-seconds` / `max-duration-seconds` | `30` / `600` | Sound lengths asked for; shorter clips loop audibly, longer ones start slowly |
+| `app.ambient.categories` | rain, cafe, forest, ocean, fireplace, wind | Channels on the Music tab: `id`, display `label` and the Freesound search `query` |
+| `app.spotify.client-id` / `client-secret` | none; set only in `application-local.yml` | Spotify app credentials from the developer dashboard. Without both, the Music tab says Spotify is not set up. The secret is never committed, logged or sent to the browser |
+| `SPOTIFY_REDIRECT_URI` / `app.spotify.redirect-uri` | `http://127.0.0.1:8080/api/spotify/callback` | Where Spotify returns after sign-in; must be registered in the Spotify dashboard. Spotify rejects `localhost` |
+| `SPOTIFY_RETURN_URL` / `app.spotify.return-url` | `http://localhost:5173/music` | The Music page the browser returns to, with `?spotify=connected/denied/expired/failed` |
+| `app.spotify.accounts-url` / `api-url` | `https://accounts.spotify.com` / `https://api.spotify.com/v1` | Spotify sign-in and Web API base URLs |
+| `app.spotify.scopes` | `streaming`, `user-read-email`, `user-read-private`, `user-modify-playback-state` | Permissions asked for; the first three are required by the Web Playback SDK |
+| `app.spotify.timeout` | `5s` | Connect and read timeout for Spotify |
+| `app.spotify.authorization-lifetime` | `10m` | How long a started sign-in stays valid |
+| `app.spotify.token-refresh-margin` | `60s` | Renew a student's Spotify token this long before it expires |
+| `app.spotify.search-limit` | `10` | Playlists per search; Spotify's maximum since February 2026 |
+| `app.spotify.max-query-length` | `100` | Longest playlist search accepted |
 
 The cache uses rounded anonymous evidence plus prompt version (`v5`) and model, separately
 from the exact card evaluation ID. Two evaluations may reuse equivalent wording after each
@@ -504,6 +520,8 @@ table may be added without team agreement.
 | source-map-js (transitive) | 1.2.2 | Source maps; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
 | Supabase | Hosted service | Managed PostgreSQL, reached only by backend JDBC; no browser SDK | [Supabase](https://supabase.com/) |
 | Google Gemini API (free tier) | model set by `app.ai.explanation.model` | Optional AI wording of match explanations (E1); off without a key | Google [Gemini API terms](https://ai.google.dev/gemini-api/terms). On the free tier Google uses submitted content to improve its products and human reviewers may read it, so only anonymous `ExplanationEvidence` is sent. Users must be 18 or older |
+| Freesound API | Hosted API, `apiv2` | Ambient sounds for the Music tab; off without a key | [API terms](https://freesound.org/help/tos_api/). Each sound has its own Creative Commons licence (often CC BY, which requires credit), shown with its author beside every playing sound |
+| Spotify Web API and Web Playback SDK | Hosted API; SDK script loaded from `sdk.scdn.co` at runtime | Students connect their own Spotify account and play playlists on the Music tab; off without app credentials | [Developer terms](https://developer.spotify.com/terms). Development mode needs the app owner on Premium and allows 5 listed users; playback needs each student on Premium. Tokens are kept in server memory only |
 | Open-Meteo | Hosted API | Campus weather for the study room; no SDK or key | CC BY 4.0 data, non-commercial; [documentation](https://open-meteo.com/en/docs), [terms](https://open-meteo.com/en/terms) |
 
 </details>

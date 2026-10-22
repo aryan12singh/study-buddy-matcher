@@ -539,6 +539,53 @@ and the manual choices remain available. `prefers-reduced-motion` stops animatio
 Weather data attribution links to [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
 provider outages do not change shared timer/audio state or block a room/session action.
 
+## Ambient sounds (Music tab)
+
+Both endpoints use the existing authenticated student API guard. The backend calls Freesound
+with the server-held key; the key never reaches the browser.
+
+`GET /api/ambient/categories` returns the configured channels in order.
+
+```text
+AmbientCategoryDto[] { id, label }
+```
+
+`GET /api/ambient/categories/{categoryId}/sound?exclude={soundId}` returns one random sound
+with an MP3 preview from that category's search. `exclude` is optional: the sound already
+playing, skipped when another choice exists.
+
+```text
+AmbientSoundDto { categoryId, id, name, author, license (URL), previewUrl }
+```
+
+An unknown category returns 404 `NOT_FOUND`. No configured key, a provider failure or timeout,
+or no playable result returns 503 `AMBIENT_UNAVAILABLE`. Preview URLs play directly from
+Freesound's CDN and need no key.
+
+## Spotify (Music tab)
+
+All endpoints use the existing authenticated student API guard except `GET /api/spotify/callback`,
+which Spotify's sign-in redirect reaches without an app token. It is tied to the student by a
+random, single-use `state` that expires after `app.spotify.authorization-lifetime`.
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET /api/spotify/status` | `SpotifyStatusDto { configured, connected }` |
+| `POST /api/spotify/authorization` | `SpotifyAuthorizationDto { url }`: the Spotify sign-in page to open |
+| `GET /api/spotify/callback?state&code&error` | 302 to `app.spotify.return-url?spotify=connected/denied/expired/failed` |
+| `GET /api/spotify/token` | `SpotifyAccessTokenDto { accessToken, expiresAt }` for the in-browser player, renewed when close to expiry |
+| `GET /api/spotify/playlists?query=` | `SpotifyPlaylistDto[] { id, uri, name, owner, imageUrl|null }`, at most 10 |
+| `POST /api/spotify/play` `{ deviceId, playlistUri }` | 204; starts the playlist on the student's player in this tab |
+| `DELETE /api/spotify/connection` | 204; forgets the student's Spotify tokens |
+
+The refresh token never leaves the server, and tokens are held in memory only, so a server
+restart asks students to connect again. No app credentials returns 503 `SPOTIFY_UNAVAILABLE`, as
+does a Spotify outage. Not connected, or a connection Spotify no longer accepts, returns 409
+`SPOTIFY_NOT_CONNECTED` (not 401, which would sign the student out of this app). Spotify refusing
+playback (player not ready, or no Premium) returns 409 `SPOTIFY_PLAYBACK_REFUSED`. A blank or
+overlong search returns 400 `INVALID_INPUT`; a `playlistUri` that is not `spotify:playlist:…`
+returns 400.
+
 ## Notifications
 
 | Method | Path | Request | Response | Auth |
