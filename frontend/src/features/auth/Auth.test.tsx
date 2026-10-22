@@ -82,6 +82,7 @@ describe('auth and role boundaries', () => {
   it('removes all private rendered state and session storage on logout', async () => {
     setAccessToken('saved-token')
     vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/auth/me' ? studentAccount : path === '/notifications/unread-count' ? { count: 1 } : { id: 2, name: 'Jamie', school: 'SCIS', programme: 'IS', yearOfStudy: 2, coursesTaken: [], targetCourse: null, preferredStudyMode: null, studyGoals: [], preferredGroupSizeMin: null, preferredGroupSizeMax: null, availability: [], relationship: { state: 'CONNECTED', requestId: null, connectionId: 7 }, contactNumber: '+65 9999 1111' }))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response(undefined))
     renderAuthenticatedApp('/students/2')
     await screen.findByText('+65 9999 1111')
     fireEvent.click(screen.getByRole('button', { name: 'Log out' }))
@@ -89,6 +90,18 @@ describe('auth and role boundaries', () => {
     expect(screen.queryByText('+65 9999 1111')).not.toBeInTheDocument()
     expect(getAccessToken()).toBeNull()
     expect(sessionStorage.getItem(SESSION_TOKEN_KEY)).toBeNull()
+    expect(post).toHaveBeenCalledWith('/auth/logout', null, { headers: { Authorization: 'Bearer saved-token' } })
+  })
+  it('signs out locally at once even when the server cannot be reached', async () => {
+    setAccessToken('saved-token')
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/auth/me' ? studentAccount : path === '/notifications/unread-count' ? { count: 0 } : []))
+    const unreachable = deferred<never>()
+    vi.spyOn(api, 'post').mockReturnValue(unreachable.promise)
+    renderAuthenticatedApp('/connections')
+    fireEvent.click(await screen.findByRole('button', { name: 'Log out' }))
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument()
+    expect(getAccessToken()).toBeNull()
+    unreachable.reject(new Error('Network Error'))
   })
   it('expires the current session after a real Axios 401', async () => {
     setAccessToken('expired-token')

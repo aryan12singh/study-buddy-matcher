@@ -39,7 +39,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/auth/me").authenticated()
+                .requestMatchers("/api/auth/me", "/api/auth/logout").authenticated()
                 .requestMatchers("/api/**").hasRole("STUDENT")
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors.authenticationEntryPoint(problems).accessDeniedHandler(problems))

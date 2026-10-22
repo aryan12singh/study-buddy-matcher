@@ -96,6 +96,7 @@ student only. Account role selection belongs to the administrator creation endpo
 | POST | `/api/auth/login` | `{email,password}` | 200 `AuthResultDto` | Public |
 | POST | `/api/auth/register` | `RegisterRequest` | 201 `AuthResultDto` | Public |
 | GET | `/api/auth/me` | none | 200 `CurrentAccountDto` | Active account |
+| POST | `/api/auth/logout` | none | 204 | Active account; increments the account's token version, so every token issued to it so far (all tabs and devices) gets 401 |
 | GET | `/api/courses` | none | 200 `CourseDto[]`, course-code order | Student |
 | GET | `/api/students/me/summary` | none | 200 `StudentActivityDto` | Student |
 

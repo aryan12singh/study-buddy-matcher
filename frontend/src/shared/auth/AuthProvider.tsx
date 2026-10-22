@@ -15,7 +15,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(Boolean(getAccessToken()))
   const [error, setError] = useState<string>()
   const [retryCount, setRetryCount] = useState(0)
-  const logout = useCallback(
+  const clearSession = useCallback(
     () => {
       setAccessToken(null)
       setAccount(null)
@@ -44,10 +44,19 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   )
   useEffect(
     () => {
-      window.addEventListener('session-expired', logout)
-      return () => window.removeEventListener('session-expired', logout)
+      window.addEventListener('session-expired', clearSession)
+      return () => window.removeEventListener('session-expired', clearSession)
     },
-    [logout]
+    [clearSession]
+  )
+  const logout = useCallback(
+    () => {
+      // Ask the server to end the token, but forget it here at once: signing out never waits on the network.
+      const token = getAccessToken()
+      if (token) api.post('/auth/logout', null, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+      clearSession()
+    },
+    [clearSession]
   )
 
   async function authenticate(path: string, input: unknown) {
