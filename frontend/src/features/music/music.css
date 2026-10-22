@@ -1,0 +1,8 @@
+.music-section + .music-section { margin-top: 2rem; }
+.music-section > h2 { margin-bottom: .8rem; }
+.spotify-panel { display: grid; gap: 1rem; }
+.spotify-now-playing { display: flex; gap: 1rem; align-items: flex-start; background: white; border: 1px solid #787f82; padding: 1rem; }
+.spotify-now-playing p { margin: 0 0 .35rem; }
+.spotify-now-playing img, .spotify-playlist img { flex: 0 0 auto; object-fit: cover; border: 1px solid #787f82; }
+.spotify-playlist > div:nth-child(2) { flex: 1; min-width: 0; }
+.spotify-playlist h3 { margin: 0 0 .35rem; overflow-wrap: anywhere; }

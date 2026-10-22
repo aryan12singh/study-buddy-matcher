@@ -39,6 +39,7 @@ export default function AppShell() {
               <NavLink to="/connections"><PixelIcon kind="connections" /><span>Connections</span></NavLink>
               <NavLink to="/groups"><PixelIcon kind="groups" /><span>Study groups</span></NavLink>
               <NavLink to="/sessions"><PixelIcon kind="clock" /><span>Study sessions</span></NavLink>
+              <NavLink to="/music"><PixelIcon kind="music" /><span>Music</span></NavLink>
               <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span>{notifications.data && notifications.data.count > 0 && (
                 <span className="unread-count" aria-label={`${notifications.data.count} unread notifications`}>{notifications.data.count}</span>
               )}</NavLink>
