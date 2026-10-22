@@ -46,6 +46,28 @@ class ListQueryTest extends PostgresHttpTest {
     }
 
     @Test
+    void matchRequestListQueriesDoNotGrowWithTheNumberOfSenders() {
+        long receiver = student("receiver@example.test", "Receiver", "Receiver private contact");
+        String token = login("receiver@example.test");
+        send(receiver, login(sender(0)));
+        var small = measure("/match-requests/incoming", token);
+        for (int index = 1; index < 12; index++) {
+            send(receiver, login(sender(index)));
+        }
+
+        var large = measure("/match-requests/incoming", token);
+
+        assertEquals(12, large.payload().size());
+        assertEquals(small.queries(), large.queries(), "Incoming request query count must not grow from 1 to 12 senders");
+    }
+
+    private String sender(int index) {
+        String email = "sender" + index + "@example.test";
+        student(email, "Sender " + index, "Sender private contact");
+        return email;
+    }
+
+    @Test
     void notificationQueriesDoNotGrowWithDistinctReferencedRequests() {
         student("sender@example.test", "Sender", "Sender private contact");
         long receiver = student("receiver@example.test", "Receiver", "Receiver private contact");
