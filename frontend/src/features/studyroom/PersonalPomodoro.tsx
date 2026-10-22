@@ -1,0 +1,96 @@
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import Button from '../../shared/components/Button'
+import Dialog from '../../shared/components/Dialog'
+import ConfirmDialog from '../../shared/components/ConfirmDialog'
+import Field from '../../shared/components/Field'
+import PixelIcon from '../../shared/components/PixelIcon'
+import { MINUTE_MILLIS, POMODORO_LIMITS, usePersonalPomodoro } from './usePersonalPomodoro'
+import { timerText } from './timer'
+
+export default function PersonalPomodoro({ accountId }: { accountId: number }) {
+  const timer = usePersonalPomodoro(accountId)
+  const [dialog, setDialog] = useState<'settings' | 'reset' | null>(null)
+  const [durations, setDurations] = useState({ focusMinutes: '', breakMinutes: '' })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const focusing = timer.phase === 'FOCUS'
+  const duration = (focusing ? timer.focusMinutes : timer.breakMinutes) * MINUTE_MILLIS
+  const progress = Math.max(0, Math.min(100, (1 - timer.remainingMillis / duration) * 100))
+
+  function adjust() {
+    setDurations({ focusMinutes: String(timer.focusMinutes), breakMinutes: String(timer.breakMinutes) })
+    setErrors({})
+    setDialog('settings')
+  }
+  function save(event: FormEvent) {
+    event.preventDefault()
+    const nextErrors: Record<string, string> = {}
+    for (const field of ['focusMinutes', 'breakMinutes'] as const) {
+      const value = Number(durations[field])
+      if (!Number.isInteger(value) || value < 1 || value > POMODORO_LIMITS[field]) {
+        nextErrors[field] = `Choose a whole number from 1 to ${POMODORO_LIMITS[field]} minutes.`
+      }
+    }
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+    timer.reset(Number(durations.focusMinutes), Number(durations.breakMinutes))
+    setDialog(null)
+  }
+
+  return (
+    <section className="personal-pomodoro study-corner-panel" aria-label="Personal Pomodoro timer">
+      <div className="pomodoro-welcome">
+        <span className="pomodoro-kicker"><PixelIcon kind="clock" />Your focus space</span>
+        <h2>A little focus. A little progress.</h2>
+        <p>Settle in, take a breath, and make time for what matters.</p>
+      </div>
+      <div className="pomodoro-center">
+        <span className={`pomodoro-phase${focusing ? '' : ' is-break'}`}>{focusing ? 'Focus time' : 'Take a break'}</span>
+        <p className="personal-pomodoro-clock" role="timer" aria-live="off"
+          aria-label={`${focusing ? 'Focus' : 'Break'} remaining ${timerText(timer.remainingMillis)}`}>{timerText(timer.remainingMillis)}</p>
+        <p className="pomodoro-caption" role="status" aria-live="polite">
+          {timer.status === 'IDLE' ? 'Your next small step starts here.' : timer.status === 'PAUSED' ? 'Paused. Come back when you are ready.'
+            : focusing ? 'One thing at a time. You have got this.' : 'Stretch, rest your eyes, and recharge.'}
+        </p>
+        <Button className="pomodoro-adjust" onClick={adjust}>Adjust timer</Button>
+      </div>
+      <div className="pomodoro-journey">
+        <div className="pomodoro-track-labels"><span>{focusing ? 'A little closer with every minute' : 'A well-earned breather'}</span><span>{focusing ? 'FOCUS FINISH' : 'BREAK FINISH'}</span></div>
+        <div className="pomodoro-track" role="progressbar" aria-label={`${focusing ? 'Focus' : 'Break'} progress`}
+          aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
+          <span className="pomodoro-track-fill" style={{ width: `${progress}%` }} />
+          <span className="pomodoro-traveller" data-running={timer.status === 'RUNNING'} style={{ left: `${progress}%` }} aria-hidden="true"><PixelIcon kind="brand" /></span>
+          <span className="pomodoro-finish" aria-hidden="true" />
+        </div>
+        <p className="pomodoro-rhythm">{timer.focusMinutes} min focus<span aria-hidden="true"> · </span>{timer.breakMinutes} min break</p>
+      </div>
+      <div className="pomodoro-bottom">
+        <div className="actions">
+          <Button variant="primary" onClick={timer.toggle}>{timer.status === 'RUNNING' ? 'Pause timer' : timer.status === 'PAUSED' ? 'Resume timer' : 'Start focus'}</Button>
+          <Button disabled={timer.status === 'IDLE'} onClick={() => setDialog('reset')}>Reset timer</Button>
+        </div>
+        <p>At your own pace, or in good company.</p>
+      </div>
+      {dialog === 'reset' && <ConfirmDialog title="Reset your timer?" confirmLabel="Reset timer" pending={false}
+        onClose={() => setDialog(null)} onConfirm={() => { timer.reset(); setDialog(null) }}>
+        <p>Your current focus or break will start over.</p>
+      </ConfirmDialog>}
+      {dialog === 'settings' && <Dialog title="Adjust your timer" onClose={() => setDialog(null)}>
+        <form noValidate onSubmit={save}>
+          <p>Find a rhythm that works for you. Saving starts a fresh focus session.</p>
+          <div className="form-grid">
+            <Field id="personal-focus-minutes" label="Focus minutes" error={errors.focusMinutes}>
+              <input id="personal-focus-minutes" type="number" min="1" max={POMODORO_LIMITS.focusMinutes} step="1"
+                value={durations.focusMinutes} onChange={event => setDurations(previous => ({ ...previous, focusMinutes: event.target.value }))} />
+            </Field>
+            <Field id="personal-break-minutes" label="Break minutes" error={errors.breakMinutes}>
+              <input id="personal-break-minutes" type="number" min="1" max={POMODORO_LIMITS.breakMinutes} step="1"
+                value={durations.breakMinutes} onChange={event => setDurations(previous => ({ ...previous, breakMinutes: event.target.value }))} />
+            </Field>
+          </div>
+          <div className="actions dialog-actions"><Button onClick={() => setDialog(null)}>Cancel</Button><Button type="submit" variant="primary">Save timer settings</Button></div>
+        </form>
+      </Dialog>}
+    </section>
+  )
+}

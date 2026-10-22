@@ -976,9 +976,13 @@ no-store/session-purge rules govern that read. Group-link copy uses the client o
 Create/update/delete destination feedback contains generic outcome text and no DTO/private
 fields.
 
-E2 student routes are `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
+E2 student routes are `/study-room`, `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
 `/sessions/{id}/edit`, `/groups/{id}/sessions` and `/connections/{id}/sessions`;
-each parent list has a `/new` editor for its authorized managers. Group detail
+each parent list has a `/new` editor for its authorized managers. The Study Room tab
+combines a personal browser timer with one sidebar populated by `/api/groups/mine`.
+Open groups link to their existing private rooms and closed groups to their history;
+opening the tab does not join a room. The personal timer uses no additional API and
+does not change the group's shared timer. Group detail
 loads a dated-session agenda only for accepted members of an open group, while
 Connections offers a session link for each active buddy. Session notification
 links target `/sessions/{id}` and recheck permission through the detail endpoint.
