@@ -1,0 +1,67 @@
+.achievements { display: grid; gap: 1.5rem; --grove-sky: #dff0f6; --metal-edge: #777; }
+.achievements h2, .achievements h3 { margin: 0; }
+.achievements-heading { font-size: 1.1rem; margin-bottom: .75rem !important; }
+
+/* Summary: four sunken stat panes */
+.achievement-summary { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: .75rem; margin: 0; }
+.achievement-summary > div { background: #fff; border: 2px solid; border-color: #808080 #fff #fff #808080; box-shadow: inset 1px 1px #404040; padding: .7rem .85rem; min-width: 0; }
+.achievement-summary dt { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #4a5357; }
+.achievement-summary dd { margin: .2rem 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .5rem; }
+.achievement-summary strong { font-size: 1.9rem; line-height: 1.1; color: var(--primary); font-variant-numeric: tabular-nums; }
+.achievement-summary small { font-size: .85rem; color: #3f474b; }
+.level-bar { flex: 1 1 120px; height: 14px; border: 2px solid; border-color: #808080 #fff #fff #808080; background: #e4e4e2; position: relative; overflow: hidden; }
+.level-bar > span { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, var(--primary) 0 8px, transparent 8px 10px); }
+.summary-level small { flex-basis: 100%; }
+
+/* Study grove */
+.grove { border: 2px solid; border-color: #fff #808080 #808080 #fff; background: linear-gradient(180deg, var(--grove-sky), #f4f9ec 75%); padding: 1rem; }
+.grove-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; margin-bottom: .75rem; }
+.grove-heading h2 { font-size: 1.1rem; }
+.grove-heading p, .grove-more { margin: 0; font-size: .9rem; color: #3f474b; }
+.grove-row { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0; }
+.grove-plot { display: grid; justify-items: center; gap: .3rem; width: 72px; animation: grove-rise .5s steps(5, end) both; }
+.grove-plot svg { width: 72px; height: 120px; display: block; image-rendering: pixelated; }
+.grove-label { font-size: .72rem; color: #3f474b; text-align: center; line-height: 1.2; min-height: 1.2em; }
+.grove-empty { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem; }
+.grove-empty > div { flex: 1 1 240px; }
+.grove-empty h3 { font-size: 1rem; margin-bottom: .25rem; }
+.grove-empty p { margin: 0; color: #3f474b; }
+@keyframes grove-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* Badges */
+.badge-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 1rem; }
+.badge-card { display: grid; grid-template-columns: 96px 1fr; gap: .85rem; align-items: start; padding: .9rem; background: #fff; border: 2px solid; border-color: #fff #808080 #808080 #fff; box-shadow: 1px 1px 0 #404040; position: relative; }
+.badge-card h3 { font-size: 1rem; }
+.badge-card p { margin: .15rem 0 0; font-size: .86rem; color: #3f474b; }
+.badge-copy { min-width: 0; }
+.badge-tier { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .05rem .4rem; border: 1px solid currentColor; margin-bottom: .25rem; }
+.badge-bronze .badge-tier { color: #7a4219; background: #fbe9d7; }
+.badge-silver .badge-tier { color: #46525c; background: #eef1f4; }
+.badge-gold .badge-tier { color: #6b4a00; background: #fff4c7; }
+.badge-locked { background: #f4f4f2; border: 2px dashed #8a8a88; box-shadow: none; }
+.badge-locked .badge-tier { color: #55595b; background: #e6e6e4; }
+.badge-locked .medallion-art { filter: grayscale(1) contrast(.9); opacity: .78; }
+.medallion-art { width: 96px; height: auto; display: block; overflow: visible; }
+.medallion-track { stroke: rgba(0, 0, 0, .12); }
+.badge-earned .medallion-art { filter: drop-shadow(2px 3px 0 rgba(0, 0, 0, .22)); }
+.badge-earned .medallion-shine { animation: medal-shine 4s ease-in-out infinite; }
+@keyframes medal-shine { 0%, 70% { transform: translate(-30px, -30px); } 100% { transform: translate(60px, 60px); } }
+.badge-meter { height: 10px; margin-top: .5rem; border: 2px solid; border-color: #808080 #fff #fff #808080; background: #e4e4e2; position: relative; }
+.badge-meter > span { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, var(--primary) 0 6px, transparent 6px 8px); }
+.badge-count { font-variant-numeric: tabular-nums; }
+.badge-count strong { color: var(--ink); }
+.badge-hint { font-style: italic; }
+
+@media (max-width: 720px) {
+  .achievement-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-level { grid-column: 1 / -1; }
+  .grove-plot, .grove-plot svg { width: 56px; }
+  .grove-plot svg { height: 94px; }
+}
+@media (max-width: 380px) {
+  .badge-card { grid-template-columns: 72px 1fr; }
+  .medallion-art { width: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grove-plot, .badge-earned .medallion-shine { animation: none; }
+}

@@ -94,6 +94,7 @@ student only. Account role selection belongs to the administrator creation endpo
 | GET | `/api/auth/me` | none | 200 `CurrentAccountDto` | Active account |
 | GET | `/api/courses` | none | 200 `CourseDto[]`, course-code order | Student |
 | GET | `/api/students/me/summary` | none | 200 `StudentActivityDto` | Student |
+| GET | `/api/achievements/me` | none | 200 `AchievementsDto` | Student |
 
 `RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
 (integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
@@ -984,3 +985,21 @@ Connections offers a session link for each active buddy. Session notification
 links target `/sessions/{id}` and recheck permission through the detail endpoint.
 Local browser drafts, room host roles and notification metadata never grant
 session management or calendar access.
+
+### AchievementsDto
+
+`GET /api/achievements/me` is read-only and derived from existing records; nothing is stored.
+
+```
+AchievementsDto { level, points, pointsToNextLevel, pointsPerLevel, earnedCount, totalCount,
+                  streak: StreakDto, badges: BadgeDto[] }
+StreakDto       { currentWeeks, bestWeeks, currentRunWeeks: LocalDate[] }   // Mondays, oldest first
+BadgeDto        { key, title, description, tier: BRONZE|SILVER|GOLD|null, nextTier: BRONZE|SILVER|GOLD|null,
+                  current, target, earned, earnedHint }
+```
+
+Badge keys and counts: `CONNECTOR` active connections, `FIRST_MOVE` match requests sent (any status),
+`TEAM_PLAYER` groups joined but not led, `FOUNDER` groups created, `PLANNER` scheduled session occurrences
+in the student's active groups and connections, `GROVE_KEEPER` best streak in weeks. The streak counts
+consecutive weeks (Monday start, `app.achievements.week-zone`) up to the current week with at least one such
+occurrence; a run ending last week is still current. Thresholds come from `app.achievements.*`.

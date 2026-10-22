@@ -324,6 +324,10 @@ or the property in `application-local.yml`.
 | `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three keys above | Typed authentication settings (`AuthProperties`) |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (minimum `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list |
+| `app.achievements.week-zone` | `Asia/Singapore` | Zone whose Monday starts each week of the study streak |
+| `app.achievements.points-per-level` | `3` | Badge points per achievements level (bronze 1, silver 2, gold 3) |
+| `app.achievements.connections` / `requests-sent` / `groups-joined` / `groups-led` | `1/3/5`, `1/5/10`, `1/2/3`, `1/2/3` | Bronze/silver/gold counts for the Connector, First Move, Team Player and Founder badges |
+| `app.achievements.sessions-planned` / `streak-weeks` | `1/5/10`, `2/4/8` | Bronze/silver/gold counts for the Planner and Grove Keeper badges |
 
 </details>
 
