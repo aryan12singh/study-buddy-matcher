@@ -24,6 +24,7 @@ public record AiExplanationProperties(
         @Positive int maxOutputTokens,
         @Positive int maxCharacters,
         @PositiveOrZero int dailyCallLimit,
+        @PositiveOrZero int dailyCallLimitPerStudent,
         @NotBlank String quotaZone,
         @NotNull Duration rateLimitCooldown) {
 
