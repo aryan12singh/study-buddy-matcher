@@ -103,6 +103,25 @@ describe('auth and role boundaries', () => {
     expect(getAccessToken()).toBeNull()
     unreachable.reject(new Error('Network Error'))
   })
+  it('waits for a pending sign-out before signing in again, so it cannot revoke the new session', async () => {
+    setAccessToken('old-token')
+    vi.spyOn(api, 'get').mockImplementation(() => new Promise(() => {}))
+    const slowLogout = deferred<never>()
+    const post = vi.spyOn(api, 'post').mockImplementation(path => path === '/auth/logout'
+      ? slowLogout.promise : Promise.resolve(response({ token: 'new-token', expiresAt: '2030-01-01T00:00:00Z', account: studentAccount })))
+    function SessionProbe() {
+      const auth = useAuth()
+      return <><button onClick={auth.logout}>Log out now</button><button onClick={() => { void auth.login('student@example.test', 'test-password') }}>Log in again</button></>
+    }
+    render(<AuthProvider><SessionProbe /></AuthProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Log out now' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Log in again' }))
+    await Promise.resolve()
+    expect(post).toHaveBeenCalledTimes(1)
+    slowLogout.reject(new Error('Network Error'))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/login', { email: 'student@example.test', password: 'test-password' }))
+    await waitFor(() => expect(getAccessToken()).toBe('new-token'))
+  })
   it('expires the current session after a real Axios 401', async () => {
     setAccessToken('expired-token')
     api.defaults.adapter = async config => {

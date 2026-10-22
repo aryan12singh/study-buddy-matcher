@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Decides whether the AI provider may be called now: within the daily allowance, and not while
- * pausing after the provider said it was rate limited. A busy demo then falls back to the standard
+ * Decides whether the AI provider may be called now: within both the shared daily allowance and the
+ * asking student's share of it, and not while pausing after the provider said it was rate limited. A busy demo then falls back to the standard
  * explanation instead of exhausting the free tier. Kept in memory: a restart resets the count, which is
  * acceptable for a coursework deployment and documented in the README.
  */

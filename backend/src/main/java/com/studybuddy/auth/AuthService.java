@@ -30,7 +30,7 @@ public class AuthService {
     private final AccountAccess access;
     private final DatabaseMutationLock mutationLock;
     private final LoginThrottle loginThrottle;
-    /** Compared against when the email is unknown, so every login costs one BCrypt check. */
+    /** Compared against when the email is unknown, so every login within the length limit costs one BCrypt check. */
     private final String unknownAccountHash;
 
     public AuthService(UserRepository users, StudentRepository students, PasswordEncoder passwords,
