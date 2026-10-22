@@ -516,6 +516,10 @@ design already allows it.
 | [Baseline verification](docs/BASELINE_VERIFICATION.md) | Repeatable checks and delivery evidence |
 | [Database operations](docs/DATABASE_OPERATIONS.md) | Migrations, seeding, access and recovery |
 | [Matching engine changes](docs/MATCHING_ENGINE_CHANGES.md) | Matching fixes and the decisions behind them |
+| [Team A testing guide](docs/TEAM_A_TESTING.md) | Matching algorithm, API, matching page and admin configuration checks |
+| [Team C verification](docs/TEAM_C_TESTING.md) | Requests, connections, groups, notifications and admin account checks |
+| [E1 verification](docs/E1_TESTING.md) | AI match explanation checks and acceptance |
+| [E2 scope](docs/E2_SCOPE.md) | What E2 delivered and its boundaries |
 | [E2 verification](docs/E2_TESTING.md) | Room, session, audio, weather and calendar checks |
 | [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
