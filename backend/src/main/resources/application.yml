@@ -139,6 +139,24 @@ app:
       - id: wind
         label: Wind
         query: wind ambience
+  spotify:
+    # Off until application-local.yml sets client-id and client-secret. Never put either here.
+    client-id:
+    client-secret:
+    # Must match a redirect URI registered in the Spotify app dashboard. Spotify rejects
+    # "localhost"; use the loopback address.
+    redirect-uri: ${SPOTIFY_REDIRECT_URI:http://127.0.0.1:8080/api/spotify/callback}
+    # Where the browser returns after sign-in.
+    return-url: ${SPOTIFY_RETURN_URL:http://localhost:5173/music}
+    accounts-url: https://accounts.spotify.com
+    api-url: https://api.spotify.com/v1
+    # streaming, user-read-email and user-read-private are required by the Web Playback SDK.
+    scopes: [streaming, user-read-email, user-read-private, user-modify-playback-state]
+    timeout: 5s
+    authorization-lifetime: 10m
+    token-refresh-margin: 60s
+    search-limit: 10
+    max-query-length: 100
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
