@@ -110,6 +110,35 @@ app:
       daily-call-limit: 18
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
+  ambient:
+    # Sounds are unavailable until application-local.yml sets api-key. Never put the key here.
+    base-url: https://freesound.org/apiv2
+    api-key:
+    timeout: 5s
+    # Search results to choose a random sound from.
+    candidate-count: 15
+    # Shorter clips loop audibly; longer ones are slow to start on campus wifi.
+    min-duration-seconds: 30
+    max-duration-seconds: 600
+    categories:
+      - id: rain
+        label: Rain
+        query: rain ambience
+      - id: cafe
+        label: Cafe
+        query: cafe ambience
+      - id: forest
+        label: Forest
+        query: forest birds ambience
+      - id: ocean
+        label: Ocean
+        query: ocean waves
+      - id: fireplace
+        label: Fireplace
+        query: fireplace crackling
+      - id: wind
+        label: Wind
+        query: wind ambience
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
