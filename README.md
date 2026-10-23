@@ -395,6 +395,14 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.daily-call-limit-per-student` | `5` | Assistant calls one student can trigger per day, so one student cannot use up the shared allowance |
 | `app.ai.assistant.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limits |
 | `app.ai.assistant.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further assistant calls are made for this long |
+| `app.ai.assistant.study-plan.max-upload-size` | `10MB` | Largest study material upload; larger files get 413. Spring's `spring.servlet.multipart` limits read this value. Base64 makes an attached PDF a third larger, which stays inside Gemini's inline request limit |
+| `app.ai.assistant.study-plan.max-topics-characters` | `4000` | Longest pasted topics text |
+| `app.ai.assistant.study-plan.max-text-file-characters` | `100000` | Most text an uploaded `.txt` or `.md` file may hold (about 25,000 tokens), since its text goes into the prompt; more gets 413 |
+
+Study material is a PDF, `.txt` or `.md` file, or pasted topics, never both. The type is checked
+from the contents as well as the extension: a `.pdf` must start with the PDF signature and a text
+file must be UTF-8, otherwise 415. A PDF is attached to the Gemini request; text goes into the
+prompt. Neither is stored.
 
 </details>
 

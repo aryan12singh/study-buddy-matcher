@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -52,6 +53,12 @@ public class ApiExceptionHandler {
     })
     public ResponseEntity<ApiProblem> malformed(Exception error) {
         return problem(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "The request contains invalid fields or values");
+    }
+
+    /** Spring refuses an over-limit upload before any controller runs, so it is mapped here. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiProblem> uploadTooLarge(MaxUploadSizeExceededException error) {
+        return problem(HttpStatus.CONTENT_TOO_LARGE, "FILE_TOO_LARGE", "The file is larger than the upload limit");
     }
 
     @ExceptionHandler(Exception.class)

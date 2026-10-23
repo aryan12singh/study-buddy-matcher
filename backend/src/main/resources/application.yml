@@ -7,6 +7,11 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+  servlet:
+    multipart:
+      # Study plan uploads; both follow the assistant's own limit so they cannot drift apart.
+      max-file-size: ${app.ai.assistant.study-plan.max-upload-size}
+      max-request-size: ${app.ai.assistant.study-plan.max-upload-size}
   jpa:
     hibernate:
       # The SQL migrations own the schema; Hibernate only checks the mappings against it.
@@ -132,6 +137,12 @@ app:
       daily-call-limit-per-student: 5
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
+      study-plan:
+        # Base64 makes an attached PDF a third larger, so 10MB stays inside Gemini's inline limit.
+        max-upload-size: 10MB
+        max-topics-characters: 4000
+        # About 25,000 tokens of notes, well inside the free tier's tokens-per-minute limit.
+        max-text-file-characters: 100000
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
