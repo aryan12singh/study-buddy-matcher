@@ -7,6 +7,11 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+  servlet:
+    multipart:
+      # Study plan uploads; both follow the assistant's own limit so they cannot drift apart.
+      max-file-size: ${app.ai.assistant.study-plan.max-upload-size}
+      max-request-size: ${app.ai.assistant.study-plan.max-upload-size}
   jpa:
     hibernate:
       # The SQL migrations own the schema; Hibernate only checks the mappings against it.
@@ -118,6 +123,26 @@ app:
       daily-call-limit-per-student: 5
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
+    assistant:
+      # Off unless application-local.yml sets enabled: true and api-key. Never put the key here.
+      # Use a key from a different Google project than E1's, so the two do not share a quota.
+      enabled: false
+      base-url: https://generativelanguage.googleapis.com/v1beta
+      model: gemini-3.5-flash
+      # Reading a PDF and writing a whole roadmap takes far longer than E1's one sentence.
+      timeout: 30s
+      max-output-tokens: 4000
+      # Google's free tier allows 20 generate requests per day per project and model.
+      daily-call-limit: 18
+      daily-call-limit-per-student: 5
+      quota-zone: Asia/Singapore
+      rate-limit-cooldown: 60s
+      study-plan:
+        # Base64 makes an attached PDF a third larger, so 10MB stays inside Gemini's inline limit.
+        max-upload-size: 10MB
+        max-topics-characters: 4000
+        # About 25,000 tokens of notes, well inside the free tier's tokens-per-minute limit.
+        max-text-file-characters: 100000
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
