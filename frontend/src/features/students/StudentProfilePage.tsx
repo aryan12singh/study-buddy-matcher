@@ -12,12 +12,12 @@ import Badge from '../../shared/components/Badge'
 import ActionNotice from '../../shared/components/ActionNotice'
 import WeeklySchedule from '../../shared/components/WeeklySchedule'
 import SendRequestDialog from '../connections/SendRequestDialog'
+import OwnAchievementSummary from '../achievements/OwnAchievementSummary'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import Avatar from '../../shared/components/Avatar'
 import CopyButton from '../../shared/components/CopyButton'
 import { returnToFrom } from '../../shared/navigation/returnTo'
 import { useAuth } from '../../shared/auth/useAuth'
-import OwnAchievementSummary from '../achievements/OwnAchievementSummary'
 
 export default function StudentProfilePage() {
   const { account } = useAuth()
