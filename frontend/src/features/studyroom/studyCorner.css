@@ -15,7 +15,7 @@
 .study-corner-meadow { position: absolute; inset: 75% 0 0; background: repeating-linear-gradient(90deg, transparent 0 49px, #e6c779 49px 54px, transparent 54px 91px), repeating-linear-gradient(0deg, #648252 0 25px, #78905b 25px 30px, #648252 30px 57px); opacity: .8; }
 .study-corner-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(245px, .44fr); gap: 1.25rem; align-items: stretch; }
 .study-corner-panel { min-width: 0; background: #fffcef; border: 2px solid #414a40; border-radius: 7px; box-shadow: 4px 5px 0 #34433470; color: #343e34; }
-.personal-pomodoro { display: flex; flex-direction: column; justify-content: space-between; align-items: center; min-height: 665px; padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 1.25rem; text-align: center; }
+.personal-pomodoro { position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: center; min-height: 665px; padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 1.25rem; text-align: center; }
 .pomodoro-welcome { width: 100%; }
 .pomodoro-kicker { display: inline-flex; align-items: center; gap: .5rem; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #66765e; }
 .pomodoro-kicker .pixel-icon { width: 15px; height: 15px; flex-basis: 15px; }
@@ -25,12 +25,11 @@
 .pomodoro-phase { display: inline-block; padding: .35rem .85rem; border: 1px solid #c5cdb3; background: #edf1df; color: #50633b; font-size: .73rem; font-weight: 700; border-radius: 3px; }
 .pomodoro-phase.is-break { background: #e5eef0; border-color: #b8cbd1; color: #3e6571; }
 .desktop .personal-pomodoro-clock { font-family: ui-monospace, 'Courier New', monospace; font-weight: 900; font-variant-numeric: tabular-nums; font-size: clamp(4.3rem, 8.7vw, 7rem); line-height: 1.1; letter-spacing: -.07em; width: fit-content; margin: .7rem auto 1rem; padding: 0 .1em .14em 0; border-bottom: 3px solid #424d3d; color: #343e34; text-shadow: 2px 2px #dce0ca; }
-.desktop .pomodoro-caption { min-height: 1.5em; font-size: .85rem; color: var(--study-corner-muted); margin-bottom: 1.15rem; }
+.desktop .pomodoro-caption { min-height: 1.5em; font-size: .85rem; color: var(--study-corner-muted); margin: 0 auto 1.15rem; }
 .study-room-workspace .retro-button { background: #fffcef; color: #3c4938; border: 2px solid #67705c; border-radius: 5px; box-shadow: 1px 2px 0 #89907830; font-size: .82rem; }
 .study-room-workspace .retro-button:hover:not(:disabled) { background: #f1f2df; }
 .study-room-workspace .retro-button.primary { background: #53694a; color: #fffef4; border-color: #43583b; box-shadow: inset 0 1px #8c9d7f, 2px 2px #34433435; }
 .study-room-workspace .retro-button.primary:hover:not(:disabled) { background: #405738; }
-.study-room-workspace .pomodoro-adjust { font-size: .75rem; min-height: 38px; padding: .4rem .85rem; }
 .pomodoro-journey { width: 100%; padding: .5rem .7rem; }
 .pomodoro-track-labels { display: flex; justify-content: space-between; gap: 1rem; text-align: left; font-size: .65rem; color: var(--study-corner-muted); margin-bottom: 1.3rem; }
 .pomodoro-track-labels > span:last-child { white-space: nowrap; font-size: .6rem; font-weight: 700; }
@@ -46,7 +45,7 @@
   .pomodoro-traveller[data-running="true"] { animation: pomodoro-bob 1.1s ease-in-out infinite; }
 }
 .pomodoro-finish { position: absolute; right: -1px; top: -8px; width: 2px; height: 23px; background: #647255; }
-.desktop .pomodoro-rhythm { margin: 1.45rem 0 0; font-size: .75rem; color: var(--study-corner-muted); }
+.desktop .pomodoro-rhythm { margin: 1.45rem auto 0; font-size: .75rem; color: var(--study-corner-muted); }
 .pomodoro-rhythm > span { margin: 0 .5rem; }
 .pomodoro-bottom { margin-top: 1rem; }
 .pomodoro-bottom .actions { justify-content: center; gap: .8rem; }
@@ -75,8 +74,27 @@
 .study-corner-groups .state-panel { padding: .9rem; background: #f4f3e5; border-color: #c6ccb5; min-height: 165px; }
 .desktop .study-corner-groups .state-panel h2 { font-size: .9rem; }
 .desktop .study-corner-groups .state-panel p { font-size: .75rem; }
+.study-corner-groups { position: relative; }
+.study-corner-groups-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.study-corner-groups-toggle { position: absolute; top: .55rem; right: .55rem; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #3e4c36; font: inherit; font-size: 1.35rem; line-height: 1; cursor: pointer; }
+.study-corner-groups-toggle:hover { background: #e9ecd9; }
+.study-corner-groups-toggle:focus-visible { outline: 2px solid #53694a; outline-offset: 1px; }
+.study-corner-layout.groups-collapsed { grid-template-columns: minmax(0, 1fr) auto; }
+.study-corner-groups.is-collapsed { width: 46px; padding: 0; }
+.study-corner-groups.is-collapsed .study-corner-groups-toggle { position: static; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: .8rem; width: 100%; height: 100%; padding: 1rem 0; border-radius: 5px; }
+.study-corner-groups-toggle-label { writing-mode: vertical-rl; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #66765e; }
+.personal-pomodoro > .window-controls { position: absolute; top: .6rem; right: .6rem; }
+/* Full screen and the hidden panel centre the timer alone; the groups list waits on the normal page. */
+.study-room-workspace.is-expanded .study-corner-groups, .study-room-workspace.is-minimal .study-corner-groups { display: none; }
+.study-room-workspace.is-expanded .study-corner-layout, .study-room-workspace.is-minimal .study-corner-layout { grid-template-columns: minmax(0, 1fr); width: min(100%, 760px); }
+.study-room-workspace.is-minimal .personal-pomodoro { min-height: 0; justify-content: center; background: none; border-color: transparent; box-shadow: none; }
+.study-room-workspace.is-minimal .personal-pomodoro > :not(.pomodoro-center),
+.study-room-workspace.is-minimal .pomodoro-phase, .study-room-workspace.is-minimal .pomodoro-caption { display: none; }
 @media (max-width: 1050px) {
-  .study-corner-layout { grid-template-columns: minmax(0, 1fr); }
+  .study-corner-layout, .study-corner-layout.groups-collapsed { grid-template-columns: minmax(0, 1fr); }
+  .study-corner-groups.is-collapsed { width: auto; }
+  .study-corner-groups.is-collapsed .study-corner-groups-toggle { flex-direction: row; justify-content: space-between; padding: .8rem 1rem; }
+  .study-corner-groups-toggle-label { writing-mode: horizontal-tb; }
   .personal-pomodoro { min-height: 590px; }
   .study-corner-groups { max-height: none; }
   .study-corner-group-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }

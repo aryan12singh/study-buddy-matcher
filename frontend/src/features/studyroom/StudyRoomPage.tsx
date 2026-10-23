@@ -16,10 +16,12 @@ import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import RoomWeatherPanel from './RoomWeatherPanel'
 import AtmosphereScene from './AtmosphereScene'
-import RoomSettingsMenu from './RoomSettingsMenu'
+import WindowControls from './WindowControls'
+import HiddenPanelTools from './HiddenPanelTools'
 import RoomRolesPanel from './RoomRolesPanel'
 import RoomTimerSettingsPanel from './RoomTimerSettingsPanel'
 import { useRoomFullscreen } from './useRoomFullscreen'
+import { usePanelVisibility } from './usePanelVisibility'
 import type { WeatherCondition } from './weatherTheme'
 import './studyCorner.css'
 import './studyroom.css'
@@ -41,12 +43,7 @@ function RoomPage({ groupId }: { groupId: number }) {
   const [atmosphere, setAtmosphere] = useState<{ condition: WeatherCondition; night: boolean }>({ condition: 'CLEAR', night: false })
   const changeAtmosphere = useCallback((condition: WeatherCondition, night: boolean) => setAtmosphere({ condition, night }), [])
   const fullscreen = useRoomFullscreen()
-  const [panelHidden, setPanelHidden] = useState(false)
-  const hidePanelButton = useRef<HTMLButtonElement>(null)
-  function showPanel() {
-    setPanelHidden(false)
-    requestAnimationFrame(() => hidePanelButton.current?.focus())
-  }
+  const panel = usePanelVisibility()
   const [confirmation, setConfirmation] = useState<'leave' | 'reset' | null>(null)
   const joined = useRef(false)
   useEffect(() => { joined.current = resource.joinedHere }, [resource.joinedHere])
@@ -143,13 +140,8 @@ function RoomPage({ groupId }: { groupId: number }) {
           </li>)}
         </ul>
       </section>}
-      <div className={`study-room-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panelHidden ? ' is-minimal' : ''}`}>
-        {panelHidden && <div className="room-minimal-tools">
-          {/* Mounted only while the panel is hidden, so focus lands here instead of on a hidden button. */}
-          {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-          <Button autoFocus onClick={showPanel}><span aria-hidden="true">▣</span> Show panel</Button>
-          {fullscreen.expanded && <Button onClick={fullscreen.toggle}><span aria-hidden="true">⤡</span> Exit full screen</Button>}
-        </div>}
+      <div className={`study-room-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+        <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
         <AtmosphereScene className="atmosphere-backdrop" condition={atmosphere.condition} night={atmosphere.night} />
         <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
           <header className="group-room-header">
@@ -157,8 +149,7 @@ function RoomPage({ groupId }: { groupId: number }) {
               <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
               <h2 id="group-room-heading">{room.groupName}</h2>
             </div>
-            <div className="group-room-tools">
-            <RoomSettingsMenu tabs={[
+            <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
               { id: 'timer', label: 'Timer', icon: '◷',
                 content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
               { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
@@ -168,13 +159,6 @@ function RoomPage({ groupId }: { groupId: number }) {
               { id: 'roles', label: 'Room roles', icon: '★',
                 content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
             ]} />
-            <button ref={hidePanelButton} type="button" className="room-window-control" aria-label="Hide panel" title="Hide panel"
-              onClick={() => setPanelHidden(true)}><span className="window-control-icon minimise" aria-hidden="true" /></button>
-            <button type="button" className="room-window-control" onClick={fullscreen.toggle}
-              aria-label={fullscreen.expanded ? 'Exit full screen' : 'Full screen'} title={fullscreen.expanded ? 'Exit full screen' : 'Full screen'}>
-              <span className={`window-control-icon ${fullscreen.expanded ? 'restore' : 'maximise'}`} aria-hidden="true" />
-            </button>
-            </div>
           </header>
           <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
             pending={action.pending} onControl={control} />

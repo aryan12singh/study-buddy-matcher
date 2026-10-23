@@ -1,44 +1,29 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
 import Button from '../../shared/components/Button'
-import Dialog from '../../shared/components/Dialog'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
-import Field from '../../shared/components/Field'
 import PixelIcon from '../../shared/components/PixelIcon'
-import { MINUTE_MILLIS, POMODORO_LIMITS, usePersonalPomodoro } from './usePersonalPomodoro'
+import { MINUTE_MILLIS, usePersonalPomodoro } from './usePersonalPomodoro'
 import { timerText } from './timer'
+import WindowControls from './WindowControls'
+import PersonalTimerSettings from './PersonalTimerSettings'
+import type { PanelVisibility } from './usePanelVisibility'
+import type { RoomFullscreen } from './useRoomFullscreen'
 
-export default function PersonalPomodoro({ accountId }: { accountId: number }) {
+export default function PersonalPomodoro({ accountId, panel, fullscreen }: {
+  accountId: number; panel: PanelVisibility; fullscreen: RoomFullscreen
+}) {
   const timer = usePersonalPomodoro(accountId)
-  const [dialog, setDialog] = useState<'settings' | 'reset' | null>(null)
-  const [durations, setDurations] = useState({ focusMinutes: '', breakMinutes: '' })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [confirmingReset, setConfirmingReset] = useState(false)
   const focusing = timer.phase === 'FOCUS'
   const duration = (focusing ? timer.focusMinutes : timer.breakMinutes) * MINUTE_MILLIS
   const progress = Math.max(0, Math.min(100, (1 - timer.remainingMillis / duration) * 100))
 
-  function adjust() {
-    setDurations({ focusMinutes: String(timer.focusMinutes), breakMinutes: String(timer.breakMinutes) })
-    setErrors({})
-    setDialog('settings')
-  }
-  function save(event: FormEvent) {
-    event.preventDefault()
-    const nextErrors: Record<string, string> = {}
-    for (const field of ['focusMinutes', 'breakMinutes'] as const) {
-      const value = Number(durations[field])
-      if (!Number.isInteger(value) || value < 1 || value > POMODORO_LIMITS[field]) {
-        nextErrors[field] = `Choose a whole number from 1 to ${POMODORO_LIMITS[field]} minutes.`
-      }
-    }
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length) return
-    timer.reset(Number(durations.focusMinutes), Number(durations.breakMinutes))
-    setDialog(null)
-  }
-
   return (
     <section className="personal-pomodoro study-corner-panel" aria-label="Personal Pomodoro timer">
+      <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
+        { id: 'timer', label: 'Timer', icon: '◷', content: <PersonalTimerSettings
+          focusMinutes={timer.focusMinutes} breakMinutes={timer.breakMinutes} onSave={(focus, rest) => timer.reset(focus, rest)} /> },
+      ]} />
       <div className="pomodoro-welcome">
         <span className="pomodoro-kicker"><PixelIcon kind="clock" />Your focus space</span>
         <h2>A little focus. A little progress.</h2>
@@ -52,7 +37,6 @@ export default function PersonalPomodoro({ accountId }: { accountId: number }) {
           {timer.status === 'IDLE' ? 'Your next small step starts here.' : timer.status === 'PAUSED' ? 'Paused. Come back when you are ready.'
             : focusing ? 'One thing at a time. You have got this.' : 'Stretch, rest your eyes, and recharge.'}
         </p>
-        <Button className="pomodoro-adjust" onClick={adjust}>Adjust timer</Button>
       </div>
       <div className="pomodoro-journey">
         <div className="pomodoro-track-labels"><span>{focusing ? 'A little closer with every minute' : 'A well-earned breather'}</span><span>{focusing ? 'FOCUS FINISH' : 'BREAK FINISH'}</span></div>
@@ -67,30 +51,14 @@ export default function PersonalPomodoro({ accountId }: { accountId: number }) {
       <div className="pomodoro-bottom">
         <div className="actions">
           <Button variant="primary" onClick={timer.toggle}>{timer.status === 'RUNNING' ? 'Pause timer' : timer.status === 'PAUSED' ? 'Resume timer' : 'Start focus'}</Button>
-          <Button disabled={timer.status === 'IDLE'} onClick={() => setDialog('reset')}>Reset timer</Button>
+          <Button disabled={timer.status === 'IDLE'} onClick={() => setConfirmingReset(true)}>End session</Button>
         </div>
         <p>At your own pace, or in good company.</p>
       </div>
-      {dialog === 'reset' && <ConfirmDialog title="Reset your timer?" confirmLabel="Reset timer" pending={false}
-        onClose={() => setDialog(null)} onConfirm={() => { timer.reset(); setDialog(null) }}>
-        <p>Your current focus or break will start over.</p>
+      {confirmingReset && <ConfirmDialog title="End this session?" confirmLabel="End session" pending={false}
+        onClose={() => setConfirmingReset(false)} onConfirm={() => { timer.reset(); setConfirmingReset(false) }}>
+        <p>Your timer goes back to {timer.focusMinutes}:00, ready for your next focus.</p>
       </ConfirmDialog>}
-      {dialog === 'settings' && <Dialog title="Adjust your timer" onClose={() => setDialog(null)}>
-        <form noValidate onSubmit={save}>
-          <p>Find a rhythm that works for you. Saving starts a fresh focus session.</p>
-          <div className="form-grid">
-            <Field id="personal-focus-minutes" label="Focus minutes" error={errors.focusMinutes}>
-              <input id="personal-focus-minutes" type="number" min="1" max={POMODORO_LIMITS.focusMinutes} step="1"
-                value={durations.focusMinutes} onChange={event => setDurations(previous => ({ ...previous, focusMinutes: event.target.value }))} />
-            </Field>
-            <Field id="personal-break-minutes" label="Break minutes" error={errors.breakMinutes}>
-              <input id="personal-break-minutes" type="number" min="1" max={POMODORO_LIMITS.breakMinutes} step="1"
-                value={durations.breakMinutes} onChange={event => setDurations(previous => ({ ...previous, breakMinutes: event.target.value }))} />
-            </Field>
-          </div>
-          <div className="actions dialog-actions"><Button onClick={() => setDialog(null)}>Cancel</Button><Button type="submit" variant="primary">Save timer settings</Button></div>
-        </form>
-      </Dialog>}
     </section>
   )
 }

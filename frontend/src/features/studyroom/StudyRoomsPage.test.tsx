@@ -62,6 +62,38 @@ describe('Study Room navigation', () => {
     expect(screen.getByRole('button', { name: 'Start focus' })).toBeEnabled()
   })
 
+  it('hides the personal panel and expands to full screen with the timer alone', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([group]))
+    renderPage(<StudyRoomsPage />)
+    const workspace = document.querySelector('.study-room-workspace')
+    fireEvent.click(await screen.findByRole('button', { name: 'Hide panel' }))
+    expect(workspace).toHaveClass('is-minimal')
+    expect(screen.getByRole('timer')).toHaveTextContent('25:00')
+    fireEvent.click(screen.getByRole('button', { name: 'Show panel' }))
+    expect(workspace).not.toHaveClass('is-minimal')
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen' }))
+    expect(workspace).toHaveClass('is-expanded')
+    fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }))
+    expect(workspace).not.toHaveClass('is-expanded')
+  })
+
+  it('folds the study groups away behind an arrow and remembers the choice', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([group]))
+    const view = renderPage(<StudyRoomsPage />)
+    const hide = await screen.findByRole('button', { name: 'Hide study groups' })
+    expect(hide).toHaveAttribute('aria-expanded', 'true')
+    hide.focus()
+    fireEvent.click(hide)
+    expect(screen.queryByRole('link', { name: 'Browse study groups' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show study groups' })).toHaveFocus()
+    expect(localStorage.getItem('study-room-groups-collapsed')).toBe('true')
+    view.unmount()
+    renderPage(<StudyRoomsPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Show study groups' }))
+    expect(await screen.findByRole('link', { name: 'Browse study groups' })).toBeInTheDocument()
+    localStorage.clear()
+  })
+
   it('keeps Study Room selected when opening an existing group room route', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ count: 0 }))
     openApplication('/groups/invalid/room')

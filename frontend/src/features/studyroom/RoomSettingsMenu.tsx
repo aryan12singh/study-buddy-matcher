@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
+import './windowControls.css'
 
 export type RoomSettingsTab = {
   id: string; label: string; icon: string; content: ReactNode

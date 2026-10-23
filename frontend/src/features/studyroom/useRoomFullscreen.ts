@@ -42,3 +42,5 @@ export function useRoomFullscreen() {
 
   return { expanded, toggle: expanded ? exit : enter }
 }
+
+export type RoomFullscreen = ReturnType<typeof useRoomFullscreen>

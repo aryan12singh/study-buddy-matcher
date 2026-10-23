@@ -4,12 +4,20 @@ import { useResource } from '../../shared/api/useResource'
 import StatePanel from '../../shared/components/StatePanel'
 import PixelIcon from '../../shared/components/PixelIcon'
 
-export default function StudyRoomGroupsPanel() {
+export default function StudyRoomGroupsPanel({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const groups = useResource('study-room-groups', getMyGroups)
   const orderedGroups = groups.data && [...groups.data.filter(group => group.active), ...groups.data.filter(group => !group.active)]
 
   return (
-    <aside className="study-corner-groups study-corner-panel" aria-labelledby="study-corner-groups-heading">
+    <aside className={`study-corner-groups study-corner-panel${collapsed ? ' is-collapsed' : ''}`}
+      aria-labelledby={collapsed ? undefined : 'study-corner-groups-heading'} aria-label={collapsed ? 'Your study groups' : undefined}>
+      {/* One button for both states keeps keyboard focus in place when the list folds away or returns. */}
+      <button type="button" className="study-corner-groups-toggle" aria-expanded={!collapsed} aria-controls="study-corner-groups-content"
+        aria-label={collapsed ? 'Show study groups' : 'Hide study groups'} title={collapsed ? 'Show study groups' : 'Hide study groups'} onClick={onToggle}>
+        <span aria-hidden="true">{collapsed ? '‹' : '›'}</span>
+        {collapsed && <span className="study-corner-groups-toggle-label" aria-hidden="true">Study groups</span>}
+      </button>
+      {!collapsed && <div id="study-corner-groups-content" className="study-corner-groups-content">
       <div className="study-corner-groups-heading">
         <span className="pomodoro-kicker"><PixelIcon kind="groups" />Better together</span>
         <div><h2 id="study-corner-groups-heading">Your study groups</h2>{groups.data && <span className="study-corner-group-count">{groups.data.length}</span>}</div>
@@ -32,6 +40,7 @@ export default function StudyRoomGroupsPanel() {
         ))}
       </div>
       <Link className="retro-button study-corner-browse" to="/groups">Browse study groups <span aria-hidden="true">→</span></Link>
+      </div>}
     </aside>
   )
 }
