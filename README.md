@@ -430,11 +430,20 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.study-plan.max-upload-size` | `10MB` | Largest study material upload; larger files get 413. Spring's `spring.servlet.multipart` limits read this value. Base64 makes an attached PDF a third larger, which stays inside Gemini's inline request limit |
 | `app.ai.assistant.study-plan.max-topics-characters` | `4000` | Longest pasted topics text |
 | `app.ai.assistant.study-plan.max-text-file-characters` | `100000` | Most text an uploaded `.txt` or `.md` file may hold (about 25,000 tokens), since its text goes into the prompt; more gets 413 |
+| `app.ai.assistant.study-plan.max-source-topics` | `40` | Most topics Gemini may list from the material |
+| `app.ai.assistant.study-plan.max-entries-per-block` | `5` | Most entries in one week or meeting of a roadmap |
+| `app.ai.assistant.study-plan.max-tasks-per-entry` | `5` | Most tasks in one roadmap entry |
 
 Study material is a PDF, `.txt` or `.md` file, or pasted topics, never both. The type is checked
 from the contents as well as the extension: a `.pdf` must start with the PDF signature and a text
 file must be UTF-8, otherwise 415. A PDF is attached to the Gemini request; text goes into the
 prompt. Neither is stored.
+
+The roadmap prompt (`prompts/study-plan-v1.txt`) states these limits and the time each week or
+meeting can hold. Gemini's reply is then checked against them: every week or meeting has at
+least one entry, no entry falls outside the plan, a block's minutes fit its limit and every text
+fits its column. Any other reply is rejected with `AI_UNAVAILABLE`. These checks bound the
+shape and size of a roadmap; they do not prove its advice is good.
 
 </details>
 

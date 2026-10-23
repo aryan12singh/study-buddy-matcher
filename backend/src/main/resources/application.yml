@@ -153,6 +153,10 @@ app:
         max-topics-characters: 4000
         # About 25,000 tokens of notes, well inside the free tier's tokens-per-minute limit.
         max-text-file-characters: 100000
+        # Roadmap size limits, stated in the prompt and checked again on Gemini's reply.
+        max-source-topics: 40
+        max-entries-per-block: 5
+        max-tasks-per-entry: 5
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

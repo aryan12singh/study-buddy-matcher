@@ -19,7 +19,7 @@ class StudyMaterialReaderTest {
     private static final byte[] PDF = "%PDF-1.7\nlecture notes".getBytes(StandardCharsets.US_ASCII);
 
     private final StudyMaterialReader reader =
-            new StudyMaterialReader(new StudyPlanProperties(DataSize.ofBytes(100), 20, 30));
+            new StudyMaterialReader(new StudyPlanProperties(DataSize.ofBytes(100), 20, 30, 40, 5, 5));
 
     private static MockMultipartFile upload(String filename, byte[] content) {
         return new MockMultipartFile("file", filename, "application/octet-stream", content);
