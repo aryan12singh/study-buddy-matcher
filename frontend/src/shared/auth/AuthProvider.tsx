@@ -64,8 +64,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   async function authenticate(path: string, input: unknown) {
     await pendingLogout.current
     const response = await api.post<AuthResponse>(path, input)
-    refreshResources(true)
+    // Store the token before announcing the change, so every refetch it triggers is authenticated
     setAccessToken(response.data.token)
+    refreshResources(true)
     setAccount(response.data.account)
     setError(undefined)
     setLoading(false)
