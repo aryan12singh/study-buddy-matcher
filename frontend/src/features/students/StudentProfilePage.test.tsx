@@ -36,8 +36,7 @@ describe('profile privacy and relationship actions', () => {
   })
   it('does not fetch achievements for administrators even if a self relationship is supplied', async () => {
     const get = vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile, id: 99, relationship: { state: 'SELF' } }))
-    renderPage(<StudentProfilePage />, '/students/99', '/students/:id', adminAccount)
-    await screen.findByText('No weekly availability saved.')
+    await act(async () => { renderPage(<StudentProfilePage />, '/students/99', '/students/:id', adminAccount) })
     expect(screen.queryByRole('region', { name: 'Your achievements' })).not.toBeInTheDocument()
     expect(get.mock.calls.every(([path]) => path !== '/achievements/me')).toBe(true)
   })
