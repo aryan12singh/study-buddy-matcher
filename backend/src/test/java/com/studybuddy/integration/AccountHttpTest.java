@@ -159,6 +159,9 @@ class AccountHttpTest extends PostgresHttpTest {
         assertEquals(0, count("select count(*) from connections where ended_at is null"));
         assertEquals(0, count("select count(*) from match_requests where status='PENDING'"));
         assertEquals(0, count("select count(*) from group_join_requests where status='PENDING'"));
+        // The leader never answered, so the history records a withdrawal rather than a rejection.
+        assertEquals("WITHDRAWN", database.queryForObject("select status from group_join_requests where study_group_id=?", String.class, ownPending));
+        assertEquals(1, count("select count(*) from notifications where type='GROUP_JOIN_REQUEST_WITHDRAWN'"));
         // Leaves the open group but stays the leader-member of the group it led, which is now closed history.
         assertEquals(0, count("select count(*) from group_memberships where study_group_id=? and student_id=?", other, target));
         assertEquals(1, count("select count(*) from group_memberships where study_group_id=? and student_id=?", led, target));

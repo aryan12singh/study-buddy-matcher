@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { closeGroup, decideApplication, getApplicants, getGroup, removeMember } from './api'
-import type { GroupMember } from './api'
+import type { GroupApplication, GroupMember } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
 import { formatTimestamp } from '../../shared/api/types'
@@ -15,31 +15,55 @@ import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import PersonCard from '../../shared/components/PersonCard'
 import CopyButton from '../../shared/components/CopyButton'
 import CapacityMeter from '../../shared/components/CapacityMeter'
+import { useAuth } from '../../shared/auth/useAuth'
 
 export default function GroupManagePage() {
+  const { id } = useParams()
+  const { account } = useAuth()
+  return <GroupManageContent key={`${account?.role}:${account?.id}:${id}`} enabled={account?.role === 'STUDENT'} />
+}
+
+function GroupManageContent({ enabled }: { enabled: boolean }) {
   const { id } = useParams(),
     groupId = Number(id),
     validId = Number.isSafeInteger(groupId) && groupId > 0
-  const resource = useResource(`manage-group-${id}`, signal => getGroup(groupId, signal), validId)
+  const resource = useResource(`manage-group-${id}`, signal => getGroup(groupId, signal), validId && enabled)
   const group = resource.data
   const applicants = useResource(`group-applicants-${id}`, signal => getApplicants(groupId, signal), Boolean(group?.viewer.leader))
   const [tab, setTab] = useState<'applicants' | 'members'>('applicants'),
     [removing, setRemoving] = useState<GroupMember | null>(null),
-    [closing, setClosing] = useState(false)
+    [closing, setClosing] = useState(false),
+    [rejecting, setRejecting] = useState<GroupApplication | null>(null)
   const action = useAction()
+  const confirmationCurrent = Boolean(group?.viewer.leader && group.active && (rejecting
+    ? applicants.data?.some(application => application.id === rejecting.id && application.status === 'PENDING')
+    : removing ? group.members.some(member => member.studentId === removing.studentId && member.joinedAt === removing.joinedAt)
+      : closing))
+
+  if ((removing || closing || rejecting) && !confirmationCurrent) {
+    setRemoving(null)
+    setClosing(false)
+    setRejecting(null)
+  }
+
+  function dismissConfirmation() {
+    setRemoving(null)
+    setClosing(false)
+    setRejecting(null)
+  }
 
   async function confirm() {
-    const result = await action.run(
-      async () => {
-        if (removing) await removeMember(groupId, removing.studentId); else await closeGroup(groupId)
-      },
-      removing ? 'Member removed.' : 'Study group closed.',
-      true
-    )
-    if (result.ok) {
-      setRemoving(null)
-      setClosing(false)
-    }
+    if (!confirmationCurrent) return
+    const result = rejecting
+      ? await action.run(() => decideApplication(groupId, rejecting.id, 'reject'), 'Application rejected.')
+      : await action.run(
+        async () => {
+          if (removing) await removeMember(groupId, removing.studentId); else await closeGroup(groupId)
+        },
+        removing ? 'Member removed.' : 'Study group closed.',
+        true
+      )
+    if (result.ok) dismissConfirmation()
   }
   return (
     <WindowPage
@@ -81,7 +105,7 @@ export default function GroupManagePage() {
           {!group.active && (
             <p className="muted">This group is closed. Membership decisions and edits are no longer available.</p>
           )}
-          <ActionNotice error={removing || closing ? undefined : action.error} success={action.success} />
+          <ActionNotice error={removing || closing || rejecting ? undefined : action.error} success={action.success} />
           <TabBar
             value={tab}
             label="Group management views"
@@ -120,7 +144,7 @@ export default function GroupManagePage() {
                         </Button>
                         <Button
                           disabled={action.pending}
-                          onClick={() => action.run(() => decideApplication(groupId, application.id, 'reject'), 'Application rejected.')}
+                          onClick={() => { action.clear(); setRejecting(application) }}
                         >Reject application</Button>
                       </>
                     )}
@@ -166,19 +190,18 @@ export default function GroupManagePage() {
           )}
         </>
       )}
-      {(removing || closing) && (
+      {(removing || closing || rejecting) && confirmationCurrent && (
         <ConfirmDialog
-          title={removing ? `Remove ${removing.name}?` : 'Close this study group?'}
-          confirmLabel={removing ? 'Remove member' : 'Close group'}
+          title={rejecting ? `Reject ${rejecting.studentName}'s application?` : removing ? `Remove ${removing.name}?` : 'Close this study group?'}
+          confirmLabel={rejecting ? 'Reject application' : removing ? 'Remove member' : 'Close group'}
           pending={action.pending}
           error={action.error}
-          onClose={() => {
-            setRemoving(null)
-            setClosing(false)
-          }}
+          onClose={dismissConfirmation}
           onConfirm={confirm}
         >
-          {removing ? (
+          {rejecting ? (
+            <p>This answer is final and {rejecting.studentName} will be notified. They may apply again later while the group has space.</p>
+          ) : removing ? (
             <p>This removes {removing.name} from the group and notifies them. Their buddy connections remain separate.</p>
           ) : (
             <>

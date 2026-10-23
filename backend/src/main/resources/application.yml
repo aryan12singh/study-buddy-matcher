@@ -7,9 +7,16 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+  servlet:
+    multipart:
+      # Study plan uploads; both follow the assistant's own limit so they cannot drift apart.
+      max-file-size: ${app.ai.assistant.study-plan.max-upload-size}
+      max-request-size: ${app.ai.assistant.study-plan.max-upload-size}
   jpa:
     hibernate:
-      ddl-auto: update
+      # The SQL migrations own the schema; Hibernate only checks the mappings against it.
+      # Run scripts/migrate-database.sh against every database, local ones included; do not override this.
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
@@ -49,9 +56,23 @@ app:
     secret: ${jwt.secret}
     token-lifetime: ${jwt.expiration-ms}ms
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+    # Wrong passwords in a row for one email before sign-in for it pauses for the lockout.
+    login-throttle:
+      max-failures: ${LOGIN_MAX_FAILURES:5}
+      lockout: ${LOGIN_LOCKOUT:15m}
   profile:
     group-size-max: ${PROFILE_GROUP_SIZE_MAX:5}
     max-courses: ${PROFILE_MAX_COURSES:8}
+  achievements:
+    # Weeks start on Monday in this zone when counting the study streak.
+    week-zone: Asia/Singapore
+    points-per-level: 3
+    connections: { bronze: 1, silver: 3, gold: 5 }
+    requests-sent: { bronze: 1, silver: 5, gold: 10 }
+    groups-joined: { bronze: 1, silver: 2, gold: 3 }
+    groups-led: { bronze: 1, silver: 2, gold: 3 }
+    sessions-planned: { bronze: 1, silver: 5, gold: 10 }
+    streak-weeks: { bronze: 2, silver: 4, gold: 8 }
   matching:
     default-strategy: BALANCED
     default-enabled-criteria: [COURSE, AVAILABILITY, STUDY_MODE, STUDY_GOAL, GROUP_SIZE]
@@ -108,8 +129,30 @@ app:
       max-characters: 600
       # Google's free tier allows 20 generate requests per day per project and model.
       daily-call-limit: 18
+      # So one student cannot use up the shared allowance; cached explanations do not count.
+      daily-call-limit-per-student: 5
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
+    assistant:
+      # Off unless application-local.yml sets enabled: true and api-key. Never put the key here.
+      # Use a key from a different Google project than E1's, so the two do not share a quota.
+      enabled: false
+      base-url: https://generativelanguage.googleapis.com/v1beta
+      model: gemini-3.5-flash
+      # Reading a PDF and writing a whole roadmap takes far longer than E1's one sentence.
+      timeout: 30s
+      max-output-tokens: 4000
+      # Google's free tier allows 20 generate requests per day per project and model.
+      daily-call-limit: 18
+      daily-call-limit-per-student: 5
+      quota-zone: Asia/Singapore
+      rate-limit-cooldown: 60s
+      study-plan:
+        # Base64 makes an attached PDF a third larger, so 10MB stays inside Gemini's inline limit.
+        max-upload-size: 10MB
+        max-topics-characters: 4000
+        # About 25,000 tokens of notes, well inside the free tier's tokens-per-minute limit.
+        max-text-file-characters: 100000
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}

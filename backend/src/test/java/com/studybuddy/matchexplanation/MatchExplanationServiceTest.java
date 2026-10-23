@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -37,7 +38,7 @@ class MatchExplanationServiceTest {
 
     private MatchExplanationService service(boolean ready) {
         AiExplanationProperties properties = new AiExplanationProperties(ready, "http://localhost", "test-model",
-                ready ? "key" : null, Duration.ofSeconds(1), 200, 600, 10, "UTC", Duration.ofSeconds(60));
+                ready ? "key" : null, Duration.ofSeconds(1), 200, 600, 10, 10, "UTC", Duration.ofSeconds(60));
         return new MatchExplanationService(matches, new ExplanationEvidenceFactory(), writer,
                 new MatchExplanationAssembler(), properties);
     }
@@ -45,7 +46,7 @@ class MatchExplanationServiceTest {
     @BeforeEach
     void setUp() {
         when(matches.evaluate(SEARCH, ME, PEER)).thenReturn(ExplanationFixtures.evaluation());
-        when(writer.write(any())).thenReturn(Optional.of("You both take IS442."));
+        when(writer.write(any(), eq(ME))).thenReturn(Optional.of("You both take IS442."));
     }
 
     @Test
@@ -64,7 +65,7 @@ class MatchExplanationServiceTest {
 
     @Test
     void noAiWordingFallsBackToTheStandardText() {
-        when(writer.write(any())).thenReturn(Optional.empty());
+        when(writer.write(any(), eq(ME))).thenReturn(Optional.empty());
 
         assertEquals(new MatchExplanationDto(PEER, EVALUATION_ID, STANDARD_TEXT, ExplanationSource.STANDARD),
                 service(true).explain(SEARCH, ME, PEER, EVALUATION_ID));

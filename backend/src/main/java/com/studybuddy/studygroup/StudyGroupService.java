@@ -111,7 +111,6 @@ public class StudyGroupService {
     }
 
     public void removeMember(Long id, Long actorId, Long memberId) {
-        access.beginWrite();
         InputRules.positiveId(memberId, "Member");
         access.lockStudents(actorId, actorId, memberId);
         StudyGroup group = lookup.findGroupLedByForUpdate(id, actorId);
@@ -126,6 +125,29 @@ public class StudyGroupService {
         memberships.delete(membership);
         notifications.notify(membership.getStudent(), NotificationType.GROUP_MEMBER_REMOVED, "You were removed from " + group.getName(),
             NotificationResourceType.GROUP, id, "membership:" + membership.getId() + ":removed");
+    }
+
+    /**
+     * Lets a member leave an open group. The leader closes the group instead, and a closed
+     * group keeps its members as history.
+     */
+    public void leave(Long id, Long actorId) {
+        access.beginWrite();
+        var student = access.requireStudent(actorId);
+        access.lockAccounts(actorId, actorId, lookup.leaderId(id));
+        StudyGroup group = lookup.findGroupForUpdate(id);
+        if (group.isLeader(actorId)) {
+            throw new StudyGroupActionNotAllowedException("A leader cannot leave their own group; close it instead");
+        }
+        if (!group.isActive()) {
+            throw new StudyGroupActionNotAllowedException("A closed group cannot be changed");
+        }
+        var membership = memberships.findByStudyGroupIdAndStudentId(id, actorId)
+            .orElseThrow(() -> new StudyGroupActionNotAllowedException("You are not a member of this group"));
+        roomLifecycle.revokeMember(id, actorId);
+        memberships.delete(membership);
+        notifications.notify(group.getLeader(), NotificationType.GROUP_MEMBER_LEFT, student.getName() + " left " + group.getName(),
+            NotificationResourceType.GROUP, id, "membership:" + membership.getId() + ":left");
     }
 
     private StudyGroup forLeaderMutation(Long id, Long actorId) {

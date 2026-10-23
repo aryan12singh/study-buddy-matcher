@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({AuthProperties.class, LoginThrottleProperties.class})
 public class SecurityConfiguration {
     @Bean
     FilterRegistrationBean<JwtAuthenticationFilter> disableDuplicateFilterRegistration(JwtAuthenticationFilter filter) {
@@ -39,7 +39,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/auth/me").authenticated()
+                .requestMatchers("/api/auth/me", "/api/auth/logout").authenticated()
                 .requestMatchers("/api/**").hasRole("STUDENT")
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors.authenticationEntryPoint(problems).accessDeniedHandler(problems))

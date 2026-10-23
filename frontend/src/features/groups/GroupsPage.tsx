@@ -123,7 +123,7 @@ export default function GroupsPage() {
             emptyTitle="No group applications yet"
             emptyMessage="Browse groups and ask to join one that fits your goals."
             emptyKind="groups"
-            emptyAction={<Button onClick={() => updateSearch('view', '', false)}>Browse study groups</Button>}
+            emptyAction={<><Button onClick={() => updateSearch('view', '', false)}>Browse study groups</Button><Link to="/help#help-groups">How group applications work</Link></>}
           />
           <div className="data-list">
             {applications.data?.map(application => (
@@ -163,7 +163,7 @@ export default function GroupsPage() {
               :
               'Try changing the filters, or create a group for your course.'}
             emptyKind="groups"
-            emptyAction={tab === 'mine' ? <Button onClick={() => updateSearch('view', '', false)}>Browse study groups</Button> : filters.length ? <Button onClick={clearFilters}>Show all groups</Button> : <Link className="retro-button primary" to="/groups/new">Start a study group</Link>}
+            emptyAction={<>{tab === 'mine' ? <Button onClick={() => updateSearch('view', '', false)}>Browse study groups</Button> : filters.length ? <Button onClick={clearFilters}>Show all groups</Button> : <Link className="retro-button primary" to="/groups/new">Start a study group</Link>}<Link to="/help#help-groups">How groups, rooms and sessions connect</Link></>}
           />
           <div className="data-list">{openGroups?.map(group => <GroupCard key={group.id} group={group} />)}</div>
           {closedGroups.length > 0 && (

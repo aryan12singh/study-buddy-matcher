@@ -23,7 +23,7 @@
 | <img src="docs/assets/icons/match.svg" width="20" height="20" alt="" /> [Features](#features) | <img src="docs/assets/icons/setup.svg" width="20" height="20" alt="" /> [Getting started](#getting-started) | <img src="docs/assets/icons/layers.svg" width="20" height="20" alt="" /> [Architecture](#architecture) |
 | <img src="docs/assets/icons/group.svg" width="20" height="20" alt="" /> [Matching engine](#matching-engine) | <img src="docs/assets/icons/room.svg" width="20" height="20" alt="" /> [Collaborative study](#collaborative-study) | <img src="docs/assets/icons/connection.svg" width="20" height="20" alt="" /> [Privacy and relationships](#privacy-and-relationships) |
 | <img src="docs/assets/icons/sliders.svg" width="20" height="20" alt="" /> [Configuration](#configuration) | <img src="docs/assets/icons/check.svg" width="20" height="20" alt="" /> [Testing](#testing) | <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Documentation](#documentation) |
-| <img src="docs/assets/icons/package.svg" width="20" height="20" alt="" /> [Libraries and assets](#libraries-and-assets) | <img src="docs/assets/icons/team.svg" width="20" height="20" alt="" /> [Team and workflow](#team-and-workflow) | |
+| <img src="docs/assets/icons/package.svg" width="20" height="20" alt="" /> [Libraries and assets](#libraries-and-assets) | <img src="docs/assets/icons/team.svg" width="20" height="20" alt="" /> [Team and workflow](#team-and-workflow) | <img src="docs/assets/icons/calendar.svg" width="20" height="20" alt="" /> [Known limitations and future work](#known-limitations-and-future-work) |
 
 ---
 
@@ -37,6 +37,7 @@
 | <img src="docs/assets/icons/room.svg" width="28" height="28" alt="" /> | **Collaborative study** | Private group rooms with a shared Pomodoro timer, original layered audio and live campus weather scenes |
 | <img src="docs/assets/icons/calendar.svg" width="28" height="28" alt="" /> | **Study sessions** | One-off or weekly group and buddy sessions with mutual-availability suggestions and calendar (`.ics`) export |
 | <img src="docs/assets/icons/bell.svg" width="28" height="28" alt="" /> | **Notifications** | Recipient-scoped updates for requests, groups, membership and sessions |
+| <img src="docs/assets/icons/docs.svg" width="28" height="28" alt="" /> | **Help and getting started** | A current-data next action, profile-to-session guide, contextual topic links and searchable answers about matching, AI, privacy, groups and rooms |
 | <img src="docs/assets/icons/admin.svg" width="28" height="28" alt="" /> | **Administration** | Create and edit accounts, view usage, deactivate, reactivate or delete accounts, and tune matching weights |
 
 ### Roles
@@ -116,8 +117,10 @@ backend datasource, then apply the ordered migrations:
 scripts/migrate-database.sh
 ```
 
-Hibernate does not create the migration constraints, indexes or row-level security, so always
-migrate first. For the shared database, follow the
+The migrations own the schema. The backend runs with `ddl-auto: validate`, so it never
+changes the database and refuses to start if a mapped table or column is missing. Validation
+does not check constraints, indexes or row-level security, so always apply every migration
+first. For the shared database, follow the
 [deployment and recovery record](docs/DATABASE_OPERATIONS.md) and never reset it for tests.
 
 ### 4. Run
@@ -287,9 +290,36 @@ bounded weekly sessions with a timezone, agenda, location and room link. Suggest
 chosen duration into everyone's shared availability, and manual times are always allowed.
 Upcoming sessions appear on Home and in group agendas.
 
+**Achievements.** Students can open their private badge page or its compact summary on their own
+profile. Six original medallions and a pixel grove reflect existing connection, request, group and
+planned-session records. Tiers and levels are current standings and may decrease when eligible
+records change; sent requests and created groups remain counted while retained, including closed
+groups for Founder. The grove counts consecutive planned-session weeks in the configured zone,
+including a session later this week, rather than attendance or completed focus. New memberships
+and buddy connections do not inherit earlier occurrences. Each badge links to an existing next
+action, and all Gold caps the level. See the [metric contract](docs/API_CONTRACT.md#achievementsdto)
+and [verification guide](docs/ACHIEVEMENTS_TESTING.md).
+
 **Calendar export.** Each session downloads as a private `.ics` snapshot with correct timezone
 and daylight-saving handling. Snapshots do not sync, so re-export after changes. Calendar
 compatibility and evidence are in [E2 verification](docs/E2_TESTING.md).
+
+---
+
+## Help and getting started
+
+Students can open **Help** (`/help`) from navigation, Home or an empty matching, connection,
+group or session view. One recommended next action follows the existing profile setup checks,
+then current requests, dated sessions and accepted group or buddy relationships. Guide links
+remain usable when a check fails, and only failed sources are retried.
+
+Five checks describe current saved records: courses/study mode, availability, a pending sent
+request or active connection, an open group membership, and an ongoing/upcoming session.
+Loading, failed and untracked states have explicit labels. Search history, room visits,
+calendar downloads and attendance are not inferred from other activity. Group room links
+open a preview and require an explicit join. The guide also explains deterministic scores,
+optional AI wording and its privacy/accuracy limits, scheduling permissions and calendar
+snapshots. See [Help verification](docs/HELP_TESTING.md) for scope and repeatable checks.
 
 ---
 
@@ -327,8 +357,14 @@ or the property in `application-local.yml`.
 | `JWT_EXPIRATION_MS` / `jwt.expiration-ms` | `86400000` (24 hours) | Token lifetime |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
 | `app.auth.secret`, `app.auth.token-lifetime`, `app.auth.allowed-origins` | Bound from the three keys above | Typed authentication settings (`AuthProperties`) |
+| `LOGIN_MAX_FAILURES` / `app.auth.login-throttle.max-failures` | `5` | Wrong passwords in a row for one email before its sign-in pauses |
+| `LOGIN_LOCKOUT` / `app.auth.login-throttle.lockout` | `15m` | How long sign-in for that email is refused, counted from its last unsuccessful attempt. Kept in memory, so a restart clears it |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (minimum `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list |
+| `app.achievements.week-zone` | `Asia/Singapore` | Zone whose Monday starts each planned-session week; later this week counts, future weeks wait |
+| `app.achievements.points-per-level` | `3` | Positive badge points per level; only the highest tier counts (bronze 1, silver 2, gold 3); the attainable final step caps at all Gold |
+| `app.achievements.connections` / `requests-sent` / `groups-joined` / `groups-led` | `1/3/5`, `1/5/10`, `1/2/3`, `1/2/3` | Bronze/silver/gold counts for the Connector, First Move, Team Player and Founder badges |
+| `app.achievements.sessions-planned` / `streak-weeks` | `1/5/10`, `2/4/8` | Bronze/silver/gold counts for the Planner and Grove Keeper badges |
 
 </details>
 
@@ -367,6 +403,7 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
 | `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |
 | `app.ai.explanation.daily-call-limit` | `18` | Gemini calls per day before falling back; just under the free tier's 20 requests per day per project and model (checked 18 Oct). In memory and resets at Singapore midnight, while Google's limit resets on Pacific time, so they can drift apart. Usage is visible at https://ai.dev/rate-limit |
+| `app.ai.explanation.daily-call-limit-per-student` | `5` | Gemini calls one student can trigger per day, so one student cannot use up the shared allowance. Cached explanations cost nothing. In memory, resetting at Singapore midnight with the shared limit |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
 | `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
 
@@ -375,6 +412,34 @@ from the exact card evaluation ID. Two evaluations may reuse equivalent wording 
 has passed the freshness check. Cache hits are revalidated against current evidence and the
 length policy; rejected cached text falls back without a provider call. Simultaneous misses
 may each call Gemini; unique insertion prevents duplicate rows, not duplicate provider calls.
+
+</details>
+
+<details>
+<summary><strong>AI study assistant</strong></summary>
+
+<br />
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `app.ai.assistant.enabled` | `false` | Turns on the assistant's Gemini calls; also needs `api-key`. Off means every AI action returns 503 `AI_UNAVAILABLE` and the screen offers the manual path |
+| `app.ai.assistant.api-key` | none; set only in `application-local.yml` | Gemini API key from a different Google project than E1's, so the two features do not share a quota. Never committed, logged or sent to the browser |
+| `app.ai.assistant.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
+| `app.ai.assistant.model` | `gemini-3.5-flash` | Gemini model ID, the same as E1 |
+| `app.ai.assistant.timeout` | `30s` | Connect timeout and read timeout, each. Longer than E1's because reading a PDF and writing a roadmap takes far longer than one sentence |
+| `app.ai.assistant.max-output-tokens` | `4000` | Upper bound on Gemini's reply length |
+| `app.ai.assistant.daily-call-limit` | `18` | Assistant calls per day before returning `AI_UNAVAILABLE`; just under the free tier's 20 requests per day per project and model. In memory and resets at midnight in `quota-zone` |
+| `app.ai.assistant.daily-call-limit-per-student` | `5` | Assistant calls one student can trigger per day, so one student cannot use up the shared allowance |
+| `app.ai.assistant.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limits |
+| `app.ai.assistant.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further assistant calls are made for this long |
+| `app.ai.assistant.study-plan.max-upload-size` | `10MB` | Largest study material upload; larger files get 413. Spring's `spring.servlet.multipart` limits read this value. Base64 makes an attached PDF a third larger, which stays inside Gemini's inline request limit |
+| `app.ai.assistant.study-plan.max-topics-characters` | `4000` | Longest pasted topics text |
+| `app.ai.assistant.study-plan.max-text-file-characters` | `100000` | Most text an uploaded `.txt` or `.md` file may hold (about 25,000 tokens), since its text goes into the prompt; more gets 413 |
+
+Study material is a PDF, `.txt` or `.md` file, or pasted topics, never both. The type is checked
+from the contents as well as the extension: a `.pdf` must start with the PDF signature and a text
+file must be UTF-8, otherwise 415. A PDF is attached to the Gemini request; text goes into the
+prompt. Neither is stored.
 
 </details>
 
@@ -455,6 +520,50 @@ cd backend
 Dated results and regression evidence are recorded in
 [baseline verification](docs/BASELINE_VERIFICATION.md) and [E2 verification](docs/E2_TESTING.md).
 
+
+---
+
+## Known limitations and future work
+
+Deliberate boundaries of the current build, each with the owner who would extend it and how the
+design already allows it.
+
+**Buddy requests and study groups (Team C)**
+
+| Limitation | Current behaviour | Planned approach |
+| --- | --- | --- |
+| Leader transfer and reopening a group | A leader can only close a group, and closing is final | Handover and reopen transitions on `StudyGroup` |
+| Re-request cooldown | A declined sender may ask again at once | A configurable cooldown checked by `MatchRequestService` |
+| Group course changes and full groups | A leader can change the course after members join; applications to a full group stay pending | Lock the course once members join; reject or notify leftover applicants |
+
+**Matching (Team A)**
+
+| Enhancement | Why not now | How the design extends |
+| --- | --- | --- |
+| Preferred learning style | Named in the brief's objective, but no taxonomy is defined | One new `CriterionScorer`, one `MatchingCriterion` value and one weight; existing scorers are unchanged |
+| Related courses (equivalent, corequisite) | The brief defines a course match as the same course | Admin-curated `CourseRelation(courseA, courseB, type)` that the course scorer and filter read |
+| Completed courses and mentoring | Profiles record courses currently taken | A separate completed-courses list and an opt-in "can mentor" search, kept apart from peer matching |
+| Required ("dealbreaker") criteria | Admins can only enable, disable and weight criteria | Each criterion becomes off, weighted or required; required ones act as filters |
+| Admin ranking preview | Weight changes are visible only after saving | Run a sample search with the unsaved weights |
+
+**Accounts and operations (Team B, admin parts Team C)**
+
+| Enhancement | Notes |
+| --- | --- |
+| Change, forgot and admin-reset password; self-service deactivation or deletion | Reuse `User.revokeTokens()` so other sessions end, and the existing admin lifecycle services |
+| Admin role changes and moderation of groups and requests | The brief limits the admin to accounts and matching |
+| Upper bounds for year of study and group capacity | Only lower bounds are enforced today; add configured maximums |
+| Course catalogue as a migration | A fresh install has no courses unless the opt-in demo seed runs |
+| Shared state across several backend instances | Sign-in throttling, the AI allowance and the weather cache live in memory, which suits one instance |
+
+**Notifications (Team C)**
+
+| Enhancement | Notes |
+| --- | --- |
+| Real-time delivery | Pages poll about every 30 seconds; server-sent events or WebSocket later |
+| Email, SMS and reminders | Deferred in [design decisions](docs/DESIGN_DECISIONS.md) |
+| Pagination | Notifications, groups and admin users return full lists, which suits the demo cohort |
+
 ---
 
 ## Documentation
@@ -467,7 +576,13 @@ Dated results and regression evidence are recorded in
 | [Baseline verification](docs/BASELINE_VERIFICATION.md) | Repeatable checks and delivery evidence |
 | [Database operations](docs/DATABASE_OPERATIONS.md) | Migrations, seeding, access and recovery |
 | [Matching engine changes](docs/MATCHING_ENGINE_CHANGES.md) | Matching fixes and the decisions behind them |
+| [Team A testing guide](docs/TEAM_A_TESTING.md) | Matching algorithm, API, matching page and admin configuration checks |
+| [Team C verification](docs/TEAM_C_TESTING.md) | Requests, connections, groups, notifications and admin account checks |
+| [E1 verification](docs/E1_TESTING.md) | AI match explanation checks and acceptance |
+| [E2 scope](docs/E2_SCOPE.md) | What E2 delivered and its boundaries |
+| [Achievements verification](docs/ACHIEVEMENTS_TESTING.md) | Private current standings, planned-week metrics, owner-summary privacy and regression checks |
 | [E2 verification](docs/E2_TESTING.md) | Room, session, audio, weather and calendar checks |
+| [Help verification](docs/HELP_TESTING.md) | Current-state onboarding, next-action priority, contextual links, permissions and responsive keyboard checks |
 | [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
 | [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |
@@ -526,6 +641,7 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 | Logo and favicon (`frontend/public/favicon.svg`) | Original pixel-book SVG |
 | README icons (`docs/assets/icons/`) | Original pixel SVGs in the logo palette |
 | Interface icons, avatar initials and patterns | Original drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css` |
+| Achievement medallions and grove | Original SVG medallions and pixel-tree patterns in `features/achievements/`; no external image or icon dependency |
 | Study room scenery and audio | Original CSS pixel scenes, including the personal timer's meadow backdrop, and native Web Audio synthesis; no sound files |
 | Weather data | Open-Meteo, with CC BY 4.0 attribution on the room screen; only the configured campus coordinates are sent |
 | Fonts | Tahoma, Verdana and system fonts; `index.css` also imports Inter and Fraunces from Google Fonts under SIL OFL 1.1 ([Inter](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt), [Fraunces](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)), falling back to system fonts offline |

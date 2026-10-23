@@ -54,7 +54,14 @@ INSERT INTO study_sessions(id,study_group_id,created_by,title,start_local,end_lo
  '2026-10-01 01:15+00','2026-10-01 01:15+00');
 INSERT INTO notifications(created_at,message,read,type,recipient_id,resource_type,resource_id,event_key) VALUES
  ('2026-10-01 01:15+00','Retained cancellation',false,'MATCH_REQUEST_CANCELLED',10,'MATCH_REQUEST',40,'fixture:cancelled'),
- ('2026-10-01 01:15+00','Retained session event',false,'GROUP_SESSION_CREATED',11,'SESSION',91,'fixture:session');
+ ('2026-10-01 01:15+00','Retained session event',false,'GROUP_SESSION_CREATED',11,'SESSION',91,'fixture:session'),
+ ('2026-10-01 01:15+00','Retained member left',false,'GROUP_MEMBER_LEFT',10,'GROUP',20,'fixture:left'),
+ ('2026-10-01 01:15+00','Retained withdrawal',false,'GROUP_JOIN_REQUEST_WITHDRAWN',10,'GROUP',20,'fixture:withdrawn'),
+ ('2026-10-01 01:15+00','Legacy withdrawal recorded as rejected',false,'GROUP_JOIN_REQUEST_REJECTED',10,'GROUP',20,'group-request:93:withdrawn');
+-- A withdrawal recorded as REJECTED before WITHDRAWN existed is converted once; a real WITHDRAWN row is kept.
+INSERT INTO group_join_requests(id,created_at,responded_at,status,student_id,study_group_id) VALUES
+ (93,'2026-10-01 01:15+00','2026-10-01 01:15+00','REJECTED',11,20),
+ (94,'2026-10-01 01:15+00','2026-10-01 01:15+00','WITHDRAWN',11,20);
 -- Reproduce a database that previously ran both Hibernate update and the old migration.
 -- Replay must remove its legacy duplicate without deleting the retained cache row.
 ALTER TABLE match_explanations ADD CONSTRAINT uk37l18h6kex7l6fcxxjpv5g7jq UNIQUE (evidence_hash);
@@ -67,7 +74,11 @@ DO $$ BEGIN
    AND NOT music_playing AND ambient_preset='RAIN' AND ambient_playing)
   OR NOT EXISTS(SELECT 1 FROM study_sessions WHERE id=91 AND title='Retained weekly session'
    AND occurrence_count=2 AND calendar_uid IS NOT NULL)
-  OR (SELECT count(*) FROM notifications WHERE event_key IN ('fixture:cancelled','fixture:session')) <> 2
+  OR (SELECT count(*) FROM notifications WHERE event_key IN ('fixture:cancelled','fixture:session','fixture:left','fixture:withdrawn')) <> 4
+  OR (SELECT status FROM group_join_requests WHERE id=93) <> 'WITHDRAWN'
+  OR (SELECT status FROM group_join_requests WHERE id=94) <> 'WITHDRAWN'
+  OR (SELECT type FROM notifications WHERE event_key='group-request:93:withdrawn') <> 'GROUP_JOIN_REQUEST_WITHDRAWN'
+  OR NOT (SELECT convalidated FROM pg_constraint WHERE conrelid='group_join_requests'::regclass AND conname='group_join_requests_status_check')
   OR NOT (SELECT convalidated FROM pg_constraint WHERE conrelid='notifications'::regclass AND conname='notifications_type_check') THEN
    RAISE EXCEPTION 'Populated repeat changed audio/session/event data or left the final enum unvalidated';
  END IF;

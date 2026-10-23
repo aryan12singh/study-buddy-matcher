@@ -177,7 +177,8 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Requirement | Backend | Screen | Tests |
 | --- | --- | --- | --- |
 | Send a request with an optional message and course/goal context | `MatchRequestService`, `MatchRequestContext` | `students/StudentProfilePage`, `connections/SendRequestDialog` | `BuddyHttpTest`, `MatchRequestServiceTest` |
-| Only the recipient can accept or decline a pending request | `MatchRequestService`, `MatchRequest` state transitions | `connections/ConnectionsPage` (Incoming) | `BuddyHttpTest`, `MatchRequestTest` |
+| Only the recipient can accept or decline a pending request; decline confirms first | `MatchRequestService`, `MatchRequest` state transitions | `connections/ConnectionsPage` (Incoming), `students/StudentProfilePage` | `BuddyHttpTest`, `MatchRequestTest`, `ConnectionsPage.test` |
+| Extra beyond the brief: the sender withdraws a pending request, freeing the pair | `MatchRequestService.cancel`, `MatchRequest.cancel` | `connections/ConnectionsPage` (Outgoing), `students/StudentProfilePage` | `LifecycleHttpTest`, `ConnectionsPage.test` |
 | Reject self, duplicate, reverse-duplicate and already-connected requests | `MatchRequestService`, partial unique index | Inline error on send | `BuddyHttpTest`, `MatchRequestServiceTest` |
 | Accepting creates exactly one connection; declining creates none | `MatchRequestService`, `Connection` | `connections/ConnectionsPage` | `BuddyHttpTest` |
 | Either student can end a connection; history is kept | `ConnectionService` | Disconnect on profile and connections list | `BuddyHttpTest`, `ConnectionServiceTest` |
@@ -201,7 +202,8 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Create a course-specific group with goals, mode, capacity and weekly schedule | `StudyGroupService`, `StudyGroup`, `GroupAvailabilitySlot` | `groups/GroupFormPage`, `shared/components/WeeklySlotEditor` | `GroupHttpTest`, `StudyGroupServiceTest` |
 | Browse and filter groups; view own groups and applications | `StudyGroupService`, `StudyGroupFilter` | `groups/GroupsPage`, `groups/GroupCard` | `GroupHttpTest`, `StudyGroupFilterTest` |
 | View group details and agenda | `StudyGroupAssembler` | `groups/GroupDetailPage` | `GroupHttpTest` |
-| Apply to join; leader approves or rejects | `GroupJoinRequestService`, `GroupJoinRequest` | `groups/ApplyGroupDialog`, `groups/GroupManagePage` | `GroupHttpTest`, `GroupJoinRequestServiceTest` |
+| Apply to join; leader approves or rejects; reject confirms first | `GroupJoinRequestService`, `GroupJoinRequest` | `groups/ApplyGroupDialog`, `groups/GroupManagePage` | `GroupHttpTest`, `GroupJoinRequestServiceTest`, `Groups.test` |
+| Extra beyond the brief: applicant withdraws a pending application; member leaves an open group | `GroupJoinRequestService.withdraw`, `StudyGroupService.leave` | `groups/GroupDetailPage` | `LifecycleHttpTest`, `GroupJoinRequestTest`, `Groups.test` |
 | Leader counts as a member; capacity cannot be exceeded | `StudyGroup`, `GroupMembership`, group row lock | `shared/components/CapacityMeter` | `GroupHttpTest`, `StudyGroupTest` |
 | Leader edits the group and removes members | `StudyGroupService` | `groups/GroupFormPage`, `groups/GroupManagePage` | `GroupHttpTest` |
 | Leader closes the group; pending applications are rejected | `GroupClosure` | `groups/GroupManagePage` | `GroupHttpTest` |
@@ -292,6 +294,22 @@ relationship cannot still download the old calendar. Manual weather scenes are
 decoration, not forecasts. The recorded database rollout does not establish a persistent
 hosted backend/frontend or new calendar-client acceptance.
 
+## Help and getting started
+
+This student guide documents the merged workflows without adding a tracking API or changing
+the matching, relationship or room permission rules.
+
+| Behaviour | Implementation | Verification |
+| --- | --- | --- |
+| One next action from confirmed profile and current activity | `helpNextStep`; Home's `nextStep` and `profileProgress`; own profile, summary, groups and sessions endpoints | Priority/unknown/failure helper cases and rendered Help tests |
+| Honest current checks, separate loading/unavailable/untracked states | `startSteps`, `StartChecklist`; searches and room visits never inferred from request counts | Current-record, failed-source retry and expired/cancelled session cases |
+| Group-room and dated-session guide with safe private navigation | Only accepted memberships of open groups supply room previews; leaders get a session agenda; buddies plan from connections | Permission invalidation, account-switch late-response tests; existing room join remains explicit |
+| Deterministic scores versus optional AI wording; privacy and calendar limits | Topic explainers and searchable FAQ; no provider or room mutation from Help | Rendered content/route checks and local Chromium synthetic-response checks |
+| Help at points of confusion | Home/incomplete profile; matching, groups, connections and session empty states | Existing feature tests assert topic links; full-shell hash focus and FAQ keyboard checks |
+
+The [Help test guide](HELP_TESTING.md) separates the local synthetic-response browser evidence
+from real-backend integration and the team's Figma, browser, contrast and projector acceptance.
+
 ## Selected extras and delivery
 
 The team has recorded both E1 and E2 as its selected required extras. They extend the
@@ -326,3 +344,24 @@ acceptance. [E1_TESTING.md](E1_TESTING.md) is the current regression and demo gu
 | Apply bounded output checks and state their limits | Prompt v5 with plain-word evidence and weights; evidence-aware course, number and code-name checks; current length policy for fresh/cached text | AI accuracy cue; literal text rendering | `ExplanationOutputValidatorTest`, prompt tests, panel rendering tests; live examples are separate acceptance |
 | Fall back on provider/cache failures without hiding core errors | Provider timeout/error handling; quota; separate cache-read/write `DataAccessException` boundaries | Standard explanation and ordinary retry states | Provider loopback, service and quota tests; no live provider required |
 | Reuse equivalent evidence without confusing it with card identity | Separate semantic hash; prompt/model versioning; unique cache row | — | `ExplanationHasherTest`, `MatchExplanationHttpTest`; cache-hit policy tests |
+
+## Achievements extension (approved 23 October)
+
+This later approved extension supersedes the badges entry in the historical 18 October
+unselected-ideas snapshot above. It derives private current standings from existing records;
+it does not add permanent awards, attendance or completed-focus tracking. The detailed policy
+is in the [API contract](API_CONTRACT.md#achievementsdto), with repeatable checks in
+[ACHIEVEMENTS_TESTING.md](ACHIEVEMENTS_TESTING.md).
+
+| Behaviour / boundary | Implementation | Evidence |
+| --- | --- | --- |
+| Student-only private current standing, no other-student lookup or profile exposure | `AchievementController`, `AchievementService`, `AccountAccess`; no achievement fields in profile DTOs | `AchievementHttpTest` anonymous/admin/other-account/profile cases |
+| Current connections/open memberships and retained sent-request/created-group history are distinguished | Existing repositories plus an open-membership count; `BadgeDefinition` explanations | Service downgrade test; HTTP disconnect/closure/history case |
+| Scheduled occurrences use active parents and current participation dates without loading entities per schedule | `AchievementSessionRepository` batched projection; existing `SessionSchedule` recurrence maths | HTTP group/buddy, tenure, readmission, removal, inactive/ended/closed/cancelled cases |
+| Planned weekly run uses Monday in the returned configured zone; later this week counts, future weeks wait | `WeeklyStreakCalculator`; read-derived best run and dated grove | Zone/boundary/gap/duplicate/future tests and precise page explanations |
+| Highest tiers determine points and an attainable capped level; invalid zero/unsorted configuration is rejected | `BadgeEvaluator`, `AchievementAssembler`, validated typed properties | Evaluator/assembler/properties tests, all-Gold and non-divisible final-step cases |
+| Existing-route actions, capped Gold progress, seed/empty/loading/error/retry and bounded tree display | Achievements feature components and badge-key route allowlist | `AchievementsPage.test.tsx`; narrow-layout and keyboard rendering checks in verification guide |
+| Minimal Team B profile integration fetches only for the matching signed-in owner and aborts on loss of ownership | Conditional keyed `OwnAchievementSummary`; existing `useResource` | `StudentProfilePage.test.tsx` other/admin/failure/navigation/account-change/logout cases |
+
+Cross-team source review, both authors' explanation, latest-Figma comparison, physical
+device/projector readability and submission acceptance still require their own evidence.

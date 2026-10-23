@@ -23,5 +23,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.role = com.studybuddy.user.Role.ADMIN order by u.id")
     List<User> findAllAdministratorsForUpdate();
-    long countByRoleAndActiveTrue(Role role);
 }

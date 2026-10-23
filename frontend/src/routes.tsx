@@ -12,6 +12,7 @@ import WindowPage from './shared/components/WindowPage'
 import ConnectionsPage from './features/connections/ConnectionsPage'
 import StudentProfilePage from './features/students/StudentProfilePage'
 import NotificationsPage from './features/notifications/NotificationsPage'
+import HelpPage from './features/help/HelpPage'
 import GroupsPage from './features/groups/GroupsPage'
 import GroupDetailPage from './features/groups/GroupDetailPage'
 import GroupFormPage from './features/groups/GroupFormPage'
@@ -22,7 +23,7 @@ import AdminUserFormPage from './features/admin/AdminUserFormPage'
 import MatchingSettingsPage from './features/matching/MatchingSettingsPage'
 import FindBuddiesPage from './features/matching/FindBuddiesPage'
 import StatePanel from './shared/components/StatePanel'
-import { SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
+import { AchievementsPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
 
 export const appRoutes = createRoutesFromElements(
     <>
@@ -39,6 +40,7 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/students/:id/edit" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/help" element={<HelpPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/new" element={<GroupFormPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />
@@ -48,6 +50,7 @@ export const appRoutes = createRoutesFromElements(
               <Route path="/study-room" element={<StudyRoomsPage />} />
               <Route path="/groups/:id/room" element={<StudyRoomPage />} />
               <Route path="/sessions" element={<SessionsPage />} />
+              <Route path="/achievements" element={<AchievementsPage />} />
               <Route path="/sessions/:id" element={<SessionDetailPage />} />
               <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
               <Route path="/groups/:id/sessions" element={<SessionsPage kind="GROUP" />} />

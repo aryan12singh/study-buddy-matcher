@@ -36,12 +36,15 @@ export function useResource<T>(key: string, loader: (signal: AbortSignal) => Pro
     let disposed = false
     queueMicrotask(() => { if (!disposed) reload(true) })
     const onChange = (event: Event) => reload((event as CustomEvent<{ purge: boolean }>).detail?.purge)
-    const onFocus = () => { if (backgroundRefresh) reload(true) }
-    const onVisible = () => { if (backgroundRefresh && !document.hidden) reload(true) }
+    // Background revalidation keeps the last response visible until it is replaced, so pages do
+    // not blank on every focus or poll. A failed refresh still clears it, and permission changes
+    // (disconnect, logout, 401) purge first through refreshResources(true).
+    const onFocus = () => { if (backgroundRefresh) reload() }
+    const onVisible = () => { if (backgroundRefresh && !document.hidden) reload() }
     window.addEventListener('resources-changed', onChange)
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onVisible)
-    const timer = backgroundRefresh ? window.setInterval(() => { if (!document.hidden) reload(true) }, REFRESH_INTERVAL_MS) : undefined
+    const timer = backgroundRefresh ? window.setInterval(() => { if (!document.hidden) reload() }, REFRESH_INTERVAL_MS) : undefined
     return () => {
       disposed = true
       cancel()

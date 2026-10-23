@@ -41,4 +41,13 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
               and m.studyGroup.leader.id <> :studentId
             """)
     long countJoinedByStudentId(@Param("studentId") Long studentId);
+
+    /** Current open memberships used by the Team Player badge, excluding groups the student leads. */
+    @Query("""
+            select count(m) from GroupMembership m
+            where m.student.id = :studentId
+              and m.studyGroup.leader.id <> :studentId
+              and m.studyGroup.active = true
+            """)
+    long countJoinedOpenByStudentId(@Param("studentId") Long studentId);
 }
