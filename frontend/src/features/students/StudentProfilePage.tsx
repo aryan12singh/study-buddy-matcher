@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { Account } from '../../shared/auth/context'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { getStudentProfile } from './api'
 import { decideMatchRequest, endConnection, withdrawMatchRequest } from '../connections/api'
@@ -16,33 +17,54 @@ import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import Avatar from '../../shared/components/Avatar'
 import CopyButton from '../../shared/components/CopyButton'
 import { returnToFrom } from '../../shared/navigation/returnTo'
+import { useAuth } from '../../shared/auth/useAuth'
 
 export default function StudentProfilePage() {
+  const { account } = useAuth()
+  const { id } = useParams()
+  return <StudentProfileContent key={`${account?.role}:${account?.id}:${id}`} account={account} />
+}
+
+function StudentProfileContent({ account }: { account: Account | null }) {
   const { id } = useParams(),
     studentId = Number(id)
   const validId = Number.isSafeInteger(studentId) && studentId > 0
+  const actorId = account?.role === 'STUDENT' ? account.id : undefined
   const back = returnToFrom(useLocation(), { path: '/connections', label: 'Back to connections' })
-  const profile = useResource(`student-${id}`, signal => getStudentProfile(studentId, signal), validId)
+  const profile = useResource(`student-${id}`, signal => getStudentProfile(studentId, signal), validId && actorId !== undefined)
   const action = useAction()
   const [requestRecipient, setRequestRecipient] = useState<{ id: number; name: string } | null>(null)
-  const [ending, setEnding] = useState(false)
-  const [answering, setAnswering] = useState<'decline' | 'withdraw' | null>(null)
+  const [ending, setEnding] = useState<{ connectionId: number; name: string } | null>(null)
+  const [answering, setAnswering] = useState<{ kind: 'decline' | 'withdraw'; requestId: number; name: string } | null>(null)
   const student = profile.data,
     relationship = student?.relationship
+  const answerCurrent = Boolean(answering && relationship?.requestId === answering.requestId &&
+    relationship.state === (answering.kind === 'decline' ? 'INCOMING_PENDING' : 'OUTGOING_PENDING'))
+  const endingCurrent = Boolean(ending && relationship?.state === 'CONNECTED' && relationship.connectionId === ending.connectionId)
+
+  if (answering && !answerCurrent) setAnswering(null)
+  if (ending && !endingCurrent) setEnding(null)
+
+  function beginRequestAction(kind: 'decline' | 'withdraw') {
+    if (!student || !relationship?.requestId) return
+    action.clear()
+    setAnswering({ kind, requestId: relationship.requestId, name: student.name })
+  }
 
   async function confirmRequestAction() {
-    if (!relationship?.requestId || !answering) return
-    const requestId = relationship.requestId
-    const result = answering === 'decline'
-      ? await action.run(() => decideMatchRequest(requestId, 'decline'), 'Request declined.')
-      : await action.run(() => withdrawMatchRequest(requestId), 'Request withdrawn.')
+    if (!answering || !answerCurrent) return
+    const target = answering
+    const result = target.kind === 'decline'
+      ? await action.run(() => decideMatchRequest(target.requestId, 'decline'), 'Request declined.')
+      : await action.run(() => withdrawMatchRequest(target.requestId), 'Request withdrawn.')
     if (result.ok) setAnswering(null)
   }
 
   async function disconnect() {
-    if (!relationship?.connectionId) return
-    const result = await action.run(() => endConnection(relationship.connectionId!), 'Connection ended.', true)
-    if (result.ok) setEnding(false)
+    if (!ending || !endingCurrent) return
+    const target = ending
+    const result = await action.run(() => endConnection(target.connectionId), 'Connection ended.', true)
+    if (result.ok) setEnding(null)
   }
   return (
     <WindowPage
@@ -115,7 +137,7 @@ export default function StudentProfilePage() {
                   <div className="actions">
                     <Button
                       disabled={action.pending}
-                      onClick={() => { action.clear(); setAnswering('withdraw') }}
+                      onClick={() => beginRequestAction('withdraw')}
                     >Withdraw request</Button>
                     <Link to="/connections?view=outgoing">View your requests</Link>
                   </div>
@@ -135,7 +157,7 @@ export default function StudentProfilePage() {
                     </Button>
                     <Button
                       disabled={action.pending}
-                      onClick={() => { action.clear(); setAnswering('decline') }}
+                      onClick={() => beginRequestAction('decline')}
                     >Decline request</Button>
                   </div>
                 </>
@@ -149,7 +171,7 @@ export default function StudentProfilePage() {
                     disabled={action.pending}
                     onClick={() => {
                       action.clear()
-                      setEnding(true)
+                      if (relationship.connectionId) setEnding({ connectionId: relationship.connectionId, name: student.name })
                     }}
                   >
                     Disconnect
@@ -203,29 +225,29 @@ export default function StudentProfilePage() {
           receiverName={requestRecipient.name}
           onClose={() => setRequestRecipient(null)}
         />}
-      {answering && (
+      {answering && answerCurrent && (
         <ConfirmDialog
-          title={answering === 'decline'
-            ? `Decline ${student?.name || 'this student'}'s request?`
-            : `Withdraw your request to ${student?.name || 'this student'}?`}
-          confirmLabel={answering === 'decline' ? 'Decline request' : 'Withdraw request'}
+          title={answering.kind === 'decline'
+            ? `Decline ${answering.name}'s request?`
+            : `Withdraw your request to ${answering.name}?`}
+          confirmLabel={answering.kind === 'decline' ? 'Decline request' : 'Withdraw request'}
           pending={action.pending}
           error={action.error}
           onClose={() => setAnswering(null)}
           onConfirm={confirmRequestAction}
         >
-          <p>{answering === 'decline'
+          <p>{answering.kind === 'decline'
             ? 'This answer is final. They can send you a new request later if you both want to study together.'
-            : 'They will no longer see this request. You can send a new one later.'}</p>
+            : 'The recipient will see this in Past requests and can no longer accept it. You can send a new request later.'}</p>
         </ConfirmDialog>
       )}
-      {ending && (
+      {ending && endingCurrent && (
         <ConfirmDialog
-          title={`Disconnect from ${student?.name || 'this student'}?`}
+          title={`Disconnect from ${ending.name}?`}
           confirmLabel="Disconnect"
           pending={action.pending}
           error={action.error}
-          onClose={() => setEnding(false)}
+          onClose={() => setEnding(null)}
           onConfirm={disconnect}
         >
           <p>Future profile views will no longer disclose either student's contact number. This ends the accepted buddy connection.</p>

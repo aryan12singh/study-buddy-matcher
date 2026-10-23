@@ -2,6 +2,8 @@ package com.studybuddy.integration;
 
 import java.util.UUID;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 
@@ -72,5 +74,69 @@ class LifecycleHttpTest extends PostgresHttpTest {
         expect(approve(group, apply(group, m), l), 200);
         expect(call("POST", "/groups/" + group + "/close", l, null), 200);
         expect(call("POST", "/groups/" + group + "/leave", m, null), 409);
+    }
+
+    @Test
+    void leavingRevokesRoomAndSessionAccessWithoutAffectingTheRemainingMembers() {
+        long leader = student("leader@example.test", "Leader", "+6591234567");
+        long member = student("member@example.test", "Member", "+6591234568");
+        String l = login("leader@example.test"), m = login("member@example.test");
+        long group = group(l, 3);
+        expect(approve(group, apply(group, m), l), 200);
+        UUID tab = UUID.randomUUID();
+        expect(call("POST", "/groups/" + group + "/room/join", m, Map.of("clientId", tab)), 200);
+        LocalDateTime start = LocalDateTime.now(ZoneId.of("Asia/Singapore")).plusDays(1).withSecond(0).withNano(0);
+        long session = expect(call("POST", "/groups/" + group + "/sessions", l, Map.of("title", "Revision",
+            "startLocal", start.toString(), "endLocal", start.plusHours(1).toString(), "timeZone", "Asia/Singapore", "occurrenceCount", 1)), 201).path("id").asLong();
+        expect(call("GET", "/sessions/" + session + "/calendar", m, null), 200);
+
+        expect(call("POST", "/groups/" + group + "/leave", m, null), 204);
+
+        assertEquals(0, count("select count(*) from room_presences where student_id=?", member));
+        expect(call("GET", "/groups/" + group + "/room", m, null), 403);
+        expect(call("POST", "/groups/" + group + "/room/join", m, Map.of("clientId", tab)), 403);
+        expect(call("PUT", "/groups/" + group + "/room/presence", m, Map.of("clientId", tab, "presence", "FOCUS")), 403);
+        expect(call("GET", "/groups/" + group + "/sessions", m, null), 403);
+        expect(call("GET", "/sessions/" + session, m, null), 403);
+        expect(call("GET", "/sessions/" + session + "/calendar", m, null), 403);
+        assertEquals(0, expect(call("GET", "/sessions/mine", m, null), 200).size());
+        expect(call("GET", "/groups/" + group + "/room", l, null), 200);
+        expect(call("GET", "/sessions/" + session, l, null), 200);
+        expect(call("GET", "/sessions/" + session + "/calendar", l, null), 200);
+        assertEquals("SCHEDULED", database.queryForObject("select status from study_sessions where id=?", String.class, session));
+        assertEquals(1, count("select count(*) from group_memberships where student_id=? and study_group_id=?", leader, group));
+    }
+
+    @Test
+    void aFailedLeaveNotificationRollsBackMembershipAndRoomRevocation() {
+        student("leader@example.test", "Leader", "+6591234567");
+        long member = student("member@example.test", "Member", "+6591234568");
+        String l = login("leader@example.test"), m = login("member@example.test");
+        long group = group(l, 3);
+        expect(approve(group, apply(group, m), l), 200);
+        expect(call("POST", "/groups/" + group + "/room/join", m, Map.of("clientId", UUID.randomUUID())), 200);
+        database.execute("alter table notifications add constraint test_notification_failure check(false) not valid");
+
+        expect(call("POST", "/groups/" + group + "/leave", m, null), 409);
+
+        assertEquals(1, count("select count(*) from group_memberships where student_id=? and study_group_id=?", member, group));
+        assertEquals(1, count("select count(*) from room_presences where student_id=?", member));
+        assertEquals(0, count("select count(*) from notifications where type='GROUP_MEMBER_LEFT'"));
+        expect(call("GET", "/groups/" + group + "/room", m, null), 200);
+    }
+
+    @Test
+    void withdrawalAndLeaveEndpointsRejectAnonymousAndAdministratorActors() {
+        student("leader@example.test", "Leader", "+6591234567");
+        long applicant = student("applicant@example.test", "Applicant", "+6591234568");
+        account("admin@example.test", "ADMIN");
+        String l = login("leader@example.test"), p = login("applicant@example.test"), admin = login("admin@example.test");
+        long group = group(l, 3), application = apply(group, p), request = send(applicant, l);
+        for (String path : new String[]{"/match-requests/" + request + "/cancel", "/group-join-requests/" + application + "/withdraw", "/groups/" + group + "/leave"}) {
+            expect(call("POST", path, null, null), 401);
+            expect(call("POST", path, admin, null), 403);
+        }
+        assertEquals("PENDING", database.queryForObject("select status from match_requests where id=?", String.class, request));
+        assertEquals("PENDING", database.queryForObject("select status from group_join_requests where id=?", String.class, application));
     }
 }

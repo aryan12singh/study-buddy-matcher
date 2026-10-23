@@ -15,8 +15,8 @@ import java.time.Instant;
 
 /**
  * A student's request to join a study group. Starts PENDING and moves once,
- * to ACCEPTED or REJECTED, through {@link #accept()} or {@link #reject()}; the
- * status has no public setter so no other transition is possible. A separate
+ * to ACCEPTED, REJECTED or WITHDRAWN through {@link #accept()}, {@link #reject()}
+ * or {@link #withdraw()}; the status has no public setter. A separate
  * state machine from {@code MatchRequest}, per the API contract.
  */
 @Entity

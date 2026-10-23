@@ -196,7 +196,7 @@ export default function ConnectionsPage() {
         >
           <p>{confirming.kind === 'decline'
             ? 'This answer is final. They can send you a new request later if you both want to study together.'
-            : 'They will no longer see this request. You can send a new one later.'}</p>
+            : 'The recipient will see this in Past requests and can no longer accept it. You can send a new request later.'}</p>
         </ConfirmDialog>
       )}
       {ending && (

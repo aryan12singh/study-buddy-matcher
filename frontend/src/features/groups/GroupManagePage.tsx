@@ -15,12 +15,19 @@ import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import PersonCard from '../../shared/components/PersonCard'
 import CopyButton from '../../shared/components/CopyButton'
 import CapacityMeter from '../../shared/components/CapacityMeter'
+import { useAuth } from '../../shared/auth/useAuth'
 
 export default function GroupManagePage() {
+  const { id } = useParams()
+  const { account } = useAuth()
+  return <GroupManageContent key={`${account?.role}:${account?.id}:${id}`} enabled={account?.role === 'STUDENT'} />
+}
+
+function GroupManageContent({ enabled }: { enabled: boolean }) {
   const { id } = useParams(),
     groupId = Number(id),
     validId = Number.isSafeInteger(groupId) && groupId > 0
-  const resource = useResource(`manage-group-${id}`, signal => getGroup(groupId, signal), validId)
+  const resource = useResource(`manage-group-${id}`, signal => getGroup(groupId, signal), validId && enabled)
   const group = resource.data
   const applicants = useResource(`group-applicants-${id}`, signal => getApplicants(groupId, signal), Boolean(group?.viewer.leader))
   const [tab, setTab] = useState<'applicants' | 'members'>('applicants'),
@@ -28,6 +35,16 @@ export default function GroupManagePage() {
     [closing, setClosing] = useState(false),
     [rejecting, setRejecting] = useState<GroupApplication | null>(null)
   const action = useAction()
+  const confirmationCurrent = Boolean(group?.viewer.leader && group.active && (rejecting
+    ? applicants.data?.some(application => application.id === rejecting.id && application.status === 'PENDING')
+    : removing ? group.members.some(member => member.studentId === removing.studentId && member.joinedAt === removing.joinedAt)
+      : closing))
+
+  if ((removing || closing || rejecting) && !confirmationCurrent) {
+    setRemoving(null)
+    setClosing(false)
+    setRejecting(null)
+  }
 
   function dismissConfirmation() {
     setRemoving(null)
@@ -36,6 +53,7 @@ export default function GroupManagePage() {
   }
 
   async function confirm() {
+    if (!confirmationCurrent) return
     const result = rejecting
       ? await action.run(() => decideApplication(groupId, rejecting.id, 'reject'), 'Application rejected.')
       : await action.run(
@@ -172,7 +190,7 @@ export default function GroupManagePage() {
           )}
         </>
       )}
-      {(removing || closing || rejecting) && (
+      {(removing || closing || rejecting) && confirmationCurrent && (
         <ConfirmDialog
           title={rejecting ? `Reject ${rejecting.studentName}'s application?` : removing ? `Remove ${removing.name}?` : 'Close this study group?'}
           confirmLabel={rejecting ? 'Reject application' : removing ? 'Remove member' : 'Close group'}

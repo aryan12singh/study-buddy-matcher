@@ -17,24 +17,53 @@ import PersonCard from '../../shared/components/PersonCard'
 import CapacityMeter from '../../shared/components/CapacityMeter'
 import CopyButton from '../../shared/components/CopyButton'
 import GroupSessionAgenda from '../sessions/GroupSessionAgenda'
+import { useAuth } from '../../shared/auth/useAuth'
 
 export default function GroupDetailPage() {
+  const { id } = useParams()
+  const { account } = useAuth()
+  return <GroupDetailContent key={`${account?.role}:${account?.id}:${id}`} actorId={account?.role === 'STUDENT' ? account.id : undefined} />
+}
+
+type MembershipConfirmation = {
+  kind: 'leave' | 'withdraw'
+  groupId: number
+  groupName: string
+  requestId: number | null
+  joinedAt?: string
+}
+
+function GroupDetailContent({ actorId }: { actorId?: number }) {
   const { id } = useParams(),
     groupId = Number(id),
     validId = Number.isSafeInteger(groupId) && groupId > 0
-  const resource = useResource(`group-${id}`, signal => getGroup(groupId, signal), validId)
+  const resource = useResource(`group-${id}`, signal => getGroup(groupId, signal), validId && actorId !== undefined)
   const group = resource.data
   const [applicationGroup, setApplicationGroup] = useState<{ id: number; name: string } | null>(null)
   const [agenda, setAgenda] = useState(false)
-  const [confirming, setConfirming] = useState<'leave' | 'withdraw' | null>(null)
+  const [confirming, setConfirming] = useState<MembershipConfirmation | null>(null)
   const action = useAction()
+  const joinedAt = group?.members.find(member => member.studentId === actorId)?.joinedAt
+  const confirmationCurrent = Boolean(confirming && group?.id === confirming.groupId && group.active &&
+    (confirming.kind === 'leave'
+      ? group.viewer.member && !group.viewer.leader && joinedAt === confirming.joinedAt
+      : !group.viewer.member && group.viewer.requestStatus === 'PENDING' && group.viewer.requestId === confirming.requestId))
+
+  // Consent belongs to the exact record that was shown, including the current membership tenure.
+  if (confirming && !confirmationCurrent) setConfirming(null)
+
+  function beginMembershipAction(kind: MembershipConfirmation['kind']) {
+    if (!group) return
+    action.clear()
+    setConfirming({ kind, groupId: group.id, groupName: group.name, requestId: group.viewer.requestId, joinedAt })
+  }
 
   async function confirmMembershipAction() {
-    if (!group || !confirming) return
-    const requestId = group.viewer.requestId
-    const result = confirming === 'leave'
-      ? await action.run(() => leaveGroup(group.id), `You left ${group.name}.`, true)
-      : await action.run(() => withdrawApplication(requestId!), 'Application withdrawn.')
+    if (!confirming || !confirmationCurrent) return
+    const target = confirming
+    const result = target.kind === 'leave'
+      ? await action.run(() => leaveGroup(target.groupId), `You left ${target.groupName}.`, true)
+      : await action.run(() => withdrawApplication(target.requestId!), 'Application withdrawn.')
     if (result.ok) setConfirming(null)
   }
   return (
@@ -107,12 +136,12 @@ export default function GroupDetailPage() {
                   </Button>
                 )}
               {group.active && !group.viewer.member && group.viewer.requestStatus === 'PENDING' && group.viewer.requestId && (
-                <Button disabled={action.pending} onClick={() => { action.clear(); setConfirming('withdraw') }}>
+                <Button disabled={action.pending} onClick={() => beginMembershipAction('withdraw')}>
                   Withdraw application
                 </Button>
               )}
               {group.active && group.viewer.member && !group.viewer.leader && (
-                <Button variant="danger" disabled={action.pending} onClick={() => { action.clear(); setConfirming('leave') }}>
+                <Button variant="danger" disabled={action.pending} onClick={() => beginMembershipAction('leave')}>
                   Leave group
                 </Button>
               )}
@@ -162,16 +191,16 @@ export default function GroupDetailPage() {
           groupName={applicationGroup.name}
           onClose={() => setApplicationGroup(null)}
         />}
-      {confirming && group && (
+      {confirming && confirmationCurrent && (
         <ConfirmDialog
-          title={confirming === 'leave' ? `Leave ${group.name}?` : `Withdraw your application to ${group.name}?`}
-          confirmLabel={confirming === 'leave' ? 'Leave group' : 'Withdraw application'}
+          title={confirming.kind === 'leave' ? `Leave ${confirming.groupName}?` : `Withdraw your application to ${confirming.groupName}?`}
+          confirmLabel={confirming.kind === 'leave' ? 'Leave group' : 'Withdraw application'}
           pending={action.pending}
           error={action.error}
           onClose={() => setConfirming(null)}
           onConfirm={confirmMembershipAction}
         >
-          <p>{confirming === 'leave'
+          <p>{confirming.kind === 'leave'
             ? 'You will no longer be a member and the leader will be told. To rejoin, you would need to apply again and be accepted.'
             : 'The leader will no longer see your application. You can apply again later while the group has space.'}</p>
         </ConfirmDialog>

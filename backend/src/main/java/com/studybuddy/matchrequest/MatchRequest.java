@@ -18,9 +18,9 @@ import java.time.Instant;
 /**
  * A study-buddy request from one student to another. Starts PENDING and moves
  * once: to ACCEPTED or DECLINED when the receiver answers through {@link #accept()}
- * or {@link #decline()}, or to CANCELLED through {@link #cancel()} when either
- * account is deactivated first. The status has no public setter, so no other
- * transition is possible.
+ * or {@link #decline()}, or to CANCELLED through {@link #cancel()} when
+ * the sender withdraws or either account is deactivated/deleted first. The status has no public
+ * setter, so no other transition is possible.
  */
 @Entity
 @Table(name = "match_requests")

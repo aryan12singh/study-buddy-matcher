@@ -211,7 +211,7 @@ describe('group leader permissions and decisions', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument())
   })
   it('hides leaving from the leader', async () => {
-    vi.spyOn(api, 'get').mockResolvedValue(response(group))
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? [] : group))
     renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
     expect(await screen.findByText('Group leader')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument()
