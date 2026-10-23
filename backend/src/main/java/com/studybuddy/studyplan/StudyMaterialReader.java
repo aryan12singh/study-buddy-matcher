@@ -1,5 +1,6 @@
 package com.studybuddy.studyplan;
 
+import com.studybuddy.ai.AiAttachment;
 import com.studybuddy.common.InputRules;
 import com.studybuddy.common.error.InvalidInputException;
 import org.springframework.stereotype.Component;
@@ -10,15 +11,18 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Turns an upload or pasted topics into checked {@link StudyMaterial}. A file's type is decided by
- * its extension and its contents together, so a renamed Word document or image is refused rather
- * than sent to the AI: a {@code .pdf} must start with the PDF signature, and a {@code .txt} or
- * {@code .md} file must be readable UTF-8 text.
+ * Turns uploads or pasted topics into checked {@link StudyMaterial}. A student may upload several
+ * files, such as one week's slides each, within a count and a total size. Each file's type is
+ * decided by its extension and its contents together, so a renamed Word document or image is
+ * refused rather than sent to the AI: a {@code .pdf} must start with the PDF signature, and a
+ * {@code .txt} or {@code .md} file must be readable UTF-8 text.
  */
 @Component
 public class StudyMaterialReader {
@@ -31,20 +35,22 @@ public class StudyMaterialReader {
         this.properties = properties;
     }
 
-    /** Exactly one of the two is expected: a file with a name, or non-blank topics. */
-    public StudyMaterial read(MultipartFile file, String topicsText) {
-        boolean fileSent = file != null && file.getOriginalFilename() != null && !file.getOriginalFilename().isBlank();
+    /** Files or non-blank topics, not both. A file part with no name is an empty form field. */
+    public StudyMaterial read(List<MultipartFile> files, String topicsText) {
+        List<MultipartFile> sent = files == null ? List.of() : files.stream()
+                .filter(file -> file != null && file.getOriginalFilename() != null && !file.getOriginalFilename().isBlank())
+                .toList();
         boolean topicsSent = topicsText != null && !topicsText.isBlank();
-        if (fileSent && topicsSent) {
-            throw new InvalidInputException("file", "Upload a file or paste topics, not both");
+        if (!sent.isEmpty() && topicsSent) {
+            throw new InvalidInputException("files", "Upload files or paste topics, not both");
         }
-        if (fileSent) {
-            return readFile(file);
+        if (!sent.isEmpty()) {
+            return readFiles(sent);
         }
         if (topicsSent) {
             return readTopics(topicsText);
         }
-        throw new InvalidInputException("topicsText", "Upload a file or paste your topics");
+        throw new InvalidInputException("topicsText", "Upload your slides or notes, or paste your topics");
     }
 
     private StudyMaterial readTopics(String topicsText) {
@@ -56,39 +62,48 @@ public class StudyMaterialReader {
         return StudyMaterial.pastedTopics(text);
     }
 
-    private StudyMaterial readFile(MultipartFile file) {
-        String filename = filenameOf(file);
-        if (file.getSize() > properties.maxUploadSize().toBytes()) {
+    private StudyMaterial readFiles(List<MultipartFile> files) {
+        if (files.size() > properties.maxFiles()) {
+            throw new InvalidInputException("files", "Upload at most " + properties.maxFiles() + " files");
+        }
+        long totalBytes = files.stream().mapToLong(MultipartFile::getSize).sum();
+        if (totalBytes > properties.maxUploadSize().toBytes()) {
             throw new StudyMaterialTooLargeException(
-                    "The file must be at most " + properties.maxUploadSize().toMegabytes() + "MB");
+                    "The files must add up to at most " + properties.maxUploadSize().toMegabytes() + "MB");
         }
-        byte[] content = contentOf(file);
-        if (content.length == 0) {
-            throw new InvalidInputException("file", "The file is empty");
-        }
-        String extension = filename.toLowerCase(Locale.ROOT);
-        if (extension.endsWith(".pdf")) {
-            if (!startsWithPdfSignature(content)) {
+        List<String> filenames = new ArrayList<>();
+        List<AiAttachment> pdfs = new ArrayList<>();
+        List<String> textParts = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String filename = filenameOf(file);
+            byte[] content = contentOf(file);
+            if (content.length == 0) {
+                throw new InvalidInputException("files", filename + " is empty");
+            }
+            String extension = filename.toLowerCase(Locale.ROOT);
+            if (extension.endsWith(".pdf") && startsWithPdfSignature(content)) {
+                pdfs.add(new AiAttachment(StudyMaterial.PDF_MEDIA_TYPE, content));
+            } else if (extension.endsWith(".txt") || extension.endsWith(".md")) {
+                textParts.add("File: " + filename + "\n" + textOf(filename, content));
+            } else {
                 throw new UnsupportedStudyMaterialException();
             }
-            return StudyMaterial.pdf(filename, content);
+            filenames.add(filename);
         }
-        if (extension.endsWith(".txt") || extension.endsWith(".md")) {
-            return readTextFile(filename, content);
-        }
-        throw new UnsupportedStudyMaterialException();
-    }
-
-    private StudyMaterial readTextFile(String filename, byte[] content) {
-        String text = utf8TextOf(content).orElseThrow(UnsupportedStudyMaterialException::new).strip();
-        if (text.isEmpty()) {
-            throw new InvalidInputException("file", "The file is empty");
-        }
+        String text = String.join("\n\n", textParts);
         if (text.length() > properties.maxTextFileCharacters()) {
             throw new StudyMaterialTooLargeException(
-                    "The file must hold at most " + properties.maxTextFileCharacters() + " characters of text");
+                    "Text files must hold at most " + properties.maxTextFileCharacters() + " characters in total");
         }
-        return StudyMaterial.textFile(filename, text);
+        return StudyMaterial.uploads(filenames, pdfs, text);
+    }
+
+    private static String textOf(String filename, byte[] content) {
+        String text = utf8TextOf(content).orElseThrow(UnsupportedStudyMaterialException::new).strip();
+        if (text.isEmpty()) {
+            throw new InvalidInputException("files", filename + " is empty");
+        }
+        return text;
     }
 
     /** Browsers may send a full path; only the last part is the name, and it must fit its column. */
@@ -96,7 +111,7 @@ public class StudyMaterialReader {
         String original = file.getOriginalFilename();
         String name = original.substring(Math.max(original.lastIndexOf('/'), original.lastIndexOf('\\')) + 1).strip();
         if (name.isEmpty() || name.length() > InputRules.TEXT_LIMIT) {
-            throw new InvalidInputException("file", "The file name must be 1 to " + InputRules.TEXT_LIMIT + " characters");
+            throw new InvalidInputException("files", "File names must be 1 to " + InputRules.TEXT_LIMIT + " characters");
         }
         return name;
     }
@@ -105,7 +120,7 @@ public class StudyMaterialReader {
         try {
             return file.getBytes();
         } catch (IOException failure) {
-            throw new InvalidInputException("file", "The file could not be read; upload it again");
+            throw new InvalidInputException("files", "A file could not be read; upload it again");
         }
     }
 

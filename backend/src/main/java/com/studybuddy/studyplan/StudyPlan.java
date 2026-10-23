@@ -28,9 +28,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A study roadmap: a personal plan paced to one course's exam, or a plan for the meetings of one
- * study session. Keeps the topics extracted from the student's material, never the material itself.
- * The same rules are enforced by the table's check constraints.
+ * A study roadmap covering one or more consecutive weeks of a student's own study, or one or more
+ * upcoming meetings of a study session. Built in one go from a validated {@link RoadmapDraft}, so
+ * every entry has a block of the plan and that block's date. Keeps the topics extracted from the
+ * student's material and the files' names, never the material itself. The same rules are
+ * enforced by the table's check constraints.
  */
 @Entity
 @Table(name = "study_plans")
@@ -41,11 +43,17 @@ public class StudyPlan {
     @ManyToOne @JoinColumn(name = "session_id") private StudySession session;
     @Column(name = "created_by") private Long createdBy;
     @ManyToOne(optional = false) @JoinColumn(name = "course_id", nullable = false) private Course course;
+    @Column(name = "first_block_date", nullable = false) private LocalDate firstBlockDate;
+    @Column(name = "block_count", nullable = false) private int blockCount;
+    @Column(name = "minutes_per_block", nullable = false) private int minutesPerBlock;
     @Column(name = "exam_date") private LocalDate examDate;
-    @Column(name = "hours_per_week") private Integer hoursPerWeek;
     @Enumerated(EnumType.STRING) @Column(name = "study_goal", length = 30) private StudyGoal studyGoal;
     @Enumerated(EnumType.STRING) @Column(name = "source_kind", nullable = false, length = 20) private StudyMaterialSource sourceKind;
-    @Column(name = "source_filename") private String sourceFilename;
+    @ElementCollection
+    @CollectionTable(name = "study_plan_source_files", joinColumns = @JoinColumn(name = "plan_id"))
+    @OrderColumn(name = "position")
+    @Column(name = "filename", nullable = false)
+    private List<String> sourceFilenames = new ArrayList<>();
     @ElementCollection
     @CollectionTable(name = "study_plan_source_topics", joinColumns = @JoinColumn(name = "plan_id"))
     @OrderColumn(name = "position")
@@ -59,43 +67,51 @@ public class StudyPlan {
 
     protected StudyPlan() { }
 
-    private StudyPlan(StudyPlanScope scope, Course course, StudyGoal studyGoal, StudyMaterial material,
-            List<String> sourceTopics, Long actorId, Instant now) {
+    private StudyPlan(StudyPlanScope scope, Course course, StudyGoal studyGoal, RoadmapFrame frame,
+            StudyMaterial material, RoadmapDraft draft, Long actorId, Instant now) {
         this.scope = scope;
         this.course = Objects.requireNonNull(course, "course");
         this.studyGoal = studyGoal;
+        this.firstBlockDate = frame.firstDate();
+        this.blockCount = frame.blocks().size();
+        this.minutesPerBlock = frame.minutesPerBlock();
         this.sourceKind = material.source();
-        this.sourceFilename = material.filename();
-        this.sourceTopics = new ArrayList<>(sourceTopics);
+        this.sourceFilenames = new ArrayList<>(material.filenames());
+        this.sourceTopics = new ArrayList<>(draft.sourceTopics());
         this.createdBy = actorId;
         this.createdAt = now;
         this.updatedAt = now;
+        for (RoadmapDraft.Entry entry : draft.entries()) {
+            RoadmapBlock block = frame.block(entry.sequence())
+                    .orElseThrow(() -> new IllegalArgumentException("An entry names a block outside the plan"));
+            entries.add(new StudyPlanEntry(this, entries.size(), entry.sequence(), block.date(), entry.title(),
+                    entry.plannedMinutes(), entry.tasks()));
+        }
     }
 
-    /** A plan only this student sees, paced week by week to their exam. */
-    public static StudyPlan personal(Student student, Course course, LocalDate examDate, int hoursPerWeek,
-            StudyGoal studyGoal, StudyMaterial material, List<String> sourceTopics, Instant now) {
-        if (examDate == null) throw new IllegalArgumentException("A personal plan needs an exam date");
-        if (hoursPerWeek < 1) throw new IllegalArgumentException("A personal plan needs weekly study hours");
-        StudyPlan plan = new StudyPlan(StudyPlanScope.PERSONAL, course, studyGoal, material, sourceTopics,
+    /**
+     * A plan only this student sees, for one or more weeks of their own study.
+     *
+     * @param examDate the exam the weeks lead up to, or null for a plan of the coming week(s) alone
+     */
+    public static StudyPlan personal(Student student, Course course, StudyGoal studyGoal, LocalDate examDate,
+            RoadmapFrame frame, StudyMaterial material, RoadmapDraft draft, Instant now) {
+        if (frame.kind() != RoadmapFrame.BlockKind.WEEK) throw new IllegalArgumentException("A personal plan is planned in weeks");
+        if (examDate != null && examDate.isBefore(frame.firstDate())) throw new IllegalArgumentException("The exam cannot be before the plan starts");
+        StudyPlan plan = new StudyPlan(StudyPlanScope.PERSONAL, course, studyGoal, frame, material, draft,
                 Objects.requireNonNull(student, "student").getId(), now);
         plan.student = student;
         plan.examDate = examDate;
-        plan.hoursPerWeek = hoursPerWeek;
         return plan;
     }
 
-    /** A plan for a session's meetings, managed by whoever may manage the session. */
-    public static StudyPlan forSession(StudySession session, Course course, StudyGoal studyGoal,
-            StudyMaterial material, List<String> sourceTopics, Long actorId, Instant now) {
-        StudyPlan plan = new StudyPlan(StudyPlanScope.SESSION, course, studyGoal, material, sourceTopics, actorId, now);
+    /** A plan for one or more of a session's upcoming meetings, managed by whoever may manage the session. */
+    public static StudyPlan forSession(StudySession session, Course course, StudyGoal studyGoal, RoadmapFrame frame,
+            StudyMaterial material, RoadmapDraft draft, Long actorId, Instant now) {
+        if (frame.kind() != RoadmapFrame.BlockKind.MEETING) throw new IllegalArgumentException("A session plan is planned in meetings");
+        StudyPlan plan = new StudyPlan(StudyPlanScope.SESSION, course, studyGoal, frame, material, draft, actorId, now);
         plan.session = Objects.requireNonNull(session, "session");
         return plan;
-    }
-
-    /** Appends an entry after the existing ones. Only used while the plan is being built. */
-    public void addEntry(int sequence, LocalDate scheduledDate, String title, int plannedMinutes, List<String> tasks) {
-        entries.add(new StudyPlanEntry(this, entries.size(), sequence, scheduledDate, title, plannedMinutes, tasks));
     }
 
     /** Ticks an entry off, or un-ticks it. False when the entry is not part of this plan. */
@@ -116,11 +132,13 @@ public class StudyPlan {
     public StudySession getSession() { return session; }
     public Long getCreatedBy() { return createdBy; }
     public Course getCourse() { return course; }
+    public LocalDate getFirstBlockDate() { return firstBlockDate; }
+    public int getBlockCount() { return blockCount; }
+    public int getMinutesPerBlock() { return minutesPerBlock; }
     public LocalDate getExamDate() { return examDate; }
-    public Integer getHoursPerWeek() { return hoursPerWeek; }
     public StudyGoal getStudyGoal() { return studyGoal; }
     public StudyMaterialSource getSourceKind() { return sourceKind; }
-    public String getSourceFilename() { return sourceFilename; }
+    public List<String> getSourceFilenames() { return List.copyOf(sourceFilenames); }
     public List<String> getSourceTopics() { return List.copyOf(sourceTopics); }
     public List<StudyPlanEntry> getEntries() { return List.copyOf(entries); }
     public Instant getCreatedAt() { return createdAt; }

@@ -10,11 +10,15 @@ import org.springframework.validation.annotation.Validated;
  * Study roadmap limits, bound from {@code app.ai.assistant.study-plan.*}. Spring's multipart limit
  * reads the same upload size, so the two cannot drift apart. The roadmap limits are given to
  * Gemini in the prompt and enforced again on its reply.
+ *
+ * @param maxUploadSize the most all of one plan's files may add up to
+ * @param maxTextFileCharacters the most text all of one plan's text files may hold together
  */
 @Validated
 @ConfigurationProperties("app.ai.assistant.study-plan")
 public record StudyPlanProperties(
         @NotNull DataSize maxUploadSize,
+        @Positive int maxFiles,
         @Positive int maxTopicsCharacters,
         @Positive int maxTextFileCharacters,
         @Positive int maxSourceTopics,

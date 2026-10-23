@@ -6,25 +6,31 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The blocks Gemini must fill and the validator checks its reply against: a number of weeks, each
- * with the student's weekly hours, or a session's upcoming meetings, each as long as the session.
- * A one-off session is a single meeting, so its entries become that meeting's timed agenda.
+ * The consecutive blocks a roadmap covers, which Gemini fills and the validator checks its reply
+ * against: one or more weeks, each with the student's weekly hours, or one or more of a session's
+ * upcoming meetings, each as long as the session. A single meeting's entries are its timed agenda.
  */
 public record RoadmapFrame(BlockKind kind, List<RoadmapBlock> blocks) {
 
-    /** What a block is called in the prompt. */
+    /** What a block is called in the prompt, and how its date is introduced. */
     public enum BlockKind {
-        WEEK("Week"),
-        MEETING("Meeting");
+        WEEK("Week", "from"),
+        MEETING("Meeting", "on");
 
         private final String label;
+        private final String datePreposition;
 
-        BlockKind(String label) {
+        BlockKind(String label, String datePreposition) {
             this.label = label;
+            this.datePreposition = datePreposition;
         }
 
         public String label() {
             return label;
+        }
+
+        public String datePreposition() {
+            return datePreposition;
         }
     }
 
@@ -33,11 +39,11 @@ public record RoadmapFrame(BlockKind kind, List<RoadmapBlock> blocks) {
         blocks = List.copyOf(blocks);
     }
 
-    /** Weeks 1 to {@code count}, each holding the student's weekly study time. */
-    public static RoadmapFrame weeks(int count, int minutesPerWeek) {
+    /** {@code count} weeks starting on {@code firstDay}, each holding the student's weekly study time. */
+    public static RoadmapFrame weeks(LocalDate firstDay, int count, int minutesPerWeek) {
         List<RoadmapBlock> weeks = new ArrayList<>();
         for (int week = 1; week <= count; week++) {
-            weeks.add(new RoadmapBlock(week, null, minutesPerWeek));
+            weeks.add(new RoadmapBlock(week, firstDay.plusWeeks(week - 1L), minutesPerWeek));
         }
         return new RoadmapFrame(BlockKind.WEEK, weeks);
     }
@@ -53,5 +59,14 @@ public record RoadmapFrame(BlockKind kind, List<RoadmapBlock> blocks) {
 
     public Optional<RoadmapBlock> block(int sequence) {
         return blocks.stream().filter(block -> block.sequence() == sequence).findFirst();
+    }
+
+    public LocalDate firstDate() {
+        return blocks.getFirst().date();
+    }
+
+    /** Every block of a frame holds the same time, so the first block's is the frame's. */
+    public int minutesPerBlock() {
+        return blocks.getFirst().availableMinutes();
     }
 }

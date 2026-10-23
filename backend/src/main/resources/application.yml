@@ -148,10 +148,14 @@ app:
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
       study-plan:
-        # Base64 makes an attached PDF a third larger, so 10MB stays inside Gemini's inline limit.
+        # All of one plan's files together. Base64 makes attached PDFs a third larger, so 10MB
+        # stays inside Gemini's inline request limit.
         max-upload-size: 10MB
+        # Enough for a few weeks of slides, one file per week.
+        max-files: 6
         max-topics-characters: 4000
-        # About 25,000 tokens of notes, well inside the free tier's tokens-per-minute limit.
+        # All of one plan's text files together: about 25,000 tokens of notes, well inside the
+        # free tier's tokens-per-minute limit.
         max-text-file-characters: 100000
         # Roadmap size limits, stated in the prompt and checked again on Gemini's reply.
         max-source-topics: 40

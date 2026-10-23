@@ -14,9 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class StudyPlanOutputValidatorTest {
     /** At most 3 topics, 2 entries per block and 2 tasks per entry, so each limit is easy to cross. */
     private static final StudyPlanOutputValidator VALIDATOR = new StudyPlanOutputValidator(
-            new StudyPlanProperties(DataSize.ofMegabytes(10), 4000, 100000, 3, 2, 2), JsonMapper.builder().build());
+            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 3, 2, 2), JsonMapper.builder().build());
     /** Two weeks of two hours each. */
-    private static final RoadmapFrame TWO_WEEKS = RoadmapFrame.weeks(2, 120);
+    private static final RoadmapFrame TWO_WEEKS = RoadmapFrame.weeks(LocalDate.of(2026, 10, 23), 2, 120);
 
     private static Optional<RoadmapDraft> validate(String reply) {
         return VALIDATOR.validate(reply, TWO_WEEKS);

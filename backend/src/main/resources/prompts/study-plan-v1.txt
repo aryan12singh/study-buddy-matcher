@@ -19,7 +19,9 @@ Rules for step 2:
 - An entry is a topic, or part of one, to study in that block. Give it "plannedMinutes" and 0 to
   {{maxTasks}} short, concrete tasks, such as "Re-read the lecture 3 slides".
 - The plannedMinutes of all entries in one block must add up to no more than that block's limit.
-- Cover every topic from step 1 at least once.
+- Cover every topic from step 1 at least once, following the order the material teaches them.
+- If the blocks hold more time than the material needs, use the later blocks to revise and
+  practise earlier topics, rather than stretching one topic thinly over several blocks.
 - Suit the plan to the study goal.
 
 Reply with exactly this shape and no other text:
