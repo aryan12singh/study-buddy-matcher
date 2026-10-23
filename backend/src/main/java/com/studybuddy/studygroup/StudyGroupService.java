@@ -111,7 +111,6 @@ public class StudyGroupService {
     }
 
     public void removeMember(Long id, Long actorId, Long memberId) {
-        access.beginWrite();
         InputRules.positiveId(memberId, "Member");
         access.lockStudents(actorId, actorId, memberId);
         StudyGroup group = lookup.findGroupLedByForUpdate(id, actorId);

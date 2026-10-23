@@ -4,6 +4,7 @@ import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Set;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -34,7 +35,10 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
     long countBySenderIdAndStatus(Long id, MatchRequestStatus status);
     List<MatchRequest> findBySenderId(Long senderId);
     List<MatchRequest> findByReceiverId(Long receiverId);
+    /** Lists fetch both students and the context course in the same query, so the count never grows per row. */
+    @EntityGraph(attributePaths = {"sender", "receiver", "contextCourse"})
     List<MatchRequest> findBySenderIdOrderByCreatedAtDesc(Long senderId);
+    @EntityGraph(attributePaths = {"sender", "receiver", "contextCourse"})
     List<MatchRequest> findByReceiverIdOrderByCreatedAtDesc(Long receiverId);
     List<MatchRequest> findBySenderIdAndStatus(Long senderId, MatchRequestStatus status);
     List<MatchRequest> findByReceiverIdAndStatus(Long receiverId, MatchRequestStatus status);

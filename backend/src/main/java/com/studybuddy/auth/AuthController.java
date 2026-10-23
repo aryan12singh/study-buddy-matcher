@@ -31,6 +31,12 @@ public class AuthController {
         return service.register(request);
     }
 
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@AuthenticationPrincipal AccountPrincipal actor) {
+        service.logout(actor.id());
+    }
+
     @GetMapping("/me")
     public CurrentAccountDto me(@AuthenticationPrincipal AccountPrincipal actor) {
         return service.me(actor.id());

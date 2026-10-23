@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { closeGroup, decideApplication, getApplicants, getGroup, removeMember } from './api'
-import type { GroupMember } from './api'
+import type { GroupApplication, GroupMember } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
 import { formatTimestamp } from '../../shared/api/types'
@@ -25,8 +25,15 @@ export default function GroupManagePage() {
   const applicants = useResource(`group-applicants-${id}`, signal => getApplicants(groupId, signal), Boolean(group?.viewer.leader))
   const [tab, setTab] = useState<'applicants' | 'members'>('applicants'),
     [removing, setRemoving] = useState<GroupMember | null>(null),
-    [closing, setClosing] = useState(false)
+    [closing, setClosing] = useState(false),
+    [rejecting, setRejecting] = useState<GroupApplication | null>(null)
   const action = useAction()
+
+  async function reject() {
+    if (!rejecting) return
+    const result = await action.run(() => decideApplication(groupId, rejecting.id, 'reject'), 'Application rejected.')
+    if (result.ok) setRejecting(null)
+  }
 
   async function confirm() {
     const result = await action.run(
@@ -81,7 +88,7 @@ export default function GroupManagePage() {
           {!group.active && (
             <p className="muted">This group is closed. Membership decisions and edits are no longer available.</p>
           )}
-          <ActionNotice error={removing || closing ? undefined : action.error} success={action.success} />
+          <ActionNotice error={removing || closing || rejecting ? undefined : action.error} success={action.success} />
           <TabBar
             value={tab}
             label="Group management views"
@@ -120,7 +127,7 @@ export default function GroupManagePage() {
                         </Button>
                         <Button
                           disabled={action.pending}
-                          onClick={() => action.run(() => decideApplication(groupId, application.id, 'reject'), 'Application rejected.')}
+                          onClick={() => { action.clear(); setRejecting(application) }}
                         >Reject application</Button>
                       </>
                     )}
@@ -165,6 +172,18 @@ export default function GroupManagePage() {
             </>
           )}
         </>
+      )}
+      {rejecting && (
+        <ConfirmDialog
+          title={`Reject ${rejecting.studentName}'s application?`}
+          confirmLabel="Reject application"
+          pending={action.pending}
+          error={action.error}
+          onClose={() => setRejecting(null)}
+          onConfirm={reject}
+        >
+          <p>Rejecting cannot be undone. {rejecting.studentName} is notified and can apply again while the group is open.</p>
+        </ConfirmDialog>
       )}
       {(removing || closing) && (
         <ConfirmDialog
