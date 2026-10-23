@@ -284,6 +284,16 @@ bounded weekly sessions with a timezone, agenda, location and room link. Suggest
 chosen duration into everyone's shared availability, and manual times are always allowed.
 Upcoming sessions appear on Home and in group agendas.
 
+**Achievements.** Students can open their private badge page or its compact summary on their own
+profile. Six original medallions and a pixel grove reflect existing connection, request, group and
+planned-session records. Tiers and levels are current standings and may decrease when eligible
+records change; sent requests and created groups remain counted while retained, including closed
+groups for Founder. The grove counts consecutive planned-session weeks in the configured zone,
+including a session later this week, rather than attendance or completed focus. New memberships
+and buddy connections do not inherit earlier occurrences. Each badge links to an existing next
+action, and all Gold caps the level. See the [metric contract](docs/API_CONTRACT.md#achievementsdto)
+and [verification guide](docs/ACHIEVEMENTS_TESTING.md).
+
 **Calendar export.** Each session downloads as a private `.ics` snapshot with correct timezone
 and daylight-saving handling. Snapshots do not sync, so re-export after changes. Calendar
 compatibility and evidence are in [E2 verification](docs/E2_TESTING.md).
@@ -328,8 +338,8 @@ or the property in `application-local.yml`.
 | `LOGIN_LOCKOUT` / `app.auth.login-throttle.lockout` | `15m` | How long sign-in for that email is refused, counted from its last unsuccessful attempt. Kept in memory, so a restart clears it |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (minimum `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list |
-| `app.achievements.week-zone` | `Asia/Singapore` | Zone whose Monday starts each week of the study streak |
-| `app.achievements.points-per-level` | `3` | Badge points per achievements level (bronze 1, silver 2, gold 3) |
+| `app.achievements.week-zone` | `Asia/Singapore` | Zone whose Monday starts each planned-session week; later this week counts, future weeks wait |
+| `app.achievements.points-per-level` | `3` | Positive badge points per level; only the highest tier counts (bronze 1, silver 2, gold 3); the attainable final step caps at all Gold |
 | `app.achievements.connections` / `requests-sent` / `groups-joined` / `groups-led` | `1/3/5`, `1/5/10`, `1/2/3`, `1/2/3` | Bronze/silver/gold counts for the Connector, First Move, Team Player and Founder badges |
 | `app.achievements.sessions-planned` / `streak-weeks` | `1/5/10`, `2/4/8` | Bronze/silver/gold counts for the Planner and Grove Keeper badges |
 
@@ -523,6 +533,7 @@ design already allows it.
 | [Team C verification](docs/TEAM_C_TESTING.md) | Requests, connections, groups, notifications and admin account checks |
 | [E1 verification](docs/E1_TESTING.md) | AI match explanation checks and acceptance |
 | [E2 scope](docs/E2_SCOPE.md) | What E2 delivered and its boundaries |
+| [Achievements verification](docs/ACHIEVEMENTS_TESTING.md) | Private current standings, planned-week metrics, owner-summary privacy and regression checks |
 | [E2 verification](docs/E2_TESTING.md) | Room, session, audio, weather and calendar checks |
 | [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
@@ -582,6 +593,7 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 | Logo and favicon (`frontend/public/favicon.svg`) | Original pixel-book SVG |
 | README icons (`docs/assets/icons/`) | Original pixel SVGs in the logo palette |
 | Interface icons, avatar initials and patterns | Original drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css` |
+| Achievement medallions and grove | Original SVG medallions and pixel-tree patterns in `features/achievements/`; no external image or icon dependency |
 | Study room scenery and audio | Original CSS pixel scenes and native Web Audio synthesis; no sound files |
 | Weather data | Open-Meteo, with CC BY 4.0 attribution on the room screen; only the configured campus coordinates are sent |
 | Fonts | Tahoma, Verdana and system fonts; `index.css` also imports Inter and Fraunces from Google Fonts under SIL OFL 1.1 ([Inter](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt), [Fraunces](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)), falling back to system fonts offline |

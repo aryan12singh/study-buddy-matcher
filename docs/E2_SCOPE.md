@@ -42,7 +42,9 @@ scope is recorded by #16 and [decisions #41](https://github.com/aryan12singh/stu
 The weather enhancement was expressly adopted after the foundation plan.
 
 [E1 #15](https://github.com/aryan12singh/study-buddy-matcher/issues/15) remains a
-separate AI match-explanation feature. Public rooms, chat, badges, task boards,
+separate AI match-explanation feature. The later [Achievements extension](ACHIEVEMENTS_TESTING.md)
+is also separate from E2; it derives current standings from existing records and adds no
+permanent awards or completed-focus tracking. Public rooms, chat, task boards,
 shared notes, global online status, group-score recommendations and AI
 roadmap/helper/icebreaker proposals remain unselected. Completing E2 does not
 mean every discussion idea has been adopted or that the whole coursework submission

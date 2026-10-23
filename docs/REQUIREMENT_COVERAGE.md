@@ -326,3 +326,24 @@ acceptance. [E1_TESTING.md](E1_TESTING.md) is the current regression and demo gu
 | Apply bounded output checks and state their limits | Prompt v5 with plain-word evidence and weights; evidence-aware course, number and code-name checks; current length policy for fresh/cached text | AI accuracy cue; literal text rendering | `ExplanationOutputValidatorTest`, prompt tests, panel rendering tests; live examples are separate acceptance |
 | Fall back on provider/cache failures without hiding core errors | Provider timeout/error handling; quota; separate cache-read/write `DataAccessException` boundaries | Standard explanation and ordinary retry states | Provider loopback, service and quota tests; no live provider required |
 | Reuse equivalent evidence without confusing it with card identity | Separate semantic hash; prompt/model versioning; unique cache row | — | `ExplanationHasherTest`, `MatchExplanationHttpTest`; cache-hit policy tests |
+
+## Achievements extension (approved 23 October)
+
+This later approved extension supersedes the badges entry in the historical 18 October
+unselected-ideas snapshot above. It derives private current standings from existing records;
+it does not add permanent awards, attendance or completed-focus tracking. The detailed policy
+is in the [API contract](API_CONTRACT.md#achievementsdto), with repeatable checks in
+[ACHIEVEMENTS_TESTING.md](ACHIEVEMENTS_TESTING.md).
+
+| Behaviour / boundary | Implementation | Evidence |
+| --- | --- | --- |
+| Student-only private current standing, no other-student lookup or profile exposure | `AchievementController`, `AchievementService`, `AccountAccess`; no achievement fields in profile DTOs | `AchievementHttpTest` anonymous/admin/other-account/profile cases |
+| Current connections/open memberships and retained sent-request/created-group history are distinguished | Existing repositories plus an open-membership count; `BadgeDefinition` explanations | Service downgrade test; HTTP disconnect/closure/history case |
+| Scheduled occurrences use active parents and current participation dates without loading entities per schedule | `AchievementSessionRepository` batched projection; existing `SessionSchedule` recurrence maths | HTTP group/buddy, tenure, readmission, removal, inactive/ended/closed/cancelled cases |
+| Planned weekly run uses Monday in the returned configured zone; later this week counts, future weeks wait | `WeeklyStreakCalculator`; read-derived best run and dated grove | Zone/boundary/gap/duplicate/future tests and precise page explanations |
+| Highest tiers determine points and an attainable capped level; invalid zero/unsorted configuration is rejected | `BadgeEvaluator`, `AchievementAssembler`, validated typed properties | Evaluator/assembler/properties tests, all-Gold and non-divisible final-step cases |
+| Existing-route actions, capped Gold progress, seed/empty/loading/error/retry and bounded tree display | Achievements feature components and badge-key route allowlist | `AchievementsPage.test.tsx`; narrow-layout and keyboard rendering checks in verification guide |
+| Minimal Team B profile integration fetches only for the matching signed-in owner and aborts on loss of ownership | Conditional keyed `OwnAchievementSummary`; existing `useResource` | `StudentProfilePage.test.tsx` other/admin/failure/navigation/account-change/logout cases |
+
+Cross-team source review, both authors' explanation, latest-Figma comparison, physical
+device/projector readability and submission acceptance still require their own evidence.

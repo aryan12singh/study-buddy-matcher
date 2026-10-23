@@ -1,5 +1,6 @@
 import type { Streak } from './api'
 import { PixelRects } from './pixelArt'
+import { Link } from 'react-router-dom'
 
 const LEAVES = { l: '#9fd36f', m: '#4f9a4a', d: '#2f6b3a', t: '#6b4426', s: '#c9a46a' }
 const GROUND = { g: '#5aa83e', h: '#7cc457', s: '#8a5a32', r: '#6b4426' }
@@ -44,8 +45,8 @@ export default function StudyGrove({ streak }: { streak: Streak }) {
   return (
     <section className="grove" aria-labelledby="grove-title">
       <div className="grove-heading">
-        <h2 id="grove-title">Study grove</h2>
-        <p>Study streak: weeks in a row with a planned session. Each week grows a tree; a run that skips a week starts again.</p>
+        <h2 id="grove-title">Planned-session grove</h2>
+        <p>One tree per consecutive week with an eligible planned session, with weeks starting Monday in {streak.weekZone}. A session later this week counts now; future weeks wait until they begin.</p>
       </div>
       {weeks.length === 0 ? (
         <div className="grove-empty">
@@ -54,17 +55,21 @@ export default function StudyGrove({ streak }: { streak: Streak }) {
           </ul>
           <div>
             <h3>Your grove is a seed</h3>
-            <p>Schedule a study session with a buddy or group this week to plant your first tree. Keep one planned session each week and it grows into a grove.</p>
+            <p>Plan a session with a buddy or group this week to plant your first tree. If your last run ended more than a week ago, a new plan starts a fresh grove.</p>
+            <div className="actions">
+              <Link className="retro-button primary" to="/sessions">Open study sessions</Link>
+              <Link className="retro-button" to="/find-buddies">Find a study buddy</Link>
+            </div>
           </div>
         </div>
       ) : (
         <>
           {hidden > 0 && <p className="grove-more">Showing the latest {weeks.length} of {streak.currentRunWeeks.length} weeks.</p>}
-          <ul className="grove-row" aria-label={`${streak.currentWeeks} week study streak`}>
+          <ul className="grove-row" aria-label={`${streak.currentWeeks} week planned-session streak`}>
             {weeks.map((week, index) => {
               const stage = stageFor(weeks.length - 1 - index)
               const date = formatter.format(new Date(`${week}T00:00:00`))
-              return <Plot key={week} rows={stage.rows} delay={index * 60} label={`Week of ${date}`} />
+              return <Plot key={week} rows={stage.rows} delay={index * 60} label={`Week of ${date}: ${stage.name}`} />
             })}
           </ul>
         </>

@@ -20,11 +20,14 @@ export interface Streak {
   bestWeeks: number
   /** ISO date of the Monday of each week in the current run, oldest first. */
   currentRunWeeks: string[]
+  weekZone: string
 }
 
 export interface Achievements {
   level: number
+  maxLevel: number
   points: number
+  maxPoints: number
   pointsToNextLevel: number
   pointsPerLevel: number
   earnedCount: number

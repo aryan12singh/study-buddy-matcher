@@ -1,6 +1,11 @@
 .achievements { display: grid; gap: 1.5rem; --grove-sky: #dff0f6; --metal-edge: #777; }
 .achievements h2, .achievements h3 { margin: 0; }
 .achievements-heading { font-size: 1.1rem; margin-bottom: .75rem !important; }
+.achievement-policy { margin: 0 0 1rem; color: #3f474b; max-width: 85ch; }
+.achievement-help { border: 1px solid #7c898e; background: #f6f7f2; padding: .75rem 1rem; }
+.achievement-help summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; font-weight: 700; }
+.achievement-help summary:focus-visible { outline: 3px solid #19398e; outline-offset: 3px; }
+.achievement-help p { max-width: 85ch; margin: .75rem 0 0; }
 
 /* Summary: four sunken stat panes */
 .achievement-summary { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: .75rem; margin: 0; }
@@ -12,6 +17,11 @@
 .level-bar { flex: 1 1 120px; height: 14px; border: 2px solid; border-color: #808080 #fff #fff #808080; background: #e4e4e2; position: relative; overflow: hidden; }
 .level-bar > span { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, var(--primary) 0 8px, transparent 8px 10px); }
 .summary-level small { flex-basis: 100%; }
+.summary-level dd > small:first-of-type { flex-basis: auto; }
+.achievement-summary-compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.own-achievements-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; }
+.own-achievements-heading h2 { margin: 0; font-size: 1.1rem; }
+.own-achievements > p { margin: .75rem 0; color: #3f474b; }
 
 /* Study grove */
 .grove { border: 2px solid; border-color: #fff #808080 #808080 #fff; background: linear-gradient(180deg, var(--grove-sky), #f4f9ec 75%); padding: 1rem; }
@@ -29,7 +39,7 @@
 @keyframes grove-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 /* Badges */
-.badge-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 1rem; }
+.badge-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr)); gap: 1rem; }
 .badge-card { display: grid; grid-template-columns: 96px 1fr; gap: .85rem; align-items: start; padding: .9rem; background: #fff; border: 2px solid; border-color: #fff #808080 #808080 #fff; box-shadow: 1px 1px 0 #404040; position: relative; }
 .badge-card h3 { font-size: 1rem; }
 .badge-card p { margin: .15rem 0 0; font-size: .86rem; color: #3f474b; }
@@ -51,17 +61,31 @@
 .badge-count { font-variant-numeric: tabular-nums; }
 .badge-count strong { color: var(--ink); }
 .badge-hint { font-style: italic; }
+.badge-action { margin-top: .75rem; max-width: 100%; overflow-wrap: anywhere; text-align: center; }
 
 @media (max-width: 720px) {
   .achievement-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary-level { grid-column: 1 / -1; }
+  .achievement-summary-compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .achievement-summary-compact .summary-level { grid-column: auto; }
   .grove-plot, .grove-plot svg { width: 56px; }
   .grove-plot svg { height: 94px; }
 }
+@media (max-width: 560px) {
+  .achievement-summary-compact { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+  .achievement-summary-compact > div { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .achievement-summary-compact dt { flex: 1 1 50%; }
+  .achievement-summary-compact dd { flex: 1 1 45%; justify-content: flex-end; margin: 0; text-align: right; }
+}
 @media (max-width: 380px) {
-  .badge-card { grid-template-columns: 72px 1fr; }
-  .medallion-art { width: 72px; }
+  .badge-card { grid-template-columns: 56px minmax(0, 1fr); gap: .65rem; padding: .7rem; }
+  .medallion-art { width: 56px; }
+  .achievement-summary, .achievement-summary-compact { grid-template-columns: minmax(0, 1fr); }
+  .achievement-summary dt { letter-spacing: .02em; }
+  .achievement-summary > div { padding: .6rem .75rem; }
+  .own-achievements-heading .retro-button { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .grove-plot, .badge-earned .medallion-shine { animation: none; }
+  .achievements .retro-button, .own-achievements .retro-button { transition: none; }
 }

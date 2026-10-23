@@ -16,8 +16,11 @@ import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import Avatar from '../../shared/components/Avatar'
 import CopyButton from '../../shared/components/CopyButton'
 import { returnToFrom } from '../../shared/navigation/returnTo'
+import { useAuth } from '../../shared/auth/useAuth'
+import OwnAchievementSummary from '../achievements/OwnAchievementSummary'
 
 export default function StudentProfilePage() {
+  const { account } = useAuth()
   const { id } = useParams(),
     studentId = Number(id)
   const validId = Number.isSafeInteger(studentId) && studentId > 0
@@ -151,6 +154,9 @@ export default function StudentProfilePage() {
               )}
             </section>
           </div>
+          {account?.role === 'STUDENT' && account.id === studentId && student.id === account.id && relationship?.state === 'SELF' && (
+            <OwnAchievementSummary key={account.id} ownerId={account.id} />
+          )}
           <section className="detail-panel">
             <h2>Courses and goals</h2>
             <h3>Courses taken</h3>
