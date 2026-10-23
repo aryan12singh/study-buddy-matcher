@@ -273,7 +273,12 @@ are in the [matching decisions](docs/DESIGN_DECISIONS.md#matching-decisions-team
 
 ## Collaborative study
 
-**Study rooms.** Each open group has one private room for its accepted members. Members share a
+**Study rooms.** The **Study Room** navigation tab opens a personal Pomodoro beside one panel
+listing all your groups. The personal timer starts at 25 minutes of focus and 5 minutes of break,
+supports pause/resume, confirmed reset and adjustable whole-minute durations (focus 1–180,
+break 1–60), and restores its elapsed time in the same browser tab for the signed-in account.
+Group loading or errors do not interrupt it. Open groups link to their private rooms; closed
+groups link to their history. Each open group has one private room for its accepted members. Members share a
 Pomodoro timer that survives refreshes and restarts, the leader assigns a host and co-host,
 and present hosts can change durations and capacity. Original layered music and ambience play
 only after each browser opts in; volume and mute stay local. Pixel weather scenes follow live
@@ -637,7 +642,7 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 | README icons (`docs/assets/icons/`) | Original pixel SVGs in the logo palette |
 | Interface icons, avatar initials and patterns | Original drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css` |
 | Achievement medallions and grove | Original SVG medallions and pixel-tree patterns in `features/achievements/`; no external image or icon dependency |
-| Study room scenery and audio | Original CSS pixel scenes and native Web Audio synthesis; no sound files |
+| Study room scenery and audio | Original CSS pixel scenes, including the personal timer's meadow backdrop, and native Web Audio synthesis; no sound files |
 | Weather data | Open-Meteo, with CC BY 4.0 attribution on the room screen; only the configured campus coordinates are sent |
 | Fonts | Tahoma, Verdana and system fonts; `index.css` also imports Inter and Fraunces from Google Fonts under SIL OFL 1.1 ([Inter](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt), [Fraunces](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)), falling back to system fonts offline |
 

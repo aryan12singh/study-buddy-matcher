@@ -32,6 +32,10 @@ export function heartbeatRoom(groupId: number, clientId: string, presence: Prese
   return snapshot(() => api.put(`${path(groupId)}/presence`, { clientId, presence }, { signal }))
 }
 export async function leaveRoom(groupId: number, clientId: string) { await api.delete(`${path(groupId)}/presence/${clientId}`) }
+/** Leaves as the tab closes or reloads; a keepalive fetch can outlive the page, unlike an ordinary request. */
+export async function leaveRoomOnExit(groupId: number, clientId: string) {
+  await api.delete(`${path(groupId)}/presence/${clientId}`, { adapter: 'fetch', fetchOptions: { keepalive: true } })
+}
 export function timerCommand(groupId: number, command: 'START' | 'PAUSE' | 'RESUME' | 'RESET', expectedVersion: number) {
   return snapshot(() => api.post(`${path(groupId)}/timer`, { command, expectedVersion }))
 }

@@ -1,6 +1,6 @@
 import type { RoomTimer } from './api'
 
-/** Client rendering only; every control and refresh still uses server state. */
+/** Projects focus/break phases from elapsed time; callers own the authoritative timer state. */
 export function projectTimer(timer: RoomTimer, elapsedMillis: number) {
   if (timer.status !== 'RUNNING') return { phase: timer.phase, remainingMillis: timer.remainingMillis }
   let elapsed = Math.max(0, elapsedMillis)

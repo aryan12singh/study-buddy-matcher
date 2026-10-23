@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,17 +26,19 @@ public class StudyRoomService {
     private final RoomAccess access;
     private final RoomAssembler assembler;
     private final RoomSettings settings;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public StudyRoomService(StudyRoomRepository rooms, RoomPresenceRepository presences,
         GroupMembershipRepository memberships, RoomAccess access, RoomAssembler assembler,
-        RoomSettings settings, @Qualifier("studyRoomClock") Clock clock) {
+        RoomSettings settings, ApplicationEventPublisher events, @Qualifier("studyRoomClock") Clock clock) {
         this.rooms = rooms;
         this.presences = presences;
         this.memberships = memberships;
         this.access = access;
         this.assembler = assembler;
         this.settings = settings;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -98,12 +101,18 @@ public class StudyRoomService {
     public StudyRoomDto controlTimer(Long groupId, Long actorId, RoomTimerInput input) {
         StudyRoom room = persistedRoom(access.lockMember(groupId, actorId));
         requireControl(room, actorId, input.expectedVersion());
+        Instant now = clock.instant();
         try {
-            room.applyTimer(input.command().apply(room.timer(), clock.instant()));
+            room.applyTimer(input.command().apply(room.timer(), now));
         } catch (IllegalStateException invalid) {
             throw new ConflictException(invalid.getMessage());
         }
         rooms.flush();
+        // Only a fresh start invites people; resuming a paused session does not. Invitations go
+        // out after this commits, so a failed invitation can never undo the start.
+        if (input.command() == TimerCommand.START) {
+            events.publishEvent(new RoomStarted(room.getId(), actorId, now));
+        }
         return detail(room, actorId);
     }
 

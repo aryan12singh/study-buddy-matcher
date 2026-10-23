@@ -51,6 +51,29 @@ automatically verifies author understanding, latest Figma or external calendar c
 
 ## End-to-end walkthrough
 
+### Study Room entry preview — 22 October 2026
+
+The user-supplied reference is implemented as a personal Pomodoro and one groups
+sidebar, with original CSS scenery and the existing shared UI primitives.
+
+- Targeted frontend verification: 29 tests across personal Pomodoro, Study Room
+  navigation, timer projection and the existing private room screen passed. Lint
+  and the production build passed.
+- Chromium preview used synthetic account/group API responses. At 1500px, the
+  timer and groups appeared side by side; at 390px and 320px they stacked without
+  horizontal overflow. Long group names wrapped and the desktop group list scrolled.
+- Browser interaction verified start/pause (25:00 to 24:59), the settings dialog's
+  focus placement and restoration of the paused 24:59 after refresh. Automated
+  checks also cover elapsed focus/break recovery, reset confirmation, invalid
+  duration edits, account separation and unavailable/corrupted browser storage.
+- A follow-up Chromium check verified the progress icon's 4px vertical bob while
+  running, with no animation while idle, paused or using reduced motion.
+- The groups endpoint and shared room actions retain their existing backend
+  contract. The preview used intercepted API responses; live database workflow
+  verification is the separate walkthrough below.
+
+### Live group and session walkthrough
+
 Use disposable seeded accounts and an open group with a leader and at least two
 accepted members. Keep a separate connected buddy pair and a stranger/admin.
 Do not put private passwords or tokens in screenshots, evidence or PR comments.

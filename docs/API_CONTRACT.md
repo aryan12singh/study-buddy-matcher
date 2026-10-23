@@ -611,6 +611,7 @@ and descriptions at their valid limits cannot cause a notification-column overfl
 | Application withdrawal | Leader, one | `GROUP_JOIN_REQUEST_WITHDRAWN` |
 | Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
 | Member leaves | Leader, one | `GROUP_MEMBER_LEFT` |
+| Study room timer started (not resumed) | Each active member not in the room, except whoever started it, and only if they have no unread notice for that group's room; links to the room. Sent in a separate transaction after the start commits; a failed invitation is logged and never undoes the start | `GROUP_STUDY_ROOM_STARTED` |
 | Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
 | Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/withdrawn/removed events; the ended-connection notice has no profile link |
 | Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |
@@ -1002,9 +1003,13 @@ no-store/session-purge rules govern that read. Group-link copy uses the client o
 Create/update/delete destination feedback contains generic outcome text and no DTO/private
 fields.
 
-E2 student routes are `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
+E2 student routes are `/study-room`, `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
 `/sessions/{id}/edit`, `/groups/{id}/sessions` and `/connections/{id}/sessions`;
-each parent list has a `/new` editor for its authorized managers. Group detail
+each parent list has a `/new` editor for its authorized managers. The Study Room tab
+combines a personal browser timer with one sidebar populated by `/api/groups/mine`.
+Open groups link to their existing private rooms and closed groups to their history;
+opening the tab does not join a room. The personal timer uses no additional API and
+does not change the group's shared timer. Group detail
 loads a dated-session agenda only for accepted members of an open group, while
 Connections offers a session link for each active buddy. Session notification
 links target `/sessions/{id}` and recheck permission through the detail endpoint.
