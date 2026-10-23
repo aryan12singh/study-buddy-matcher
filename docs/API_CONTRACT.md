@@ -611,6 +611,7 @@ and descriptions at their valid limits cannot cause a notification-column overfl
 | Application withdrawal | Leader, one | `GROUP_JOIN_REQUEST_WITHDRAWN` |
 | Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
 | Member leaves | Leader, one | `GROUP_MEMBER_LEFT` |
+| Study room timer started (not resumed) | Each active member not in the room, except whoever started it, and only if they have no unread notice for that group's room; links to the room. Sent in a separate transaction after the start commits; a failed invitation is logged and never undoes the start | `GROUP_STUDY_ROOM_STARTED` |
 | Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
 | Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/withdrawn/removed events; the ended-connection notice has no profile link |
 | Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |

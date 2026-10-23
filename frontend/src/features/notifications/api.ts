@@ -23,6 +23,7 @@ export function followNotification(notification: Notification) {
 export function notificationLink(notification: Notification) {
   if (!notification.resourceId) return null
   if (notification.resourceType === 'GROUP') {
+    if (notification.type === 'GROUP_STUDY_ROOM_STARTED') return { to: `/groups/${notification.resourceId}/room`, label: 'Open study room' }
     // A leader's join-request notice goes straight to where the decision is made
     return notification.type === 'GROUP_JOIN_REQUEST_RECEIVED'
       ? { to: `/groups/${notification.resourceId}/manage`, label: 'Review applications' }
