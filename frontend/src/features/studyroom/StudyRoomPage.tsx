@@ -19,6 +19,7 @@ import AtmosphereScene from './AtmosphereScene'
 import RoomSettingsMenu from './RoomSettingsMenu'
 import RoomRolesPanel from './RoomRolesPanel'
 import RoomTimerSettingsPanel from './RoomTimerSettingsPanel'
+import { useRoomFullscreen } from './useRoomFullscreen'
 import type { WeatherCondition } from './weatherTheme'
 import './studyCorner.css'
 import './studyroom.css'
@@ -39,6 +40,13 @@ function RoomPage({ groupId }: { groupId: number }) {
   const { account } = useAuth()
   const [atmosphere, setAtmosphere] = useState<{ condition: WeatherCondition; night: boolean }>({ condition: 'CLEAR', night: false })
   const changeAtmosphere = useCallback((condition: WeatherCondition, night: boolean) => setAtmosphere({ condition, night }), [])
+  const fullscreen = useRoomFullscreen()
+  const [panelHidden, setPanelHidden] = useState(false)
+  const hidePanelButton = useRef<HTMLButtonElement>(null)
+  function showPanel() {
+    setPanelHidden(false)
+    requestAnimationFrame(() => hidePanelButton.current?.focus())
+  }
   const [confirmation, setConfirmation] = useState<'leave' | 'reset' | null>(null)
   const joined = useRef(false)
   useEffect(() => { joined.current = resource.joinedHere }, [resource.joinedHere])
@@ -95,7 +103,7 @@ function RoomPage({ groupId }: { groupId: number }) {
   }
 
   async function reset() {
-    if (room && await change(() => timerCommand(groupId, 'RESET', room.version), 'The shared timer was reset.')) {
+    if (room && await change(() => timerCommand(groupId, 'RESET', room.version), 'The session was ended for everyone.')) {
       setConfirmation(null)
     }
   }
@@ -135,7 +143,13 @@ function RoomPage({ groupId }: { groupId: number }) {
           </li>)}
         </ul>
       </section>}
-      <div className="study-room-workspace group-room-workspace">
+      <div className={`study-room-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panelHidden ? ' is-minimal' : ''}`}>
+        {panelHidden && <div className="room-minimal-tools">
+          {/* Mounted only while the panel is hidden, so focus lands here instead of on a hidden button. */}
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+          <Button autoFocus onClick={showPanel}><span aria-hidden="true">▣</span> Show panel</Button>
+          {fullscreen.expanded && <Button onClick={fullscreen.toggle}><span aria-hidden="true">⤡</span> Exit full screen</Button>}
+        </div>}
         <AtmosphereScene className="atmosphere-backdrop" condition={atmosphere.condition} night={atmosphere.night} />
         <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
           <header className="group-room-header">
@@ -143,6 +157,7 @@ function RoomPage({ groupId }: { groupId: number }) {
               <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
               <h2 id="group-room-heading">{room.groupName}</h2>
             </div>
+            <div className="group-room-tools">
             <RoomSettingsMenu tabs={[
               { id: 'timer', label: 'Timer', icon: '◷',
                 content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
@@ -153,6 +168,13 @@ function RoomPage({ groupId }: { groupId: number }) {
               { id: 'roles', label: 'Room roles', icon: '★',
                 content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
             ]} />
+            <button ref={hidePanelButton} type="button" className="room-window-control" aria-label="Hide panel" title="Hide panel"
+              onClick={() => setPanelHidden(true)}><span className="window-control-icon minimise" aria-hidden="true" /></button>
+            <button type="button" className="room-window-control" onClick={fullscreen.toggle}
+              aria-label={fullscreen.expanded ? 'Exit full screen' : 'Full screen'} title={fullscreen.expanded ? 'Exit full screen' : 'Full screen'}>
+              <span className={`window-control-icon ${fullscreen.expanded ? 'restore' : 'maximise'}`} aria-hidden="true" />
+            </button>
+            </div>
           </header>
           <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
             pending={action.pending} onControl={control} />
@@ -169,14 +191,14 @@ function RoomPage({ groupId }: { groupId: number }) {
         <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
       </div>
     </>}
-    {confirmation && <Dialog title={confirmation === 'leave' ? 'Leave study room?' : 'Reset shared timer?'}
+    {confirmation && <Dialog title={confirmation === 'leave' ? 'Leave study room?' : 'End this session?'}
       busy={action.pending} onClose={() => setConfirmation(null)}>
-      <p>{confirmation === 'leave' ? 'This browser will leave and stop its audio. You can join again while the group is open.' : 'This resets the focus cycle for everyone in the room.'}</p>
+      <p>{confirmation === 'leave' ? 'This browser will leave and stop its audio. You can join again while the group is open.' : `The timer goes back to ${room ? `${room.focusMinutes}:00` : 'the start'} for everyone. Everyone stays in the room.`}</p>
       <ActionNotice error={action.error} />
       <div className="actions">
         <Button disabled={action.pending} onClick={() => setConfirmation(null)}>Keep studying</Button>
         <Button variant="danger" disabled={action.pending} onClick={() => void (confirmation === 'leave' ? leave() : reset())}>
-          {confirmation === 'leave' ? 'Leave study room' : 'Reset for everyone'}
+          {confirmation === 'leave' ? 'Leave study room' : 'End session for everyone'}
         </Button>
       </div>
     </Dialog>}

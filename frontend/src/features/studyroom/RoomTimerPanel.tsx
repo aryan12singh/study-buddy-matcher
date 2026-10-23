@@ -78,7 +78,7 @@ export default function RoomTimerPanel({ snapshot, canControl, joined = true, pe
       {timer.status === 'IDLE' && <Button variant="primary" disabled={pending} onClick={() => onControl('START')}>Start focus</Button>}
       {timer.status === 'RUNNING' && <Button disabled={pending} onClick={() => onControl('PAUSE')}>Pause for everyone</Button>}
       {timer.status === 'PAUSED' && <Button variant="primary" disabled={pending} onClick={() => onControl('RESUME')}>Resume for everyone</Button>}
-      {timer.status !== 'IDLE' && <Button disabled={pending} onClick={() => onControl('RESET')}>Reset timer</Button>}
+      {timer.status !== 'IDLE' && <Button disabled={pending} onClick={() => onControl('RESET')}>End session</Button>}
     </div> : <p className="room-timer-note">Only the host, co-host or group leader can control the timer.</p>)}
   </section>
 }

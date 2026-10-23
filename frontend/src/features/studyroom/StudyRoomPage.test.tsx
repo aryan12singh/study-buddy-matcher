@@ -77,7 +77,7 @@ describe('private room screen', () => {
     expect(engine.play).not.toHaveBeenCalled()
   })
 
-  it('joins as a host and confirms reset before sending a versioned command', async () => {
+  it('joins as a host and confirms ending the session before sending a versioned reset', async () => {
     const post = vi.spyOn(api, 'post').mockImplementation(async (path, input) => {
       if (path.endsWith('/join')) return response(joinedRoom())
       const command = (input as { command: string }).command
@@ -89,9 +89,9 @@ describe('private room screen', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Start focus' }))
     await screen.findByRole('button', { name: 'Pause for everyone' })
     expect(post).toHaveBeenCalledWith('/groups/5/room/timer', { command: 'START', expectedVersion: 0 })
-    fireEvent.click(screen.getByRole('button', { name: 'Reset timer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'End session' }))
     expect(post).not.toHaveBeenCalledWith('/groups/5/room/timer', expect.objectContaining({ command: 'RESET' }))
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Reset for everyone' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End session for everyone' }))
     await screen.findByRole('button', { name: 'Start focus' })
     expect(post).toHaveBeenCalledWith('/groups/5/room/timer', { command: 'RESET', expectedVersion: 1 })
   })
@@ -317,7 +317,7 @@ describe('private room screen', () => {
     expect(screen.getByLabelText('Focus minutes')).toBeDisabled()
     expect(screen.getByLabelText('Break minutes')).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Save timer settings' })).toBeDisabled()
-    expect(screen.getByText('The timer has started. Reset it before changing the durations.')).toBeInTheDocument()
+    expect(screen.getByText('A session is in progress. End it before changing the durations.')).toBeInTheDocument()
   })
 
   it('validates settings and retains the edited version through background refreshes', async () => {
@@ -374,6 +374,38 @@ describe('private room screen', () => {
     fireEvent(window, new Event('pagehide'))
     const tab = vi.mocked(api.post).mock.calls[0][1] as { clientId: string }
     expect(remove).toHaveBeenCalledWith(`/groups/5/room/presence/${tab.clientId}`, expect.objectContaining({ fetchOptions: { keepalive: true } }))
+  })
+
+  it('expands the room to full screen and back', async () => {
+    const request = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(document.documentElement, 'requestFullscreen', { value: request, configurable: true })
+    open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Full screen' }))
+    expect(request).toHaveBeenCalled()
+    expect(document.querySelector('.group-room-workspace')).toHaveClass('is-expanded')
+    fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }))
+    expect(document.querySelector('.group-room-workspace')).not.toHaveClass('is-expanded')
+    delete (document.documentElement as Partial<HTMLElement>).requestFullscreen
+  })
+
+  it('collapses the expanded room with Escape when the browser has no full screen', async () => {
+    open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Full screen' }))
+    expect(document.querySelector('.group-room-workspace')).toHaveClass('is-expanded')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.getByRole('button', { name: 'Full screen' })).toBeInTheDocument()
+  })
+
+  it('hides the panel to show only the timer over the background, and brings it back', async () => {
+    open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Hide panel' }))
+    expect(document.querySelector('.group-room-workspace')).toHaveClass('is-minimal')
+    expect(screen.getByRole('timer')).toHaveTextContent('25:00')
+    const show = screen.getByRole('button', { name: 'Show panel' })
+    expect(show).toHaveFocus()
+    fireEvent.click(show)
+    expect(document.querySelector('.group-room-workspace')).not.toHaveClass('is-minimal')
+    expect(screen.queryByRole('button', { name: 'Show panel' })).not.toBeInTheDocument()
   })
 
   it('does not call the API for an invalid group link', () => {

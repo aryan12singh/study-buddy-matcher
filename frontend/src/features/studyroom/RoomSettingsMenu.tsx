@@ -49,9 +49,9 @@ export default function RoomSettingsMenu({ tabs }: { tabs: RoomSettingsTab[] }) 
 
   return <div ref={menu} className="room-settings-menu"
     onKeyDown={event => { if (event.key === 'Escape' && open) { event.preventDefault(); close() } }}>
-    <button ref={toggle} type="button" className="retro-button secondary room-settings-toggle"
+    <button ref={toggle} type="button" className="room-window-control room-settings-toggle" aria-label="Settings" title="Settings"
       aria-expanded={open} aria-controls={`${id}-menu`} onClick={() => setOpen(value => !value)}>
-      <span aria-hidden="true">⚙</span> Settings
+      <span className="window-control-icon settings" aria-hidden="true">⚙</span>
     </button>
     <div id={`${id}-menu`} className="room-settings-popover" role="region" aria-label="Room settings" hidden={!open}>
       <div className="room-settings-tabs">

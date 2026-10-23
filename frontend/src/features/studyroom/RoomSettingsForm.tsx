@@ -51,7 +51,7 @@ export default function RoomSettingsForm({ room, fields, pending, onSave, server
   }
   return <section className="detail-panel">
     {fields === 'timer'
-      ? <p className="muted">{locked ? 'The timer has started. Reset it before changing the durations.'
+      ? <p className="muted">{locked ? 'A session is in progress. End it before changing the durations.'
         : 'Present hosts and co-hosts can change the durations for everyone.'}</p>
       : <p className="muted">The host and co-host control the shared timer and audio. Only the leader assigns roles; present hosts and co-hosts can change capacity.</p>}
     <form className="stack-form" noValidate onSubmit={submit}>
