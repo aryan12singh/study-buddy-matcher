@@ -224,6 +224,10 @@ connection. Repeated decisions produce a conflict and no duplicate event. Answer
 and ended connections remain available to admin counts and request history; ended connections
 are not returned by the connection list.
 
+Withdrawing does not erase the request: the recipient sees its `CANCELLED` status under
+Past requests and cannot accept it. UI confirmations capture the original request/connection
+and signed-in account; navigation or a refreshed replacement relation requires fresh consent.
+
 `ConnectionDto` is `{id,otherStudentId,otherStudentName,createdAt}`, written from the caller's
 side. It has no contact number. Disconnect is one-way and notifies the other participant.
 
@@ -293,6 +297,12 @@ history. An applicant may withdraw a pending application and apply again later. 
 status is `PENDING`, `ACCEPTED`, `REJECTED` (the leader's answer or closure) or `WITHDRAWN` (the
 applicant's choice, or their account was deactivated or deleted). Leader transfer and group
 reopening are not added.
+
+Group confirmations likewise bind to the original group, application or membership tenure.
+Changing the route/account, replacing a pending application, or leaving and rejoining clears
+an earlier confirmation. An unchanged refresh preserves the current confirmation. Leaving
+revokes room presence/roles and private session/calendar access in the membership transaction;
+the group's sessions remain available to its remaining members.
 
 ```json
 {
