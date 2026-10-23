@@ -348,6 +348,7 @@ or the property in `application-local.yml`.
 | --- | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | `local` | Loads `application-local.yml` in development |
 | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | Required unless set locally | Backend database connection |
+| `DB_MAX_POOL_SIZE` / `spring.datasource.hikari.maximum-pool-size` | `5` | Most database connections one backend keeps open. Spring's default of 10 would let one developer fill most of the shared Supabase Session pooler's 15 clients |
 | `JWT_SECRET` / `jwt.secret` | Required, at least 32 characters | Signs sign-in tokens |
 | `JWT_EXPIRATION_MS` / `jwt.expiration-ms` | `86400000` (24 hours) | Token lifetime |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |

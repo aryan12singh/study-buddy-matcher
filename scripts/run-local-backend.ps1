@@ -52,7 +52,7 @@ if (-not $ready) { throw 'PostgreSQL did not become ready' }
 
 Write-Host 'Applying migrations...'
 $migrations = Get-ChildItem "$RepoRoot\backend\src\main\resources\db\migrations\*.sql" | Sort-Object Name
-$sql = "SET LOCAL client_min_messages=warning;`n" + (($migrations | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n")
+$sql = "SET LOCAL client_min_messages=warning;`n" + (($migrations | ForEach-Object { Get-Content $_.FullName -Raw -Encoding UTF8 }) -join "`n")
 # Piped straight to docker: text piped into a PowerShell function does not reach a program inside it.
 $sql | docker exec -i $Container psql -h 127.0.0.1 -U studybuddy -d studybuddy --no-psqlrc `
     --quiet --set=ON_ERROR_STOP=1 --single-transaction | Out-Null
