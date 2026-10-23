@@ -28,7 +28,10 @@ value is unique in PostgreSQL, including inactive accounts. New passwords requir
 eight characters and at most 72 UTF-8 bytes. Login retains annotated request validation;
 otherwise-valid input exceeding the UTF-8 byte limit gets the same 401 `INVALID_CREDENTIALS`
 as a wrong password before BCrypt comparison. Malformed/over-character-limit fields still
-return 400. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
+return 400. After `app.auth.login-throttle.max-failures` wrong passwords in a row for one
+normalized email, known or unknown, login for it returns 429 `TOO_MANY_LOGIN_ATTEMPTS` for
+`app.auth.login-throttle.lockout` after the last attempt; a successful login clears the count.
+Each attempt is counted before its password is checked, so parallel guesses cannot exceed it. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
 request, connection, group and notification responses.
 
 Contact input accepts local Singapore 8-digit numbers beginning 6/8/9, or `+` followed by
@@ -70,6 +73,7 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 401 | `UNAUTHENTICATED` | Missing, invalid, expired, revoked token; missing/inactive current account |
 | 401 | `INVALID_CREDENTIALS` | Login email/password does not match an account (checked before account state) |
 | 403 | `ACCOUNT_DEACTIVATED` | Login with the correct password for a deactivated account |
+| 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
 | 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
 | 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self-removal |
@@ -92,6 +96,7 @@ student only. Account role selection belongs to the administrator creation endpo
 | POST | `/api/auth/login` | `{email,password}` | 200 `AuthResultDto` | Public |
 | POST | `/api/auth/register` | `RegisterRequest` | 201 `AuthResultDto` | Public |
 | GET | `/api/auth/me` | none | 200 `CurrentAccountDto` | Active account |
+| POST | `/api/auth/logout` | none | 204 | Active account; increments the account's token version, so every token issued to it so far (all tabs and devices) gets 401 |
 | GET | `/api/courses` | none | 200 `CourseDto[]`, course-code order | Student |
 | GET | `/api/students/me/summary` | none | 200 `StudentActivityDto` | Student |
 

@@ -1,5 +1,7 @@
 package com.studybuddy.admin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.studybuddy.auth.AccountCreation;
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.InputRules;
@@ -18,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class AdminUserService {
+    /** Audit trail of account lifecycle actions: ids and roles only, never names, emails or contacts. */
+    private static final Logger LOG = LoggerFactory.getLogger(AdminUserService.class);
     private final UserRepository users;
     private final StudentRepository students;
     private final StudentNameRepository studentNames;
@@ -115,6 +119,7 @@ public class AdminUserService {
         if (user.getRole() == Role.STUDENT) {
             deactivation.apply(id);
         }
+        LOG.info("Administrator {} deactivated {} account {}", actorId, user.getRole(), id);
         return detail(user);
     }
 
@@ -124,6 +129,7 @@ public class AdminUserService {
             throw new IllegalStateException("This account is already active");
         }
         user.setActive(true);
+        LOG.info("Administrator {} reactivated {} account {}", actorId, user.getRole(), id);
         return detail(user);
     }
 
@@ -133,8 +139,10 @@ public class AdminUserService {
         if (user.getRole() == Role.STUDENT) {
             deletion.apply(id);
         }
+        Role role = user.getRole();
         users.delete(user);
         users.flush();
+        LOG.info("Administrator {} permanently deleted {} account {}", actorId, role, id);
     }
 
     private void removalAllowed(User user, Long actorId) {

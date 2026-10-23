@@ -8,20 +8,24 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Decides whether the AI provider may be called now: within the daily allowance, and not while
- * pausing after the provider said it was rate limited. A busy demo then falls back to the standard
+ * Decides whether the AI provider may be called now: within both the shared daily allowance and the
+ * asking student's share of it, and not while pausing after the provider said it was rate limited. A busy demo then falls back to the standard
  * explanation instead of exhausting the free tier. Kept in memory: a restart resets the count, which is
  * acceptable for a coursework deployment and documented in the README.
  */
 @Component
 public class ExplanationQuota {
     private final int dailyLimit;
+    private final int dailyLimitPerStudent;
     private final Duration cooldown;
     private final Clock clock;
     private LocalDate day;
     private int used;
+    private final Map<Long, Integer> usedByStudent = new HashMap<>();
     private Instant pausedUntil = Instant.MIN;
 
     /**
@@ -35,11 +39,13 @@ public class ExplanationQuota {
 
     ExplanationQuota(AiExplanationProperties properties, Clock clock) {
         this.dailyLimit = properties.dailyCallLimit();
+        this.dailyLimitPerStudent = properties.dailyCallLimitPerStudent();
         this.cooldown = properties.rateLimitCooldown();
         this.clock = clock;
     }
 
-    public synchronized boolean tryAcquire() {
+    /** One call for this student, within both their own and everyone's allowance for today. */
+    public synchronized boolean tryAcquire(Long studentId) {
         if (clock.instant().isBefore(pausedUntil)) {
             return false;
         }
@@ -47,11 +53,14 @@ public class ExplanationQuota {
         if (!today.equals(day)) {
             day = today;
             used = 0;
+            usedByStudent.clear();
         }
-        if (used >= dailyLimit) {
+        int usedByThisStudent = usedByStudent.getOrDefault(studentId, 0);
+        if (used >= dailyLimit || usedByThisStudent >= dailyLimitPerStudent) {
             return false;
         }
         used++;
+        usedByStudent.put(studentId, usedByThisStudent + 1);
         return true;
     }
 
