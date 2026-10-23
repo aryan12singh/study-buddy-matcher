@@ -197,6 +197,39 @@ describe('group leader permissions and decisions', () => {
     expect(post).toHaveBeenCalledWith('/groups/5/join-requests/20/reject')
     expect(within(dialog).getByRole('button', { name: 'Reject application' })).toBeEnabled()
   })
+  it('lets a member leave after confirming, and never offers it to the leader', async () => {
+    const memberView = { ...group, viewer: { leader: false, member: true, requestId: 20, requestStatus: 'ACCEPTED' } }
+    let left = false
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? []
+      : left ? { ...memberView, memberCount: 1, viewer: { ...memberView.viewer, member: false } } : memberView))
+    const post = vi.spyOn(api, 'post').mockImplementation(async () => { left = true; return response(undefined) })
+    renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave group' }))
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leave group' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/groups/5/leave'))
+    expect(await screen.findByText('You left OOP study crew.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument())
+  })
+  it('hides leaving from the leader', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? [] : group))
+    renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
+    expect(await screen.findByText('Group leader')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument()
+  })
+  it('lets an applicant withdraw a pending application after confirming', async () => {
+    const applicantView = { ...group, viewer: { leader: false, member: false, requestId: 20, requestStatus: 'PENDING' } }
+    vi.spyOn(api, 'get').mockResolvedValueOnce(response(applicantView))
+      .mockResolvedValue(response({ ...applicantView, viewer: { ...applicantView.viewer, requestStatus: 'WITHDRAWN' } }))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...applicant, status: 'WITHDRAWN' }))
+    renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
+    fireEvent.click(await screen.findByRole('button', { name: 'Withdraw application' }))
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Withdraw application' }))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/group-join-requests/20/withdraw'))
+    expect(await screen.findByText(/You withdrew your previous application/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Request membership' })).toBeInTheDocument()
+  })
   it('protects the leader and confirms removal of another member', async () => {
     vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/join-requests') ? [] : group))
     const remove = vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))

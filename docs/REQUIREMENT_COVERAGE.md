@@ -177,7 +177,8 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Requirement | Backend | Screen | Tests |
 | --- | --- | --- | --- |
 | Send a request with an optional message and course/goal context | `MatchRequestService`, `MatchRequestContext` | `students/StudentProfilePage`, `connections/SendRequestDialog` | `BuddyHttpTest`, `MatchRequestServiceTest` |
-| Only the recipient can accept or decline a pending request | `MatchRequestService`, `MatchRequest` state transitions | `connections/ConnectionsPage` (Incoming) | `BuddyHttpTest`, `MatchRequestTest` |
+| Only the recipient can accept or decline a pending request; decline confirms first | `MatchRequestService`, `MatchRequest` state transitions | `connections/ConnectionsPage` (Incoming), `students/StudentProfilePage` | `BuddyHttpTest`, `MatchRequestTest`, `ConnectionsPage.test` |
+| Extra beyond the brief: the sender withdraws a pending request, freeing the pair | `MatchRequestService.cancel`, `MatchRequest.cancel` | `connections/ConnectionsPage` (Outgoing), `students/StudentProfilePage` | `LifecycleHttpTest`, `ConnectionsPage.test` |
 | Reject self, duplicate, reverse-duplicate and already-connected requests | `MatchRequestService`, partial unique index | Inline error on send | `BuddyHttpTest`, `MatchRequestServiceTest` |
 | Accepting creates exactly one connection; declining creates none | `MatchRequestService`, `Connection` | `connections/ConnectionsPage` | `BuddyHttpTest` |
 | Either student can end a connection; history is kept | `ConnectionService` | Disconnect on profile and connections list | `BuddyHttpTest`, `ConnectionServiceTest` |
@@ -201,7 +202,8 @@ E1 wording (#15), E2 (#16), slides and peer evaluation remain their separate tra
 | Create a course-specific group with goals, mode, capacity and weekly schedule | `StudyGroupService`, `StudyGroup`, `GroupAvailabilitySlot` | `groups/GroupFormPage`, `shared/components/WeeklySlotEditor` | `GroupHttpTest`, `StudyGroupServiceTest` |
 | Browse and filter groups; view own groups and applications | `StudyGroupService`, `StudyGroupFilter` | `groups/GroupsPage`, `groups/GroupCard` | `GroupHttpTest`, `StudyGroupFilterTest` |
 | View group details and agenda | `StudyGroupAssembler` | `groups/GroupDetailPage` | `GroupHttpTest` |
-| Apply to join; leader approves or rejects | `GroupJoinRequestService`, `GroupJoinRequest` | `groups/ApplyGroupDialog`, `groups/GroupManagePage` | `GroupHttpTest`, `GroupJoinRequestServiceTest` |
+| Apply to join; leader approves or rejects; reject confirms first | `GroupJoinRequestService`, `GroupJoinRequest` | `groups/ApplyGroupDialog`, `groups/GroupManagePage` | `GroupHttpTest`, `GroupJoinRequestServiceTest`, `Groups.test` |
+| Extra beyond the brief: applicant withdraws a pending application; member leaves an open group | `GroupJoinRequestService.withdraw`, `StudyGroupService.leave` | `groups/GroupDetailPage` | `LifecycleHttpTest`, `GroupJoinRequestTest`, `Groups.test` |
 | Leader counts as a member; capacity cannot be exceeded | `StudyGroup`, `GroupMembership`, group row lock | `shared/components/CapacityMeter` | `GroupHttpTest`, `StudyGroupTest` |
 | Leader edits the group and removes members | `StudyGroupService` | `groups/GroupFormPage`, `groups/GroupManagePage` | `GroupHttpTest` |
 | Leader closes the group; pending applications are rejected | `GroupClosure` | `groups/GroupManagePage` | `GroupHttpTest` |

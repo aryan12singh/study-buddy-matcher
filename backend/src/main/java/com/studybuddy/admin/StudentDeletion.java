@@ -102,7 +102,7 @@ public class StudentDeletion {
             memberships.delete(membership);
         }
         for (var application : applications.findByStudentId(id)) {
-            if (application.isPending()) notifications.notify(application.getStudyGroup().getLeader(), NotificationType.GROUP_JOIN_REQUEST_REJECTED,
+            if (application.isPending()) notifications.notify(application.getStudyGroup().getLeader(), NotificationType.GROUP_JOIN_REQUEST_WITHDRAWN,
                 "An application was withdrawn because the applicant's account was deleted", NotificationResourceType.GROUP,
                 application.getStudyGroup().getId(), "account-delete:" + id + ":application:" + application.getId());
             applications.delete(application);

@@ -15,6 +15,10 @@ public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinReque
 
     @Query("select r.student.id from GroupJoinRequest r where r.id=:id and r.studyGroup.id=:groupId")
     Optional<Long> findApplicantId(@Param("id") Long id, @Param("groupId") Long groupId);
+
+    /** The group of an application, found only when it belongs to the given student. */
+    @Query("select r.studyGroup.id from GroupJoinRequest r where r.id=:id and r.student.id=:studentId")
+    Optional<Long> findGroupIdForApplicant(@Param("id") Long id, @Param("studentId") Long studentId);
     Optional<GroupJoinRequest> findFirstByStudyGroupIdAndStudentIdOrderByCreatedAtDescIdDesc(Long groupId, Long studentId);
 
     interface GroupRequestState {

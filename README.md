@@ -527,10 +527,6 @@ design already allows it.
 
 | Limitation | Current behaviour | Planned approach |
 | --- | --- | --- |
-| Withdraw a pending buddy request | Stays pending until the receiver responds, and blocks a request in the other direction | A sender-only transition to the existing `CANCELLED` state |
-| Withdraw a group application | Only the leader can resolve it | A `WITHDRAWN` state on `GroupJoinRequestStatus` |
-| Leave a group | Only the leader can remove a member (see the API contract) | Self-leave with confirmation, keeping history with a `leftAt` timestamp |
-| Sending a request by student ID | The Connections dialog accepts a raw student ID | Send only from a profile or match card |
 | Leader transfer and reopening a group | A leader can only close a group, and closing is final | Handover and reopen transitions on `StudyGroup` |
 | Re-request cooldown | A declined sender may ask again at once | A configurable cooldown checked by `MatchRequestService` |
 | Group course changes and full groups | A leader can change the course after members join; applications to a full group stay pending | Lock the course once members join; reject or notify leftover applicants |

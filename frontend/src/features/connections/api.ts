@@ -12,4 +12,6 @@ export async function sendMatchRequest(receiverId: number, message: string, cont
   return (await api.post<MatchRequest>('/match-requests', { receiverId, message: message.trim() || null, context: { origin: context.origin, courseId: context.courseId || null, studyGoal: context.studyGoal || null } })).data
 }
 export async function decideMatchRequest(id: number, decision: 'accept' | 'decline') { return (await api.post<MatchRequest>(`/match-requests/${id}/${decision}`)).data }
+/** The sender takes back a request that has not been answered; the server records it as CANCELLED. */
+export async function withdrawMatchRequest(id: number) { return (await api.post<MatchRequest>(`/match-requests/${id}/cancel`)).data }
 export async function endConnection(id: number) { await api.delete(`/connections/${id}`) }

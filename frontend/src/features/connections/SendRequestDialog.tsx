@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useAuth } from '../../shared/auth/useAuth'
 import { getCourses } from '../../shared/api/courses'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -17,24 +16,22 @@ import { useFormExit } from '../../shared/components/useFormExit'
 import { useDraftClose } from '../../shared/components/useDraftClose'
 import { useViewLifetime } from '../../shared/components/useViewNavigation'
 
-/** Reuse from a matching card by passing its known MATCHING context. */
+/** Opened from a student's profile or a matching card, so the receiver is always a known student. */
 
 export default function SendRequestDialog({ receiverId, receiverName, context = { origin: 'PROFILE' }, onClose, onSent }: {
-  receiverId?: number
+  receiverId: number
   receiverName?: string
   context?: RequestContext
   onClose: () => void
   onSent?: (request: MatchRequest) => void
 }) {
-  const { account } = useAuth(),
-    action = useAction()
+  const action = useAction()
   const courses = useResource('request-courses', getCourses)
-  const [target, setTarget] = useState(receiverId ? String(receiverId) : '')
   const [message, setMessage] = useState(''),
     [courseId, setCourseId] = useState(context.courseId ? String(context.courseId) : '')
   const [studyGoal, setStudyGoal] = useState(context.studyGoal || '')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const dirty = Boolean(message.trim()) || target !== (receiverId ? String(receiverId) : '') ||
+  const dirty = Boolean(message.trim()) ||
     courseId !== (context.courseId ? String(context.courseId) : '') || studyGoal !== (context.studyGoal || '')
   const exit = useFormExit(dirty, action.pending)
   const close = useDraftClose(dirty, onClose)
@@ -43,14 +40,12 @@ export default function SendRequestDialog({ receiverId, receiverName, context = 
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     const invalid: Record<string, string> = {}
-    if (!Number.isSafeInteger(Number(target)) || Number(target) <= 0) invalid.receiverId = 'Enter a valid student ID.'
-    else if (Number(target) === account?.id) invalid.receiverId = 'Choose another student.'
     if (message.trim().length > 255) invalid.message = 'Use up to 255 characters.'
     setErrors(invalid)
     if (Object.keys(invalid).length) return
     const result = await action.run(
       () => sendMatchRequest(
-        Number(target),
+        receiverId,
         message,
         {
           origin: context.origin,
@@ -77,25 +72,6 @@ export default function SendRequestDialog({ receiverId, receiverName, context = 
         onSubmit={submit}
         noValidate
       >
-        {!receiverId && (
-          <Field
-            id="request-student"
-            label="Student ID"
-            error={errors.receiverId || action.errors.receiverId}
-            hint="Open a student profile from matching to send a request by name."
-          >
-            <input
-              id="request-student"
-              type="number"
-              min="1"
-              step="1"
-              value={target}
-              disabled={action.pending}
-              onChange={event => setTarget(event.target.value)}
-              aria-invalid={Boolean(errors.receiverId)}
-            />
-          </Field>
-        )}
         <Field
           id="request-message"
           label="Message (optional)"

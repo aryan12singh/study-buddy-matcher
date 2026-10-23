@@ -68,8 +68,8 @@ public class StudentDeactivation {
             closure.close(locked);
         }
         for (var request : applications.findByStudentIdAndStatus(studentId, GroupJoinRequestStatus.PENDING)) {
-            request.reject();
-            notifications.notify(request.getStudyGroup().getLeader(), NotificationType.GROUP_JOIN_REQUEST_REJECTED,
+            request.withdraw();
+            notifications.notify(request.getStudyGroup().getLeader(), NotificationType.GROUP_JOIN_REQUEST_WITHDRAWN,
                 "An applicant's account is no longer active; their application was withdrawn", NotificationResourceType.GROUP,
                 request.getStudyGroup().getId(), "group-request:" + request.getId() + ":withdrawn");
         }

@@ -160,3 +160,11 @@ PR #55 later merged these changes; the baseline closure record carries the subse
 and accepted contact/learning-style contract. Authors must still explain retained changes.
 Projector/Figma/browser acceptance, diagram exports, presentation, peer evaluations and final
 submission are separate human/delivery gates.
+
+## Withdrawal and leave follow-up, 23 October
+
+PR #67 extends the lifecycle with sender cancellation, applicant withdrawal and member leave.
+Its subsequent confirmation-target and retained-history fixes, isolated database regression
+checks and coordinated migration gate are recorded in
+[WITHDRAW_LEAVE_TESTING.md](WITHDRAW_LEAVE_TESTING.md). This supplements the dated baseline
+evidence above without changing its historical scope or asserting a shared-database rollout.

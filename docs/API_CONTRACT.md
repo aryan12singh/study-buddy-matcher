@@ -76,7 +76,7 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
 | 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
-| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self-removal |
+| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated or stale decision, closed/full group, self-removal, leader leaving |
 | 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
 | 409 | `STALE_MATCHING_CONFIG` | Expected configuration revision no longer matches; reload before saving/restoring |
 | 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
@@ -171,6 +171,7 @@ draft state is local form state, not an added API/DTO field.
 | GET | `/api/match-requests/outgoing` | none | 200 `MatchRequestDto[]`, all statuses newest first | Student |
 | POST | `/api/match-requests/{id}/accept` | none | 200 `MatchRequestDto`, `ACCEPTED` | Receiver |
 | POST | `/api/match-requests/{id}/decline` | none | 200 `MatchRequestDto`, `DECLINED` | Receiver |
+| POST | `/api/match-requests/{id}/cancel` | none | 200 `MatchRequestDto`, `CANCELLED` | Sender |
 | GET | `/api/connections` | none | 200 `ConnectionDto[]`, active only newest first | Student |
 | DELETE | `/api/connections/{id}` | none | 204 | Participant |
 | GET | `/api/students/{id}/profile` | none | 200 `PublicProfileDto` or `ConnectedProfileDto` | Student |
@@ -217,11 +218,16 @@ any active connection between the pair are 409. Inactive/missing recipients are 
 ```
 
 Nullable course/context values remain explicit nulls. Request status is `PENDING`, `ACCEPTED`,
-`DECLINED` or `CANCELLED`. `CANCELLED` means nobody answered because one of the two accounts was
-deactivated or deleted. Decisions are one-way. Acceptance creates exactly one symmetric active
+`DECLINED` or `CANCELLED`. `CANCELLED` means nobody answered: the sender withdrew the request,
+or one of the two accounts was deactivated or deleted. Decisions are one-way, and a withdrawn
+request frees the pair to send a new one. Acceptance creates exactly one symmetric active
 connection. Repeated decisions produce a conflict and no duplicate event. Answered history
 and ended connections remain available to admin counts and request history; ended connections
 are not returned by the connection list.
+
+Withdrawing does not erase the request: the recipient sees its `CANCELLED` status under
+Past requests and cannot accept it. UI confirmations capture the original request/connection
+and signed-in account; navigation or a refreshed replacement relation requires fresh consent.
 
 `ConnectionDto` is `{id,otherStudentId,otherStudentName,createdAt}`, written from the caller's
 side. It has no contact number. Disconnect is one-way and notifies the other participant.
@@ -277,15 +283,27 @@ private profile after a failed refresh.
 | PUT | `/api/groups/{id}` | `StudyGroupDetails`, all editable fields replaced | 200 detail | Leader |
 | POST | `/api/groups/{id}/close` | none | 200 detail, `active:false` | Leader |
 | DELETE | `/api/groups/{id}/members/{studentId}` | none | 204 | Leader |
+| POST | `/api/groups/{id}/leave` | none | 204; 409 for the leader, a non-member or a closed group | Member |
 | POST | `/api/groups/{id}/join-requests` | `{message?:string}` | 201 `GroupJoinRequestDto` | Student |
 | GET | `/api/groups/{id}/join-requests` | none | 200 pending application DTOs, newest first | Leader |
 | POST | `/api/groups/{id}/join-requests/{requestId}/accept` | none | 200 application DTO, `ACCEPTED` | Leader |
 | POST | `/api/groups/{id}/join-requests/{requestId}/reject` | none | 200 application DTO, `REJECTED` | Leader |
 | GET | `/api/group-join-requests/mine` | none | 200 own application DTOs, every status newest first | Student |
+| POST | `/api/group-join-requests/{requestId}/withdraw` | none | 200 application DTO, `WITHDRAWN`; 404 for another student's application | Applicant |
 
 A leader is a relationship to one group, not an account role. The creator becomes the first
-accepted member and counts toward capacity. Pending applications do not count. No self-leave,
-leader transfer or group reopening is added.
+accepted member and counts toward capacity. Pending applications do not count. A member may
+leave an open group; the leader closes the group instead, and a closed group keeps its members as
+history. An applicant may withdraw a pending application and apply again later. Application
+status is `PENDING`, `ACCEPTED`, `REJECTED` (the leader's answer or closure) or `WITHDRAWN` (the
+applicant's choice, or their account was deactivated or deleted). Leader transfer and group
+reopening are not added.
+
+Group confirmations likewise bind to the original group, application or membership tenure.
+Changing the route/account, replacing a pending application, or leaving and rejoining clears
+an earlier confirmation. An unchanged refresh preserves the current confirmation. Leaving
+revokes room presence/roles and private session/calendar access in the membership transaction;
+the group's sessions remain available to its remaining members.
 
 ```json
 {
@@ -586,13 +604,15 @@ and descriptions at their valid limits cannot cause a notification-column overfl
 | --- | --- | --- |
 | Buddy send | Receiver, one | `MATCH_REQUEST_RECEIVED` |
 | Accept / decline | Sender, one | `MATCH_REQUEST_ACCEPTED` / `MATCH_REQUEST_DECLINED` |
-| Request cancelled by deactivation or deletion | Other participant, one | `MATCH_REQUEST_CANCELLED` |
+| Request withdrawn by its sender, or cancelled by deactivation or deletion | Other participant, one | `MATCH_REQUEST_CANCELLED` |
 | Disconnect | Other participant, one | `CONNECTION_ENDED` |
 | Group application | Leader, one | `GROUP_JOIN_REQUEST_RECEIVED` |
 | Group accept / reject | Applicant, one | `GROUP_JOIN_REQUEST_ACCEPTED` / `GROUP_JOIN_REQUEST_REJECTED` |
+| Application withdrawal | Leader, one | `GROUP_JOIN_REQUEST_WITHDRAWN` |
 | Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
+| Member leaves | Leader, one | `GROUP_MEMBER_LEFT` |
 | Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
-| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/removed events; the ended-connection notice has no profile link |
+| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/withdrawn/removed events; the ended-connection notice has no profile link |
 | Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |
 
 Failed/conflicting domain actions create no notification. Locked transitions and the partial
@@ -653,7 +673,7 @@ open groups including leadership. Counts are real; absent relations produce zero
 
 Deactivation retains account/profile/history, revokes access, ends active connections,
 cancels pending buddy requests both ways, closes led groups and rejects their pending
-applicants, rejects the student's pending applications and removes their memberships in open
+applicants, withdraws the student's pending applications and removes their memberships in open
 groups they do not lead. Closed groups keep their members, including the leader, as history. Reactivation restores access through fresh login only; it restores no
 ended relation or membership. Repeated status operations are 409.
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getConnections, getMatchRequests, decideMatchRequest, endConnection } from './api'
+import { getConnections, getMatchRequests, decideMatchRequest, endConnection, withdrawMatchRequest } from './api'
 import type { Connection, MatchRequest } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -12,7 +12,6 @@ import Badge from '../../shared/components/Badge'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
-import SendRequestDialog from './SendRequestDialog'
 import PersonCard from '../../shared/components/PersonCard'
 
 /** What a request is about; a profile origin is the default, so only matching is called out. */
@@ -25,10 +24,8 @@ export default function ConnectionsPage() {
   const [search, setSearch] = useSearchParams()
   const requestedView = search.get('view')
   const tab = requestedView === 'outgoing' || requestedView === 'connected' ? requestedView : 'incoming'
-  const [sending, setSending] = useState(false),
-    [ending, setEnding] = useState<Connection | null>(null),
-    [declining, setDeclining] = useState<MatchRequest | null>(null)
-  const [notice, setNotice] = useState<string>()
+  const [ending, setEnding] = useState<Connection | null>(null),
+    [confirming, setConfirming] = useState<{ request: MatchRequest; kind: 'decline' | 'withdraw' } | null>(null)
   const action = useAction()
   const requests = useResource(
     `requests-${tab}`,
@@ -49,7 +46,12 @@ export default function ConnectionsPage() {
         key={request.id}
         studentId={id}
         name={name}
-        actions={tab === 'incoming' && request.status === 'PENDING' && (
+        actions={request.status !== 'PENDING' ? undefined : tab === 'outgoing' ? (
+          <Button
+            disabled={action.pending}
+            onClick={() => { action.clear(); setConfirming({ request, kind: 'withdraw' }) }}
+          >Withdraw request</Button>
+        ) : (
           <>
             <Button
               variant="primary"
@@ -60,7 +62,7 @@ export default function ConnectionsPage() {
             </Button>
             <Button
               disabled={action.pending}
-              onClick={() => { action.clear(); setDeclining(request) }}
+              onClick={() => { action.clear(); setConfirming({ request, kind: 'decline' }) }}
             >Decline request</Button>
           </>
         )}
@@ -79,10 +81,13 @@ export default function ConnectionsPage() {
     )
   }
 
-  async function decline() {
-    if (!declining) return
-    const result = await action.run(() => decideMatchRequest(declining.id, 'decline'), 'Request declined.')
-    if (result.ok) setDeclining(null)
+  async function confirmRequestAction() {
+    if (!confirming) return
+    const { request, kind } = confirming
+    const result = kind === 'decline'
+      ? await action.run(() => decideMatchRequest(request.id, 'decline'), 'Request declined.')
+      : await action.run(() => withdrawMatchRequest(request.id), 'Request withdrawn.')
+    if (result.ok) setConfirming(null)
   }
 
   async function disconnect() {
@@ -94,13 +99,7 @@ export default function ConnectionsPage() {
     <WindowPage
       title="Connections"
       description="Manage buddy requests and accepted study connections."
-      actions={<Button variant="primary" onClick={() => {
-        action.clear()
-        setNotice(undefined)
-        setSending(true)
-      }}>
-        Send match request
-      </Button>}
+      actions={<Link className="retro-button primary" to="/find-buddies">Find study buddies</Link>}
     >
       <TabBar
         label="Connection views"
@@ -112,11 +111,10 @@ export default function ConnectionsPage() {
         ]}
         onChange={value => {
           setSearch({ view: value })
-          setNotice(undefined)
           action.clear()
         }}
       />
-      <ActionNotice error={ending || declining ? undefined : action.error} success={notice || action.success} />
+      <ActionNotice error={ending || confirming ? undefined : action.error} success={action.success} />
       {tab === 'connected' ? (
         <>
           <StatePanel
@@ -127,7 +125,7 @@ export default function ConnectionsPage() {
             emptyTitle="No connected buddies yet"
             emptyMessage="Send a match request or accept an incoming request to connect."
             emptyKind="connections"
-            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
+            emptyAction={<Link className="retro-button" to="/find-buddies">Find study buddies</Link>}
           />
           {connections.data?.length === 0 && !connections.error && (
             <p className="privacy-note"><Link to="/help#help-privacy">How requests and contact privacy work</Link></p>
@@ -173,7 +171,7 @@ export default function ConnectionsPage() {
               :
               'Your sent requests and their decisions will appear here.'}
             emptyKind="connections"
-            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
+            emptyAction={<Link className="retro-button" to="/find-buddies">Find study buddies</Link>}
           />
           {waiting?.length === 0 && !requests.error && (
             <p className="privacy-note"><Link to="/help#help-privacy">How requests and contact privacy work</Link></p>
@@ -191,21 +189,20 @@ export default function ConnectionsPage() {
           )}
         </>
       )}
-      {sending &&
-        <SendRequestDialog onClose={() => setSending(false)} onSent={() => {
-          setSearch({ view: 'outgoing' })
-          setNotice('Match request sent.')
-        }} />}
-      {declining && (
+      {confirming && (
         <ConfirmDialog
-          title={`Decline ${declining.senderName}'s request?`}
-          confirmLabel="Decline request"
+          title={confirming.kind === 'decline'
+            ? `Decline ${confirming.request.senderName}'s request?`
+            : `Withdraw your request to ${confirming.request.receiverName}?`}
+          confirmLabel={confirming.kind === 'decline' ? 'Decline request' : 'Withdraw request'}
           pending={action.pending}
           error={action.error}
-          onClose={() => setDeclining(null)}
-          onConfirm={decline}
+          onClose={() => setConfirming(null)}
+          onConfirm={confirmRequestAction}
         >
-          <p>Declining cannot be undone. {declining.senderName} is told the request was declined and can send a new one later.</p>
+          <p>{confirming.kind === 'decline'
+            ? 'This answer is final. They can send you a new request later if you both want to study together.'
+            : 'The recipient will see this in Past requests and can no longer accept it. You can send a new request later.'}</p>
         </ConfirmDialog>
       )}
       {ending && (
