@@ -16,6 +16,7 @@ describe('buddy requests and connections', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
     pending.resolve(response([]))
     expect(await screen.findByText('No incoming requests')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How requests and contact privacy work' })).toHaveAttribute('href', '/help#help-privacy')
     fireEvent.click(screen.getByRole('button', { name: 'Outgoing requests' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Temporary failure')
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
@@ -67,6 +68,7 @@ describe('buddy requests and connections', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Disconnect' }))
     await waitFor(() => expect(remove).toHaveBeenCalledWith('/connections/7'))
     expect(await screen.findByText('No connected buddies yet')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How requests and contact privacy work' })).toHaveAttribute('href', '/help#help-privacy')
   })
   it('sends matching context without invented private fields', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([{ id: 3, code: 'IS442', name: 'OOP' }]))

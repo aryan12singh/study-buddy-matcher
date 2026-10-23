@@ -84,6 +84,7 @@ export default function FindBuddiesPanel() {
         <div className="route-notice" role="status">
           <p>Your profile is incomplete. Add courses, a study mode and weekly availability for a more useful comparison.</p>
           {profileEditLink && <Link to={profileEditLink}>Complete your study profile</Link>}
+          <Link to="/help#help-start-title">Why profile setup matters</Link>
         </div>
       )}
       <div className="match-toolbar">
@@ -127,7 +128,7 @@ export default function FindBuddiesPanel() {
       {courses.error && filtersOpen && <Button onClick={() => courses.reload(true)}>Retry courses</Button>}
       {profile.error && <p className="field-hint">Your profile could not be loaded. You can still search. <Button onClick={() => profile.reload(true)}>Retry profile</Button></p>}
       <FilterSummary filters={chips} onClear={() => { apply({}); setFiltersOpen(true) }} />
-      {!hasSearchContext(search) && <StatePanel empty emptyTitle="Start your first matching search" emptyMessage="Choose a course or study goal above. Add optional filters to compare students who suit your plans." emptyKind="search" />}
+      {!hasSearchContext(search) && <StatePanel empty emptyTitle="Start your first matching search" emptyMessage="Choose a course or study goal above. Add optional filters to compare students who suit your plans." emptyKind="search" emptyAction={<Link to="/help#help-matching">How matching and filters work</Link>} />}
       <ActionNotice success={notice} />
       <StatePanel
         loading={results.loading && !results.data}
@@ -137,6 +138,7 @@ export default function FindBuddiesPanel() {
         emptyTitle="No students match this search"
         emptyMessage="Try another course or goal, or relax the shared free time or match quality filters. Existing connections are excluded."
         emptyKind="search"
+        emptyAction={<Link to="/help#help-matching">Understand scores and empty searches</Link>}
       />
       <div className="data-list" aria-label="Matching students">
         {matches?.map(match => (

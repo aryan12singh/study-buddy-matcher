@@ -37,6 +37,7 @@
 | <img src="docs/assets/icons/room.svg" width="28" height="28" alt="" /> | **Collaborative study** | Private group rooms with a shared Pomodoro timer, original layered audio and live campus weather scenes |
 | <img src="docs/assets/icons/calendar.svg" width="28" height="28" alt="" /> | **Study sessions** | One-off or weekly group and buddy sessions with mutual-availability suggestions and calendar (`.ics`) export |
 | <img src="docs/assets/icons/bell.svg" width="28" height="28" alt="" /> | **Notifications** | Recipient-scoped updates for requests, groups, membership and sessions |
+| <img src="docs/assets/icons/docs.svg" width="28" height="28" alt="" /> | **Help and getting started** | A current-data next action, profile-to-session guide, contextual topic links and searchable answers about matching, AI, privacy, groups and rooms |
 | <img src="docs/assets/icons/admin.svg" width="28" height="28" alt="" /> | **Administration** | Create and edit accounts, view usage, deactivate, reactivate or delete accounts, and tune matching weights |
 
 ### Roles
@@ -290,6 +291,23 @@ compatibility and evidence are in [E2 verification](docs/E2_TESTING.md).
 
 ---
 
+## Help and getting started
+
+Students can open **Help** (`/help`) from navigation, Home or an empty matching, connection,
+group or session view. One recommended next action follows the existing profile setup checks,
+then current requests, dated sessions and accepted group or buddy relationships. Guide links
+remain usable when a check fails, and only failed sources are retried.
+
+Five checks describe current saved records: courses/study mode, availability, a pending sent
+request or active connection, an open group membership, and an ongoing/upcoming session.
+Loading, failed and untracked states have explicit labels. Search history, room visits,
+calendar downloads and attendance are not inferred from other activity. Group room links
+open a preview and require an explicit join. The guide also explains deterministic scores,
+optional AI wording and its privacy/accuracy limits, scheduling permissions and calendar
+snapshots. See [Help verification](docs/HELP_TESTING.md) for scope and repeatable checks.
+
+---
+
 ## Privacy and relationships
 
 | Rule | Behaviour |
@@ -520,6 +538,7 @@ design already allows it.
 | [E1 verification](docs/E1_TESTING.md) | AI match explanation checks and acceptance |
 | [E2 scope](docs/E2_SCOPE.md) | What E2 delivered and its boundaries |
 | [E2 verification](docs/E2_TESTING.md) | Room, session, audio, weather and calendar checks |
+| [Help verification](docs/HELP_TESTING.md) | Current-state onboarding, next-action priority, contextual links, permissions and responsive keyboard checks |
 | [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
 | [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |

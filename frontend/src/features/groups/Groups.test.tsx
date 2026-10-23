@@ -168,6 +168,7 @@ describe('group fields and saved state', () => {
     expect(await screen.findByText('No groups match these filters')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Your groups' }))
     expect(await screen.findByText('No groups joined yet')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How groups, rooms and sessions connect' })).toHaveAttribute('href', '/help#help-groups')
     expect(get).toHaveBeenCalledWith('/groups/mine', expect.any(Object))
     fireEvent.click(screen.getByRole('button', { name: 'Your applications' }))
     expect(await screen.findByText('Rejected', { selector: '.status-badge' })).toBeInTheDocument()

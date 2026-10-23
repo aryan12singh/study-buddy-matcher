@@ -157,6 +157,7 @@ describe('Find buddies page', () => {
     await screen.findByRole('link', { name: 'Jamie Lee' })
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }))
     expect(await screen.findByRole('link', { name: 'Complete your study profile' })).toHaveAttribute('href', '/students/1/edit')
+    expect(screen.getByRole('link', { name: 'Why profile setup matters' })).toHaveAttribute('href', '/help#help-start-title')
     expect(screen.getByLabelText('Course')).toBeEnabled()
   })
 
@@ -164,6 +165,7 @@ describe('Find buddies page', () => {
     mockApi(() => Promise.resolve(response(ranked([]))))
     openPage()
     expect(await screen.findByText('No students match this search')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Understand scores and empty searches' })).toHaveAttribute('href', '/help#help-matching')
     await openFilters()
     fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
     fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))

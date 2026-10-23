@@ -127,7 +127,7 @@ export default function ConnectionsPage() {
             emptyTitle="No connected buddies yet"
             emptyMessage="Send a match request or accept an incoming request to connect."
             emptyKind="connections"
-            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
+            emptyAction={<><Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button><Link to="/help#help-privacy">How requests and contact privacy work</Link></>}
           />
           <div className="data-list">
             {connections.data?.map(connection => (
@@ -170,7 +170,7 @@ export default function ConnectionsPage() {
               :
               'Your sent requests and their decisions will appear here.'}
             emptyKind="connections"
-            emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
+            emptyAction={<><Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button><Link to="/help#help-privacy">How requests and contact privacy work</Link></>}
           />
           <div className="data-list">
             {waiting?.map(requestRow)}

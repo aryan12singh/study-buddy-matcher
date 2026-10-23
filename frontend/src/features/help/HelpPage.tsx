@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import WindowPage from '../../shared/components/WindowPage'
 import ExplainerCard from './ExplainerCard'
 import FaqSection from './FaqSection'
@@ -7,15 +9,31 @@ import './help.css'
 
 /** A getting-started guide: first steps, how each area works, and searchable answers. */
 export default function HelpPage() {
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (!hash) return
+    let active = true
+    // Run after the shared shell's route focus, so contextual links land on their topic.
+    queueMicrotask(() => {
+      if (!active) return
+      const target = document.getElementById(hash.slice(1))
+      target?.focus({ preventScroll: true })
+      target?.scrollIntoView?.({ block: 'start' })
+    })
+    return () => { active = false }
+  }, [hash])
   return (
     <WindowPage
       title="Help and getting started"
-      description="New here? Work through the first steps, then read how each part of Study Buddy Matcher works."
+      description="Find your next action, understand your matches, and turn a study connection into a dated plan."
     >
       <nav className="help-jump" aria-label="On this page">
-        <a href="#help-start-title">Start here</a>
-        <a href="#help-how-title">How it works</a>
-        <a href="#help-faq-title">Questions</a>
+        <Link to="#help-start-title">Start here</Link>
+        <Link to="#help-matching">Matching</Link>
+        <Link to="#help-ai">AI and privacy</Link>
+        <Link to="#help-groups">Groups and rooms</Link>
+        <Link to="#help-sessions">Sessions and calendar</Link>
+        <Link to="#help-faq-title">Questions</Link>
       </nav>
       <div className="help-layout">
         <StartChecklist />
@@ -23,7 +41,7 @@ export default function HelpPage() {
           <div className="help-section-head">
             <div>
               <span className="help-eyebrow">The basics</span>
-              <h2 id="help-how-title">How it works</h2>
+              <h2 id="help-how-title" tabIndex={-1}>How it works</h2>
             </div>
           </div>
           <div className="help-cards">

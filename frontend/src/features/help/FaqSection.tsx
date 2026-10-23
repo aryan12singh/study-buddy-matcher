@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Button from '../../shared/components/Button'
 import StatePanel from '../../shared/components/StatePanel'
 import FaqItem from './FaqItem'
@@ -6,6 +6,7 @@ import { FAQS, filterFaqs } from './helpContent'
 
 export default function FaqSection() {
   const [query, setQuery] = useState('')
+  const searchInput = useRef<HTMLInputElement>(null)
   const results = filterFaqs(FAQS, query)
   const searching = query.trim().length > 0
   return (
@@ -13,13 +14,14 @@ export default function FaqSection() {
       <div className="help-section-head">
         <div>
           <span className="help-eyebrow">Questions</span>
-          <h2 id="help-faq-title">Frequently asked questions</h2>
+          <h2 id="help-faq-title" tabIndex={-1}>Frequently asked questions</h2>
         </div>
       </div>
       <div className="help-search">
         <label htmlFor="help-faq-search">Search questions</label>
         <input
           id="help-faq-search"
+          ref={searchInput}
           type="search"
           value={query}
           placeholder="Try “contact number” or “calendar”"
@@ -39,7 +41,7 @@ export default function FaqSection() {
           emptyKind="search"
           emptyTitle={`No answers match “${query.trim()}”`}
           emptyMessage="Try a shorter phrase, such as “groups” or “sessions”."
-          emptyAction={<Button onClick={() => setQuery('')}>Clear search</Button>}
+          emptyAction={<Button onClick={() => { setQuery(''); searchInput.current?.focus() }}>Clear search</Button>}
         />
       )}
     </section>
