@@ -379,6 +379,26 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 </details>
 
 <details>
+<summary><strong>AI study assistant</strong></summary>
+
+<br />
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `app.ai.assistant.enabled` | `false` | Turns on the assistant's Gemini calls; also needs `api-key`. Off means every AI action returns 503 `AI_UNAVAILABLE` and the screen offers the manual path |
+| `app.ai.assistant.api-key` | none; set only in `application-local.yml` | Gemini API key from a different Google project than E1's, so the two features do not share a quota. Never committed, logged or sent to the browser |
+| `app.ai.assistant.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
+| `app.ai.assistant.model` | `gemini-3.5-flash` | Gemini model ID, the same as E1 |
+| `app.ai.assistant.timeout` | `30s` | Connect timeout and read timeout, each. Longer than E1's because reading a PDF and writing a roadmap takes far longer than one sentence |
+| `app.ai.assistant.max-output-tokens` | `4000` | Upper bound on Gemini's reply length |
+| `app.ai.assistant.daily-call-limit` | `18` | Assistant calls per day before returning `AI_UNAVAILABLE`; just under the free tier's 20 requests per day per project and model. In memory and resets at midnight in `quota-zone` |
+| `app.ai.assistant.daily-call-limit-per-student` | `5` | Assistant calls one student can trigger per day, so one student cannot use up the shared allowance |
+| `app.ai.assistant.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limits |
+| `app.ai.assistant.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further assistant calls are made for this long |
+
+</details>
+
+<details>
 <summary><strong>Study rooms, sessions and weather</strong></summary>
 
 <br />
