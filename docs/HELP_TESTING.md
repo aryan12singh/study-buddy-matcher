@@ -22,8 +22,9 @@ reuses its already-loaded setup state and adds no request.
 
 Five checks can be confirmed from current records: courses/study mode, weekly availability,
 a pending outgoing request or active connection, membership of an open group, and an ongoing
-or upcoming dated session. A completed, cancelled or past session does not satisfy the last
-check. Weekly occurrences advance through the same helper and view clock as session lists.
+or upcoming dated session. A cancelled session or one whose final occurrence has ended does
+not satisfy the last check. Weekly occurrences advance through the same helper and view clock
+as session lists.
 
 `Saved in your profile`, current relationship/group/session labels, `Checking current records`,
 `Could not check` and `Not checked` distinguish known, missing and unavailable information.
