@@ -1,5 +1,6 @@
 package com.studybuddy.studyplan;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,6 +14,8 @@ import org.springframework.validation.annotation.Validated;
  *
  * @param maxUploadSize the most all of one plan's files may add up to
  * @param maxTextFileCharacters the most text all of one plan's text files may hold together
+ * @param maxWeeks the most weeks a personal plan may cover, which bounds how far away the exam can be
+ * @param timeZone the zone whose calendar decides "today" for a plan's first week
  */
 @Validated
 @ConfigurationProperties("app.ai.assistant.study-plan")
@@ -23,5 +26,8 @@ public record StudyPlanProperties(
         @Positive int maxTextFileCharacters,
         @Positive int maxSourceTopics,
         @Positive int maxEntriesPerBlock,
-        @Positive int maxTasksPerEntry) {
+        @Positive int maxTasksPerEntry,
+        @Positive int maxWeeks,
+        @Positive int maxHoursPerWeek,
+        @NotBlank String timeZone) {
 }

@@ -40,7 +40,7 @@ class StudyPlanPromptLiveTest {
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final Course COURSE = new Course("IS442", "Object Oriented Programming");
     private static final StudyPlanProperties LIMITS =
-            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5);
+            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5, 16, 40, "Asia/Singapore");
 
     private static GeminiClient client() {
         String model = System.getenv().getOrDefault("GEMINI_LIVE_TEST_MODEL", "gemini-3.5-flash");

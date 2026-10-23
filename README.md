@@ -434,6 +434,9 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.study-plan.max-source-topics` | `40` | Most topics Gemini may list from the material |
 | `app.ai.assistant.study-plan.max-entries-per-block` | `5` | Most entries in one week or meeting of a roadmap |
 | `app.ai.assistant.study-plan.max-tasks-per-entry` | `5` | Most tasks in one roadmap entry |
+| `app.ai.assistant.study-plan.max-weeks` | `16` | Most weeks a personal plan covers, so the exam can be at most this far away |
+| `app.ai.assistant.study-plan.max-hours-per-week` | `40` | Most study hours per week a student can plan |
+| `app.ai.assistant.study-plan.time-zone` | `Asia/Singapore` | Calendar that decides "today", the first day of a personal plan |
 
 A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
 slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the

@@ -18,7 +18,7 @@ class StudyPlanPromptBuilderTest {
     private static final LocalDate FRIDAY = LocalDate.of(2026, 10, 23);
     private static final AiAttachment PDF = new AiAttachment("application/pdf", "%PDF-1.7".getBytes());
     private static final StudyPlanPromptBuilder BUILDER =
-            new StudyPlanPromptBuilder(new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5));
+            new StudyPlanPromptBuilder(new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5, 16, 40, "Asia/Singapore"));
 
     private static String prompt(StudyGoal goal, RoadmapFrame frame, StudyMaterial material) {
         return BUILDER.build(IS442, goal, frame, material);

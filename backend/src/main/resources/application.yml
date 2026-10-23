@@ -161,6 +161,12 @@ app:
         max-source-topics: 40
         max-entries-per-block: 5
         max-tasks-per-entry: 5
+        # A personal plan runs from today to at most this many weeks ahead, so the exam can be
+        # at most this far away. Each week holds the student's hours, up to max-hours-per-week.
+        max-weeks: 16
+        max-hours-per-week: 40
+        # "Today", for a plan's first week, follows the students' calendar, not the server's.
+        time-zone: Asia/Singapore
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
