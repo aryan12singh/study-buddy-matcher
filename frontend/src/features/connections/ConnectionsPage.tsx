@@ -129,6 +129,9 @@ export default function ConnectionsPage() {
             emptyKind="connections"
             emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
           />
+          {connections.data?.length === 0 && !connections.error && (
+            <p className="privacy-note"><Link to="/help#help-privacy">How requests and contact privacy work</Link></p>
+          )}
           <div className="data-list">
             {connections.data?.map(connection => (
               <PersonCard
@@ -172,6 +175,9 @@ export default function ConnectionsPage() {
             emptyKind="connections"
             emptyAction={<Button onClick={() => { action.clear(); setNotice(undefined); setSending(true) }}>Start a buddy request</Button>}
           />
+          {waiting?.length === 0 && !requests.error && (
+            <p className="privacy-note"><Link to="/help#help-privacy">How requests and contact privacy work</Link></p>
+          )}
           <div className="data-list">
             {waiting?.map(requestRow)}
           </div>

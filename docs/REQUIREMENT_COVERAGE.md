@@ -292,6 +292,22 @@ relationship cannot still download the old calendar. Manual weather scenes are
 decoration, not forecasts. The recorded database rollout does not establish a persistent
 hosted backend/frontend or new calendar-client acceptance.
 
+## Help and getting started
+
+This student guide documents the merged workflows without adding a tracking API or changing
+the matching, relationship or room permission rules.
+
+| Behaviour | Implementation | Verification |
+| --- | --- | --- |
+| One next action from confirmed profile and current activity | `helpNextStep`; Home's `nextStep` and `profileProgress`; own profile, summary, groups and sessions endpoints | Priority/unknown/failure helper cases and rendered Help tests |
+| Honest current checks, separate loading/unavailable/untracked states | `startSteps`, `StartChecklist`; searches and room visits never inferred from request counts | Current-record, failed-source retry and expired/cancelled session cases |
+| Group-room and dated-session guide with safe private navigation | Only accepted memberships of open groups supply room previews; leaders get a session agenda; buddies plan from connections | Permission invalidation, account-switch late-response tests; existing room join remains explicit |
+| Deterministic scores versus optional AI wording; privacy and calendar limits | Topic explainers and searchable FAQ; no provider or room mutation from Help | Rendered content/route checks and local Chromium synthetic-response checks |
+| Help at points of confusion | Home/incomplete profile; matching, groups, connections and session empty states | Existing feature tests assert topic links; full-shell hash focus and FAQ keyboard checks |
+
+The [Help test guide](HELP_TESTING.md) separates the local synthetic-response browser evidence
+from real-backend integration and the team's Figma, browser, contrast and projector acceptance.
+
 ## Selected extras and delivery
 
 The team has recorded both E1 and E2 as its selected required extras. They extend the

@@ -43,6 +43,7 @@ export default function AppShell() {
                 <span className="unread-count" aria-label={`${notifications.data.count} unread notifications`}>{notifications.data.count}</span>
               )}</NavLink>
               <NavLink to={`/students/${account.id}`}><PixelIcon kind="profile" /><span>My study profile</span></NavLink>
+              <NavLink to="/help"><PixelIcon kind="brand" /><span>Help</span></NavLink>
               {notifications.error && (
                 <span className="nav-error" role="status">Unread count unavailable. <button type="button" onClick={() => notifications.reload()}>Retry</button></span>
               )}

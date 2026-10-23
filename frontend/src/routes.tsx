@@ -12,6 +12,7 @@ import WindowPage from './shared/components/WindowPage'
 import ConnectionsPage from './features/connections/ConnectionsPage'
 import StudentProfilePage from './features/students/StudentProfilePage'
 import NotificationsPage from './features/notifications/NotificationsPage'
+import HelpPage from './features/help/HelpPage'
 import GroupsPage from './features/groups/GroupsPage'
 import GroupDetailPage from './features/groups/GroupDetailPage'
 import GroupFormPage from './features/groups/GroupFormPage'
@@ -39,6 +40,7 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/students/:id/edit" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/help" element={<HelpPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/new" element={<GroupFormPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />

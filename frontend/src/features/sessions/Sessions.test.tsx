@@ -159,6 +159,7 @@ describe('dated study session workflows', () => {
     serve({ '/groups/5': { ...group, viewer: { leader: false, member: true } }, '/groups/5/sessions': [] })
     renderPage(<SessionsPage kind="GROUP" />, '/groups/5/sessions', '/groups/:id/sessions')
     expect(await screen.findByText('No study sessions yet')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How to plan sessions and export a calendar' })).toHaveAttribute('href', '/help#help-sessions')
     expect(screen.getByText('The group leader plans and manages sessions.')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Plan study session' })).not.toBeInTheDocument()
   })

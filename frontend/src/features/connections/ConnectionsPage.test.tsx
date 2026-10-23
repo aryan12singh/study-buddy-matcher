@@ -14,12 +14,16 @@ describe('buddy requests and connections', () => {
     const get = vi.spyOn(api, 'get').mockImplementationOnce(() => pending.promise).mockRejectedValueOnce(new Error('Temporary failure')).mockResolvedValueOnce(response([]))
     renderPage(<ConnectionsPage />, '/connections', '/connections')
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
+    expect(screen.queryByRole('link', { name: 'How requests and contact privacy work' })).not.toBeInTheDocument()
     pending.resolve(response([]))
     expect(await screen.findByText('No incoming requests')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How requests and contact privacy work' })).toHaveAttribute('href', '/help#help-privacy')
     fireEvent.click(screen.getByRole('button', { name: 'Outgoing requests' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Temporary failure')
+    expect(screen.queryByRole('link', { name: 'How requests and contact privacy work' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByText('No outgoing requests')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How requests and contact privacy work' })).toHaveAttribute('href', '/help#help-privacy')
     expect(get).toHaveBeenCalledTimes(3)
   })
   it('accepts the pending request and moves it to past requests', async () => {
@@ -40,6 +44,7 @@ describe('buddy requests and connections', () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([{ ...request, status: 'DECLINED', respondedAt: '2026-10-07T02:00:00Z' }]))
     renderPage(<ConnectionsPage />, '/connections?view=outgoing', '/connections')
     expect(await screen.findByText('Declined', { selector: '.status-badge' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'How requests and contact privacy work' })).not.toBeInTheDocument()
     expect(screen.queryByText(/Past requests/)).not.toBeInTheDocument()
   })
   it('confirms before declining and keeps decline available after a rejected action', async () => {
@@ -67,6 +72,7 @@ describe('buddy requests and connections', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Disconnect' }))
     await waitFor(() => expect(remove).toHaveBeenCalledWith('/connections/7'))
     expect(await screen.findByText('No connected buddies yet')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How requests and contact privacy work' })).toHaveAttribute('href', '/help#help-privacy')
   })
   it('sends matching context without invented private fields', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([{ id: 3, code: 'IS442', name: 'OOP' }]))
