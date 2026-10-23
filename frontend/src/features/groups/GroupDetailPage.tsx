@@ -33,7 +33,7 @@ export default function GroupDetailPage() {
     if (!group || !confirming) return
     const requestId = group.viewer.requestId
     const result = confirming === 'leave'
-      ? await action.run(() => leaveGroup(group.id), `You left ${group.name}.`)
+      ? await action.run(() => leaveGroup(group.id), `You left ${group.name}.`, true)
       : await action.run(() => withdrawApplication(requestId!), 'Application withdrawn.')
     if (result.ok) setConfirming(null)
   }

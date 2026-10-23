@@ -98,12 +98,6 @@ class GroupJoinRequestTest {
     }
 
     @Test
-    void isFromIsTrueOnlyForTheApplicant() {
-        assertTrue(request.isFrom(2L));
-        assertFalse(request.isFrom(1L));
-    }
-
-    @Test
     void belongsToIsTrueOnlyForItsOwnGroup() {
         assertTrue(request.belongsTo(5L));
         assertFalse(request.belongsTo(6L));

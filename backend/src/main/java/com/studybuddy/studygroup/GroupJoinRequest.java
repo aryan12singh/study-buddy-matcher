@@ -116,10 +116,6 @@ public class GroupJoinRequest {
         respond(GroupJoinRequestStatus.WITHDRAWN);
     }
 
-    public boolean isFrom(Long studentId) {
-        return student.getId().equals(studentId);
-    }
-
     /**
      * Lets a caller check the state first, so a stale request is reported as
      * such rather than as whatever other rule happens to fail next.

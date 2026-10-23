@@ -75,18 +75,12 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 403 | `ACCOUNT_DEACTIVATED` | Login with the correct password for a deactivated account |
 | 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
-| 404 | `NOT_FOUND` | Missing resource, unavailable/inactive student subject/target, or no endpoint at this address |
-| 405 | `METHOD_NOT_ALLOWED` | The endpoint exists but does not support this HTTP method |
+| 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
 | 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated or stale decision, closed/full group, self-removal, leader leaving |
 | 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
 | 409 | `STALE_MATCHING_CONFIG` | Expected configuration revision no longer matches; reload before saving/restoring |
 | 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
-| 415 | `UNSUPPORTED_MEDIA_TYPE` | A request body was sent in a format other than JSON |
 | 500 | `INTERNAL_ERROR` | Safe generic failure; no SQL, internal exception, credential or private data is returned |
-
-`STATE_CONFLICT` messages come from domain state rules (`InvalidStateTransitionException` or a
-feature's conflict exception) and are written for students. Any other unexpected state error is a
-programming fault and is reported as `INTERNAL_ERROR`, so framework wording never reaches the client.
 
 Body and service field validation errors have `fieldErrors`; other errors use an empty object. Authentication
 and permission errors share the same shape. All security responses include `Cache-Control:
