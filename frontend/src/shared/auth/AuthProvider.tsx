@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api, errorMessage, getAccessToken, refreshResources, setAccessToken } from '../api/client'
 import { AuthContext } from './context'
@@ -15,7 +15,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(Boolean(getAccessToken()))
   const [error, setError] = useState<string>()
   const [retryCount, setRetryCount] = useState(0)
-  const logout = useCallback(
+  const clearSession = useCallback(
     () => {
       setAccessToken(null)
       setAccount(null)
@@ -44,13 +44,25 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   )
   useEffect(
     () => {
-      window.addEventListener('session-expired', logout)
-      return () => window.removeEventListener('session-expired', logout)
+      window.addEventListener('session-expired', clearSession)
+      return () => window.removeEventListener('session-expired', clearSession)
     },
-    [logout]
+    [clearSession]
+  )
+  // A sign-in waits for this, so a slow sign-out cannot revoke the session that replaces it.
+  const pendingLogout = useRef<Promise<unknown> | null>(null)
+  const logout = useCallback(
+    () => {
+      // Ask the server to end the token, but forget it here at once: signing out never waits on the network.
+      const token = getAccessToken()
+      if (token) pendingLogout.current = api.post('/auth/logout', null, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+      clearSession()
+    },
+    [clearSession]
   )
 
   async function authenticate(path: string, input: unknown) {
+    await pendingLogout.current
     const response = await api.post<AuthResponse>(path, input)
     refreshResources(true)
     setAccessToken(response.data.token)

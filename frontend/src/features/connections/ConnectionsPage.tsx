@@ -26,7 +26,8 @@ export default function ConnectionsPage() {
   const requestedView = search.get('view')
   const tab = requestedView === 'outgoing' || requestedView === 'connected' ? requestedView : 'incoming'
   const [sending, setSending] = useState(false),
-    [ending, setEnding] = useState<Connection | null>(null)
+    [ending, setEnding] = useState<Connection | null>(null),
+    [declining, setDeclining] = useState<MatchRequest | null>(null)
   const [notice, setNotice] = useState<string>()
   const action = useAction()
   const requests = useResource(
@@ -59,7 +60,7 @@ export default function ConnectionsPage() {
             </Button>
             <Button
               disabled={action.pending}
-              onClick={() => action.run(() => decideMatchRequest(request.id, 'decline'), 'Request declined.')}
+              onClick={() => { action.clear(); setDeclining(request) }}
             >Decline request</Button>
           </>
         )}
@@ -76,6 +77,12 @@ export default function ConnectionsPage() {
         )}
       </PersonCard>
     )
+  }
+
+  async function decline() {
+    if (!declining) return
+    const result = await action.run(() => decideMatchRequest(declining.id, 'decline'), 'Request declined.')
+    if (result.ok) setDeclining(null)
   }
 
   async function disconnect() {
@@ -109,7 +116,7 @@ export default function ConnectionsPage() {
           action.clear()
         }}
       />
-      <ActionNotice error={ending ? undefined : action.error} success={notice || action.success} />
+      <ActionNotice error={ending || declining ? undefined : action.error} success={notice || action.success} />
       {tab === 'connected' ? (
         <>
           <StatePanel
@@ -183,6 +190,18 @@ export default function ConnectionsPage() {
           setSearch({ view: 'outgoing' })
           setNotice('Match request sent.')
         }} />}
+      {declining && (
+        <ConfirmDialog
+          title={`Decline ${declining.senderName}'s request?`}
+          confirmLabel="Decline request"
+          pending={action.pending}
+          error={action.error}
+          onClose={() => setDeclining(null)}
+          onConfirm={decline}
+        >
+          <p>Declining cannot be undone. {declining.senderName} is told the request was declined and can send a new one later.</p>
+        </ConfirmDialog>
+      )}
       {ending && (
         <ConfirmDialog
           title={`Disconnect from ${ending.otherStudentName}?`}

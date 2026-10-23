@@ -42,15 +42,19 @@ describe('buddy requests and connections', () => {
     expect(await screen.findByText('Declined', { selector: '.status-badge' })).toBeInTheDocument()
     expect(screen.queryByText(/Past requests/)).not.toBeInTheDocument()
   })
-  it('keeps decline available after a rejected action', async () => {
+  it('confirms before declining and keeps decline available after a rejected action', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([request]))
     const post = vi.spyOn(api, 'post').mockRejectedValueOnce(new Error('The request changed. Refresh and try again.')).mockResolvedValue(response({ ...request, status: 'DECLINED' }))
     renderPage(<ConnectionsPage />, '/connections', '/connections')
     fireEvent.click(await screen.findByRole('button', { name: 'Decline request' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('The request changed')
-    expect(screen.getByRole('button', { name: 'Decline request' })).toBeEnabled()
-    fireEvent.click(screen.getByRole('button', { name: 'Decline request' }))
+    expect(post).not.toHaveBeenCalled()
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Decline request' }))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('The request changed')
+    expect(within(dialog).getByRole('button', { name: 'Decline request' })).toBeEnabled()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Decline request' }))
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
   it('requires confirmation to disconnect and uses the connection endpoint', async () => {
     vi.spyOn(api, 'get').mockResolvedValueOnce(response([{ id: 7, otherStudentId: 2, otherStudentName: 'Jamie', createdAt: '2026-10-06T01:00:00Z' }])).mockResolvedValue(response([]))

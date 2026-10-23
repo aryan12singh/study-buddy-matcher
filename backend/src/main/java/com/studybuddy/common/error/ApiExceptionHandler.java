@@ -1,5 +1,7 @@
 package com.studybuddy.common.error;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -16,6 +18,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
     private final HttpServletRequest request;
 
     public ApiExceptionHandler(HttpServletRequest request) {
@@ -53,6 +56,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiProblem> unexpected(Exception error) {
+        // The stack trace finds the fault; the message is left out because it can carry SQL or user data.
+        var trace = new RuntimeException(error.getClass().getName());
+        trace.setStackTrace(error.getStackTrace());
+        LOG.error("Unexpected failure on {} {}", request.getMethod(), request.getRequestURI(), trace);
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "The action could not be completed; try again later");
     }
 

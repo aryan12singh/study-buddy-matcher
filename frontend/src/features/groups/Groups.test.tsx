@@ -146,7 +146,9 @@ describe('group fields and saved state', () => {
       if (refresh === 'focus') window.dispatchEvent(new Event('focus'))
       else vi.advanceTimersByTime(REFRESH_INTERVAL_MS)
     })
-    expect(screen.getByText('Loading…', { selector: '.loading-caption' })).toBeInTheDocument()
+    // The group stays on screen while revalidating instead of blanking to a skeleton.
+    expect(screen.queryByText('Loading…', { selector: '.loading-caption' })).not.toBeInTheDocument()
+    expect(screen.getAllByText('OOP study crew').length).toBeGreaterThan(0)
     expect(screen.getByRole('dialog')).toBe(dialog)
     expect(within(dialog).getByLabelText('Message (optional)')).toHaveValue('I can meet on Monday evenings.')
     await act(async () => {
@@ -187,9 +189,12 @@ describe('group leader permissions and decisions', () => {
     renderPage(<GroupManagePage />, '/groups/5/manage', '/groups/:id/manage')
     expect(await screen.findByRole('button', { name: 'Approve application' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'Reject application' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Application no longer pending')
+    expect(post).not.toHaveBeenCalled()
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Reject application' }))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Application no longer pending')
     expect(post).toHaveBeenCalledWith('/groups/5/join-requests/20/reject')
-    expect(screen.getByRole('button', { name: 'Reject application' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Reject application' })).toBeEnabled()
   })
   it('protects the leader and confirms removal of another member', async () => {
     vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/join-requests') ? [] : group))

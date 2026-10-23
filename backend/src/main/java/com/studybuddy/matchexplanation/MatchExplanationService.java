@@ -41,7 +41,7 @@ public class MatchExplanationService {
         requireCurrentEvaluation(evaluationId, evaluation.result().evaluationId());
         String standardText = evaluation.result().explanation();
         Optional<String> aiText = properties.ready()
-                ? writer.write(evidenceFactory.from(evaluation))
+                ? writer.write(evidenceFactory.from(evaluation), actorId)
                 : Optional.empty();
         return aiText.map(text -> assembler.ai(candidateId, evaluationId, text))
                 .orElseGet(() -> assembler.standard(candidateId, evaluationId, standardText));
