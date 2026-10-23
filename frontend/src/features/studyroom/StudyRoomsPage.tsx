@@ -4,6 +4,10 @@ import WindowPage from '../../shared/components/WindowPage'
 import PersonalPomodoro from './PersonalPomodoro'
 import StudyRoomGroupsPanel from './StudyRoomGroupsPanel'
 import HiddenPanelTools from './HiddenPanelTools'
+import AtmosphereScene from './AtmosphereScene'
+import RoomWeatherPanel from './RoomWeatherPanel'
+import { DEFAULT_ATMOSPHERE } from './weatherTheme'
+import type { Atmosphere } from './weatherTheme'
 import { usePanelVisibility } from './usePanelVisibility'
 import { useRoomFullscreen } from './useRoomFullscreen'
 import './studyCorner.css'
@@ -18,6 +22,7 @@ export default function StudyRoomsPage() {
   const panel = usePanelVisibility()
   const fullscreen = useRoomFullscreen()
   const [groupsCollapsed, setGroupsCollapsed] = useState(readGroupsCollapsed)
+  const [atmosphere, setAtmosphere] = useState<Atmosphere>(DEFAULT_ATMOSPHERE)
   function toggleGroups() {
     const next = !groupsCollapsed
     setGroupsCollapsed(next)
@@ -26,11 +31,13 @@ export default function StudyRoomsPage() {
 
   return (
     <WindowPage title="Study Room" description="A quiet corner for a focused mind.">
-      <div className={`study-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+      <div className={`study-room-workspace atmosphere-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
         <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-        <div className="study-corner-scenery" aria-hidden="true"><i className="study-corner-cloud cloud-left" /><i className="study-corner-cloud cloud-right" /><i className="study-corner-hills" /><i className="study-corner-meadow" /></div>
+        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
         <div className={`study-corner-layout${groupsCollapsed ? ' groups-collapsed' : ''}`}>
-          {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen} />}
+          {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen}
+            extraTabs={[{ id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
+              content: <RoomWeatherPanel liveEnabled store="personal-room" onChange={setAtmosphere} /> }]} />}
           <StudyRoomGroupsPanel collapsed={groupsCollapsed} onToggle={toggleGroups} />
         </div>
       </div>

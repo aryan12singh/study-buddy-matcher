@@ -51,7 +51,9 @@ describe('Study Room navigation', () => {
 
   it('shows loading, handles a failed request and retries to an empty state with a way to find groups', async () => {
     const pending = deferred<never>()
-    vi.spyOn(api, 'get').mockImplementationOnce(() => pending.promise).mockResolvedValue(response([]))
+    let groupRequests = 0
+    vi.spyOn(api, 'get').mockImplementation(path => path === '/weather' ? Promise.resolve(response({ available: false }))
+      : groupRequests++ === 0 ? pending.promise : Promise.resolve(response([])))
     renderPage(<StudyRoomsPage />)
     expect(within(screen.getByRole('complementary', { name: 'Your study groups' })).getByRole('status')).toHaveTextContent('Loading')
     await act(async () => { pending.reject(new Error('Unable to load your groups.')) })
@@ -69,6 +71,13 @@ describe('Study Room navigation', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Hide panel' }))
     expect(workspace).toHaveClass('is-minimal')
     expect(screen.getByRole('timer')).toHaveTextContent('25:00')
+    // The panel's own controls are hidden by CSS, which this test environment does not apply.
+    const view = within(screen.getByRole('group', { name: 'Timer view' }))
+    fireEvent.click(view.getByRole('button', { name: 'Full screen' }))
+    expect(workspace).toHaveClass('is-expanded')
+    fireEvent.click(view.getByRole('button', { name: 'Exit full screen' }))
+    expect(workspace).toHaveClass('is-minimal')
+    expect(workspace).not.toHaveClass('is-expanded')
     fireEvent.click(screen.getByRole('button', { name: 'Show panel' }))
     expect(workspace).not.toHaveClass('is-minimal')
     fireEvent.click(screen.getByRole('button', { name: 'Full screen' }))
@@ -91,6 +100,19 @@ describe('Study Room navigation', () => {
     renderPage(<StudyRoomsPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'Show study groups' }))
     expect(await screen.findByRole('link', { name: 'Browse study groups' })).toBeInTheDocument()
+    localStorage.clear()
+  })
+
+  it('lets the personal room choose its own weather and time of day for the background', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/weather' ? { available: false } : [group]))
+    renderPage(<StudyRoomsPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Room atmosphere' }))
+    fireEvent.change(screen.getByLabelText('Window view'), { target: { value: 'RAIN' } })
+    fireEvent.change(screen.getByLabelText('Time of day'), { target: { value: 'NIGHT' } })
+    const backdrop = document.querySelector('.atmosphere-backdrop')
+    expect(backdrop).toHaveAttribute('data-weather', 'rain')
+    expect(backdrop).toHaveAttribute('data-night', 'true')
     localStorage.clear()
   })
 

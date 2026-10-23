@@ -7,12 +7,6 @@
   border: 1px solid #748e86;
   overflow: hidden;
 }
-.study-corner-scenery { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.study-corner-cloud { position: absolute; width: 140px; height: 17px; background: #e9eee0a6; box-shadow: 23px -12px #e9eee0a6, 45px 12px #e9eee0a6; }
-.study-corner-cloud.cloud-left { left: 3%; top: 6%; }
-.study-corner-cloud.cloud-right { right: 7%; top: 17%; transform: scale(.8); }
-.study-corner-hills { position: absolute; inset: 28% -8% 12%; background: #6f9573; clip-path: polygon(0 55%, 10% 55%, 10% 38%, 18% 38%, 18% 22%, 25% 22%, 25% 38%, 32% 38%, 32% 55%, 48% 55%, 48% 42%, 59% 42%, 59% 26%, 70% 26%, 70% 42%, 81% 42%, 81% 58%, 93% 58%, 93% 48%, 100% 48%, 100% 100%, 0 100%); }
-.study-corner-meadow { position: absolute; inset: 75% 0 0; background: repeating-linear-gradient(90deg, transparent 0 49px, #e6c779 49px 54px, transparent 54px 91px), repeating-linear-gradient(0deg, #648252 0 25px, #78905b 25px 30px, #648252 30px 57px); opacity: .8; }
 .study-corner-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(245px, .44fr); gap: 1.25rem; align-items: stretch; }
 .study-corner-panel { min-width: 0; background: #fffcef; border: 2px solid #414a40; border-radius: 7px; box-shadow: 4px 5px 0 #34433470; color: #343e34; }
 .personal-pomodoro { position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: center; min-height: 665px; padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 1.25rem; text-align: center; }

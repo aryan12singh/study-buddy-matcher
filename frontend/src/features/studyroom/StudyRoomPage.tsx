@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { configureRoom, joinRoom, leaveRoom, leaveRoomOnExit, selectAudio, timerCommand } from './api'
 import type { RoomAudio, RoomConfiguration, RoomSnapshot } from './api'
@@ -22,7 +22,8 @@ import RoomRolesPanel from './RoomRolesPanel'
 import RoomTimerSettingsPanel from './RoomTimerSettingsPanel'
 import { useRoomFullscreen } from './useRoomFullscreen'
 import { usePanelVisibility } from './usePanelVisibility'
-import type { WeatherCondition } from './weatherTheme'
+import { DEFAULT_ATMOSPHERE } from './weatherTheme'
+import type { Atmosphere } from './weatherTheme'
 import './studyCorner.css'
 import './studyroom.css'
 
@@ -40,8 +41,7 @@ function RoomPage({ groupId }: { groupId: number }) {
   const room = resource.snapshot?.room
   const action = useAction()
   const { account } = useAuth()
-  const [atmosphere, setAtmosphere] = useState<{ condition: WeatherCondition; night: boolean }>({ condition: 'CLEAR', night: false })
-  const changeAtmosphere = useCallback((condition: WeatherCondition, night: boolean) => setAtmosphere({ condition, night }), [])
+  const [atmosphere, setAtmosphere] = useState<Atmosphere>(DEFAULT_ATMOSPHERE)
   const fullscreen = useRoomFullscreen()
   const panel = usePanelVisibility()
   const [confirmation, setConfirmation] = useState<'leave' | 'reset' | null>(null)
@@ -140,9 +140,9 @@ function RoomPage({ groupId }: { groupId: number }) {
           </li>)}
         </ul>
       </section>}
-      <div className={`study-room-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+      <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
         <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-        <AtmosphereScene className="atmosphere-backdrop" condition={atmosphere.condition} night={atmosphere.night} />
+        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
         <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
           <header className="group-room-header">
             <div className="group-room-title">
@@ -153,7 +153,7 @@ function RoomPage({ groupId }: { groupId: number }) {
               { id: 'timer', label: 'Timer', icon: '◷',
                 content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
               { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
-                content: <RoomWeatherPanel liveEnabled onChange={changeAtmosphere} /> },
+                content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
               { id: 'audio', label: 'Room audio', icon: '♪', persistent: true,
                 content: <RoomAudioPanel key={resource.joinedHere ? 'joined' : 'preview'} room={room} active={resource.joinedHere} pending={action.pending} onSelect={audio} /> },
               { id: 'roles', label: 'Room roles', icon: '★',

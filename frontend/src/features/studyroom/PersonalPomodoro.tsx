@@ -5,12 +5,13 @@ import PixelIcon from '../../shared/components/PixelIcon'
 import { MINUTE_MILLIS, usePersonalPomodoro } from './usePersonalPomodoro'
 import { timerText } from './timer'
 import WindowControls from './WindowControls'
+import type { RoomSettingsTab } from './RoomSettingsMenu'
 import PersonalTimerSettings from './PersonalTimerSettings'
 import type { PanelVisibility } from './usePanelVisibility'
 import type { RoomFullscreen } from './useRoomFullscreen'
 
-export default function PersonalPomodoro({ accountId, panel, fullscreen }: {
-  accountId: number; panel: PanelVisibility; fullscreen: RoomFullscreen
+export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTabs = [] }: {
+  accountId: number; panel: PanelVisibility; fullscreen: RoomFullscreen; extraTabs?: RoomSettingsTab[]
 }) {
   const timer = usePersonalPomodoro(accountId)
   const [confirmingReset, setConfirmingReset] = useState(false)
@@ -23,6 +24,7 @@ export default function PersonalPomodoro({ accountId, panel, fullscreen }: {
       <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
         { id: 'timer', label: 'Timer', icon: '◷', content: <PersonalTimerSettings
           focusMinutes={timer.focusMinutes} breakMinutes={timer.breakMinutes} onSave={(focus, rest) => timer.reset(focus, rest)} /> },
+        ...extraTabs,
       ]} />
       <div className="pomodoro-welcome">
         <span className="pomodoro-kicker"><PixelIcon kind="clock" />Your focus space</span>
