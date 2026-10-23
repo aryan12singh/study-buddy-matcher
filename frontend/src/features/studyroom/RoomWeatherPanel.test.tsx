@@ -15,7 +15,7 @@ it('uses Singapore daylight and lets a local atmosphere change without an extern
   fireEvent.change(screen.getByLabelText('Window view'), { target: { value: 'STORM' } })
   expect(screen.getByText(/Selected atmosphere/)).toBeInTheDocument()
   expect(localStorage.getItem('study-room-atmosphere')).toBe('STORM')
-  expect(change).toHaveBeenLastCalledWith('STORM')
+  expect(change).toHaveBeenLastCalledWith('STORM', expect.any(Boolean))
   expect(get).not.toHaveBeenCalled()
 })
 it('labels live versus last-known data and keeps selectable themes available after provider failure', async () => {

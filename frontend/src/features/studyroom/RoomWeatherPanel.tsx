@@ -3,6 +3,7 @@ import { api } from '../../shared/api/client'
 import { useResource } from '../../shared/api/useResource'
 import Field from '../../shared/components/Field'
 import Button from '../../shared/components/Button'
+import AtmosphereScene from './AtmosphereScene'
 import { campusNight, readWeatherChoice, weatherConditions, weatherLabels } from './weatherTheme'
 import type { RoomWeather, WeatherChoice, WeatherCondition } from './weatherTheme'
 import './weatherTheme.css'
@@ -12,7 +13,7 @@ async function getWeather(signal: AbortSignal): Promise<RoomWeather> {
 }
 
 export default function RoomWeatherPanel({ liveEnabled = false, onChange }: {
-  liveEnabled?: boolean; onChange?: (condition: WeatherCondition) => void
+  liveEnabled?: boolean; onChange?: (condition: WeatherCondition, night: boolean) => void
 }) {
   const [choice, setChoice] = useState<WeatherChoice>(readWeatherChoice)
   const [now, setNow] = useState(() => new Date())
@@ -20,7 +21,7 @@ export default function RoomWeatherPanel({ liveEnabled = false, onChange }: {
   const live = weather.data?.available ? weather.data : undefined
   const condition = choice === 'AUTO' ? live?.condition ?? 'CLEAR' : choice
   const night = choice === 'AUTO' && live ? !live.isDay : campusNight(now)
-  useEffect(() => { onChange?.(condition) }, [condition, onChange])
+  useEffect(() => { onChange?.(condition, night) }, [condition, night, onChange])
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60000)
     return () => window.clearInterval(timer)
@@ -28,12 +29,8 @@ export default function RoomWeatherPanel({ liveEnabled = false, onChange }: {
   useEffect(() => {
     try { localStorage.setItem('study-room-atmosphere', choice) } catch { /* Storage is optional. */ }
   }, [choice])
-  return <section className="detail-panel room-atmosphere" aria-label="Room atmosphere" data-weather={condition.toLowerCase()} data-night={night}>
-    <div className="atmosphere-window" aria-hidden="true">
-      <div className="atmosphere-sky"><i className="atmosphere-orb" /><i className="atmosphere-cloud cloud-one" /><i className="atmosphere-cloud cloud-two" /><div className="atmosphere-rain" /><div className="atmosphere-fog" /><div className="atmosphere-stars" /></div>
-      <div className="atmosphere-crossbar" /><div className="atmosphere-desk"><i className="atmosphere-books" /><i className="atmosphere-cup" /><i className="atmosphere-plant" /></div>
-      <span className="atmosphere-caption">{night ? 'Night study' : 'Day study'}</span>
-    </div>
+  return <section className="detail-panel room-atmosphere" aria-label="Room atmosphere">
+    <AtmosphereScene condition={condition} night={night} />
     <div className="atmosphere-controls">
       <h2>Room atmosphere</h2>
       <p>Make this corner your own. Your choice changes only this browser.</p>
