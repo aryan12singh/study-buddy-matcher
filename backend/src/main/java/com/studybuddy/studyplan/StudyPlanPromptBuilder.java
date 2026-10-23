@@ -91,9 +91,10 @@ public class StudyPlanPromptBuilder {
         return MATERIAL_MARKER.matcher(text).replaceAll("");
     }
 
+    /** Git on Windows may check the template out with \r\n line endings; the prompt is the same everywhere. */
     private static String loadTemplate() {
         try (InputStream input = new ClassPathResource(TEMPLATE_PATH).getInputStream()) {
-            return StreamUtils.copyToString(input, StandardCharsets.UTF_8);
+            return StreamUtils.copyToString(input, StandardCharsets.UTF_8).replace("\r\n", "\n");
         } catch (IOException missing) {
             throw new IllegalStateException("Prompt template " + TEMPLATE_PATH + " is missing", missing);
         }

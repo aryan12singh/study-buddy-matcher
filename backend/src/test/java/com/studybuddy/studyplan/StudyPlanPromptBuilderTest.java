@@ -39,6 +39,12 @@ class StudyPlanPromptBuilderTest {
         assertFalse(prompt.contains("{{"), prompt);
     }
 
+    /** Fails on a Windows checkout with autocrlf if the template's line endings are not normalised. */
+    @Test
+    void thePromptHasTheSameLineEndingsOnEveryMachine() {
+        assertFalse(prompt(StudyMaterial.pastedTopics("Polymorphism")).contains("\r"));
+    }
+
     @Test
     void aMissingGoalIsSaidToBeUnspecified() {
         assertTrue(prompt(StudyMaterial.pastedTopics("Polymorphism")).contains("Study goal: not specified"));
