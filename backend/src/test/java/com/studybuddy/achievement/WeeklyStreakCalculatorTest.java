@@ -55,9 +55,26 @@ class WeeklyStreakCalculatorTest {
 
     @Test
     void weekBoundaryUsesConfiguredZone() {
-        // Sunday 23:30 in Singapore is still the previous week there, though Monday has begun nowhere else yet.
-        Instant lateSunday = LocalDate.of(2026, 10, 18).atTime(23, 30).atZone(SINGAPORE).toInstant();
-        StreakDto streak = calculator.calculate(List.of(lateSunday), SINGAPORE, TODAY);
-        assertThat(streak.currentRunWeeks()).containsExactly(LocalDate.of(2026, 10, 12));
+        // Sunday in UTC has become Monday in Singapore; the configured zone wins.
+        Instant boundary = Instant.parse("2026-10-18T16:30:00Z");
+        assertThat(calculator.calculate(List.of(boundary), SINGAPORE, TODAY).currentRunWeeks())
+                .containsExactly(LocalDate.of(2026, 10, 19));
+        assertThat(calculator.calculate(List.of(boundary), ZoneId.of("UTC"), TODAY).currentRunWeeks())
+                .containsExactly(LocalDate.of(2026, 10, 12));
+    }
+
+    @Test
+    void plannedOccurrenceLaterThisWeekCountsBeforeItsStartButNextWeekDoesNot() {
+        StreakDto streak = calculator.calculate(List.of(on("2026-10-25"), on("2026-10-26")), SINGAPORE, TODAY);
+        assertThat(streak.currentWeeks()).isEqualTo(1);
+        assertThat(streak.bestWeeks()).isEqualTo(1);
+        assertThat(streak.currentRunWeeks()).containsExactly(LocalDate.of(2026, 10, 19));
+    }
+
+    @Test
+    void aRunEndingTwoWeeksAgoIsNoLongerCurrent() {
+        StreakDto streak = calculator.calculate(List.of(on("2026-10-06")), SINGAPORE, TODAY);
+        assertThat(streak.currentWeeks()).isZero();
+        assertThat(streak.bestWeeks()).isEqualTo(1);
     }
 }

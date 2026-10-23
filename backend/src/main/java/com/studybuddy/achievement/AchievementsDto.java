@@ -4,7 +4,9 @@ import java.util.List;
 
 public record AchievementsDto(
         int level,
+        int maxLevel,
         int points,
+        int maxPoints,
         int pointsToNextLevel,
         int pointsPerLevel,
         int earnedCount,

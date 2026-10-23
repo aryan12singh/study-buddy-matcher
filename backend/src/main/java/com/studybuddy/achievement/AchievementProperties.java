@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.ZoneId;
+import java.util.Objects;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -20,11 +21,22 @@ public record AchievementProperties(
         @Valid @NotNull TierThresholds sessionsPlanned,
         @Valid @NotNull TierThresholds streakWeeks) {
 
+    public AchievementProperties {
+        Objects.requireNonNull(weekZone, "Week zone is required");
+        if (pointsPerLevel < 1) throw new IllegalArgumentException("Points per level must be positive");
+        Objects.requireNonNull(connections, "Connection thresholds are required");
+        Objects.requireNonNull(requestsSent, "Request thresholds are required");
+        Objects.requireNonNull(groupsJoined, "Joined-group thresholds are required");
+        Objects.requireNonNull(groupsLed, "Created-group thresholds are required");
+        Objects.requireNonNull(sessionsPlanned, "Session thresholds are required");
+        Objects.requireNonNull(streakWeeks, "Streak thresholds are required");
+    }
+
     /** The counts at which a badge reaches bronze, silver and gold, in increasing order. */
     public record TierThresholds(@Min(1) int bronze, @Min(1) int silver, @Min(1) int gold) {
         public TierThresholds {
-            if (!(bronze <= silver && silver <= gold)) {
-                throw new IllegalArgumentException("Tier thresholds must be bronze <= silver <= gold");
+            if (!(bronze > 0 && bronze <= silver && silver <= gold)) {
+                throw new IllegalArgumentException("Tier thresholds must be positive and bronze <= silver <= gold");
             }
         }
     }

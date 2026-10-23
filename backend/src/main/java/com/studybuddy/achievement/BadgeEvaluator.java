@@ -10,8 +10,8 @@ public final class BadgeEvaluator {
         BadgeTier next = tier == null ? BadgeTier.BRONZE : tier == BadgeTier.GOLD ? null : BadgeTier.values()[tier.ordinal() + 1];
         long target = threshold(next == null ? BadgeTier.GOLD : next, thresholds);
         String hint = next == null
-                ? "Gold reached. Every tier earned."
-                : definition.hint(target - current, next);
+                ? "Gold is your current tier. No higher tier."
+                : definition.hint(current, target, next);
         return new BadgeDto(definition.key(), definition.title(), definition.description(),
                 tier, next, current, target, tier != null, hint);
     }

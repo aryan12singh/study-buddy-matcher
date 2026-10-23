@@ -16,7 +16,7 @@ class BadgeEvaluatorTest {
         assertThat(badge.tier()).isNull();
         assertThat(badge.nextTier()).isEqualTo(BadgeTier.BRONZE);
         assertThat(badge.target()).isEqualTo(1);
-        assertThat(badge.earnedHint()).isEqualTo("1 more connection to reach Bronze.");
+        assertThat(badge.earnedHint()).isEqualTo("1 more active connection to reach Bronze.");
     }
 
     @Test
@@ -26,7 +26,7 @@ class BadgeEvaluatorTest {
         assertThat(badge.tier()).isEqualTo(BadgeTier.SILVER);
         assertThat(badge.nextTier()).isEqualTo(BadgeTier.GOLD);
         assertThat(badge.target()).isEqualTo(5);
-        assertThat(badge.earnedHint()).isEqualTo("2 more connections to reach Gold.");
+        assertThat(badge.earnedHint()).isEqualTo("2 more active connections to reach Gold.");
     }
 
     @Test
@@ -35,5 +35,12 @@ class BadgeEvaluatorTest {
         assertThat(badge.tier()).isEqualTo(BadgeTier.GOLD);
         assertThat(badge.nextTier()).isNull();
         assertThat(badge.target()).isEqualTo(5);
+        assertThat(badge.earnedHint()).isEqualTo("Gold is your current tier. No higher tier.");
+    }
+
+    @Test
+    void groveHintStatesTheFullRunTargetBecauseTheCurrentRunMayHaveRestarted() {
+        BadgeDto badge = evaluator.evaluate(BadgeDefinition.GROVE_KEEPER, 3, new TierThresholds(2, 4, 8));
+        assertThat(badge.earnedHint()).isEqualTo("Plan 4 consecutive weeks to reach Silver. Your longest eligible run is 3.");
     }
 }

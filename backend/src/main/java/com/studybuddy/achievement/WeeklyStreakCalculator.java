@@ -12,7 +12,7 @@ import java.util.TreeSet;
 
 /**
  * Pure streak maths: turns session start times into runs of consecutive weeks.
- * Weeks after the current one are ignored, so a streak never counts the future.
+ * Weeks after the current one are ignored. A planned occurrence later this week counts now.
  * A run that ended last week is still current, because this week may not have a session yet.
  */
 public final class WeeklyStreakCalculator {
@@ -26,7 +26,8 @@ public final class WeeklyStreakCalculator {
                 weeks.add(week);
             }
         }
-        return new StreakDto(currentRun(weeks, thisWeek).size(), bestRun(weeks), currentRun(weeks, thisWeek));
+        List<LocalDate> current = currentRun(weeks, thisWeek);
+        return new StreakDto(current.size(), bestRun(weeks), current, zone.getId());
     }
 
     private static List<LocalDate> currentRun(TreeSet<LocalDate> weeks, LocalDate thisWeek) {

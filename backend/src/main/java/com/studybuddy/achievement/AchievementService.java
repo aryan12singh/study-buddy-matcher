@@ -6,8 +6,7 @@ import com.studybuddy.matchrequest.MatchRequestRepository;
 import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroupRepository;
 import com.studybuddy.studysession.SessionOccurrenceDto;
-import com.studybuddy.studysession.StudySession;
-import com.studybuddy.studysession.StudySessionRepository;
+import com.studybuddy.studysession.SessionSchedule;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Derives badges and the weekly study streak from data the student already has.
+ * Derives current badge tiers and a planned-session weekly streak from existing records.
  * Nothing here is stored: every value is recomputed from connections, requests, groups and sessions.
  */
 @Service
@@ -27,15 +26,16 @@ public class AchievementService {
     private final MatchRequestRepository requests;
     private final GroupMembershipRepository memberships;
     private final StudyGroupRepository groups;
-    private final StudySessionRepository sessions;
+    private final AchievementSessionRepository sessions;
     private final AchievementProperties properties;
+    private final AchievementAssembler assembler;
     private final Clock clock;
     private final BadgeEvaluator evaluator = new BadgeEvaluator();
     private final WeeklyStreakCalculator streaks = new WeeklyStreakCalculator();
 
     public AchievementService(AccountAccess access, ConnectionRepository connections, MatchRequestRepository requests,
-            GroupMembershipRepository memberships, StudyGroupRepository groups, StudySessionRepository sessions,
-            AchievementProperties properties, Clock clock) {
+            GroupMembershipRepository memberships, StudyGroupRepository groups, AchievementSessionRepository sessions,
+            AchievementProperties properties, AchievementAssembler assembler, Clock clock) {
         this.access = access;
         this.connections = connections;
         this.requests = requests;
@@ -43,15 +43,17 @@ public class AchievementService {
         this.groups = groups;
         this.sessions = sessions;
         this.properties = properties;
+        this.assembler = assembler;
         this.clock = clock;
     }
 
     public AchievementsDto forStudent(Long actorId) {
         access.requireStudent(actorId);
-        List<StudySession> mySessions = sessions.findMine(actorId);
-        List<Instant> starts = mySessions.stream()
-                .flatMap(session -> session.schedule().occurrences().stream())
-                .map(SessionOccurrenceDto::startAt)
+        List<Instant> starts = sessions.findEligibleSchedules(actorId).stream()
+                .flatMap(session -> new SessionSchedule(session.getStartLocal(), session.getEndLocal(),
+                        session.getTimeZone(), session.getOccurrenceCount()).occurrences().stream()
+                        .map(SessionOccurrenceDto::startAt)
+                        .filter(start -> !start.isBefore(session.getParticipationStartedAt())))
                 .toList();
         LocalDate today = LocalDate.now(clock.withZone(properties.weekZone()));
         StreakDto streak = streaks.calculate(starts, properties.weekZone(), today);
@@ -59,15 +61,11 @@ public class AchievementService {
         List<BadgeDto> badges = List.of(
                 evaluator.evaluate(BadgeDefinition.CONNECTOR, connections.countActiveByStudentId(actorId), properties.connections()),
                 evaluator.evaluate(BadgeDefinition.FIRST_MOVE, requests.countBySenderId(actorId), properties.requestsSent()),
-                evaluator.evaluate(BadgeDefinition.TEAM_PLAYER, memberships.countJoinedByStudentId(actorId), properties.groupsJoined()),
+                evaluator.evaluate(BadgeDefinition.TEAM_PLAYER, memberships.countJoinedOpenByStudentId(actorId), properties.groupsJoined()),
                 evaluator.evaluate(BadgeDefinition.FOUNDER, groups.countByLeaderId(actorId), properties.groupsLed()),
                 evaluator.evaluate(BadgeDefinition.PLANNER, starts.size(), properties.sessionsPlanned()),
                 evaluator.evaluate(BadgeDefinition.GROVE_KEEPER, streak.bestWeeks(), properties.streakWeeks()));
 
-        int points = badges.stream().filter(BadgeDto::earned).mapToInt(badge -> badge.tier().points()).sum();
-        int perLevel = properties.pointsPerLevel();
-        int earned = (int) badges.stream().filter(BadgeDto::earned).count();
-        return new AchievementsDto(points / perLevel + 1, points, perLevel - points % perLevel, perLevel,
-                earned, badges.size(), streak, badges);
+        return assembler.toDto(badges, streak);
     }
 }

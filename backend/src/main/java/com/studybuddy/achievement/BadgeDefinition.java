@@ -2,12 +2,18 @@ package com.studybuddy.achievement;
 
 /** The fixed catalogue of badges: what each one is called and what it counts. */
 public enum BadgeDefinition {
-    CONNECTOR("Connector", "Active study connections", "connection", "connections"),
-    FIRST_MOVE("First Move", "Match requests you have sent", "match request", "match requests"),
-    TEAM_PLAYER("Team Player", "Study groups you joined", "group to join", "groups to join"),
-    FOUNDER("Founder", "Study groups you created", "group to create", "groups to create"),
-    PLANNER("Planner", "Upcoming and past sessions on your active schedule", "session to schedule", "sessions to schedule"),
-    GROVE_KEEPER("Grove Keeper", "Your best run of weeks with a planned session", "week in a row", "weeks in a row");
+    CONNECTOR("Connector", "Active accepted buddy connections. Disconnecting lowers this count.", "active connection", "active connections"),
+    FIRST_MOVE("First Move", "Retained match requests you sent, in any status, including declined or cancelled requests.", "sent request", "sent requests"),
+    TEAM_PLAYER("Team Player", "Open groups you currently belong to without leading. Leaving, removal or closure lowers this count.", "open group membership", "open group memberships"),
+    FOUNDER("Founder", "Retained groups you created, including closed groups.", "created group", "created groups"),
+    PLANNER("Planner", "Planned occurrences on your active buddy and group schedules, from your current join or connection date onward. Includes past and future dates, excludes cancelled sessions.", "planned occurrence", "planned occurrences"),
+    GROVE_KEEPER("Grove Keeper", "Longest planned-session weekly run in your currently eligible schedules. Recomputed when those schedules change.", "consecutive planned week", "consecutive planned weeks") {
+        @Override
+        public String hint(long current, long target, BadgeTier next) {
+            return "Plan " + target + " consecutive weeks to reach " + tierLabel(next)
+                    + ". Your longest eligible run is " + current + ".";
+        }
+    };
 
     private final String title;
     private final String description;
@@ -33,8 +39,12 @@ public enum BadgeDefinition {
         return description;
     }
 
-    public String hint(long remaining, BadgeTier next) {
-        String label = next.name().charAt(0) + next.name().substring(1).toLowerCase();
-        return remaining + " more " + (remaining == 1 ? unitOne : unitMany) + " to reach " + label + ".";
+    public String hint(long current, long target, BadgeTier next) {
+        long remaining = target - current;
+        return remaining + " more " + (remaining == 1 ? unitOne : unitMany) + " to reach " + tierLabel(next) + ".";
+    }
+
+    private static String tierLabel(BadgeTier tier) {
+        return tier.name().charAt(0) + tier.name().substring(1).toLowerCase();
     }
 }
