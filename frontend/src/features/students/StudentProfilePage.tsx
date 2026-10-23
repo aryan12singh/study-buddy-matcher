@@ -21,13 +21,12 @@ import { useAuth } from '../../shared/auth/useAuth'
 
 export default function StudentProfilePage() {
   const { account } = useAuth()
-  const { id } = useParams()
-  return <StudentProfileContent key={`${account?.role}:${account?.id}:${id}`} account={account} />
-}
-
-function StudentProfileContent({ account }: { account: Account | null }) {
   const { id } = useParams(),
     studentId = Number(id)
+  return <StudentProfileContent key={`${account?.role}:${account?.id}:${id}`} account={account} id={id} studentId={studentId} />
+}
+
+function StudentProfileContent({ account, id, studentId }: { account: Account | null; id?: string; studentId: number }) {
   const validId = Number.isSafeInteger(studentId) && studentId > 0
   const actorId = account?.role === 'STUDENT' ? account.id : undefined
   const back = returnToFrom(useLocation(), { path: '/connections', label: 'Back to connections' })
