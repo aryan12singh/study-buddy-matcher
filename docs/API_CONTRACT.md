@@ -99,6 +99,7 @@ student only. Account role selection belongs to the administrator creation endpo
 | POST | `/api/auth/logout` | none | 204 | Active account; increments the account's token version, so every token issued to it so far (all tabs and devices) gets 401 |
 | GET | `/api/courses` | none | 200 `CourseDto[]`, course-code order | Student |
 | GET | `/api/students/me/summary` | none | 200 `StudentActivityDto` | Student |
+| GET | `/api/achievements/me` | none | 200 `AchievementsDto` | Student |
 
 `RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
 (integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
@@ -989,3 +990,53 @@ Connections offers a session link for each active buddy. Session notification
 links target `/sessions/{id}` and recheck permission through the detail endpoint.
 Local browser drafts, room host roles and notification metadata never grant
 session management or calendar access.
+
+### AchievementsDto
+
+`GET /api/achievements/me` returns the authenticated student's private current standing. It is
+read-only and recomputed from existing records; there is no award table or permanent badge history.
+Anonymous requests receive 401 and administrators receive 403. There is no achievement endpoint
+for another student, and public, connected and administrator profile payloads never embed this data.
+
+```
+AchievementsDto { level, maxLevel, points, maxPoints, pointsToNextLevel, pointsPerLevel, earnedCount, totalCount,
+                  streak: StreakDto, badges: BadgeDto[] }
+StreakDto       { currentWeeks, bestWeeks, currentRunWeeks: LocalDate[], weekZone }   // Mondays, oldest first
+BadgeDto        { key, title, description, tier: BRONZE|SILVER|GOLD|null, nextTier: BRONZE|SILVER|GOLD|null,
+                  current, target, earned, earnedHint }
+```
+
+| Badge key | Count and lifecycle |
+| --- | --- |
+| `CONNECTOR` | Active accepted connections; ending one lowers the count |
+| `FIRST_MOVE` | Retained sent match requests in any status, including declined/cancelled/accepted; disconnecting does not erase those requests |
+| `TEAM_PLAYER` | Current memberships in open groups the student does not lead; leaving, removal or closure lowers the count |
+| `FOUNDER` | Retained groups created by the student, including closed groups |
+| `PLANNER` | Individual non-cancelled scheduled occurrences on currently accessible open-group/active-buddy schedules, including past and future occurrences, from the start of the current membership or exact connection onward |
+| `GROVE_KEEPER` | Longest consecutive planned-week run derived from those currently eligible occurrences; it can decrease if the source schedules change or become inaccessible |
+
+The schedule read uses one projection query including each membership's `joinedAt` or connection's
+`createdAt`. A newcomer or readmitted member does not inherit occurrences before that current tenure.
+Inactive buddies, ended connections, closed groups, removed memberships and cancelled sessions are
+ineligible. Each weekly recurrence counts separately for Planner, even when its date is in a future week.
+
+For the streak, weeks start on Monday in `app.achievements.week-zone`, returned as `weekZone`.
+Each distinct eligible week counts once. Future weeks are excluded, but an occurrence later in the
+current week counts immediately because the metric measures planning. A run ending last week remains
+current while this week is still open; a gap of a whole week resets the current run. `bestWeeks` is the
+longest run in currently eligible data, not a stored all-time record. Removing/cancelling/editing a
+schedule can change both streak values. Neither scheduling nor the room timer records attendance,
+completed focus time or study quality.
+
+Thresholds are positive and nondecreasing bronze/silver/gold values from `app.achievements.*`;
+`points-per-level` must be positive. `earned` means a badge currently has a tier. Only the highest tier
+contributes points (Bronze 1, Silver 2, Gold 3); tiers are not added together. `target` is the next
+tier's threshold, or the Gold threshold with `nextTier=null` at Gold. Counts may exceed a Gold target.
+Six Gold badges yield `maxPoints=18`; the default maximum is level 7. The last level step is shortened
+when needed so every configured maximum is reachable. At maximum standing `pointsToNextLevel=0`.
+Tiers, points and level can fall when eligible records decrease; retained request/group history only
+disappears when its underlying records do.
+
+Badge actions are a frontend allowlist keyed by the fixed badge catalogue; the API never supplies
+arbitrary navigation URLs. The own-profile summary fetches `/me` only after the signed-in student's
+role, route id, profile id and `SELF` relationship agree. It unmounts/aborts on owner or profile changes.

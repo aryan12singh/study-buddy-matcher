@@ -63,6 +63,16 @@ app:
   profile:
     group-size-max: ${PROFILE_GROUP_SIZE_MAX:5}
     max-courses: ${PROFILE_MAX_COURSES:8}
+  achievements:
+    # Weeks start on Monday in this zone when counting the study streak.
+    week-zone: Asia/Singapore
+    points-per-level: 3
+    connections: { bronze: 1, silver: 3, gold: 5 }
+    requests-sent: { bronze: 1, silver: 5, gold: 10 }
+    groups-joined: { bronze: 1, silver: 2, gold: 3 }
+    groups-led: { bronze: 1, silver: 2, gold: 3 }
+    sessions-planned: { bronze: 1, silver: 5, gold: 10 }
+    streak-weeks: { bronze: 2, silver: 4, gold: 8 }
   matching:
     default-strategy: BALANCED
     default-enabled-criteria: [COURSE, AVAILABILITY, STUDY_MODE, STUDY_GOAL, GROUP_SIZE]

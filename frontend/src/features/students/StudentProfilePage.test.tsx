@@ -6,6 +6,10 @@ import { refreshResources } from '../../shared/api/client'
 import { REFRESH_INTERVAL_MS } from '../../shared/api/useResource'
 import { deferred, renderPage, response } from '../../test/renderApp'
 import StudentProfilePage from './StudentProfilePage'
+import { RouterProvider } from 'react-router-dom'
+import { AuthContext } from '../../shared/auth/context'
+import { adminAccount } from '../../test/renderApp'
+import { achievementStanding } from '../../test/achievementStanding'
 
 const publicProfile = { id: 2, name: 'Jamie', school: 'SCIS', programme: 'Information Systems', yearOfStudy: 2, coursesTaken: [], targetCourse: null, preferredStudyMode: null, studyGoals: [], preferredGroupSizeMin: null, preferredGroupSizeMax: null, availability: [], relationship: { state: 'STRANGER', requestId: null, connectionId: null } }
 afterEach(() => {
@@ -13,6 +17,66 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 describe('profile privacy and relationship actions', () => {
+  it('loads a compact private achievement summary only on the signed-in students own self profile', async () => {
+    const get = vi.spyOn(api, 'get').mockImplementation(path => Promise.resolve(response(path === '/achievements/me'
+      ? achievementStanding : { ...publicProfile, id: 1, relationship: { state: 'SELF' } })))
+    renderPage(<StudentProfilePage />, '/students/1', '/students/:id')
+    const summary = await screen.findByRole('region', { name: 'Your achievements' })
+    expect(await within(summary).findByText('Current planned streak')).toBeInTheDocument()
+    expect(within(summary).getByText('Private to you. Current badge tiers reflect your records; the streak counts planned session weeks.')).toBeInTheDocument()
+    expect(within(summary).getByRole('link', { name: 'View all achievements' })).toHaveAttribute('href', '/achievements')
+    expect(get.mock.calls.filter(([path]) => path === '/achievements/me')).toHaveLength(1)
+  })
+  it.each(['SELF', 'STRANGER', 'CONNECTED'])('never fetches or renders achievements for another students %s profile', async state => {
+    const get = vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile, relationship: { state } }))
+    renderPage(<StudentProfilePage />, '/students/2', '/students/:id')
+    await screen.findByText('No weekly availability saved.')
+    expect(screen.queryByRole('region', { name: 'Your achievements' })).not.toBeInTheDocument()
+    expect(get.mock.calls.every(([path]) => path !== '/achievements/me')).toBe(true)
+  })
+  it('does not fetch achievements for administrators even if a self relationship is supplied', async () => {
+    const get = vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile, id: 99, relationship: { state: 'SELF' } }))
+    await act(async () => { renderPage(<StudentProfilePage />, '/students/99', '/students/:id', adminAccount) })
+    expect(screen.queryByRole('region', { name: 'Your achievements' })).not.toBeInTheDocument()
+    expect(get.mock.calls.every(([path]) => path !== '/achievements/me')).toBe(true)
+  })
+  it('keeps the profile usable when the independent achievement request fails and supports retry', async () => {
+    let achievementReads = 0
+    vi.spyOn(api, 'get').mockImplementation(path => {
+      if (path !== '/achievements/me') return Promise.resolve(response({ ...publicProfile, id: 1, relationship: { state: 'SELF' } }))
+      return ++achievementReads === 1 ? Promise.reject(new Error('Achievement service unavailable')) : Promise.resolve(response(achievementStanding))
+    })
+    renderPage(<StudentProfilePage />, '/students/1', '/students/:id')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Achievement service unavailable')
+    expect(screen.getByRole('link', { name: 'Edit my profile' })).toBeInTheDocument()
+    expect(screen.getByText('No weekly availability saved.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await screen.findByText('Current planned streak')
+  })
+  it('aborts the private request when navigating to another profile and ignores a late response', async () => {
+    const pending = deferred<never>()
+    const get = vi.spyOn(api, 'get').mockImplementation(path => path === '/achievements/me' ? pending.promise
+      : Promise.resolve(response(path === '/students/1/profile' ? { ...publicProfile, id: 1, relationship: { state: 'SELF' } } : publicProfile)))
+    const { router } = renderPage(<StudentProfilePage />, '/students/1', '/students/:id')
+    await screen.findByRole('region', { name: 'Your achievements' })
+    await waitFor(() => expect(get.mock.calls.some(([path]) => path === '/achievements/me')).toBe(true))
+    const signal = get.mock.calls.find(([path]) => path === '/achievements/me')?.[1]?.signal as AbortSignal
+    await act(async () => { await router.navigate('/students/2') })
+    expect(signal.aborted).toBe(true)
+    await act(async () => { pending.resolve(response(achievementStanding)) })
+    expect(screen.queryByRole('region', { name: 'Your achievements' })).not.toBeInTheDocument()
+  })
+  it('hides private standing immediately when the signed-in owner changes or logs out', async () => {
+    const get = vi.spyOn(api, 'get').mockImplementation(path => Promise.resolve(response(path === '/achievements/me'
+      ? achievementStanding : { ...publicProfile, id: 1, relationship: { state: 'SELF' } })))
+    const { auth, router, rerender } = renderPage(<StudentProfilePage />, '/students/1', '/students/:id')
+    await screen.findByText('Current planned streak')
+    rerender(<AuthContext.Provider value={{ ...auth, account: { ...auth.account, id: 2 } }}><RouterProvider router={router} /></AuthContext.Provider>)
+    expect(screen.queryByRole('region', { name: 'Your achievements' })).not.toBeInTheDocument()
+    rerender(<AuthContext.Provider value={{ ...auth, account: null }}><RouterProvider router={router} /></AuthContext.Provider>)
+    expect(screen.queryByRole('region', { name: 'Your achievements' })).not.toBeInTheDocument()
+    expect(get.mock.calls.filter(([path]) => path === '/achievements/me')).toHaveLength(1)
+  })
   it('links a sent request to the outgoing requests view', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ ...publicProfile,
       relationship: { state: 'OUTGOING_PENDING', requestId: 7, connectionId: null }

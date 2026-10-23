@@ -23,7 +23,7 @@ import AdminUserFormPage from './features/admin/AdminUserFormPage'
 import MatchingSettingsPage from './features/matching/MatchingSettingsPage'
 import FindBuddiesPage from './features/matching/FindBuddiesPage'
 import StatePanel from './shared/components/StatePanel'
-import { SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage } from './lazyPages'
+import { AchievementsPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage } from './lazyPages'
 
 export const appRoutes = createRoutesFromElements(
     <>
@@ -49,6 +49,7 @@ export const appRoutes = createRoutesFromElements(
             <Route element={<Suspense fallback={<StatePanel loading />}><Outlet /></Suspense>}>
               <Route path="/groups/:id/room" element={<StudyRoomPage />} />
               <Route path="/sessions" element={<SessionsPage />} />
+              <Route path="/achievements" element={<AchievementsPage />} />
               <Route path="/sessions/:id" element={<SessionDetailPage />} />
               <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
               <Route path="/groups/:id/sessions" element={<SessionsPage kind="GROUP" />} />

@@ -5,3 +5,4 @@ export const StudyRoomPage = lazy(() => import('./features/studyroom/StudyRoomPa
 export const SessionsPage = lazy(() => import('./features/sessions/SessionsPage'))
 export const SessionDetailPage = lazy(() => import('./features/sessions/SessionDetailPage'))
 export const SessionFormPage = lazy(() => import('./features/sessions/SessionFormPage'))
+export const AchievementsPage = lazy(() => import('./features/achievements/AchievementsPage'))
