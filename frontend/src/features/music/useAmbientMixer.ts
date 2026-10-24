@@ -30,6 +30,10 @@ export function useAmbientMixer() {
   // Only the latest request per category may update it, so a slow earlier reply cannot win.
   const requests = useRef(new Map<string, number>())
   const fades = useRef(new Map<string, number>())
+  // Each sound's own level; what the browser plays is that level times the master volume.
+  const levels = useRef(new Map<string, number>())
+  const masterRef = useRef(1)
+  const [master, setMasterState] = useState(1)
   const mounted = useRef(true)
   const mutedRef = useRef(false)
   const [channels, setChannels] = useState<Record<string, Channel>>({})
@@ -61,11 +65,19 @@ export function useAmbientMixer() {
     if (!audio) {
       audio = new Audio()
       audio.loop = true
-      audio.volume = DEFAULT_VOLUME
+      audio.volume = DEFAULT_VOLUME * masterRef.current
+      levels.current.set(id, DEFAULT_VOLUME)
       audio.muted = mutedRef.current
       audios.current.set(id, audio)
     }
     return audio
+  }
+
+  function setLevel(id: string, level: number) {
+    // Create the element first: a new one starts at the default level, which this then replaces.
+    const audio = audioFor(id)
+    levels.current.set(id, level)
+    audio.volume = level * masterRef.current
   }
 
   function cancelFade(id: string) {
@@ -78,17 +90,16 @@ export function useAmbientMixer() {
   /** Stops any remix fade and puts the sound back at the volume its slider shows. */
   function settle(id: string) {
     cancelFade(id)
-    audioFor(id).volume = channel(id).volume
+    setLevel(id, channel(id).volume)
   }
 
   function fade(id: string, to: number, done?: () => void) {
     cancelFade(id)
-    const audio = audioFor(id)
-    const from = audio.volume
+    const from = levels.current.get(id) ?? DEFAULT_VOLUME
     let step = 0
     fades.current.set(id, window.setInterval(() => {
       step++
-      audio.volume = from + (to - from) * Math.min(1, step / FADE_STEPS)
+      setLevel(id, from + (to - from) * Math.min(1, step / FADE_STEPS))
       if (step < FADE_STEPS) return
       cancelFade(id)
       done?.()
@@ -150,8 +161,15 @@ export function useAmbientMixer() {
 
   function setVolume(id: string, volume: number) {
     cancelFade(id)
-    audioFor(id).volume = volume
+    setLevel(id, volume)
     update(id, { volume })
+  }
+
+  /** Turns every ambient sound up or down together, keeping each one's own level. */
+  function setMaster(volume: number) {
+    masterRef.current = volume
+    audios.current.forEach((audio, id) => { audio.volume = (levels.current.get(id) ?? DEFAULT_VOLUME) * volume })
+    setMasterState(volume)
   }
 
   function toggleMute() {
@@ -179,7 +197,7 @@ export function useAmbientMixer() {
     fade(id, 0, () => {
       const audio = audioFor(id)
       audio.pause()
-      audio.volume = current.volume
+      setLevel(id, current.volume)
       if (isCurrent()) update(id, { status: current.sound ? 'paused' : 'idle' })
     })
   }
@@ -197,7 +215,7 @@ export function useAmbientMixer() {
       }
       // New or swapped sounds fade in from silence.
       cancelFade(id)
-      audioFor(id).volume = 0
+      setLevel(id, 0)
       fade(id, volume)
       if (current.sound && current.status !== 'playing' && current.status !== 'loading') {
         update(id, { status: 'loading', error: undefined })
@@ -210,5 +228,5 @@ export function useAmbientMixer() {
 
   const anyPlaying = Object.values(channels).some(current => current.status === 'playing')
 
-  return { channel, muted, anyPlaying, toggle, newSound, setVolume, toggleMute, stopAll, remix }
+  return { channel, muted, anyPlaying, master, toggle, newSound, setVolume, setMaster, toggleMute, stopAll, remix }
 }

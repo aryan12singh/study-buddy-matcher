@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { appRoutes } from '../../routes'
 import { api } from '../../shared/api/client'
@@ -125,6 +125,24 @@ describe('Study Room navigation', () => {
     expect(navigation.getByRole('link', { name: 'Study Room' })).toHaveClass('active')
     expect(navigation.getByRole('link', { name: 'Study groups' })).not.toHaveClass('active')
     expect(navigation.getByRole('link', { name: 'Study groups' })).not.toHaveAttribute('aria-current', 'page')
+  })
+
+  it('invites the student to pick music from the timer corner and opens the Music settings tab', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/spotify/status'
+      ? { configured: false, connected: false, embedPlaylistId: 'abc' } : path === '/ambient/categories' ? [] : [group]))
+    renderPage(<StudyRoomsPage />)
+    const settings = await screen.findByRole('button', { name: 'Settings' })
+    expect(settings).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(await screen.findByRole('button', { name: 'Open music settings' }))
+    expect(settings).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('tab', { name: 'Music' })).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByTitle('Spotify study playlist')).toBeInTheDocument()
+    // Closing the menu hides the tab but keeps the player loaded, so music keeps playing.
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Music' }), { key: 'Escape' })
+    expect(settings).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByTitle('Spotify study playlist')).toBeInTheDocument()
+    // The free playlist cannot report playback, so the prompt steps aside once it is loaded.
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Open music settings' })).not.toBeInTheDocument())
   })
 
   it('requires sign-in before requesting the private room list', async () => {

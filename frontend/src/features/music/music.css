@@ -1,23 +1,127 @@
-.music-player { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; align-items: start; }
-@media (max-width: 900px) { .music-player { grid-template-columns: minmax(0, 1fr); } }
-.music-section > h2 { margin-bottom: .8rem; }
-.spotify-panel { display: grid; gap: 1rem; }
-.spotify-now-playing { display: flex; flex-direction: column; align-items: center; gap: .75rem; background: white; border: 1px solid #787f82; padding: 1rem; text-align: center; }
-.spotify-now-playing p { margin: 0 0 .35rem; }
-.spotify-cover { width: min(200px, 100%); height: auto; aspect-ratio: 1; object-fit: cover; border: 1px solid #787f82; }
-.spotify-cover-empty { display: grid; place-items: center; background: #f6f7f2; }
-.spotify-track { max-width: 100%; overflow-wrap: anywhere; }
-.spotify-controls { display: flex; gap: .5rem; justify-content: center; }
-.spotify-controls .retro-button { min-width: 3rem; font-size: 1.1rem; }
-.music-settings { margin-top: 1rem; border: 1px solid #7c898e; background: #f6f7f2; padding: .75rem 1rem; }
-.music-settings > summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; font-weight: 700; }
-.music-settings > summary:focus-visible { outline: 3px solid #19398e; outline-offset: 3px; }
-.music-settings[open] > summary { margin-bottom: .75rem; }
-.spotify-progress { display: flex; align-items: center; gap: .5rem; width: 100%; font-size: .8rem; font-variant-numeric: tabular-nums; }
-.spotify-progress input { flex: 1; min-width: 0; }
-.spotify-volume { width: min(200px, 100%); }
-.music-mode { display: flex; border: 2px solid; border-color: #808080 #fff #fff #808080; background: #e4e6df; padding: 2px; }
-.music-mode button { flex: 1; min-height: 36px; border: 0; background: transparent; font: inherit; font-weight: 700; color: #3f474b; cursor: pointer; }
-.music-mode button[aria-pressed="true"] { background: #fff; color: #19398e; box-shadow: 1px 1px #808080; }
-.music-mode button:focus-visible { outline: 3px solid #19398e; outline-offset: -3px; }
-.spotify-embed { display: block; border: 0; border-radius: 12px; }
+/*
+ * The Music tab of the room settings menu: one narrow column in the room's cream panels, olive ink
+ * and offset pixel shadows. Rules start from .room-settings-panel so they outrank the menu's own
+ * compact sizes for buttons and text.
+ */
+.music-player {
+  --music-paper: #fffcef;
+  --music-ink: #343e34;
+  --music-muted: #626d57;
+  --music-line: #414a40;
+  --music-soft-line: #c5cdb3;
+  --music-green: #53694a;
+  --music-green-dark: #405738;
+  --music-wash: #edf1df;
+  display: grid; gap: .75rem; color: var(--music-ink);
+}
+.music-card { min-width: 0; display: grid; gap: .6rem; padding: .7rem; background: #fffef8; border: 2px solid #67705c; border-radius: 6px; box-shadow: 2px 3px 0 #89907840; }
+.desktop .room-settings-panel .music-player .music-card-title { display: flex; align-items: center; gap: .45rem; margin: 0; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #66765e; }
+.music-card-title .pixel-icon { width: 13px; height: 13px; flex-basis: 13px; }
+.desktop .room-settings-panel .music-player p { margin: 0; }
+
+/* Buttons and sliders follow the room's palette instead of the default blue. */
+.room-settings-panel .music-player .retro-button { min-height: 30px; padding: .25rem .65rem; background: var(--music-paper); color: #3c4938; border: 2px solid #67705c; border-radius: 5px; box-shadow: 1px 2px 0 #89907830; font-size: .7rem; }
+.room-settings-panel .music-player .retro-button:hover:not(:disabled) { background: #f1f2df; }
+.room-settings-panel .music-player .retro-button.primary { background: var(--music-green); color: #fffef4; border-color: #43583b; box-shadow: inset 0 1px #8c9d7f, 2px 2px #34433435; }
+.room-settings-panel .music-player .retro-button.primary:hover:not(:disabled) { background: var(--music-green-dark); }
+.room-settings-panel .music-player .retro-button[aria-pressed="true"]:not(.primary) { background: var(--music-wash); border-color: var(--music-green); }
+.room-settings-panel .music-player .retro-button:disabled { opacity: .5; cursor: not-allowed; }
+.room-settings-panel .music-player .retro-button:focus-visible { outline: 3px solid var(--music-green-dark); outline-offset: 2px; }
+.music-player a { color: #3e5a33; }
+.desktop .room-settings-panel .music-player .muted, .desktop .room-settings-panel .music-player .row-meta { color: var(--music-muted); font-size: .72rem; }
+
+/* Free playlist / Premium switch. */
+.music-mode { display: flex; gap: 3px; padding: 3px; background: var(--music-wash); border: 2px solid #67705c; border-radius: 6px; }
+.music-mode button { flex: 1; min-height: 30px; border: 0; border-radius: 4px; background: transparent; font: inherit; font-size: .7rem; font-weight: 700; color: var(--music-muted); cursor: pointer; }
+.music-mode button:hover { color: var(--music-ink); }
+.music-mode button[aria-pressed="true"] { background: var(--music-green); color: #fffef4; box-shadow: inset 0 1px #8c9d7f, 1px 2px 0 #34433440; }
+.music-mode button:focus-visible { outline: 3px solid var(--music-green-dark); outline-offset: 1px; }
+
+/* Spotify: the compact embed, or the Premium player as one row of cover and track. */
+.spotify-panel { display: grid; gap: .6rem; }
+.spotify-embed { display: block; border: 0; border-radius: 10px; box-shadow: 2px 3px 0 #34433440; }
+.spotify-now-playing { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: .45rem .7rem; align-items: center; padding: .6rem; background: var(--music-paper); border: 1px solid var(--music-soft-line); border-radius: 5px; }
+.spotify-cover { width: 64px; height: 64px; object-fit: cover; border: 2px solid var(--music-line); border-radius: 4px; box-shadow: 2px 3px 0 #34433450; }
+.spotify-cover-empty { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #edf1df 0 8px, #e4e9d2 8px 16px); }
+.spotify-cover-empty .pixel-icon { width: 22px; height: 22px; flex-basis: 22px; color: var(--music-green); }
+.spotify-track { min-width: 0; overflow-wrap: anywhere; }
+.desktop .room-settings-panel .spotify-track strong { font-size: .82rem; }
+.spotify-progress, .spotify-controls, .spotify-volume { grid-column: 1 / -1; }
+.spotify-progress { display: flex; align-items: center; gap: .5rem; width: 100%; font-family: ui-monospace, 'Courier New', monospace; font-size: .66rem; color: var(--music-muted); font-variant-numeric: tabular-nums; }
+.spotify-progress .music-slider { flex: 1; }
+.spotify-controls { display: flex; gap: .4rem; justify-content: center; flex-wrap: wrap; }
+.room-settings-panel .music-player .spotify-controls .retro-button { min-width: 38px; min-height: 32px; font-size: .85rem; }
+.spotify-volume { justify-self: center; width: min(180px, 100%); }
+
+/* Ambient sounds: a toolbar, then one compact row per sound. */
+.music-toolbar { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ambient-grid { display: grid; gap: .45rem; }
+.ambient-tile {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name play" "status status" "volume another";
+  align-items: center; gap: .3rem .5rem; min-width: 0; padding: .5rem .6rem;
+  background: var(--music-paper); border: 1px solid var(--music-soft-line); border-radius: 5px; transition: border-color .15s, background .15s;
+}
+.ambient-tile.is-playing { background: var(--music-wash); border-color: #7c9465; box-shadow: inset 3px 0 0 var(--music-green); }
+.ambient-tile-head, .ambient-tile-foot { display: contents; }
+.desktop .room-settings-panel .ambient-tile h3 { grid-area: name; display: flex; align-items: center; gap: .4rem; margin: 0; font-size: .8rem; color: var(--music-ink); }
+.ambient-tile-head .retro-button { grid-area: play; }
+.desktop .room-settings-panel .ambient-status { grid-area: status; font-size: .66rem; color: var(--music-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ambient-tile .field-error { grid-column: 1 / -1; }
+.ambient-volume { grid-area: volume; display: flex; align-items: center; gap: .4rem; min-width: 0; font-size: .6rem; font-weight: 700; color: var(--music-muted); text-transform: uppercase; letter-spacing: .08em; }
+.ambient-volume .music-slider { flex: 1; }
+.room-settings-panel .music-player .ambient-another { grid-area: another; min-height: 26px; padding: .1rem .5rem; font-size: .64rem; box-shadow: none; }
+
+/* Three bars beside each name that bounce while it plays. */
+.ambient-bars { display: inline-flex; align-items: flex-end; gap: 2px; width: 12px; height: 11px; }
+.ambient-bars i { flex: 1; height: 30%; background: var(--music-soft-line); }
+.ambient-tile.is-playing .ambient-bars i { background: var(--music-green); height: 100%; }
+.ambient-tile.is-playing .ambient-bars i:nth-child(2) { height: 60%; }
+.ambient-tile.is-playing .ambient-bars i:nth-child(3) { height: 80%; }
+@keyframes ambient-bounce { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ambient-tile.is-playing .ambient-bars i { transform-origin: bottom; animation: ambient-bounce .9s ease-in-out infinite; }
+  .ambient-tile.is-playing .ambient-bars i:nth-child(2) { animation-delay: -.3s; }
+  .ambient-tile.is-playing .ambient-bars i:nth-child(3) { animation-delay: -.6s; }
+}
+
+/* The timer's mini player sits at the panel's top left, in the flow so it never covers the heading. */
+.now-playing-mini {
+  position: relative; z-index: 3; align-self: flex-start; display: grid; width: min(205px, 100%); margin: -.4rem 0 .9rem -1rem; padding: .4rem .45rem;
+  background: #fffef8; border: 2px solid #67705c; border-radius: 6px; box-shadow: 2px 3px 0 #89907840;
+  text-align: left; color: #343e34;
+}
+.now-playing-mini-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; align-items: center; gap: .35rem; }
+.now-playing-mini-cover { box-sizing: border-box; width: 32px; height: 32px; object-fit: cover; border: 2px solid #414a40; border-radius: 3px; box-shadow: 1px 1px 0 #34433440; }
+.now-playing-mini-cover.is-empty { display: grid; place-items: center; background: #edf1df; color: #53694a; }
+.now-playing-mini-cover .pixel-icon { width: 14px; height: 14px; flex-basis: 14px; }
+.now-playing-mini-track { display: grid; min-width: 0; line-height: 1.2; }
+.now-playing-mini-track strong, .now-playing-mini-track > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-playing-mini-kicker { font-size: .5rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #7c9465; }
+.now-playing-mini-track strong { font-size: .72rem; }
+.now-playing-mini-track > span:last-child { font-size: .68rem; color: #626d57; }
+/* Same size and style as the window controls opposite; only the symbol size is set here. */
+.room-window-control.now-playing-mini-control { font-size: .78rem; line-height: 1; }
+/* The volumes drop down over the panel below, so opening them never shifts the timer. */
+.now-playing-mini-volumes {
+  position: absolute; top: calc(100% - 2px); left: -2px; right: -2px; display: grid; gap: .4rem; padding: .45rem .5rem .5rem;
+  background: #fffef8; border: 2px solid #67705c; border-top: 1px dashed #c5cdb3; border-radius: 0 0 7px 7px; box-shadow: 2px 3px 0 #89907840;
+}
+.now-playing-mini.is-open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.now-playing-mini-volume { display: grid; grid-template-columns: 3.8rem minmax(0, 1fr); align-items: center; gap: .4rem; font-size: .52rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #626d57; }
+.now-playing-mini-volume .music-slider { flex: 1; }
+@media (max-width: 700px) { .now-playing-mini { align-self: stretch; width: auto; margin: 0 0 .9rem; } }
+
+/* Every music slider: a thin olive track filled up to a square pixel handle. */
+.music-slider { -webkit-appearance: none; appearance: none; height: 16px; min-width: 0; margin: 0; background: transparent; cursor: pointer; }
+.music-slider::-webkit-slider-runnable-track { height: 6px; border: 1px solid #8a957c; border-radius: 0;
+  background: linear-gradient(90deg, #53694a var(--fill, 0%), #e4e6d5 var(--fill, 0%)); }
+.music-slider::-moz-range-track { height: 6px; border: 1px solid #8a957c; background: #e4e6d5; }
+.music-slider::-moz-range-progress { height: 6px; background: #53694a; }
+.music-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin-top: -4px;
+  background: #fffcef; border: 2px solid #414a40; border-radius: 0; box-shadow: 1px 1px 0 #34433460; }
+.music-slider::-moz-range-thumb { width: 10px; height: 10px; background: #fffcef; border: 2px solid #414a40; border-radius: 0; box-shadow: 1px 1px 0 #34433460; }
+.music-slider:hover::-webkit-slider-thumb { background: #edf1df; }
+.music-slider:focus-visible { outline: 2px solid #405738; outline-offset: 3px; }
+.music-slider:disabled { opacity: .5; cursor: not-allowed; }
+.now-playing-mini.is-prompt { gap: .45rem; border-style: dashed; background: #fffcef; box-shadow: none; }
+.study-room-workspace .now-playing-mini .now-playing-mini-open { min-height: 32px; padding: .2rem .6rem; font-size: .74rem; }

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { configureRoom, joinRoom, leaveRoom, leaveRoomOnExit, selectAudio, timerCommand } from './api'
-import type { RoomAudio, RoomConfiguration, RoomSnapshot } from './api'
+import { configureRoom, joinRoom, leaveRoom, leaveRoomOnExit, timerCommand } from './api'
+import type { RoomConfiguration, RoomSnapshot } from './api'
 import { useStudyRoom } from './useStudyRoom'
 import RoomTimerPanel from './RoomTimerPanel'
-import RoomAudioPanel from './RoomAudioPanel'
 import { useAction } from '../../shared/api/useAction'
 import { useAuth } from '../../shared/auth/useAuth'
 import WindowPage from '../../shared/components/WindowPage'
@@ -15,7 +14,8 @@ import Dialog from '../../shared/components/Dialog'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import RoomWeatherPanel from './RoomWeatherPanel'
-import MusicSettings from '../music/MusicSettings'
+import MusicPlayer from '../music/MusicPlayer'
+import MusicProvider from '../music/MusicProvider'
 import AtmosphereScene from './AtmosphereScene'
 import WindowControls from './WindowControls'
 import HiddenPanelTools from './HiddenPanelTools'
@@ -106,10 +106,6 @@ function RoomPage({ groupId }: { groupId: number }) {
     }
   }
 
-  function audio(audio: RoomAudio) {
-    if (room) void change(() => selectAudio(groupId, audio, room.version), 'The room audio was updated.')
-  }
-
   function settings(input: RoomConfiguration) {
     return change(() => configureRoom(groupId, input), 'Room settings were saved.')
   }
@@ -141,38 +137,38 @@ function RoomPage({ groupId }: { groupId: number }) {
           </li>)}
         </ul>
       </section>}
-      <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
-        <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
-        <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
-          <header className="group-room-header">
-            <div className="group-room-title">
-              <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
-              <h2 id="group-room-heading">{room.groupName}</h2>
-            </div>
-            <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
-              { id: 'timer', label: 'Timer', icon: '◷',
-                content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-              { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
-                content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
-              { id: 'audio', label: 'Room audio', icon: '♪', persistent: true,
-                content: <RoomAudioPanel key={resource.joinedHere ? 'joined' : 'preview'} room={room} active={resource.joinedHere} pending={action.pending} onSelect={audio} /> },
-              { id: 'roles', label: 'Room roles', icon: '★',
-                content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-            ]} />
-          </header>
-          <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
-            pending={action.pending} onControl={control} />
-          <footer className="group-room-footer">
-            {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
-            {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
-            {resource.joinedHere
-              ? <Button variant="danger" disabled={action.pending} onClick={() => setConfirmation('leave')}>Leave room</Button>
-              : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
-          </footer>
-        </section>
-      </div>
-      <MusicSettings />
+      <MusicProvider>
+        <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+          <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
+          <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
+          <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
+            <header className="group-room-header">
+              <div className="group-room-title">
+                <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
+                <h2 id="group-room-heading">{room.groupName}</h2>
+              </div>
+              <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
+                { id: 'timer', label: 'Timer', icon: '◷',
+                  content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
+                { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
+                  content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
+                { id: 'roles', label: 'Room roles', icon: '★',
+                  content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
+                { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
+              ]} />
+            </header>
+            <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
+              pending={action.pending} onControl={control} />
+            <footer className="group-room-footer">
+              {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
+              {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
+              {resource.joinedHere
+                ? <Button variant="danger" disabled={action.pending} onClick={() => setConfirmation('leave')}>Leave room</Button>
+                : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
+            </footer>
+          </section>
+        </div>
+      </MusicProvider>
       <div className="group-room-extras">
         <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
       </div>

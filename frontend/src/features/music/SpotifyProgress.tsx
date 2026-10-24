@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { NowPlaying } from './useSpotifyPlayer'
+import MusicSlider from './MusicSlider'
 
 function clock(ms: number) {
   const seconds = Math.floor(ms / 1000)
@@ -20,9 +21,8 @@ export default function SpotifyProgress({ track, onSeek }: { track: NowPlaying; 
   return (
     <div className="spotify-progress">
       <span>{clock(position)}</span>
-      <input type="range" aria-label="Track position" aria-valuetext={`${clock(position)} of ${clock(track.durationMs)}`}
-        min={0} max={track.durationMs} step={1000} value={position}
-        onChange={event => onSeek(Number(event.target.value))} />
+      <MusicSlider aria-label="Track position" aria-valuetext={`${clock(position)} of ${clock(track.durationMs)}`}
+        min={0} max={track.durationMs} step={1000} value={position} onValue={onSeek} />
       <span>{clock(track.durationMs)}</span>
     </div>
   )

@@ -1,29 +1,11 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { getSpotifyStatus } from './spotifyApi'
+import { useSpotify } from './spotifyContext'
 import SpotifyEmbed from './SpotifyEmbed'
 import SpotifyPremiumPlayer from './SpotifyPremiumPlayer'
-import { useResource } from '../../shared/api/useResource'
 import StatePanel from '../../shared/components/StatePanel'
-
-type Mode = 'premium' | 'embed'
-const MODE_KEY = 'spotify-player-mode'
-
-function readMode(): Mode {
-  try { return localStorage.getItem(MODE_KEY) === 'premium' ? 'premium' : 'embed' } catch { return 'embed' }
-}
 
 /** Lets the student choose between their Premium account and the free embedded playlist. */
 export default function SpotifyPanel() {
-  const [search] = useSearchParams()
-  // Coming back from Spotify sign-in means the student wants the Premium player.
-  const [mode, setMode] = useState<Mode>(() => search.has('spotify') ? 'premium' : readMode())
-  const status = useResource('spotify-status', getSpotifyStatus, true, false)
-
-  function choose(next: Mode) {
-    setMode(next)
-    try { localStorage.setItem(MODE_KEY, next) } catch { /* Storage is optional. */ }
-  }
+  const { status, mode, chooseMode: choose } = useSpotify()
 
   if (status.loading) return <StatePanel loading />
   if (status.error || !status.data) return <StatePanel error={status.error} onRetry={() => status.reload(true)} />

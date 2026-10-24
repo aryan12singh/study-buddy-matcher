@@ -77,7 +77,10 @@
 .study-corner-groups.is-collapsed { width: 46px; padding: 0; }
 .study-corner-groups.is-collapsed .study-corner-groups-toggle { position: static; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: .8rem; width: 100%; height: 100%; padding: 1rem 0; border-radius: 5px; }
 .study-corner-groups-toggle-label { writing-mode: vertical-rl; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #66765e; }
-.personal-pomodoro > .window-controls { position: absolute; top: .6rem; right: .6rem; }
+/* Mirror the music mini player opposite (music.css). Its card sits 1rem outside the side padding,
+   so the controls keep the same gap from the right edge. Vertically they line up with its buttons:
+   the card starts .4rem above the top padding, then adds a 2px border and .4rem of padding. */
+.personal-pomodoro > .window-controls { position: absolute; top: calc(1.5rem - .4rem + 2px + .4rem); right: calc(clamp(1rem, 3vw, 2.5rem) - 1rem); }
 /* Full screen and the hidden panel centre the timer alone; the groups list waits on the normal page. */
 .study-room-workspace.is-expanded .study-corner-groups, .study-room-workspace.is-minimal .study-corner-groups { display: none; }
 .study-room-workspace.is-expanded .study-corner-layout, .study-room-workspace.is-minimal .study-corner-layout { grid-template-columns: minmax(0, 1fr); width: min(100%, 760px); }

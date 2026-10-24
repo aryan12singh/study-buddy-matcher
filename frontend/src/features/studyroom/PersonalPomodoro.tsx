@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import Button from '../../shared/components/Button'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import PixelIcon from '../../shared/components/PixelIcon'
@@ -10,8 +11,10 @@ import PersonalTimerSettings from './PersonalTimerSettings'
 import type { PanelVisibility } from './usePanelVisibility'
 import type { RoomFullscreen } from './useRoomFullscreen'
 
-export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTabs = [] }: {
+export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTabs = [], corner }: {
   accountId: number; panel: PanelVisibility; fullscreen: RoomFullscreen; extraTabs?: RoomSettingsTab[]
+  /** Shown in the top-left corner, opposite the window controls, such as the music mini player. */
+  corner?: ReactNode
 }) {
   const timer = usePersonalPomodoro(accountId)
   const [confirmingReset, setConfirmingReset] = useState(false)
@@ -26,6 +29,7 @@ export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTa
           focusMinutes={timer.focusMinutes} breakMinutes={timer.breakMinutes} onSave={(focus, rest) => timer.reset(focus, rest)} /> },
         ...extraTabs,
       ]} />
+      {corner}
       <div className="pomodoro-welcome">
         <span className="pomodoro-kicker"><PixelIcon kind="clock" />Your focus space</span>
         <h2>A little focus. A little progress.</h2>

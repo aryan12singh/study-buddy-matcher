@@ -1,14 +1,20 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
+import { onOpenRoomSettings } from './roomSettingsEvents'
 import './windowControls.css'
 
 export type RoomSettingsTab = {
   id: string; label: string; icon: string; content: ReactNode
   /** Kept mounted while hidden, for panels that must keep running (audio, live weather). */
   persistent?: boolean
+  /** Mounted the first time it is shown, then kept mounted, for panels that are slow to load but must keep playing. */
+  keepAfterOpen?: boolean
 }
 
-/** A tabbed settings menu. Persistent panels stay mounted when hidden; others mount only while shown. */
+/**
+ * A tabbed settings menu. Persistent panels stay mounted when hidden; keep-after-open panels stay
+ * mounted once shown; others mount only while shown.
+ */
 export default function RoomSettingsMenu({ tabs }: { tabs: RoomSettingsTab[] }) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(tabs[0].id)
@@ -16,6 +22,16 @@ export default function RoomSettingsMenu({ tabs }: { tabs: RoomSettingsTab[] }) 
   const menu = useRef<HTMLDivElement>(null)
   const toggle = useRef<HTMLButtonElement>(null)
   const tabButtons = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [visited, setVisited] = useState<ReadonlySet<string>>(new Set())
+  const shown = open ? active : undefined
+  if (shown && !visited.has(shown)) setVisited(new Set(visited).add(shown))
+
+  // Something else on the page may ask for a tab, such as the music prompt in the timer's corner.
+  useEffect(() => onOpenRoomSettings(tab => {
+    if (!tabs.some(candidate => candidate.id === tab)) return
+    setActive(tab)
+    setOpen(true)
+  }), [tabs])
 
   useEffect(() => {
     if (!open) return
@@ -68,7 +84,7 @@ export default function RoomSettingsMenu({ tabs }: { tabs: RoomSettingsTab[] }) 
       </div>
       {tabs.map(tab => <div key={tab.id} role="tabpanel" id={`${id}-${tab.id}-panel`} aria-labelledby={`${id}-${tab.id}-tab`}
         className="room-settings-panel" hidden={active !== tab.id}>
-        {(tab.persistent || (open && active === tab.id)) && tab.content}
+        {(tab.persistent || (tab.keepAfterOpen && visited.has(tab.id)) || (open && active === tab.id)) && tab.content}
       </div>)}
     </div>
   </div>

@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { startSpotifyAuthorization } from './spotifyApi'
 import type { SpotifyStatus } from './spotifyApi'
-import { DEFAULT_VOLUME, useSpotifyPlayer } from './useSpotifyPlayer'
+import { useSpotify } from './spotifyContext'
 import { errorMessage } from '../../shared/api/client'
 import ActionNotice from '../../shared/components/ActionNotice'
 import Button from '../../shared/components/Button'
 import PixelIcon from '../../shared/components/PixelIcon'
 import SpotifyProgress from './SpotifyProgress'
+import MusicSlider from './MusicSlider'
 
 /** What Spotify's redirect back to this page reports in `?spotify=`. */
 const OUTCOMES: Record<string, { success?: string; error?: string }> = {
@@ -22,9 +23,8 @@ export default function SpotifyPremiumPlayer({ status }: { status: SpotifyStatus
   const [search, setSearch] = useSearchParams()
   const [outcome, setOutcome] = useState<{ success?: string; error?: string }>({})
   const connected = status.connected
-  const player = useSpotifyPlayer(connected)
+  const { player, volume, setVolume } = useSpotify()
   const [pending, setPending] = useState(false)
-  const [volume, setVolume] = useState(DEFAULT_VOLUME)
   const [volumeOpen, setVolumeOpen] = useState(false)
 
   // Show the sign-in outcome once, then drop it from the address so a refresh does not repeat it.
@@ -90,11 +90,10 @@ export default function SpotifyPremiumPlayer({ status }: { status: SpotifyStatus
             </Button>
             <Button disabled={!nowPlaying} onClick={player.nextTrack} aria-label="Next track" title="Next track">⏭</Button>
             <Button aria-expanded={volumeOpen} aria-controls="spotify-volume" onClick={() => setVolumeOpen(open => !open)}
-              aria-label="Volume" title="Volume">{volume === 0 ? '🔇' : '🔊'}</Button>
+              aria-label="Volume" title="Volume">{volume === 0 ? 'Muted' : 'Vol'}</Button>
           </div>
-          {volumeOpen && <input id="spotify-volume" className="spotify-volume" type="range" aria-label="Spotify volume"
-            min={0} max={1} step={0.05} value={volume}
-            onChange={event => { const next = Number(event.target.value); setVolume(next); player.setVolume(next) }} />}
+          {volumeOpen && <MusicSlider id="spotify-volume" className="spotify-volume" aria-label="Spotify volume"
+            min={0} max={1} step={0.05} value={volume} onValue={setVolume} />}
         </div>
       )}
     </div>
