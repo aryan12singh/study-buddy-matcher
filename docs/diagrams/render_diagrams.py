@@ -157,7 +157,7 @@ def architecture():
     c = Canvas("architecture", "Architecture and privacy boundaries", "The browser reaches application data only through the authenticated Spring API.", height=1130)
     c.panel(455,170,720,795,"SPRING BOOT BACKEND",fill="#eff4f7")
     c.box(45,260,330,285,"React + Vite",[
-        "Feature screens and route guards", "Shared authenticated API client", "Local drafts and audio consent", "Calendar snapshot download", "No database client / browser grant"
+        "Feature screens and route guards", "Shared authenticated API client", "Local drafts and music player", "Calendar snapshot download", "No database client / browser grant"
     ])
     c.box(505,230,620,105,"Spring Security",["JWT signature · active account · role · token version"])
     c.box(505,390,280,110,"Controllers",["Validate typed input", "Delegate one service call"])
@@ -228,8 +228,8 @@ def e2_use_cases():
     c.actor(100,450,"Student")
     items=[
         (290,["Join / leave private room", "and view current participants"],["Accepted active group member;", "distinct students count toward capacity."]),
-        (405,["Control Pomodoro, shared", "audio and room configuration"],["Group leader or present assigned host/co-host;", "only the leader assigns host roles."]),
-        (520,["Choose local volume / mute", "and enable browser audio"],["Intentional per-browser consent;", "playback position and volume stay local."]),
+        (405,["Control Pomodoro", "and room configuration"],["Group leader or present assigned host/co-host;", "only the leader assigns host roles."]),
+        (520,["Play Spotify and", "ambient sounds"],["Music tab in room settings;", "heard only in this browser."]),
         (635,["Plan / edit / cancel", "group or buddy sessions"],["Group leader or active buddy participant;", "other accepted group members may view."]),
         (750,["View mutual availability", "and export calendar snapshot"],["Current parent relationship required;", "suggestions do not confirm attendance."]),
         (865,["Choose room atmosphere", "and view campus weather"],["Selectable original scenes; optional", "cached Open-Meteo campus conditions."]),
@@ -420,7 +420,7 @@ def collaborative_study():
     c.panel(45,170,560,1000,"PRIVATE GROUP ROOM",color=TEAL,fill=GREEN)
     c.panel(625,170,560,1000,"DATED GROUP / BUDDY SESSIONS",color=TEAL,fill=GREEN)
     c.panel(1205,170,550,1000,"OPTIONAL CAMPUS WEATHER",color=TEAL,fill=GREEN)
-    c.cls(85,235,480,"StudyRoomService",[],["+ state(groupId, actorId): StudyRoomDto", "+ join(...), heartbeat(...): StudyRoomDto", "+ leave(...): void", "+ controlTimer(...), audio(...),", "  configure(...): StudyRoomDto"],color=TEAL,size=17)
+    c.cls(85,235,480,"StudyRoomService",[],["+ state(groupId, actorId): StudyRoomDto", "+ join(...), heartbeat(...): StudyRoomDto", "+ leave(...): void", "+ controlTimer(...),", "  configure(...): StudyRoomDto"],color=TEAL,size=17)
     c.cls(85,505,480,"StudyRoom",["- studyGroup: StudyGroup [1]", "- host, coHost: Student [0..1 each]", "- version: long"],["+ timer(): PomodoroTimer", "+ applyTimer(timer): void"],color=TEAL,size=18)
     c.cls(85,795,480,"RoomPresence",["- studyRoom: StudyRoom [1]", "- student: Student [1]", "- clientId: UUID", "- expiresAt, observedAt: Instant"],["+ renew(presence, now, expiresAt): void"],color=TEAL,size=17)
     c.line([(325,435),(325,505)],end="arrow")

@@ -95,7 +95,7 @@ classDiagram
 Room controls persist a versioned timer snapshot; presence heartbeats update
 separate expiring leases. State reads use `RoomAccess.readMember` without row locks.
 Heartbeats use that same authorization check and renew only an existing unexpired
-lease; concurrent deletion fails renewal. Join/leave and timer/audio/configuration
+lease; concurrent deletion fails renewal. Join/leave and timer/configuration
 changes use `lockMember`: account locks precede the group lock, followed by a current
 membership check. Assemblers expose only DTOs. The leader retains controls, delegated
 hosts must be present, and distinct students count toward capacity. Membership/account/
@@ -434,10 +434,10 @@ erDiagram
         bigint version
         bigint host_id FK
         bigint co_host_id FK
-        varchar music_preset
-        boolean music_playing
-        varchar ambient_preset
-        boolean ambient_playing
+        varchar music_preset "unused since 24 Oct"
+        boolean music_playing "unused since 24 Oct"
+        varchar ambient_preset "unused since 24 Oct"
+        boolean ambient_playing "unused since 24 Oct"
     }
     room_presences {
         bigint id PK

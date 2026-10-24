@@ -363,13 +363,12 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | PUT | `/api/groups/{groupId}/room/presence` | `{clientId: UUID, presence: PRESENT / FOCUS / BREAK}`; renewed DTO, 200 |
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
-| PUT | `/api/groups/{groupId}/room/audio` | `{musicPreset, musicPlaying, ambientPreset, ambientPlaying, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid
 timer transition returns 409. Only the leader or a currently present assigned
-host/co-host can change timer/audio/settings. The leader retains these controls without
+host/co-host can change timer/settings. The leader retains these controls without
 joining, so room capacity cannot block administrative recovery. Only the leader
 assigns roles; a present delegated host/co-host can change durations/capacity only
 while preserving the effective current role assignments in the settings body.
@@ -388,7 +387,7 @@ Each heartbeat extends its lease by the configured lifetime. An unknown/expired
 lease returns 409 and requires an explicit join; it cannot bypass capacity by
 renewing. Polled state reads use `RoomAccess.readMember` without a group-row lock.
 Heartbeats use the same authorization check and update only an existing, unexpired
-tab lease; a concurrently deleted lease fails renewal. Join, leave, timer/audio
+tab lease; a concurrently deleted lease fails renewal. Join, leave, timer
 control and configuration use `lockMember`, taking account locks before the group
 lock. This serializes admission and shared-state transitions without queuing every
 poll or lease renewal on the group row. Inactive/removed members are excluded; closed groups return
@@ -396,9 +395,8 @@ poll or lease renewal on the group row. Inactive/removed members are excluded; c
 A removed/deactivated member loses all tab leases and assigned roles within the
 membership/account transaction; later readmission/reactivation cannot revive an
 old heartbeat. A removed/deleted/inactive host falls back to the leader, and invalid
-co-hosts are omitted. Group closure removes leases, resets the timer and stops both
-audio layers. Account deletion cascades presences; leader/group deletion removes
-the room. Clients purge snapshots/stop audio on refresh failure, then retry and
+co-hosts are omitted. Group closure removes leases, resets the timer. Account deletion cascades presences; leader/group deletion removes
+the room. Clients purge snapshots on refresh failure, then retry and
 explicitly rejoin. Browser timer rendering does not confer control authority.
 
 `StudyRoomDto` fields:
@@ -412,21 +410,15 @@ leader, canControl, joined (actor present in any tab)
 pollIntervalMillis, leaseLifetimeMillis
 timer {phase: FOCUS/BREAK, status: IDLE/RUNNING/PAUSED,
        remainingMillis (at serverTime), focusMillis, breakMillis}
-audio {musicPreset: CALM_MUSIC|null, musicPlaying: boolean,
-       ambientPreset: RAIN/WHITE_NOISE/CAFE|null, ambientPlaying: boolean}
-audioPresets [{id, label, kind: MUSIC/AMBIENT}]
 participants [{studentId, name, presence, expiresAt, leader, host, coHost}]
 members [{studentId, name}] (active accepted members for role selectors)
 ```
 
 The browser renders elapsed time from each server snapshot and reconciles on the
-server-provided poll interval (default two seconds). Local enable/volume/mute are
-not sent to the API. Original synthesized music and ambient layers have independent
-shared selection/play state and independent local volume/mute. A null preset is
-allowed only when that layer is paused; sending an ambient preset to the music
-layer, or vice versa, is 400. Playback requires local consent and failure leaves
-the room usable silently. Playback positions are not synchronized. No external
-music credentials/assets are required.
+server-provided poll interval (default two seconds). Rooms have no shared audio: music
+and ambient sounds come from each study room's Music settings tab, play only in each student's
+own browser and are not sent to the room API. The former shared audio endpoint was
+removed on 24 October; its `study_rooms` columns remain, unused, until a later migration.
 
 ## Dated study sessions and calendar (E2 #16)
 
@@ -561,7 +553,7 @@ selected clear/cloudy/rain/storm/snow/fog. Manual choices are decorative and sav
 only in that browser. Without usable live data, the scene follows Singapore day/night
 and the manual choices remain available. `prefers-reduced-motion` stops animations.
 Weather data attribution links to [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
-provider outages do not change shared timer/audio state or block a room/session action.
+provider outages do not change shared timer state or block a room/session action.
 
 ## Ambient sounds (Study Room music)
 

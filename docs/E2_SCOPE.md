@@ -14,8 +14,8 @@ it is not an active implementation checklist.
 | --- | --- |
 | Private group room | Accepted active members only; join/leave, participant list, focus/break state, distinct-student capacity and expiring tab leases |
 | Shared Pomodoro | Configurable durations, server-time start/pause/resume/reset and observed-version conflict checks; state survives refresh/reconnect |
-| Leader/delegated control | Leader assigns host/co-host; present assigned hosts control timer/audio and configure durations/capacity without changing roles; leader retains recovery control |
-| Music and ambience | Independent original synthesized music and ambient selections/play state; intentional local enable, separate volume/mute and silent failure fallback |
+| Leader/delegated control | Leader assigns host/co-host; present assigned hosts control the timer and configure durations/capacity without changing roles; leader retains recovery control |
+| Music and ambience | Superseded 24 October: the shared synthesized room audio was removed. Each student plays Spotify and Freesound ambient sounds from the study room Music settings tab, heard only in their own browser |
 | Dated sessions | Group leader and the two connected buddies manage authorized dated series, timezone, title, optional agenda/location/room link and whole-series update/cancel |
 | Mutual availability | Existing Team A interval intersections across current participants; empty schedules stay empty and suggestions do not confirm attendance |
 | Calendar export | Single or bounded weekly series expanded to stable individual UTC events; correct timezone/DST resolution, private authenticated export and honest re-import limitations |
@@ -25,13 +25,15 @@ it is not an active implementation checklist.
 
 The owner approved a contained usability pass on the same PR: accurate ongoing-session
 labels, direct safe room actions on current/upcoming cards, an accessible phase-transition
-cue, remembered browser-local audio volume/mute and duration-aware mutual suggestions.
+cue, remembered browser-local audio volume/mute (removed with room audio on 24 October)
+and duration-aware mutual suggestions.
 These use existing authorized DTOs and native browser capabilities; they introduce no API,
 schema, library or provider changes. The existing disclosure file is unchanged in this pass.
 
 The owner approved existing Team C retro components for these screens and original
-built-in audio. No external music account, audio provider, asset pack or new Java/npm
-dependency is introduced. Open-Meteo was separately approved for optional weather;
+built-in audio. The built-in audio has since been replaced by the study room Music settings tab,
+which uses the Spotify and Freesound services listed in the README; no new Java/npm
+dependency or asset pack is introduced. Open-Meteo was separately approved for optional weather;
 its source/terms/attribution and configuration are recorded in the README and decisions.
 
 ## Sources and boundaries
@@ -57,7 +59,7 @@ return DTOs, with contacts/emails/tokens excluded. Transition writes take accoun
 locks before group/connection locks so admission and state changes serialize with
 lifecycle operations. Room reads and existing-lease heartbeats recheck membership
 without a group-row lock; renewal never creates an expired or deleted lease. Room
-leases are separate from the durable timer/audio state and from dated sessions.
+leases are separate from the durable timer state and from dated sessions.
 Removal, closure and deactivation clear leases/roles transactionally; readmission
 requires a new capacity-checked join. Session access always checks the current
 parent relationship, including after a notification link or calendar click.
@@ -68,9 +70,8 @@ locally. Multiple tabs count once toward capacity; leaving removes only that tab
 lease. A host disconnect does not pause the timer. The leader/co-host can recover,
 and an expired host must rejoin before controlling the room.
 
-Music and ambient layers share preset/play state. Native Web Audio requires local
-consent and stops on exit/access loss. Local volume/mute never enters API state;
-playback positions are not synchronized. Optional weather uses fixed configured
+Rooms hold no audio state. Music comes from each student's own study room Music settings tab
+and never enters the room API. Optional weather uses fixed configured
 campus coordinates, never the student's location or account data, with bounded
 network/cache behavior and visible stale/unavailable feedback.
 
@@ -100,12 +101,14 @@ avoid a new test framework or a second suite that mirrors every implementation l
 
 [E2_TESTING.md](E2_TESTING.md) records the current results and acceptance status.
 The earlier room-only counts are historical evidence, not the current completion
-result. Verify two authenticated browsers, layered audio, membership revocation,
+result. Verify two authenticated browsers, membership revocation,
 dated-session dashboard/agenda/notification updates, export times and real imports
 into Google Calendar, Apple Calendar and Outlook. Record gaps honestly.
 
 The [database record](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026) documents the
-shared room/audio/session migrations and temporary schema/wiring check after merge.
+shared room/audio/session migrations and temporary schema/wiring check after merge. The
+room audio columns those migrations added remain in the schema, unused, since the feature's
+removal on 24 October.
 It does not claim a persistent hosted application. Outlook import remains
 owner-deferred because of school MFA. Final team/device/projector acceptance,
 rehearsal and submission retain their own evidence; E1 remains separate PR #61 work.

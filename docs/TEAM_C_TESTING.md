@@ -67,7 +67,7 @@ database migration, private configuration and startup steps before running the a
 | #14 Self-removal and concurrent account/relationship mutations stay safe | `AccountHttpTest`, account-access/lifecycle unit tests | Verify self controls remain unavailable; concurrent cases are exercised directly through real HTTP/PostgreSQL |
 
 The supported group-management contract is leader decisions/removal and closure. Dated
-sessions, rooms, timers, audio and calendar exports belong to E2, not this acceptance table.
+sessions, rooms, timers, music and calendar exports belong to E2, not this acceptance table.
 
 ## Confirmed merged-main fixes
 
