@@ -222,6 +222,45 @@ class StudyRoomHttpTest extends PostgresHttpTest {
     }
 
     @Test
+    void theLastPersonLeavingEndsTheSession() {
+        UUID leaderTab = UUID.randomUUID(), memberTab = UUID.randomUUID();
+        join(leader, leaderTab); join(member, memberTab);
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        expect(call("DELETE", path() + "/presence/" + leaderTab, leader, null), 204);
+        assertEquals("RUNNING", state(member).path("timer").path("status").asString(), "Someone is still studying");
+        expect(call("DELETE", path() + "/presence/" + memberTab, member, null), 204);
+        assertEquals("IDLE", state(leader).path("timer").path("status").asString());
+    }
+
+    @Test
+    void aSessionStartedInAnEmptyRoomIsNotEndedByTheFirstJoin() {
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        assertEquals("RUNNING", join(member, UUID.randomUUID()).path("timer").path("status").asString());
+    }
+
+    @Test
+    void aLeavingHostHandsOverToThePresentCoHostOrElseSomeoneStillHere() {
+        configure(0, 25, 4, memberId, otherId);
+        UUID memberTab = UUID.randomUUID(), otherTab = UUID.randomUUID();
+        join(member, memberTab); join(other, otherTab); join(leader, UUID.randomUUID());
+        expect(call("DELETE", path() + "/presence/" + memberTab, member, null), 204);
+        var room = state(leader);
+        assertEquals(otherId, room.path("hostId").asLong(), "The present co-host takes over");
+        assertTrue(room.path("coHostId").isNull());
+        expect(call("DELETE", path() + "/presence/" + otherTab, other, null), 204);
+        assertEquals(leaderId, state(leader).path("hostId").asLong(), "The only person left takes over");
+    }
+
+    @Test
+    void anAssignedHostWhoHasNotArrivedKeepsTheRole() {
+        configure(0, 25, 4, memberId, null);
+        UUID otherTab = UUID.randomUUID();
+        join(other, otherTab); join(leader, UUID.randomUUID());
+        expect(call("DELETE", path() + "/presence/" + otherTab, other, null), 204);
+        assertEquals(memberId, state(leader).path("hostId").asLong());
+    }
+
+    @Test
     void presentHostsCanChangeDurationsAndCapacityWithoutAssigningRoles() {
         var room = configure(0, 25, 4, memberId, otherId);
         long version = room.path("version").asLong();

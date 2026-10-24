@@ -69,6 +69,17 @@ public class StudyRoom {
         if (changedDurations) applyTimer(PomodoroTimer.idle(Duration.ofMinutes(focus), Duration.ofMinutes(breakLength)));
     }
 
+    /** The host left while others stayed; one of them takes over, and a co-host who does stops being co-host. */
+    public void handOverHost(Student next) {
+        host = next;
+        if (coHost != null && coHost.getId().equals(next.getId())) coHost = null;
+    }
+
+    /** The last person left, so the shared session ends and the timer is ready for the next one. */
+    public void endSession() {
+        applyTimer(timer().reset());
+    }
+
     public void revokeRoles(Long studentId) {
         if (host != null && host.getId().equals(studentId)) host = null;
         if (coHost != null && coHost.getId().equals(studentId)) coHost = null;

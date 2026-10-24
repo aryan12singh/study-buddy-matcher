@@ -395,7 +395,13 @@ poll or lease renewal on the group row. Inactive/removed members are excluded; c
 A removed/deactivated member loses all tab leases and assigned roles within the
 membership/account transaction; later readmission/reactivation cannot revive an
 old heartbeat. A removed/deleted/inactive host falls back to the leader, and invalid
-co-hosts are omitted. Group closure removes leases, resets the timer. Account deletion cascades presences; leader/group deletion removes
+co-hosts are omitted. Group closure removes leases, resets the timer.
+When the effective host leaves (`DELETE .../presence/{clientId}` for their last tab, or an
+expired lease pruned on the next join) and others are present, the role passes to the present
+co-host, who then stops being co-host, or else to the most recently active person present.
+A host who has not joined keeps the role. When the last present student leaves, a running or
+paused session ends and the timer resets to IDLE; a session the leader started in an empty
+room is not ended by the first join. Both changes increment the room version. Account deletion cascades presences; leader/group deletion removes
 the room. Clients purge snapshots on refresh failure, then retry and
 explicitly rejoin. Browser timer rendering does not confer control authority.
 

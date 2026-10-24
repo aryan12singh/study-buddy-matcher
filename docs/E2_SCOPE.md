@@ -68,7 +68,10 @@ The timer stores an immutable server-time anchor and remaining duration instead 
 ticks. HTTP polling reconciles snapshots while the browser renders the countdown
 locally. Multiple tabs count once toward capacity; leaving removes only that tab's
 lease. A host disconnect does not pause the timer. The leader/co-host can recover,
-and an expired host must rejoin before controlling the room.
+and an expired host must rejoin before controlling the room. Since 24 October, a host who
+leaves (or whose tab lease expires) while others stay hands the role to the present
+co-host, or else the most recently active person still there; when the last person
+leaves, the session ends and the timer resets.
 
 Rooms hold no audio state. Music comes from each student's own study room Music settings tab
 and never enters the room API. Optional weather uses fixed configured

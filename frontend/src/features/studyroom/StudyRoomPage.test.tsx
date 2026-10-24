@@ -73,6 +73,26 @@ describe('private room screen', () => {
     expect(screen.getByRole('region', { name: 'Studying together' }).closest('.group-room')).not.toBeNull()
   })
 
+  it('explains what leaving does: ending the session when last, or handing over as host', async () => {
+    const jamie = { ...present, studentId: 2, name: 'Jamie', host: false }
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ participants: [present, jamie] })))
+    vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom({ participants: [present, jamie] })))
+    open()
+    await joinStudyRoom()
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave room' }))
+    expect(within(screen.getByRole('dialog')).getByText(/Jamie will take over as host/)).toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Keep studying' }))
+  })
+
+  it('warns the last person that leaving ends the session', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
+    vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom()))
+    open()
+    await joinStudyRoom()
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave room' }))
+    expect(within(screen.getByRole('dialog')).getByText(/You're the last one here, so leaving ends the session/)).toBeInTheDocument()
+  })
+
   it('shows an empty preview and keeps controls inactive before joining', async () => {
     open()
     expect(await screen.findByText('The room is quiet.')).toBeInTheDocument()

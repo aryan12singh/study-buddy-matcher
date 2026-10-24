@@ -8,9 +8,12 @@ import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroup;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -53,8 +56,14 @@ public class StudyRoomService {
         StudyGroup group = access.lockMember(groupId, actorId);
         StudyRoom room = persistedRoom(group);
         Instant now = clock.instant();
+        // Tabs closed without leaving count as departures once their leases have expired.
+        Set<Long> expired = presences.findByStudyRoomIdAndExpiresAtLessThanEqual(room.getId(), now).stream()
+            .map(p -> p.getStudent().getId()).collect(Collectors.toCollection(HashSet::new));
+        // The student joining is back, not gone, even if an old tab of theirs had expired.
+        expired.remove(actorId);
         presences.deleteByStudyRoomIdAndExpiresAtLessThanEqual(room.getId(), now);
         presences.flush();
+        afterDeparture(room, group, expired, now);
         var current = presences.findEligible(room.getId(), now);
         boolean alreadyHere = current.stream().anyMatch(p -> p.getStudent().getId().equals(actorId));
         if (!alreadyHere && participantCount(current) >= Math.min(room.getParticipantLimit(), group.getMaxGroupSize())) {
@@ -93,9 +102,32 @@ public class StudyRoomService {
     }
 
     public void leave(Long groupId, Long actorId, UUID clientId) {
-        access.lockMember(groupId, actorId);
-        rooms.findByStudyGroupId(groupId).ifPresent(room ->
-            presences.deleteByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId));
+        StudyGroup group = access.lockMember(groupId, actorId);
+        rooms.findByStudyGroupId(groupId).ifPresent(room -> {
+            presences.deleteByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId);
+            presences.flush();
+            afterDeparture(room, group, Set.of(actorId), clock.instant());
+        });
+    }
+
+    /**
+     * Keeps the room sensible after people leave. When the last person goes, the session ends.
+     * When the host goes and others stay, the present co-host takes over, or else the most recently
+     * active person. A host who has not arrived yet keeps the role, and a session the leader
+     * started in an empty room keeps running, because neither of those is a departure.
+     */
+    private void afterDeparture(StudyRoom room, StudyGroup group, Set<Long> departed, Instant now) {
+        if (departed.isEmpty()) return;
+        var present = presences.findEligible(room.getId(), now);
+        Set<Long> presentIds = present.stream().map(p -> p.getStudent().getId()).collect(Collectors.toSet());
+        if (present.isEmpty()) {
+            if (room.timer().status() != TimerStatus.IDLE) room.endSession();
+            return;
+        }
+        Long hostId = room.getHost() != null ? room.getHost().getId() : group.getLeader().getId();
+        if (!departed.contains(hostId) || presentIds.contains(hostId)) return;
+        Student coHost = room.getCoHost();
+        room.handOverHost(coHost != null && presentIds.contains(coHost.getId()) ? coHost : present.getFirst().getStudent());
     }
 
     public StudyRoomDto controlTimer(Long groupId, Long actorId, RoomTimerInput input) {

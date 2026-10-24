@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { configureRoom, joinRoom, leaveRoom, leaveRoomOnExit, timerCommand } from './api'
-import type { RoomConfiguration, RoomSnapshot } from './api'
+import type { RoomConfiguration, RoomSnapshot, StudyRoom } from './api'
 import { useStudyRoom } from './useStudyRoom'
 import RoomTimerPanel from './RoomTimerPanel'
 import { useAction } from '../../shared/api/useAction'
@@ -33,6 +33,22 @@ export default function StudyRoomPage() {
   // Changing groups remounts the page, so a previous room's private state cannot linger.
   const { account } = useAuth()
   return <RoomPage key={`${account?.id}-${id}`} groupId={Number(id)} />
+}
+
+/**
+ * Says what leaving will do, mirroring the server's rules: the last person out ends the session,
+ * and a departing host hands over to the present co-host or else the most recently active person.
+ */
+function leaveMessage(room: StudyRoom, accountId?: number) {
+  const others = room.participants.filter(person => person.studentId !== accountId)
+  const rejoin = 'You can rejoin any time while the group is open.'
+  if (!others.length) return `You're the last one here, so leaving ends the session and resets the timer. ${rejoin}`
+  if (room.hostId === accountId) {
+    const next = others.find(person => person.studentId === room.coHostId) ?? others[0]
+    return `${next.name} will take over as host, and the session carries on without you. ${rejoin}`
+  }
+  const count = others.length === 1 ? `${others[0].name}, who is` : `the ${others.length} others`
+  return `The session carries on for ${count} still here. ${rejoin}`
 }
 
 function RoomPage({ groupId }: { groupId: number }) {
@@ -162,7 +178,7 @@ function RoomPage({ groupId }: { groupId: number }) {
     </>}
     {confirmation && <Dialog title={confirmation === 'leave' ? 'Leave study room?' : 'End this session?'}
       busy={action.pending} onClose={() => setConfirmation(null)}>
-      <p>{confirmation === 'leave' ? 'This browser will leave and stop its audio. You can join again while the group is open.' : `The timer goes back to ${room ? `${room.focusMinutes}:00` : 'the start'} for everyone. Everyone stays in the room.`}</p>
+      <p>{confirmation === 'leave' ? room ? leaveMessage(room, account?.id) : '' : `The timer goes back to ${room ? `${room.focusMinutes}:00` : 'the start'} for everyone. Everyone stays in the room.`}</p>
       <ActionNotice error={action.error} />
       <div className="actions">
         <Button disabled={action.pending} onClick={() => setConfirmation(null)}>Keep studying</Button>
