@@ -15,6 +15,7 @@ import Dialog from '../../shared/components/Dialog'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import RoomWeatherPanel from './RoomWeatherPanel'
+import MusicSettings from '../music/MusicSettings'
 import AtmosphereScene from './AtmosphereScene'
 import WindowControls from './WindowControls'
 import HiddenPanelTools from './HiddenPanelTools'
@@ -171,6 +172,7 @@ function RoomPage({ groupId }: { groupId: number }) {
           </footer>
         </section>
       </div>
+      <MusicSettings />
       <div className="group-room-extras">
         <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
       </div>

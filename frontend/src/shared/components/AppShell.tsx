@@ -44,7 +44,6 @@ export default function AppShell() {
               <NavLink to="/sessions"><PixelIcon kind="clock" /><span>Study sessions</span></NavLink>
               <Link to="/study-room" className={viewingStudyRoom ? 'active' : undefined}
                 aria-current={viewingStudyRoom ? 'page' : undefined}><PixelIcon kind="brand" /><span>Study Room</span></Link>
-              <NavLink to="/music"><PixelIcon kind="music" /><span>Music</span></NavLink>
               <NavLink to="/achievements"><AchievementNavIcon /><span>Achievements</span></NavLink>
               <NavLink to="/notifications"><PixelIcon kind="notifications" /><span>Notifications</span>{notifications.data && notifications.data.count > 0 && (
                 <span className="unread-count" aria-label={`${notifications.data.count} unread notifications`}>{notifications.data.count}</span>

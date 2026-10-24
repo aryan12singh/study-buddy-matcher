@@ -22,7 +22,6 @@ import AdminUserDetailPage from './features/admin/AdminUserDetailPage'
 import AdminUserFormPage from './features/admin/AdminUserFormPage'
 import MatchingSettingsPage from './features/matching/MatchingSettingsPage'
 import FindBuddiesPage from './features/matching/FindBuddiesPage'
-import MusicPage from './features/music/MusicPage'
 import StatePanel from './shared/components/StatePanel'
 import { AchievementsPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
 
@@ -41,7 +40,6 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/students/:id/edit" element={<EditProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/music" element={<MusicPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/new" element={<GroupFormPage />} />

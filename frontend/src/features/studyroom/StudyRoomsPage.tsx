@@ -6,6 +6,7 @@ import StudyRoomGroupsPanel from './StudyRoomGroupsPanel'
 import HiddenPanelTools from './HiddenPanelTools'
 import AtmosphereScene from './AtmosphereScene'
 import RoomWeatherPanel from './RoomWeatherPanel'
+import MusicSettings from '../music/MusicSettings'
 import { DEFAULT_ATMOSPHERE } from './weatherTheme'
 import type { Atmosphere } from './weatherTheme'
 import { usePanelVisibility } from './usePanelVisibility'
@@ -41,6 +42,7 @@ export default function StudyRoomsPage() {
           <StudyRoomGroupsPanel collapsed={groupsCollapsed} onToggle={toggleGroups} />
         </div>
       </div>
+      <MusicSettings />
     </WindowPage>
   )
 }
