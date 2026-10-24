@@ -25,6 +25,8 @@ public record AmbientProperties(
         @Positive int candidateCount,
         @Positive int minDurationSeconds,
         @Positive int maxDurationSeconds,
+        // Only sounds under this Freesound licence are offered; CC0 needs no on-screen credit.
+        @NotBlank String license,
         @NotEmpty List<@Valid AmbientCategory> categories) {
 
     public AmbientProperties {

@@ -181,6 +181,8 @@ app:
     # Shorter clips loop audibly; longer ones are slow to start on campus wifi.
     min-duration-seconds: 30
     max-duration-seconds: 600
+    # CC0 sounds are public domain, so the mixer can play them without crediting each author.
+    license: Creative Commons 0
     categories:
       - id: rain
         label: Rain

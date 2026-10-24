@@ -37,13 +37,11 @@ public class FreesoundClient implements SoundSearchClient {
 
     @Override
     public List<AmbientSound> search(String query) throws IOException {
-        // Very short clips loop audibly, so only sounds within the configured length are asked for.
-        String durationFilter = "duration:[" + properties.minDurationSeconds() + " TO " + properties.maxDurationSeconds() + "]";
         try {
             String reply = client.get()
                     .uri(uri -> uri.path("/search/")
                             .queryParam("query", query)
-                            .queryParam("filter", durationFilter)
+                            .queryParam("filter", filter(properties))
                             .queryParam("fields", FIELDS)
                             .queryParam("page_size", properties.candidateCount())
                             .build())
@@ -54,6 +52,15 @@ public class FreesoundClient implements SoundSearchClient {
         } catch (RestClientException failure) {
             throw new IOException("Sound provider unavailable", failure);
         }
+    }
+
+    /**
+     * Very short clips loop audibly, so only sounds within the configured length are asked for,
+     * and only under the configured licence, so the app need not credit each author on screen.
+     */
+    static String filter(AmbientProperties properties) {
+        return "duration:[" + properties.minDurationSeconds() + " TO " + properties.maxDurationSeconds() + "]"
+                + " license:\"" + properties.license() + "\"";
     }
 
     static List<AmbientSound> parse(String reply) throws IOException {

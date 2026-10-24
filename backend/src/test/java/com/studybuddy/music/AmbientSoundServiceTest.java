@@ -19,7 +19,7 @@ class AmbientSoundServiceTest {
     private final AmbientSound second = new AmbientSound(2, "Heavy rain", "ben", "https://licence/2", "https://cdn/2.mp3");
 
     private AmbientSoundService serviceWithKey(String apiKey) {
-        var properties = new AmbientProperties("https://freesound.org/apiv2", apiKey, Duration.ofSeconds(5), 15, 30, 600,
+        var properties = new AmbientProperties("https://freesound.org/apiv2", apiKey, Duration.ofSeconds(5), 15, 30, 600, "Creative Commons 0",
                 List.of(new AmbientCategory("rain", "Rain", "rain ambience")));
         return new AmbientSoundService(client, properties, new AmbientAssembler(), random);
     }

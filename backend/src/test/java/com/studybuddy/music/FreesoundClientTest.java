@@ -3,6 +3,7 @@ package com.studybuddy.music;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,6 +18,12 @@ class FreesoundClientTest {
                 ]}""";
         assertEquals(List.of(new AmbientSound(1, "Rain", "ana", "http://creativecommons.org/publicdomain/zero/1.0/", "https://cdn/1.mp3")),
                 FreesoundClient.parse(reply));
+    }
+
+    @Test void filterAsksForTheConfiguredLengthAndLicenceOnly() {
+        var properties = new AmbientProperties("https://freesound.org/apiv2", "key", Duration.ofSeconds(5), 15, 30, 600,
+                "Creative Commons 0", List.of(new AmbientCategory("rain", "Rain", "rain ambience")));
+        assertEquals("duration:[30 TO 600] license:\"Creative Commons 0\"", FreesoundClient.filter(properties));
     }
 
     @Test void parseWithNoResultsIsEmpty() throws Exception {
