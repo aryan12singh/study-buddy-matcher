@@ -69,7 +69,8 @@ export default function RoomWeatherPanel({ liveEnabled = false, store = 'study-r
         </p> : <p>Live weather is unavailable. The window follows campus daylight; you can select any atmosphere.</p>}
         <Button disabled={weather.loading} onClick={() => weather.reload()}>Refresh weather</Button>
       </div> : <p className="muted">{choice !== 'AUTO' ? 'Selected atmosphere; this is not a weather forecast.' : daylight === 'AUTO' ? 'Daylight follows Singapore time.' : 'Showing your chosen time of day.'}</p>}
-      <p className="field-hint">{liveEnabled && <>Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> (CC BY 4.0). </>}The scene is decorative. It does not change shared audio or timer settings.</p>
+      {/* Open-Meteo's data is CC BY 4.0, which requires this credit wherever it is shown. */}
+      {liveEnabled && <p className="field-hint">Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> (CC BY 4.0)</p>}
     </div>
   </section>
 }
