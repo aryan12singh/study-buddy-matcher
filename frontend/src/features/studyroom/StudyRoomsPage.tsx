@@ -6,6 +6,9 @@ import StudyRoomGroupsPanel from './StudyRoomGroupsPanel'
 import HiddenPanelTools from './HiddenPanelTools'
 import AtmosphereScene from './AtmosphereScene'
 import RoomWeatherPanel from './RoomWeatherPanel'
+import MusicPlayer from '../music/MusicPlayer'
+import NowPlayingMini from '../music/NowPlayingMini'
+import MusicProvider from '../music/MusicProvider'
 import { DEFAULT_ATMOSPHERE } from './weatherTheme'
 import type { Atmosphere } from './weatherTheme'
 import { usePanelVisibility } from './usePanelVisibility'
@@ -31,16 +34,19 @@ export default function StudyRoomsPage() {
 
   return (
     <WindowPage title="Study Room" description="A quiet corner for a focused mind.">
-      <div className={`study-room-workspace atmosphere-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
-        <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
-        <div className={`study-corner-layout${groupsCollapsed ? ' groups-collapsed' : ''}`}>
-          {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen}
-            extraTabs={[{ id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
-              content: <RoomWeatherPanel liveEnabled store="personal-room" onChange={setAtmosphere} /> }]} />}
-          <StudyRoomGroupsPanel collapsed={groupsCollapsed} onToggle={toggleGroups} />
+      <MusicProvider>
+        <div className={`study-room-workspace atmosphere-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+          <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
+          <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
+          <div className={`study-corner-layout${groupsCollapsed ? ' groups-collapsed' : ''}`}>
+            {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen} corner={<NowPlayingMini />}
+              extraTabs={[{ id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
+                content: <RoomWeatherPanel liveEnabled store="personal-room" onChange={setAtmosphere} /> },
+              { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> }]} />}
+            <StudyRoomGroupsPanel collapsed={groupsCollapsed} onToggle={toggleGroups} />
+          </div>
         </div>
-      </div>
+      </MusicProvider>
     </WindowPage>
   )
 }

@@ -20,7 +20,7 @@ applying the complete ordered migration set. The shared project received the ful
 | `20261009010000_study_rooms.sql` | Private room/timer state and expiring presence leases; backend-only tables/sequences |
 | `20261011090000_matching_weights_per_strategy.sql` | Matching weights belong to a strategy: adds `matching_configs.strategy` (existing rows become Balanced) and replaces one weight per criterion with one per strategy and criterion |
 | `20261013090000_complete_matching_configuration.sql` | Singleton matching settings, minimum score, persistent revision/override state and `matching_enabled_criteria`; preserves valid legacy overrides and denies browser access to the new table |
-| `20261014010000_room_audio_layers.sql` | Independent music/ambient columns and checks; backfills legacy selections once and preserves changed layer state on repetition |
+| `20261014010000_room_audio_layers.sql` | Independent music/ambient columns and checks; backfills legacy selections once and preserves changed layer state on repetition. Unused since room audio was removed on 24 October; kept so the ordered history still applies |
 | `20261014020000_study_sessions.sql` | Private group/buddy dated sessions, bounded schedule/parent/status checks, calendar UID and scoped query indexes; backend-only table/sequence |
 
 These are versioned source files. The historical shared
@@ -392,6 +392,11 @@ music choice becomes the music layer and a legacy ambient choice becomes the amb
 layer. Repeating SQL must preserve current selections and never restart paused audio.
 New clients use independent music/ambient fields; old single-preset clients are not
 the E2 API contract. Deploy the upgraded backend and frontend together.
+
+Room audio was removed from the application on 24 October. The backend no longer maps any
+`study_rooms` audio column; all of them have defaults or allow null, so new rooms still
+insert. They stay in place until a dropping migration is applied after every running
+backend has the change, because older backends still write them.
 
 `study_sessions` belongs to exactly one group or connection, enforced by a database
 check. Its local date-time fields are intentional civil times in the saved IANA zone;

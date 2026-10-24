@@ -83,7 +83,7 @@ and remain separately labeled; they do not replace the OO class diagrams.
   the interaction when its guard is true; `loop` scores filtered candidates. Empty success
   is HTTP 200 with an empty list, not an error. E1 must not be presented as a scorer/strategy.
 - Room state reads and existing-lease renewals recheck access without a group-row lock.
-  Admission and timer/audio/configuration transitions use account-before-group locking.
+  Admission and timer/configuration transitions use account-before-group locking.
   Session mutations serialize on their current parent; neither room presence nor a calendar
   snapshot is an attendance promise.
 

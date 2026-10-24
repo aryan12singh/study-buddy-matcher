@@ -2,7 +2,6 @@ package com.studybuddy.studyroom;
 
 import com.studybuddy.studygroup.GroupMembership;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -36,8 +35,6 @@ public class RoomAssembler {
             joined, settings.pollInterval().toMillis(), settings.leaseLifetime().toMillis(),
             new RoomTimerDto(timer.phase(), timer.status(), timer.remainingAtAnchor().toMillis(),
                 timer.focusDuration().toMillis(), timer.breakDuration().toMillis()),
-            new RoomAudioDto(room.getMusicPreset(), room.isMusicPlaying(), room.getAmbientPreset(), room.isAmbientPlaying()),
-            Arrays.stream(AudioPreset.values()).map(p -> new AudioPresetDto(p, p.label(), p.kind())).toList(),
             latest.values().stream().map(p -> new RoomParticipantDto(p.getStudent().getId(), p.getStudent().getName(),
                 p.getPresence(), p.getExpiresAt(), group.isLeader(p.getStudent().getId()),
                 p.getStudent().getId().equals(hostId), Objects.equals(p.getStudent().getId(), coHostId))).toList(),

@@ -6,10 +6,6 @@ import { deferred, renderPage, response } from '../../test/renderApp'
 import StudyRoomPage from './StudyRoomPage'
 import type { StudyRoom } from './api'
 
-const engine = vi.hoisted(() => ({ enable: vi.fn(), play: vi.fn(), stop: vi.fn(), close: vi.fn() }))
-vi.mock('./RoomAudioEngine', () => ({ RoomAudioEngine: class {
-  enable = engine.enable; play = engine.play; stop = engine.stop; close = engine.close
-} }))
 
 const weather = { available: false, condition: 'CLEAR', temperatureCelsius: null, isDay: true, observedAt: null, stale: false, location: 'SMU campus' }
 const room: StudyRoom = {
@@ -18,8 +14,6 @@ const room: StudyRoom = {
   participantLimit: 4, groupLimit: 4, hostId: 1, coHostId: null, hostOnline: false,
   leader: false, canControl: false, joined: false, pollIntervalMillis: 2000, leaseLifetimeMillis: 30000,
   timer: { phase: 'FOCUS', status: 'IDLE', remainingMillis: 1500000, focusMillis: 1500000, breakMillis: 300000 },
-  audio: { musicPreset: 'CALM_MUSIC', musicPlaying: false, ambientPreset: 'RAIN', ambientPlaying: false },
-  audioPresets: [{ id: 'CALM_MUSIC', label: 'Calm melody', kind: 'MUSIC' }, { id: 'RAIN', label: 'Soft rain', kind: 'AMBIENT' }],
   participants: [], members: [{ studentId: 1, name: 'Priya' }, { studentId: 2, name: 'Jamie' }],
 }
 const present = { studentId: 1, name: 'Priya', presence: 'PRESENT' as const, expiresAt: '2026-10-09T00:00:30Z', leader: false, host: true, coHost: false }
@@ -32,18 +26,17 @@ function open(overrides: Partial<StudyRoom> = {}) {
 }
 async function joinStudyRoom() {
   const button = await screen.findByRole('button', { name: 'Join study room' })
-  // Finish the joined panel's effects before testing browser audio consent.
+  // Finish the joined panel's effects before the test continues.
   await act(async () => { fireEvent.click(button) })
 }
 async function openSettingsTab(name: string) {
   fireEvent.click(await screen.findByRole('button', { name: 'Settings' }))
   fireEvent.click(screen.getByRole('tab', { name }))
 }
-const openRoomAudio = () => openSettingsTab('Room audio')
-afterEach(() => { vi.restoreAllMocks(); Object.values(engine).forEach(mock => mock.mockReset()); localStorage.clear() })
+afterEach(() => { vi.restoreAllMocks(); localStorage.clear() })
 
 describe('private room screen', () => {
-  it('keeps timer, atmosphere and audio behind a tabbed settings menu that closes back to its button', async () => {
+  it('keeps timer, atmosphere and roles behind a tabbed settings menu that closes back to its button', async () => {
     open()
     const settings = await screen.findByRole('button', { name: 'Settings' })
     expect(settings).toHaveAttribute('aria-expanded', 'false')
@@ -59,22 +52,52 @@ describe('private room screen', () => {
     expect(atmosphere).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByLabelText('Window view')).toBeVisible()
     fireEvent.keyDown(atmosphere, { key: 'ArrowRight' })
-    expect(screen.getByRole('tab', { name: 'Room audio' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('button', { name: 'Enable audio in this browser' })).toBeInTheDocument()
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Room audio' }), { key: 'Escape' })
+    expect(screen.getByRole('tab', { name: 'Room roles' })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Room roles' }), { key: 'Escape' })
     expect(settings).toHaveAttribute('aria-expanded', 'false')
     expect(settings).toHaveFocus()
   })
 
-  it('shows an empty preview and keeps controls and audio inactive before joining', async () => {
+  it('offers a personal music player that says only this student hears it', async () => {
+    open()
+    expect(await screen.findByRole('button', { name: 'Open music settings' })).toBeInTheDocument()
+    expect(screen.getByText('Only you will hear it, not the group.')).toBeInTheDocument()
+  })
+
+  it('shows the people studying as a crew inside the room panel', async () => {
+    open({ participants: [present, { ...present, studentId: 2, name: 'Jamie', presence: 'BREAK', host: false }] })
+    const crew = within(await screen.findByRole('region', { name: 'Studying together' }))
+    expect(crew.getByText('2 / 4')).toBeInTheDocument()
+    expect(crew.getByText('Host')).toBeInTheDocument()
+    expect(crew.getByText('On a break')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Studying together' }).closest('.group-room')).not.toBeNull()
+  })
+
+  it('explains what leaving does: ending the session when last, or handing over as host', async () => {
+    const jamie = { ...present, studentId: 2, name: 'Jamie', host: false }
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ participants: [present, jamie] })))
+    vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom({ participants: [present, jamie] })))
+    open()
+    await joinStudyRoom()
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave room' }))
+    expect(within(screen.getByRole('dialog')).getByText(/Jamie will take over as host/)).toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Keep studying' }))
+  })
+
+  it('warns the last person that leaving ends the session', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
+    vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom()))
+    open()
+    await joinStudyRoom()
+    fireEvent.click(await screen.findByRole('button', { name: 'Leave room' }))
+    expect(within(screen.getByRole('dialog')).getByText(/You're the last one here, so leaving ends the session/)).toBeInTheDocument()
+  })
+
+  it('shows an empty preview and keeps controls inactive before joining', async () => {
     open()
     expect(await screen.findByText('The room is quiet.')).toBeInTheDocument()
     expect(screen.getByText('25:00')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Start focus' })).not.toBeInTheDocument()
-    await openRoomAudio()
-    expect(screen.getByRole('button', { name: 'Enable audio in this browser' })).toBeDisabled()
-    expect(engine.enable).not.toHaveBeenCalled()
-    expect(engine.play).not.toHaveBeenCalled()
   })
 
   it('joins as a host and confirms ending the session before sending a versioned reset', async () => {
@@ -96,24 +119,13 @@ describe('private room screen', () => {
     expect(post).toHaveBeenCalledWith('/groups/5/room/timer', { command: 'RESET', expectedVersion: 1 })
   })
 
-  it('lets the leader recover audio from a full room but keeps the timer for people in the room', async () => {
-    open({ leader: true, canControl: true, participantLimit: 1, participants: [present] })
-    await openRoomAudio()
-    expect(screen.queryByRole('button', { name: 'Start focus' })).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Shared music selection')).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Play music for everyone' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Enable audio in this browser' })).toBeDisabled()
-    expect(engine.enable).not.toHaveBeenCalled()
-  })
-
-  it('ordinary members cannot control the timer/audio and leaving affects only this tab', async () => {
+  it('ordinary members cannot control the timer and leaving affects only this tab', async () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ canControl: false })))
     const remove = vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
     open()
     await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
     expect(screen.queryByRole('button', { name: 'Start focus' })).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Shared music selection')).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'Leave room' }))
     expect(remove).not.toHaveBeenCalled()
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leave study room' }))
@@ -140,20 +152,16 @@ describe('private room screen', () => {
     expect(heartbeat).not.toHaveBeenCalled()
   })
 
-  it('purges the private snapshot and stops local audio after a rejected heartbeat', async () => {
-    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: null, musicPlaying: false, ambientPreset: 'RAIN', ambientPlaying: true } })))
+  it('purges the private snapshot after a rejected heartbeat', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
     vi.spyOn(api, 'put').mockRejectedValue(new Error('Membership removed'))
     open()
     await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
-    await openRoomAudio()
-    fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
-    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25))
     fireEvent(window, new Event('focus'))
     expect(await screen.findByText('Membership removed')).toBeInTheDocument()
     expect(screen.queryByText('Priya (you)')).not.toBeInTheDocument()
     expect(screen.queryByRole('timer')).not.toBeInTheDocument()
-    expect(engine.close).toHaveBeenCalled()
   })
 
   it('stays in the room when a heartbeat fails on the network or server', async () => {
@@ -166,7 +174,6 @@ describe('private room screen', () => {
     open()
     await joinStudyRoom()
     await screen.findByRole('button', { name: 'Leave room' })
-    const closesAfterJoin = engine.close.mock.calls.length
     fireEvent(window, new Event('focus'))
     await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(1))
     expect(await screen.findByText(/Reconnecting to the room/)).toBeInTheDocument()
@@ -174,84 +181,9 @@ describe('private room screen', () => {
     await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(2))
     expect(screen.getByRole('button', { name: 'Leave room' })).toBeInTheDocument()
     expect(screen.getByRole('timer')).toBeInTheDocument()
-    expect(engine.close).toHaveBeenCalledTimes(closesAfterJoin)
     fireEvent(window, new Event('focus'))
     await waitFor(() => expect(heartbeat).toHaveBeenCalledTimes(3))
     await waitFor(() => expect(screen.queryByText(/Reconnecting to the room/)).not.toBeInTheDocument())
-  })
-
-  it('keeps audio silent until consent and applies volume/mute only locally', async () => {
-    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: null, musicPlaying: false, ambientPreset: 'RAIN', ambientPlaying: true } })))
-    const put = vi.spyOn(api, 'put')
-    open()
-    await joinStudyRoom()
-    await screen.findByRole('button', { name: 'Leave room' })
-    expect(engine.play).not.toHaveBeenCalled()
-    await openRoomAudio()
-    fireEvent.click(screen.getByRole('button', { name: 'Enable audio in this browser' }))
-    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25))
-    fireEvent.change(screen.getByRole('slider', { name: 'Your ambience volume: 25%' }), { target: { value: '42' } })
-    expect(engine.play).toHaveBeenLastCalledWith('ambient', 'RAIN', 0.42)
-    fireEvent.click(screen.getByLabelText('Mute only my ambience'))
-    expect(engine.play).toHaveBeenLastCalledWith('ambient', 'RAIN', 0)
-    expect(put).not.toHaveBeenCalled()
-  })
-
-  it('mixes both shared layers and keeps each local mute independent', async () => {
-    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: 'CALM_MUSIC', musicPlaying: true, ambientPreset: 'RAIN', ambientPlaying: true } })))
-    const put = vi.spyOn(api, 'put')
-    open()
-    await joinStudyRoom()
-    await screen.findByRole('button', { name: 'Leave room' })
-    await openRoomAudio()
-    fireEvent.click(screen.getByRole('button', { name: 'Enable audio in this browser' }))
-    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('music', 'CALM_MUSIC', 0.25))
-    expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25)
-    fireEvent.click(screen.getByLabelText('Mute only my music'))
-    expect(engine.play).toHaveBeenCalledWith('music', 'CALM_MUSIC', 0)
-    expect(engine.play).toHaveBeenLastCalledWith('ambient', 'RAIN', 0.25)
-    expect(put).not.toHaveBeenCalled()
-  })
-
-  it('remembers each local gain and mute across leaving, rejoining and remounting without remembering playback consent', async () => {
-    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom({ audio: { musicPreset: 'CALM_MUSIC', musicPlaying: true, ambientPreset: 'RAIN', ambientPlaying: true } })))
-    vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
-    const view = open()
-    await joinStudyRoom()
-    await screen.findByRole('button', { name: 'Leave room' })
-    await openRoomAudio()
-    fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
-    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.25))
-    fireEvent.change(screen.getByRole('slider', { name: 'Your music volume: 25%' }), { target: { value: '60' } })
-    fireEvent.change(screen.getByRole('slider', { name: 'Your ambience volume: 25%' }), { target: { value: '42' } })
-    fireEvent.click(screen.getByLabelText('Mute only my music'))
-    expect(JSON.parse(localStorage.getItem('study-room-audio-preferences')!)).toEqual({
-      volume: { music: 60, ambient: 42 }, muted: { music: true, ambient: false },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Leave room' }))
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leave study room' }))
-    await screen.findByRole('button', { name: 'Join study room' })
-    expect(engine.close).toHaveBeenCalled()
-    engine.play.mockClear(); engine.enable.mockClear()
-    await joinStudyRoom()
-    await screen.findByRole('button', { name: 'Leave room' })
-    expect(screen.getByRole('slider', { name: 'Your music volume: 60%' })).toBeDisabled()
-    expect(screen.getByRole('slider', { name: 'Your ambience volume: 42%' })).toBeDisabled()
-    expect(screen.getByLabelText('Mute only my music')).toBeChecked()
-    expect(engine.enable).not.toHaveBeenCalled()
-    expect(engine.play).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Enable audio in this browser' }))
-    await waitFor(() => expect(engine.play).toHaveBeenCalledWith('ambient', 'RAIN', 0.42))
-    expect(engine.play).toHaveBeenCalledWith('music', 'CALM_MUSIC', 0)
-    view.unmount()
-    engine.play.mockClear(); engine.enable.mockClear()
-    open()
-    await openRoomAudio()
-    expect(screen.getByRole('slider', { name: 'Your music volume: 60%' })).toBeDisabled()
-    expect(screen.getByLabelText('Mute only my music')).toBeChecked()
-    expect(screen.getByRole('button', { name: 'Enable audio in this browser' })).toBeDisabled()
-    expect(engine.play).not.toHaveBeenCalled()
-    expect(engine.enable).not.toHaveBeenCalled()
   })
 
   it('allows a present host to change duration and capacity while preserving leader-only roles', async () => {
@@ -297,18 +229,6 @@ describe('private room screen', () => {
     expect(roles.getByText('No co-host', { selector: 'dd' })).toBeInTheDocument()
     expect(roles.queryByLabelText('Host')).not.toBeInTheDocument()
     expect(roles.getByText(/The group leader assigns the host and co-host/)).toBeInTheDocument()
-  })
-
-  it('handles audio failure without disabling room controls', async () => {
-    engine.enable.mockRejectedValueOnce(new Error('Audio unavailable'))
-    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
-    open()
-    await joinStudyRoom()
-    await screen.findByRole('button', { name: 'Leave room' })
-    await openRoomAudio()
-    fireEvent.click(await screen.findByRole('button', { name: 'Enable audio in this browser' }))
-    expect(await screen.findByText('Audio unavailable')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Start focus' })).toBeEnabled()
   })
 
   it('locks the timer durations once the shared timer has started', async () => {

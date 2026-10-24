@@ -7,5 +7,5 @@ public record StudyRoomDto(Long groupId, String groupName, long version, Instant
     int focusMinutes, int breakMinutes, int maxFocusMinutes, int maxBreakMinutes,
     int participantLimit, int groupLimit, Long hostId, Long coHostId, boolean hostOnline,
     boolean leader, boolean canControl, boolean joined, long pollIntervalMillis, long leaseLifetimeMillis,
-    RoomTimerDto timer, RoomAudioDto audio, List<AudioPresetDto> audioPresets,
+    RoomTimerDto timer,
     List<RoomParticipantDto> participants, List<RoomMemberDto> members) {}

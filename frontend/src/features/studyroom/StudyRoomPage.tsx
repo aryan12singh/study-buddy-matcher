@@ -1,20 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { configureRoom, joinRoom, leaveRoom, leaveRoomOnExit, selectAudio, timerCommand } from './api'
-import type { RoomAudio, RoomConfiguration, RoomSnapshot } from './api'
+import { configureRoom, joinRoom, leaveRoom, leaveRoomOnExit, timerCommand } from './api'
+import type { RoomConfiguration, RoomSnapshot, StudyRoom } from './api'
 import { useStudyRoom } from './useStudyRoom'
 import RoomTimerPanel from './RoomTimerPanel'
-import RoomAudioPanel from './RoomAudioPanel'
 import { useAction } from '../../shared/api/useAction'
 import { useAuth } from '../../shared/auth/useAuth'
 import WindowPage from '../../shared/components/WindowPage'
 import Button from '../../shared/components/Button'
-import Avatar from '../../shared/components/Avatar'
-import PixelIcon from '../../shared/components/PixelIcon'
 import Dialog from '../../shared/components/Dialog'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import RoomWeatherPanel from './RoomWeatherPanel'
+import RoomParticipants from './RoomParticipants'
+import MusicPlayer from '../music/MusicPlayer'
+import NowPlayingMini from '../music/NowPlayingMini'
+import MusicProvider from '../music/MusicProvider'
 import AtmosphereScene from './AtmosphereScene'
 import WindowControls from './WindowControls'
 import HiddenPanelTools from './HiddenPanelTools'
@@ -32,6 +33,22 @@ export default function StudyRoomPage() {
   // Changing groups remounts the page, so a previous room's private state cannot linger.
   const { account } = useAuth()
   return <RoomPage key={`${account?.id}-${id}`} groupId={Number(id)} />
+}
+
+/**
+ * Says what leaving will do, mirroring the server's rules: the last person out ends the session,
+ * and a departing host hands over to the present co-host or else the most recently active person.
+ */
+function leaveMessage(room: StudyRoom, accountId?: number) {
+  const others = room.participants.filter(person => person.studentId !== accountId)
+  const rejoin = 'You can rejoin any time while the group is open.'
+  if (!others.length) return `You're the last one here, so leaving ends the session and resets the timer. ${rejoin}`
+  if (room.hostId === accountId) {
+    const next = others.find(person => person.studentId === room.coHostId) ?? others[0]
+    return `${next.name} will take over as host, and the session carries on without you. ${rejoin}`
+  }
+  const count = others.length === 1 ? `${others[0].name}, who is` : `the ${others.length} others`
+  return `The session carries on for ${count} still here. ${rejoin}`
 }
 
 function RoomPage({ groupId }: { groupId: number }) {
@@ -105,10 +122,6 @@ function RoomPage({ groupId }: { groupId: number }) {
     }
   }
 
-  function audio(audio: RoomAudio) {
-    if (room) void change(() => selectAudio(groupId, audio, room.version), 'The room audio was updated.')
-  }
-
   function settings(input: RoomConfiguration) {
     return change(() => configureRoom(groupId, input), 'Room settings were saved.')
   }
@@ -125,59 +138,47 @@ function RoomPage({ groupId }: { groupId: number }) {
       {resource.reconnecting && <p className="group-room-notices" role="status">
         <strong>Connection lost.</strong> Reconnecting to the room; the shared timer keeps running.
       </p>}
-      {!!room.participants.length && <section className="group-room-participants" aria-label="Participants">
-        <div className="group-room-participants-heading">
-          <h2><PixelIcon kind="groups" />Participants</h2>
-          <span className="study-corner-group-count">{room.participants.length} / {room.participantLimit}</span>
+      <MusicProvider>
+        <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+          <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
+          <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
+          <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
+            <header className="group-room-header">
+              <NowPlayingMini personal />
+              <div className="group-room-title">
+                <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
+                <h2 id="group-room-heading">{room.groupName}</h2>
+              </div>
+              <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
+                { id: 'timer', label: 'Timer', icon: '◷',
+                  content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
+                { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
+                  content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
+                { id: 'roles', label: 'Room roles', icon: '★',
+                  content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
+                { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
+              ]} />
+            </header>
+            <RoomParticipants room={room} accountId={account?.id} joinedHere={resource.joinedHere} />
+            <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
+              pending={action.pending} onControl={control} />
+            <footer className="group-room-footer">
+              {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
+              {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
+              {resource.joinedHere
+                ? <Button variant="danger" disabled={action.pending} onClick={() => setConfirmation('leave')}>Leave room</Button>
+                : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
+            </footer>
+          </section>
         </div>
-        <ul className="group-room-people">
-          {room.participants.map(person => <li key={person.studentId}>
-            <Avatar name={person.name} />
-            <span className="group-room-person-name">{person.name}{person.studentId !== account?.id ? '' : resource.joinedHere ? ' (you)' : ' (you, in another tab)'}</span>
-            {(person.leader || person.host || person.coHost) && <span className="group-room-person-status">
-              {[person.leader && 'Leader', person.host && 'Host', person.coHost && 'Co-host'].filter(Boolean).join(' · ')}
-            </span>}
-          </li>)}
-        </ul>
-      </section>}
-      <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
-        <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
-        <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
-          <header className="group-room-header">
-            <div className="group-room-title">
-              <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
-              <h2 id="group-room-heading">{room.groupName}</h2>
-            </div>
-            <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
-              { id: 'timer', label: 'Timer', icon: '◷',
-                content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-              { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
-                content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
-              { id: 'audio', label: 'Room audio', icon: '♪', persistent: true,
-                content: <RoomAudioPanel key={resource.joinedHere ? 'joined' : 'preview'} room={room} active={resource.joinedHere} pending={action.pending} onSelect={audio} /> },
-              { id: 'roles', label: 'Room roles', icon: '★',
-                content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-            ]} />
-          </header>
-          <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
-            pending={action.pending} onControl={control} />
-          <footer className="group-room-footer">
-            {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
-            {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
-            {resource.joinedHere
-              ? <Button variant="danger" disabled={action.pending} onClick={() => setConfirmation('leave')}>Leave room</Button>
-              : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
-          </footer>
-        </section>
-      </div>
+      </MusicProvider>
       <div className="group-room-extras">
         <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
       </div>
     </>}
     {confirmation && <Dialog title={confirmation === 'leave' ? 'Leave study room?' : 'End this session?'}
       busy={action.pending} onClose={() => setConfirmation(null)}>
-      <p>{confirmation === 'leave' ? 'This browser will leave and stop its audio. You can join again while the group is open.' : `The timer goes back to ${room ? `${room.focusMinutes}:00` : 'the start'} for everyone. Everyone stays in the room.`}</p>
+      <p>{confirmation === 'leave' ? room ? leaveMessage(room, account?.id) : '' : `The timer goes back to ${room ? `${room.focusMinutes}:00` : 'the start'} for everyone. Everyone stays in the room.`}</p>
       <ActionNotice error={action.error} />
       <div className="actions">
         <Button disabled={action.pending} onClick={() => setConfirmation(null)}>Keep studying</Button>

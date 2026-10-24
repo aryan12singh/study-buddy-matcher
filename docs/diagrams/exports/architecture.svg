@@ -47,7 +47,7 @@
 <text x="63" y="295" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">React + Vite</text>
 <text x="63" y="329" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Feature screens and route guards</text>
 <text x="63" y="356" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Shared authenticated API client</text>
-<text x="63" y="383" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Local drafts and audio consent</text>
+<text x="63" y="383" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Local drafts and music player</text>
 <text x="63" y="410" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Calendar snapshot download</text>
 <text x="63" y="437" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">No database client / browser grant</text>
 <text x="523" y="265" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Spring Security</text>

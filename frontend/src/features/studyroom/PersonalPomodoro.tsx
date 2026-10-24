@@ -1,19 +1,24 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import Button from '../../shared/components/Button'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import PixelIcon from '../../shared/components/PixelIcon'
 import { MINUTE_MILLIS, usePersonalPomodoro } from './usePersonalPomodoro'
 import { timerText } from './timer'
+import { useTimerPings } from './timerPing'
 import WindowControls from './WindowControls'
 import type { RoomSettingsTab } from './RoomSettingsMenu'
 import PersonalTimerSettings from './PersonalTimerSettings'
 import type { PanelVisibility } from './usePanelVisibility'
 import type { RoomFullscreen } from './useRoomFullscreen'
 
-export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTabs = [] }: {
+export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTabs = [], corner }: {
   accountId: number; panel: PanelVisibility; fullscreen: RoomFullscreen; extraTabs?: RoomSettingsTab[]
+  /** Shown in the top-left corner, opposite the window controls, such as the music mini player. */
+  corner?: ReactNode
 }) {
   const timer = usePersonalPomodoro(accountId)
+  useTimerPings(timer.status, timer.phase)
   const [confirmingReset, setConfirmingReset] = useState(false)
   const focusing = timer.phase === 'FOCUS'
   const duration = (focusing ? timer.focusMinutes : timer.breakMinutes) * MINUTE_MILLIS
@@ -26,6 +31,7 @@ export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTa
           focusMinutes={timer.focusMinutes} breakMinutes={timer.breakMinutes} onSave={(focus, rest) => timer.reset(focus, rest)} /> },
         ...extraTabs,
       ]} />
+      {corner}
       <div className="pomodoro-welcome">
         <span className="pomodoro-kicker"><PixelIcon kind="clock" />Your focus space</span>
         <h2>A little focus. A little progress.</h2>
@@ -55,7 +61,6 @@ export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTa
           <Button variant="primary" onClick={timer.toggle}>{timer.status === 'RUNNING' ? 'Pause timer' : timer.status === 'PAUSED' ? 'Resume timer' : 'Start focus'}</Button>
           <Button disabled={timer.status === 'IDLE'} onClick={() => setConfirmingReset(true)}>End session</Button>
         </div>
-        <p>At your own pace, or in good company.</p>
       </div>
       {confirmingReset && <ConfirmDialog title="End this session?" confirmLabel="End session" pending={false}
         onClose={() => setConfirmingReset(false)} onConfirm={() => { timer.reset(); setConfirmingReset(false) }}>

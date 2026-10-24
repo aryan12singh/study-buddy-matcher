@@ -363,13 +363,12 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | PUT | `/api/groups/{groupId}/room/presence` | `{clientId: UUID, presence: PRESENT / FOCUS / BREAK}`; renewed DTO, 200 |
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
-| PUT | `/api/groups/{groupId}/room/audio` | `{musicPreset, musicPlaying, ambientPreset, ambientPlaying, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid
 timer transition returns 409. Only the leader or a currently present assigned
-host/co-host can change timer/audio/settings. The leader retains these controls without
+host/co-host can change timer/settings. The leader retains these controls without
 joining, so room capacity cannot block administrative recovery. Only the leader
 assigns roles; a present delegated host/co-host can change durations/capacity only
 while preserving the effective current role assignments in the settings body.
@@ -388,7 +387,7 @@ Each heartbeat extends its lease by the configured lifetime. An unknown/expired
 lease returns 409 and requires an explicit join; it cannot bypass capacity by
 renewing. Polled state reads use `RoomAccess.readMember` without a group-row lock.
 Heartbeats use the same authorization check and update only an existing, unexpired
-tab lease; a concurrently deleted lease fails renewal. Join, leave, timer/audio
+tab lease; a concurrently deleted lease fails renewal. Join, leave, timer
 control and configuration use `lockMember`, taking account locks before the group
 lock. This serializes admission and shared-state transitions without queuing every
 poll or lease renewal on the group row. Inactive/removed members are excluded; closed groups return
@@ -396,9 +395,14 @@ poll or lease renewal on the group row. Inactive/removed members are excluded; c
 A removed/deactivated member loses all tab leases and assigned roles within the
 membership/account transaction; later readmission/reactivation cannot revive an
 old heartbeat. A removed/deleted/inactive host falls back to the leader, and invalid
-co-hosts are omitted. Group closure removes leases, resets the timer and stops both
-audio layers. Account deletion cascades presences; leader/group deletion removes
-the room. Clients purge snapshots/stop audio on refresh failure, then retry and
+co-hosts are omitted. Group closure removes leases, resets the timer.
+When the effective host leaves (`DELETE .../presence/{clientId}` for their last tab, or an
+expired lease pruned on the next join) and others are present, the role passes to the present
+co-host, who then stops being co-host, or else to the most recently active person present.
+A host who has not joined keeps the role. When the last present student leaves, a running or
+paused session ends and the timer resets to IDLE; a session the leader started in an empty
+room is not ended by the first join. Both changes increment the room version. Account deletion cascades presences; leader/group deletion removes
+the room. Clients purge snapshots on refresh failure, then retry and
 explicitly rejoin. Browser timer rendering does not confer control authority.
 
 `StudyRoomDto` fields:
@@ -412,21 +416,15 @@ leader, canControl, joined (actor present in any tab)
 pollIntervalMillis, leaseLifetimeMillis
 timer {phase: FOCUS/BREAK, status: IDLE/RUNNING/PAUSED,
        remainingMillis (at serverTime), focusMillis, breakMillis}
-audio {musicPreset: CALM_MUSIC|null, musicPlaying: boolean,
-       ambientPreset: RAIN/WHITE_NOISE/CAFE|null, ambientPlaying: boolean}
-audioPresets [{id, label, kind: MUSIC/AMBIENT}]
 participants [{studentId, name, presence, expiresAt, leader, host, coHost}]
 members [{studentId, name}] (active accepted members for role selectors)
 ```
 
 The browser renders elapsed time from each server snapshot and reconciles on the
-server-provided poll interval (default two seconds). Local enable/volume/mute are
-not sent to the API. Original synthesized music and ambient layers have independent
-shared selection/play state and independent local volume/mute. A null preset is
-allowed only when that layer is paused; sending an ambient preset to the music
-layer, or vice versa, is 400. Playback requires local consent and failure leaves
-the room usable silently. Playback positions are not synchronized. No external
-music credentials/assets are required.
+server-provided poll interval (default two seconds). Rooms have no shared audio: music
+and ambient sounds come from each study room's Music settings tab, play only in each student's
+own browser and are not sent to the room API. The former shared audio endpoint was
+removed on 24 October; its `study_rooms` columns remain, unused, until a later migration.
 
 ## Dated study sessions and calendar (E2 #16)
 
@@ -561,7 +559,54 @@ selected clear/cloudy/rain/storm/snow/fog. Manual choices are decorative and sav
 only in that browser. Without usable live data, the scene follows Singapore day/night
 and the manual choices remain available. `prefers-reduced-motion` stops animations.
 Weather data attribution links to [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
-provider outages do not change shared timer/audio state or block a room/session action.
+provider outages do not change shared timer state or block a room/session action.
+
+## Ambient sounds (Study Room music)
+
+Both endpoints use the existing authenticated student API guard. The backend calls Freesound
+with the server-held key; the key never reaches the browser.
+
+`GET /api/ambient/categories` returns the configured channels in order.
+
+```text
+AmbientCategoryDto[] { id, label }
+```
+
+`GET /api/ambient/categories/{categoryId}/sound?exclude={soundId}` returns one random sound
+with an MP3 preview from that category's search. `exclude` is optional: the sound already
+playing, skipped when another choice exists.
+
+```text
+AmbientSoundDto { categoryId, id, name, author, license (URL), previewUrl }
+```
+
+An unknown category returns 404 `NOT_FOUND`. No configured key, a provider failure or timeout,
+or no playable result returns 503 `AMBIENT_UNAVAILABLE`. Preview URLs play directly from
+Freesound's CDN and need no key.
+
+## Spotify (Study Room music)
+
+All endpoints use the existing authenticated student API guard except `GET /api/spotify/callback`,
+which Spotify's sign-in redirect reaches without an app token. It is tied to the student by a
+random, single-use `state` that expires after `app.spotify.authorization-lifetime`.
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET /api/spotify/status` | `SpotifyStatusDto { configured, connected, embedPlaylistId }` |
+| `POST /api/spotify/authorization` | `SpotifyAuthorizationDto { url }`: the Spotify sign-in page to open |
+| `GET /api/spotify/callback?state&code&error` | 302 to `app.spotify.return-url?spotify=connected/denied/expired/failed` |
+| `GET /api/spotify/token` | `SpotifyAccessTokenDto { accessToken, expiresAt }` for the in-browser player, renewed when close to expiry |
+| `GET /api/spotify/playlists?query=` | `SpotifyPlaylistDto[] { id, uri, name, owner, imageUrl|null }`, at most 10 |
+| `POST /api/spotify/play` `{ deviceId, playlistUri }` | 204; starts the playlist on the student's player in this tab |
+| `DELETE /api/spotify/connection` | 204; forgets the student's Spotify tokens |
+
+The refresh token never leaves the server, and tokens are held in memory only, so a server
+restart asks students to connect again. No app credentials returns 503 `SPOTIFY_UNAVAILABLE`, as
+does a Spotify outage. Not connected, or a connection Spotify no longer accepts, returns 409
+`SPOTIFY_NOT_CONNECTED` (not 401, which would sign the student out of this app). Spotify refusing
+playback (player not ready, or no Premium) returns 409 `SPOTIFY_PLAYBACK_REFUSED`. A blank or
+overlong search returns 400 `INVALID_INPUT`; a `playlistUri` that is not `spotify:playlist:…`
+returns 400.
 
 ## Notifications
 

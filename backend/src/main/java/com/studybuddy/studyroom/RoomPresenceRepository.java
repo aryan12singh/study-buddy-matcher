@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 public interface RoomPresenceRepository extends JpaRepository<RoomPresence, Long> {
     Optional<RoomPresence> findByStudyRoomIdAndStudentIdAndClientId(Long roomId, Long studentId, UUID clientId);
     void deleteByStudyRoomIdAndStudentIdAndClientId(Long roomId, Long studentId, UUID clientId);
+    List<RoomPresence> findByStudyRoomIdAndExpiresAtLessThanEqual(Long roomId, Instant now);
     void deleteByStudyRoomIdAndExpiresAtLessThanEqual(Long roomId, Instant now);
     void deleteByStudyRoomStudyGroupIdAndStudentId(Long groupId, Long studentId);
     void deleteByStudyRoomStudyGroupId(Long groupId);

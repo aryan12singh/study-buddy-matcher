@@ -30,7 +30,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
-backend/src/main/resources/application-local.yml
+# Also catches copies such as "application-local 2.yml" that iCloud or Finder create.
+backend/src/main/resources/application-local*.yml
 
 # ---------------------------------------------------------------------------
 # Local database files
