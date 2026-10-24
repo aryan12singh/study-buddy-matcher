@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { getMyGroups } from '../groups/api'
 import { useResource } from '../../shared/api/useResource'
 import StatePanel from '../../shared/components/StatePanel'
-import PixelIcon from '../../shared/components/PixelIcon'
 
 export default function StudyRoomGroupsPanel({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const groups = useResource('study-room-groups', getMyGroups)
@@ -19,7 +18,6 @@ export default function StudyRoomGroupsPanel({ collapsed, onToggle }: { collapse
       </button>
       {!collapsed && <div id="study-corner-groups-content" className="study-corner-groups-content">
       <div className="study-corner-groups-heading">
-        <span className="pomodoro-kicker"><PixelIcon kind="groups" />Better together</span>
         <div><h2 id="study-corner-groups-heading">Your study groups</h2>{groups.data && <span className="study-corner-group-count">{groups.data.length}</span>}</div>
         <p>A familiar face, a shared goal. Find your people here.</p>
       </div>

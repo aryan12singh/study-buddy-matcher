@@ -13,12 +13,12 @@
 .room-settings-menu { flex-shrink: 0; }
 .room-minimal-tools { position: absolute; z-index: 2; top: 1rem; right: 1rem; display: flex; gap: .5rem; }
 .study-room-workspace .room-minimal-tools .retro-button { min-height: 36px; padding: .35rem .8rem; font-size: .75rem; gap: .4rem; background: #fffcefe6; }
-.room-settings-popover { position: absolute; z-index: 5; top: calc(100% + .4rem); right: 0; width: min(420px, calc(100vw - 2.5rem)); max-height: min(460px, 65vh); display: flex; flex-direction: column; background: #fffcef; border: 2px solid #414a40; border-radius: 8px; box-shadow: 5px 6px 0 #34433470; overflow: hidden; text-align: left; }
+.room-settings-popover { position: absolute; z-index: 5; top: calc(100% + .4rem); right: 0; width: min(480px, calc(100vw - 2.5rem)); max-height: min(460px, 65vh); display: flex; flex-direction: column; background: #fffcef; border: 2px solid #414a40; border-radius: 8px; box-shadow: 5px 6px 0 #34433470; overflow: hidden; text-align: left; }
 /* The tab bar reads as the menu's title bar: a light olive strip whose selected tab is a cream
    folder tab that merges into the panel below. */
-.room-settings-tabs { display: flex; align-items: flex-end; justify-content: space-between; gap: .4rem; padding: .45rem .45rem 0; background: linear-gradient(#e7edce, #d9e1bf); border-bottom: 2px solid #414a40; }
-.room-settings-tabs [role='tablist'] { display: flex; gap: .2rem; min-width: 0; margin-bottom: -2px; }
-.room-settings-tab { display: inline-flex; align-items: center; gap: .4rem; min-width: 0; max-width: 160px; padding: .4rem .65rem .45rem .45rem; border: 2px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; background: transparent; color: #56634f; font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background .15s, color .15s; }
+.room-settings-tabs { display: flex; align-items: flex-end; justify-content: space-between; gap: .35rem; padding: .45rem .4rem 0; background: linear-gradient(#e7edce, #d9e1bf); border-bottom: 2px solid #414a40; }
+.room-settings-tabs [role='tablist'] { display: flex; gap: .15rem; min-width: 0; margin-bottom: -2px; }
+.room-settings-tab { display: inline-flex; align-items: center; gap: .35rem; min-width: 0; padding: .4rem .55rem .45rem .4rem; border: 2px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; background: transparent; color: #56634f; font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background .15s, color .15s; }
 .room-settings-tab:hover { background: #f4f6e8b3; color: #343e34; }
 .room-settings-tab[aria-selected='true'] { background: #fffcef; border-color: #414a40; color: #343e34; padding-bottom: calc(.45rem + 2px); }
 .room-settings-tab:focus-visible { outline: 2px solid #53694a; outline-offset: -4px; }
@@ -54,5 +54,5 @@
 .study-room-workspace.is-expanded { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; overflow-y: auto; border: 0; }
 @media (max-width: 550px) {
   .study-room-workspace.is-minimal { min-height: 360px; }
-  .room-settings-tab { padding-inline: .6rem .7rem; }
+  .room-settings-tab { padding-inline: .35rem .45rem; }
 }

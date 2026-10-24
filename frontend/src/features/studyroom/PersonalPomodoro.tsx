@@ -59,7 +59,6 @@ export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTa
           <Button variant="primary" onClick={timer.toggle}>{timer.status === 'RUNNING' ? 'Pause timer' : timer.status === 'PAUSED' ? 'Resume timer' : 'Start focus'}</Button>
           <Button disabled={timer.status === 'IDLE'} onClick={() => setConfirmingReset(true)}>End session</Button>
         </div>
-        <p>At your own pace, or in good company.</p>
       </div>
       {confirmingReset && <ConfirmDialog title="End this session?" confirmLabel="End session" pending={false}
         onClose={() => setConfirmingReset(false)} onConfirm={() => { timer.reset(); setConfirmingReset(false) }}>
