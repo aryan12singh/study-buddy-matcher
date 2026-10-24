@@ -682,7 +682,7 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 | README icons (`docs/assets/icons/`) | Original pixel SVGs in the logo palette |
 | Interface icons, avatar initials and patterns | Original drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css` |
 | Achievement medallions and grove | Original SVG medallions and pixel-tree patterns in `features/achievements/`; no external image or icon dependency |
-| Study room scenery | Original CSS pixel scenes, including the personal timer's meadow backdrop. Room music comes from the Spotify and Freesound services above; no sound files are shipped |
+| Study room scenery | Original CSS pixel scenes, including the personal timer's meadow backdrop. Room music comes from the Spotify and Freesound services above. The timer's start and end chimes are synthesised in the browser with Web Audio; no sound files are shipped |
 | Weather data | Open-Meteo, with CC BY 4.0 attribution on the room screen; only the configured campus coordinates are sent |
 | Fonts | Tahoma, Verdana and system fonts; `index.css` also imports Inter and Fraunces from Google Fonts under SIL OFL 1.1 ([Inter](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt), [Fraunces](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)), falling back to system fonts offline |
 

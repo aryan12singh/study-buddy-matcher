@@ -5,6 +5,7 @@ import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import PixelIcon from '../../shared/components/PixelIcon'
 import { MINUTE_MILLIS, usePersonalPomodoro } from './usePersonalPomodoro'
 import { timerText } from './timer'
+import { useTimerPings } from './timerPing'
 import WindowControls from './WindowControls'
 import type { RoomSettingsTab } from './RoomSettingsMenu'
 import PersonalTimerSettings from './PersonalTimerSettings'
@@ -17,6 +18,7 @@ export default function PersonalPomodoro({ accountId, panel, fullscreen, extraTa
   corner?: ReactNode
 }) {
   const timer = usePersonalPomodoro(accountId)
+  useTimerPings(timer.status, timer.phase)
   const [confirmingReset, setConfirmingReset] = useState(false)
   const focusing = timer.phase === 'FOCUS'
   const duration = (focusing ? timer.focusMinutes : timer.breakMinutes) * MINUTE_MILLIS

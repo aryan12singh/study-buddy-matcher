@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RoomSnapshot, TimerPhase } from './api'
 import { projectTimer, timerText } from './timer'
+import { playPing, useTimerPings } from './timerPing'
 import Button from '../../shared/components/Button'
 import PixelIcon from '../../shared/components/PixelIcon'
 
@@ -37,6 +38,8 @@ export default function RoomTimerPanel({ snapshot, canControl, joined = true, pe
     }
   }, [])
   const timer = snapshot.room.timer
+  // Start and end chime for people in the room; phase changes chime below, where they are confirmed.
+  useTimerPings(timer.status, undefined, joined)
   const renderedAt = Math.max(now, snapshot.receivedAt)
   const elapsed = renderedAt - snapshot.receivedAt + snapshot.estimatedLatency
   const current = projectTimer(timer, elapsed)
@@ -48,6 +51,7 @@ export default function RoomTimerPanel({ snapshot, canControl, joined = true, pe
       && continuesTimer(previous.snapshot, snapshot)
     if (continuing && previous.phase !== current.phase && phaseStartedAt > previous.phaseStartedAt + 2) {
       setTransition(current.phase === 'BREAK' ? 'Break started. Take a moment to recharge.' : 'Focus started. Time to study together.')
+      if (joined) playPing(current.phase === 'BREAK' ? 'end' : 'start')
     } else if (previous && !continuing && (previous.snapshot !== snapshot || timer.status === 'RUNNING')) {
       setTransition('')
     }
@@ -57,7 +61,7 @@ export default function RoomTimerPanel({ snapshot, canControl, joined = true, pe
     observed.current = document.hidden ? null : { snapshot, at: renderedAt,
       phase: correctingBackwards ? previous.phase : current.phase,
       phaseStartedAt: correctingBackwards ? previous.phaseStartedAt : phaseStartedAt }
-  }, [current.phase, phaseStartedAt, renderedAt, snapshot, timer.status])
+  }, [current.phase, joined, phaseStartedAt, renderedAt, snapshot, timer.status])
   const focusing = current.phase === 'FOCUS'
   const duration = focusing ? timer.focusMillis : timer.breakMillis
   const progress = duration > 0 ? Math.max(0, Math.min(100, (1 - current.remainingMillis / duration) * 100)) : 0
