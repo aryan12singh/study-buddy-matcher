@@ -33,14 +33,6 @@ public class StudyRoom {
     @Column(nullable = false)
     private long remainingMillis;
     private Instant timerAnchor;
-    @Enumerated(EnumType.STRING) @Column(length = 20)
-    private AudioPreset musicPreset = AudioPreset.CALM_MUSIC;
-    @Column(nullable = false)
-    private boolean musicPlaying;
-    @Enumerated(EnumType.STRING) @Column(length = 20)
-    private AudioPreset ambientPreset;
-    @Column(nullable = false)
-    private boolean ambientPlaying;
 
     protected StudyRoom() {}
 
@@ -77,13 +69,6 @@ public class StudyRoom {
         if (changedDurations) applyTimer(PomodoroTimer.idle(Duration.ofMinutes(focus), Duration.ofMinutes(breakLength)));
     }
 
-    public void selectAudio(AudioPreset music, boolean playMusic, AudioPreset ambient, boolean playAmbient) {
-        musicPreset = music;
-        musicPlaying = playMusic;
-        ambientPreset = ambient;
-        ambientPlaying = playAmbient;
-    }
-
     public void revokeRoles(Long studentId) {
         if (host != null && host.getId().equals(studentId)) host = null;
         if (coHost != null && coHost.getId().equals(studentId)) coHost = null;
@@ -91,8 +76,6 @@ public class StudyRoom {
 
     public void close() {
         applyTimer(timer().reset());
-        musicPlaying = false;
-        ambientPlaying = false;
         host = null;
         coHost = null;
     }
@@ -104,8 +87,4 @@ public class StudyRoom {
     public int getFocusMinutes() { return focusMinutes; }
     public int getBreakMinutes() { return breakMinutes; }
     public int getParticipantLimit() { return participantLimit; }
-    public AudioPreset getMusicPreset() { return musicPreset; }
-    public boolean isMusicPlaying() { return musicPlaying; }
-    public AudioPreset getAmbientPreset() { return ambientPreset; }
-    public boolean isAmbientPlaying() { return ambientPlaying; }
 }

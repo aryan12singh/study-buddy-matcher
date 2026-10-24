@@ -44,10 +44,6 @@ public class StudyRoomController {
     public StudyRoomDto timer(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
         @Valid @RequestBody RoomTimerInput input) { return service.controlTimer(groupId, actor.id(), input); }
 
-    @PutMapping("/audio")
-    public StudyRoomDto audio(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
-        @Valid @RequestBody RoomAudioInput input) { return service.audio(groupId, actor.id(), input); }
-
     @PutMapping("/settings")
     public StudyRoomDto configure(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
         @Valid @RequestBody RoomConfigurationInput input) { return service.configure(groupId, actor.id(), input); }

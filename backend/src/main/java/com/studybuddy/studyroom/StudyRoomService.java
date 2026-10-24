@@ -116,16 +116,6 @@ public class StudyRoomService {
         return detail(room, actorId);
     }
 
-    public StudyRoomDto audio(Long groupId, Long actorId, RoomAudioInput input) {
-        StudyRoom room = persistedRoom(access.lockMember(groupId, actorId));
-        requireControl(room, actorId, input.expectedVersion());
-        validateLayer(input.musicPreset(), input.musicPlaying(), "MUSIC", "music");
-        validateLayer(input.ambientPreset(), input.ambientPlaying(), "AMBIENT", "ambient");
-        room.selectAudio(input.musicPreset(), input.musicPlaying(), input.ambientPreset(), input.ambientPlaying());
-        rooms.flush();
-        return detail(room, actorId);
-    }
-
     public StudyRoomDto configure(Long groupId, Long actorId, RoomConfigurationInput input) {
         StudyGroup group = access.lockMember(groupId, actorId, input.hostId(), input.coHostId());
         StudyRoom room = persistedRoom(group);
@@ -167,15 +157,6 @@ public class StudyRoomService {
             throw new ForbiddenActionException("Only the leader or a present host/co-host can control the room");
         }
         requireVersion(room, version);
-    }
-
-    private void validateLayer(AudioPreset preset, boolean playing, String kind, String field) {
-        if (preset != null && !preset.kind().equals(kind)) {
-            throw new InvalidInputException(field + "Preset", "Choose a " + kind.toLowerCase() + " preset for this layer");
-        }
-        if (playing && preset == null) {
-            throw new InvalidInputException(field + "Playing", "Choose a preset before playing this layer");
-        }
     }
 
     private void requireVersion(StudyRoom room, Long expectedVersion) {
