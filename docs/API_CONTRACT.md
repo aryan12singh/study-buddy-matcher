@@ -970,6 +970,59 @@ Quota is a per-process daily budget, reset on restart; it is not a durable multi
 billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
 duplicate cache rows only. See [E1 testing](E1_TESTING.md) for evidence and remaining acceptance.
 
+## Study plans (AI study assistant)
+
+Proposed bonus extension on `feat/team-b/study-roadmap`; not part of the agreed selected extras
+until the team accepts it. Student only. This section covers personal plans; session plans for
+a group or buddy session are added with their own endpoints.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/study-plans` | `multipart/form-data`: `PersonalPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto` | Student |
+| GET | `/api/study-plans` | none | 200 `StudyPlanSummaryDto[]`, own personal plans newest first | Student |
+| GET | `/api/study-plans/{planId}` | none | 200 `StudyPlanDto` | Owner |
+| PUT | `/api/study-plans/{planId}/entries/{entryId}/progress` | `{ "completed": true }` | 200 `StudyPlanDto` | Owner |
+| DELETE | `/api/study-plans/{planId}` | none | 204 | Owner |
+
+```text
+PersonalPlanInput   (multipart form fields)
+  courseId, hoursPerWeek (1 to max-hours-per-week), examDate? (yyyy-MM-dd), studyGoal?, topicsText?
+StudyPlanDto
+  { id, scope: PERSONAL/SESSION, course: CourseDto, sessionId|null, firstBlockDate, blockCount,
+    minutesPerBlock, examDate|null, studyGoal|null, sourceKind: UPLOAD/PASTE, sourceFilenames[],
+    sourceTopics[], canManage, createdAt, updatedAt,
+    entries: [{ id, sequence, scheduledDate, title, plannedMinutes, tasks[], completed }] }
+StudyPlanSummaryDto
+  { id, scope, course, firstBlockDate, blockCount, examDate|null, studyGoal|null,
+    entryCount, completedCount, createdAt }
+```
+
+A plan starts today in `Asia/Singapore` (`study-plan.time-zone`). Without `examDate` it covers
+this week alone; with one it covers every week up to the exam, so an exam 1 to 7 days away is one
+week and 8 to 14 days two. The exam must be after today and within `max-weeks` weeks. Each
+week holds `hoursPerWeek` hours. Week *n* of a plan starts on `firstBlockDate` plus 7 × (*n* − 1)
+days, which is each entry's `scheduledDate`.
+
+The material is one or more `files` (PDF, `.txt` or `.md`) or `topicsText`, never both. Files
+together must fit `max-upload-size` and `max-text-file-characters`, and each file's contents must
+match its extension. Files are sent to Google Gemini for this one request and never stored; only
+their names are kept. The roadmap Gemini returns must pass the checks in the README's
+"AI study assistant" configuration section; a student may keep several plans for one course.
+
+Errors, in the order they are checked, so a bad request never spends the student's AI allowance:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 400 | `INVALID_INPUT` | A missing or malformed field; an unknown `courseId`; `hoursPerWeek` out of range; an exam today, in the past or beyond `max-weeks`; no material, or both files and topics; too many files; an empty file; topics too long |
+| 413 | `FILE_TOO_LARGE` | Files together over `max-upload-size`, or text files over `max-text-file-characters` |
+| 415 | `UNSUPPORTED_FILE_TYPE` | A file other than PDF, `.txt` or `.md`, or whose contents do not match its extension |
+| 503 | `AI_UNAVAILABLE` | The assistant is switched off, over its daily allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+| 404 | `NOT_FOUND` | Reading, ticking or deleting a plan that does not exist or is not the student's own, or an entry not in that plan |
+
+The plan is created in three steps: a short read that checks the request, the Gemini call, and
+a short write that checks the student is still active before saving. No database transaction or
+account lock is held while Gemini answers.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview

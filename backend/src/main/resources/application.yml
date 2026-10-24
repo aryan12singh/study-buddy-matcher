@@ -7,6 +7,10 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      # Spring's default of 10 open connections per backend lets one developer fill most of
+      # Supabase's 15-client Session pooler; 5 is plenty for one person and lets three share it.
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:5}
   servlet:
     multipart:
       # Study plan uploads; both follow the assistant's own limit so they cannot drift apart.
@@ -148,11 +152,25 @@ app:
       quota-zone: Asia/Singapore
       rate-limit-cooldown: 60s
       study-plan:
-        # Base64 makes an attached PDF a third larger, so 10MB stays inside Gemini's inline limit.
+        # All of one plan's files together. Base64 makes attached PDFs a third larger, so 10MB
+        # stays inside Gemini's inline request limit.
         max-upload-size: 10MB
+        # Enough for a few weeks of slides, one file per week.
+        max-files: 6
         max-topics-characters: 4000
-        # About 25,000 tokens of notes, well inside the free tier's tokens-per-minute limit.
+        # All of one plan's text files together: about 25,000 tokens of notes, well inside the
+        # free tier's tokens-per-minute limit.
         max-text-file-characters: 100000
+        # Roadmap size limits, stated in the prompt and checked again on Gemini's reply.
+        max-source-topics: 40
+        max-entries-per-block: 5
+        max-tasks-per-entry: 5
+        # A personal plan runs from today to at most this many weeks ahead, so the exam can be
+        # at most this far away. Each week holds the student's hours, up to max-hours-per-week.
+        max-weeks: 16
+        max-hours-per-week: 40
+        # "Today", for a plan's first week, follows the students' calendar, not the server's.
+        time-zone: Asia/Singapore
   demo-seed:
     enabled: ${DEMO_SEED_ENABLED:false}
     student-password: ${DEMO_STUDENT_PASSWORD:}
