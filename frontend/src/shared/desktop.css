@@ -173,6 +173,10 @@
 .route-notice { padding: .7rem 1rem; border: 1px solid #94b08a; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
 .route-notice p { margin: 0; font-size: .92rem; }
 .route-notice .retro-button { min-height: 44px; width: 44px; padding: 0; flex: 0 0 44px; }
+/* Action notices share the route notice's layout: the message, then a dismiss button on the right. */
+.action-notice { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
+.action-notice p { margin: 0; }
+.action-notice .retro-button { min-height: 36px; width: 36px; padding: 0; flex: 0 0 36px; }
 .copy-control { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .55rem; max-width: 100%; }
 .copy-feedback { color: #315b35; font-size: .84rem; }
 .copy-control > p { width: 100%; margin: .2rem 0; }
