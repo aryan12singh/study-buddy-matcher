@@ -12,8 +12,9 @@ import './music.css'
  * The timer's corner player: the current Spotify track with next track and volume, and one volume
  * for all ambient sounds. Only the Premium player can report a track; the free embedded playlist
  * keeps its controls to itself. With nothing playing it invites the student to pick some music.
+ * In a group room, `personal` adds a note that only this student hears it, beside the shared timer.
  */
-export default function NowPlayingMini() {
+export default function NowPlayingMini({ personal = false }: { personal?: boolean }) {
   const { mode, player, volume, setVolume } = useSpotify()
   const ambient = useAmbient()
   const settings = useMusicSettings()
@@ -46,6 +47,7 @@ export default function NowPlayingMini() {
             <strong>Study with some music?</strong>
           </div>
         </div>
+        {personal && <p className="now-playing-mini-note">Only you will hear it, not the group.</p>}
         <Button variant="primary" className="now-playing-mini-open" onClick={() => openRoomSettings('music')}>Open music settings</Button>
       </div>
     )
@@ -59,7 +61,7 @@ export default function NowPlayingMini() {
           : <span className="now-playing-mini-cover is-empty" aria-hidden="true"><PixelIcon kind="music" /></span>}
         <div className="now-playing-mini-track">
           <span className="now-playing-mini-kicker">{track ? (playing ? 'Now playing' : 'Paused') : 'Ambient sounds'}</span>
-          <strong title={track?.name}>{track ? track.name : 'Playing in the background'}</strong>
+          <strong title={track?.name}>{track ? track.name : 'Playing'}</strong>
         </div>
         {/* Plain icon buttons, styled like the panel's window controls opposite. */}
         {track && <button type="button" className="room-window-control now-playing-mini-control" onClick={player.nextTrack}
@@ -69,6 +71,7 @@ export default function NowPlayingMini() {
           <span aria-hidden="true">{volumesOpen ? '▴' : '▾'}</span>
         </button>
       </div>
+      {personal && <p className="now-playing-mini-note">Only you hear this, not the group.</p>}
       {volumesOpen && <div id={volumesId} className="now-playing-mini-volumes">
         {track && <label className="now-playing-mini-volume">
           <span aria-hidden="true">Music</span>

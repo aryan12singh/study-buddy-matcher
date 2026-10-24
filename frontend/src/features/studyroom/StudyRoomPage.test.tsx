@@ -58,6 +58,21 @@ describe('private room screen', () => {
     expect(settings).toHaveFocus()
   })
 
+  it('offers a personal music player that says only this student hears it', async () => {
+    open()
+    expect(await screen.findByRole('button', { name: 'Open music settings' })).toBeInTheDocument()
+    expect(screen.getByText('Only you will hear it, not the group.')).toBeInTheDocument()
+  })
+
+  it('shows the people studying as a crew inside the room panel', async () => {
+    open({ participants: [present, { ...present, studentId: 2, name: 'Jamie', presence: 'BREAK', host: false }] })
+    const crew = within(await screen.findByRole('region', { name: 'Studying together' }))
+    expect(crew.getByText('2 / 4')).toBeInTheDocument()
+    expect(crew.getByText('Host')).toBeInTheDocument()
+    expect(crew.getByText('On a break')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Studying together' }).closest('.group-room')).not.toBeNull()
+  })
+
   it('shows an empty preview and keeps controls inactive before joining', async () => {
     open()
     expect(await screen.findByText('The room is quiet.')).toBeInTheDocument()

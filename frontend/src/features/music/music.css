@@ -123,5 +123,6 @@
 .music-slider:hover::-webkit-slider-thumb { background: #edf1df; }
 .music-slider:focus-visible { outline: 2px solid #405738; outline-offset: 3px; }
 .music-slider:disabled { opacity: .5; cursor: not-allowed; }
+.desktop .now-playing-mini .now-playing-mini-note { margin: .3rem 0 0; font-size: .6rem; line-height: 1.3; color: #7c9465; }
 .now-playing-mini.is-prompt { gap: .45rem; border-style: dashed; background: #fffcef; box-shadow: none; }
 .study-room-workspace .now-playing-mini .now-playing-mini-open { min-height: 32px; padding: .2rem .6rem; font-size: .74rem; }

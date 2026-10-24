@@ -8,13 +8,13 @@ import { useAction } from '../../shared/api/useAction'
 import { useAuth } from '../../shared/auth/useAuth'
 import WindowPage from '../../shared/components/WindowPage'
 import Button from '../../shared/components/Button'
-import Avatar from '../../shared/components/Avatar'
-import PixelIcon from '../../shared/components/PixelIcon'
 import Dialog from '../../shared/components/Dialog'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import RoomWeatherPanel from './RoomWeatherPanel'
+import RoomParticipants from './RoomParticipants'
 import MusicPlayer from '../music/MusicPlayer'
+import NowPlayingMini from '../music/NowPlayingMini'
 import MusicProvider from '../music/MusicProvider'
 import AtmosphereScene from './AtmosphereScene'
 import WindowControls from './WindowControls'
@@ -122,27 +122,13 @@ function RoomPage({ groupId }: { groupId: number }) {
       {resource.reconnecting && <p className="group-room-notices" role="status">
         <strong>Connection lost.</strong> Reconnecting to the room; the shared timer keeps running.
       </p>}
-      {!!room.participants.length && <section className="group-room-participants" aria-label="Participants">
-        <div className="group-room-participants-heading">
-          <h2><PixelIcon kind="groups" />Participants</h2>
-          <span className="study-corner-group-count">{room.participants.length} / {room.participantLimit}</span>
-        </div>
-        <ul className="group-room-people">
-          {room.participants.map(person => <li key={person.studentId}>
-            <Avatar name={person.name} />
-            <span className="group-room-person-name">{person.name}{person.studentId !== account?.id ? '' : resource.joinedHere ? ' (you)' : ' (you, in another tab)'}</span>
-            {(person.leader || person.host || person.coHost) && <span className="group-room-person-status">
-              {[person.leader && 'Leader', person.host && 'Host', person.coHost && 'Co-host'].filter(Boolean).join(' · ')}
-            </span>}
-          </li>)}
-        </ul>
-      </section>}
       <MusicProvider>
         <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
           <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
           <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
           <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
             <header className="group-room-header">
+              <NowPlayingMini personal />
               <div className="group-room-title">
                 <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
                 <h2 id="group-room-heading">{room.groupName}</h2>
@@ -157,6 +143,7 @@ function RoomPage({ groupId }: { groupId: number }) {
                 { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
               ]} />
             </header>
+            <RoomParticipants room={room} accountId={account?.id} joinedHere={resource.joinedHere} />
             <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
               pending={action.pending} onControl={control} />
             <footer className="group-room-footer">
