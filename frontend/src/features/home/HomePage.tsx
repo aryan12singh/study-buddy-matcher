@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { getMatchRequests } from '../connections/api'
 import { getMyGroups } from '../groups/api'
 import { getNotifications } from '../notifications/api'
@@ -38,10 +39,11 @@ export default function HomePage() {
     <WindowPage
       title={settingUp ? `Welcome, ${name}` : `Welcome back, ${name}`}
       description={`${todayLabel()} · ${settingUp ? 'A few quick steps and matching can start working for you.' : 'Your study profile is up to date.'}`}
-      actions={<ProfileStatusBadge profile={profile.data} studentId={studentId} />}
+      actions={<><ProfileStatusBadge profile={profile.data} studentId={studentId} /><Link className="retro-button" to="/help#help-start-title">Getting started</Link></>}
     >
       <div className="home-layout">
         {step && <NextStepCard step={step} />}
+        {settingUp && <p className="privacy-note">New to matching? <Link to="/help#help-start-title">Follow the profile setup guide</Link> to see what each step enables.</p>}
         <ActivityStrip />
         <RequestCards requests={requests} pending={pending} />
         <UpcomingSessions />

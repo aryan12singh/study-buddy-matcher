@@ -57,6 +57,11 @@ public class User {
 
     public void deactivate() {
         active = false;
+        revokeTokens();
+    }
+
+    /** Every token issued before this call stops being accepted. */
+    public void revokeTokens() {
         tokenVersion++;
     }
 

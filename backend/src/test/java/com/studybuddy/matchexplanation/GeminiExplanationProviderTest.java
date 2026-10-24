@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GeminiExplanationProviderTest {
+    private static final Long STUDENT_ID = 7L;
     private static final String REPLY = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"explanation\\\":\\\"You both take IS442.\\\"}\"}]}}]}";
 
     private HttpServer server;
@@ -64,7 +65,7 @@ class GeminiExplanationProviderTest {
     private GeminiExplanationProvider provider(String basePath) {
         AiExplanationProperties properties = new AiExplanationProperties(true,
                 "http://127.0.0.1:" + server.getAddress().getPort() + basePath, "test-model", "test-key",
-                Duration.ofMillis(500), 200, 600, 10, "UTC", Duration.ofSeconds(60));
+                Duration.ofMillis(500), 200, 600, 10, 10, "UTC", Duration.ofSeconds(60));
         quota = new ExplanationQuota(properties);
         return new GeminiExplanationProvider(properties, ExplanationFixtures.JSON, quota);
     }
@@ -95,7 +96,7 @@ class GeminiExplanationProviderTest {
         status = 429;
 
         assertTrue(provider().explain("PROMPT").isEmpty());
-        assertFalse(quota.tryAcquire());
+        assertFalse(quota.tryAcquire(STUDENT_ID));
     }
 
     @Test

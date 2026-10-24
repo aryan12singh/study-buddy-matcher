@@ -82,6 +82,7 @@ describe('auth and role boundaries', () => {
   it('removes all private rendered state and session storage on logout', async () => {
     setAccessToken('saved-token')
     vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/auth/me' ? studentAccount : path === '/notifications/unread-count' ? { count: 1 } : { id: 2, name: 'Jamie', school: 'SCIS', programme: 'IS', yearOfStudy: 2, coursesTaken: [], targetCourse: null, preferredStudyMode: null, studyGoals: [], preferredGroupSizeMin: null, preferredGroupSizeMax: null, availability: [], relationship: { state: 'CONNECTED', requestId: null, connectionId: 7 }, contactNumber: '+65 9999 1111' }))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response(undefined))
     renderAuthenticatedApp('/students/2')
     await screen.findByText('+65 9999 1111')
     fireEvent.click(screen.getByRole('button', { name: 'Log out' }))
@@ -89,6 +90,37 @@ describe('auth and role boundaries', () => {
     expect(screen.queryByText('+65 9999 1111')).not.toBeInTheDocument()
     expect(getAccessToken()).toBeNull()
     expect(sessionStorage.getItem(SESSION_TOKEN_KEY)).toBeNull()
+    expect(post).toHaveBeenCalledWith('/auth/logout', null, { headers: { Authorization: 'Bearer saved-token' } })
+  })
+  it('signs out locally at once even when the server cannot be reached', async () => {
+    setAccessToken('saved-token')
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/auth/me' ? studentAccount : path === '/notifications/unread-count' ? { count: 0 } : []))
+    const unreachable = deferred<never>()
+    vi.spyOn(api, 'post').mockReturnValue(unreachable.promise)
+    renderAuthenticatedApp('/connections')
+    fireEvent.click(await screen.findByRole('button', { name: 'Log out' }))
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument()
+    expect(getAccessToken()).toBeNull()
+    unreachable.reject(new Error('Network Error'))
+  })
+  it('waits for a pending sign-out before signing in again, so it cannot revoke the new session', async () => {
+    setAccessToken('old-token')
+    vi.spyOn(api, 'get').mockImplementation(() => new Promise(() => {}))
+    const slowLogout = deferred<never>()
+    const post = vi.spyOn(api, 'post').mockImplementation(path => path === '/auth/logout'
+      ? slowLogout.promise : Promise.resolve(response({ token: 'new-token', expiresAt: '2030-01-01T00:00:00Z', account: studentAccount })))
+    function SessionProbe() {
+      const auth = useAuth()
+      return <><button onClick={auth.logout}>Log out now</button><button onClick={() => { void auth.login('student@example.test', 'test-password') }}>Log in again</button></>
+    }
+    render(<AuthProvider><SessionProbe /></AuthProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Log out now' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Log in again' }))
+    await Promise.resolve()
+    expect(post).toHaveBeenCalledTimes(1)
+    slowLogout.reject(new Error('Network Error'))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/login', { email: 'student@example.test', password: 'test-password' }))
+    await waitFor(() => expect(getAccessToken()).toBe('new-token'))
   })
   it('expires the current session after a real Axios 401', async () => {
     setAccessToken('expired-token')

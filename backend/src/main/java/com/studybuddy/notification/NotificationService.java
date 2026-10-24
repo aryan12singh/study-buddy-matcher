@@ -24,6 +24,12 @@ public class NotificationService {
         notifications.save(new Notification(recipient, type, message, resourceType, resourceId, eventKey));
     }
 
+    /** Whether the recipient still has an unread notice of this type about the resource. */
+    @Transactional(readOnly = true)
+    public boolean hasUnread(Long recipientId, NotificationType type, Long resourceId) {
+        return notifications.existsByRecipientIdAndTypeAndResourceIdAndReadFalse(recipientId, type, resourceId);
+    }
+
     @Transactional(readOnly = true)
     public List<NotificationDto> list(Long actorId) {
         return list(actorId, NotificationFilter.ALL);

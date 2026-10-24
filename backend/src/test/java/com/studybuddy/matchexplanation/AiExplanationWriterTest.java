@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AiExplanationWriterTest {
+    private static final Long STUDENT_ID = 7L;
     private static final String GOOD_REPLY = "{\"explanation\":\"You both take IS442.\"}";
 
     @Mock private ExplanationCache cache;
@@ -39,7 +40,7 @@ class AiExplanationWriterTest {
         writer = new AiExplanationWriter(cache, quota, new ExplanationPromptBuilder(ExplanationFixtures.JSON), provider,
                 new ExplanationOutputValidator(600, ExplanationFixtures.JSON));
         when(cache.find(evidence)).thenReturn(Optional.empty());
-        when(quota.tryAcquire()).thenReturn(true);
+        when(quota.tryAcquire(STUDENT_ID)).thenReturn(true);
         when(provider.explain(anyString())).thenReturn(Optional.of(GOOD_REPLY));
     }
 
@@ -47,13 +48,13 @@ class AiExplanationWriterTest {
     void cacheHitSkipsTheProvider() {
         when(cache.find(evidence)).thenReturn(Optional.of("Cached answer."));
 
-        assertEquals(Optional.of("Cached answer."), writer.write(evidence));
+        assertEquals(Optional.of("Cached answer."), writer.write(evidence, STUDENT_ID));
         verifyNoInteractions(provider, quota);
     }
 
     @Test
     void aGoodAnswerIsReturnedAndCached() {
-        assertEquals(Optional.of("You both take IS442."), writer.write(evidence));
+        assertEquals(Optional.of("You both take IS442."), writer.write(evidence, STUDENT_ID));
         verify(cache).save(evidence, "You both take IS442.");
     }
 
@@ -61,7 +62,7 @@ class AiExplanationWriterTest {
     void noAnswerGivesNothingAndCachesNothing() {
         when(provider.explain(anyString())).thenReturn(Optional.empty());
 
-        assertTrue(writer.write(evidence).isEmpty());
+        assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
         verify(cache, never()).save(any(), anyString());
     }
 
@@ -69,15 +70,15 @@ class AiExplanationWriterTest {
     void aRejectedAnswerGivesNothingAndCachesNothing() {
         when(provider.explain(anyString())).thenReturn(Optional.of("{\"explanation\":\"A 90% chance of success.\"}"));
 
-        assertTrue(writer.write(evidence).isEmpty());
+        assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
         verify(cache, never()).save(any(), anyString());
     }
 
     @Test
     void anExhaustedQuotaGivesNothingWithoutCallingTheProvider() {
-        when(quota.tryAcquire()).thenReturn(false);
+        when(quota.tryAcquire(STUDENT_ID)).thenReturn(false);
 
-        assertTrue(writer.write(evidence).isEmpty());
+        assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
         verifyNoInteractions(provider);
     }
 
@@ -85,7 +86,7 @@ class AiExplanationWriterTest {
     void cacheReadFailureGivesNothingWithoutSpendingQuota() {
         when(cache.find(evidence)).thenThrow(new DataAccessResourceFailureException("cache unavailable"));
 
-        assertTrue(writer.write(evidence).isEmpty());
+        assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
         verifyNoInteractions(quota, provider);
     }
 
@@ -93,14 +94,14 @@ class AiExplanationWriterTest {
     void cacheWriteFailureStillReturnsTheValidatedAnswer() {
         doThrow(new DataIntegrityViolationException("cache write unavailable")).when(cache).save(evidence, "You both take IS442.");
 
-        assertEquals(Optional.of("You both take IS442."), writer.write(evidence));
+        assertEquals(Optional.of("You both take IS442."), writer.write(evidence, STUDENT_ID));
     }
 
     @Test
     void cacheHitsAreRevalidatedAgainstCurrentEvidenceAndLengthPolicy() {
         for (String cached : new String[] {"Study LAW999 together.", "You share 20 hours per week.", "a".repeat(601)}) {
             when(cache.find(evidence)).thenReturn(Optional.of(cached));
-            assertTrue(writer.write(evidence).isEmpty(), cached);
+            assertTrue(writer.write(evidence, STUDENT_ID).isEmpty(), cached);
         }
         verifyNoInteractions(quota, provider);
     }

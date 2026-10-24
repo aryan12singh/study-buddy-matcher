@@ -37,6 +37,11 @@ public class GroupJoinRequestController {
         return service.mine(actor.id());
     }
 
+    @PostMapping("/api/group-join-requests/{requestId}/withdraw")
+    public GroupJoinRequestDto withdraw(@PathVariable Long requestId, @AuthenticationPrincipal AccountPrincipal actor) {
+        return service.withdraw(requestId, actor.id());
+    }
+
     @PostMapping("/api/groups/{id}/join-requests/{requestId}/accept")
     public GroupJoinRequestDto accept(@PathVariable Long id, @PathVariable Long requestId, @AuthenticationPrincipal AccountPrincipal actor) {
         return service.accept(id, requestId, actor.id());

@@ -13,7 +13,8 @@ export default function SessionList({ sessions, upcomingOnly = false, limit }: {
   const visible = limit === undefined ? selected : selected.slice(0, limit)
   return <>
     <StatePanel empty={!visible.length} emptyTitle={upcomingOnly ? 'No upcoming study sessions' : 'No study sessions yet'}
-      emptyMessage="Plan a dated session with your group or a connected buddy." emptyKind="clock" />
+      emptyMessage="Plan a dated session with your group or a connected buddy." emptyKind="clock"
+      emptyAction={<Link to="/help#help-sessions">How to plan sessions and export a calendar</Link>} />
     {!!visible.length && <ul className="data-list session-list" aria-label="Study sessions">
       {visible.map(session => <li key={session.id} className="data-row">
         <div>

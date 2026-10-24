@@ -11,6 +11,11 @@ spring:
 jwt:
   secret: ${STUDYBUDDY_TEST_JWT_SECRET}
 app:
+  auth:
+    # Suites share one context, so sign-in failures from unrelated tests must never add up to a lock.
+    # LoginThrottleHttpTest sets its own low limit.
+    login-throttle:
+      max-failures: 1000
   weather:
     enabled: false
   demo-seed:

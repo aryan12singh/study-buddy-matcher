@@ -31,7 +31,8 @@ public class AiExplanationWriter {
         this.validator = validator;
     }
 
-    public Optional<String> write(ExplanationEvidence evidence) {
+    /** The student is used only for their share of the call allowance; it never reaches the provider. */
+    public Optional<String> write(ExplanationEvidence evidence, Long studentId) {
         Optional<String> cached;
         try {
             cached = cache.find(evidence);
@@ -44,7 +45,7 @@ public class AiExplanationWriter {
             // Today's checks apply to previously accepted text too.
             return validator.validateText(cached.get(), evidence);
         }
-        if (!quota.tryAcquire()) {
+        if (!quota.tryAcquire(studentId)) {
             return Optional.empty();
         }
         Optional<String> written = provider.explain(prompts.build(evidence)).flatMap(raw -> validator.validate(raw, evidence));

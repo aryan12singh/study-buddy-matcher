@@ -129,10 +129,10 @@ table enables RLS and revokes `PUBLIC`/`anon`/`authenticated` access in the same
    Asia/Singapore; the conversion uses `AT TIME ZONE 'Asia/Singapore'` only while the column
    is still timestamp-without-time-zone. Changing timezone assumptions needs a reviewed
    migration, not a runtime flag.
-5. Apply files in order and verify mappings, constraints and access. The app runs with
-   `ddl-auto: update`, but schema update does not replace the project's migration preflight,
-   data adoption, partial indexes or browser access rules. Migrations remain required; tests
-   use `validate`.
+5. Apply files in order and verify mappings, constraints and access. The app and tests run
+   with `ddl-auto: validate`, so Hibernate never alters a database and startup stops, naming
+   it, when a mapped table or column is missing. Validation does not check constraints,
+   indexes, primary keys or row-level security, so every migration is still required.
 
 The historical 7 October shared upgrade preflight found the mapped database empty. An
 ignored private schema snapshot (`.env.shared-schema-backup.json`) captured columns, constraints, indexes, grants,
@@ -262,6 +262,67 @@ Post-rollout checks confirmed:
 
 Restore path if needed: the backup is a `pg_restore`-compatible custom-format dump kept
 privately by the operator. It must not be attached to a PR or committed.
+
+### Withdraw and leave rollout — 23 October 2026
+
+PR #67 adds `20261023090000_withdraw_and_leave.sql`. It was applied to the shared project
+`tagmkcbjespzgljdafiv` before the PR merged, because the code needs the new values and the
+current code does not yet write them. No old withdrawals existed to relabel, so no row changed.
+
+Backup first. The Supabase CLI (2.117.0, signed in to the project owner's account, using its
+temporary login role rather than a database password) dumped the roles, the schema and the
+data, including Supabase's `auth` tables. The files are kept privately by the operator outside
+tracked source and must not be attached to a PR or committed. The `public` part was
+test-restored into a disposable PostgreSQL 17 database, where all 21 tables matched the dump
+row for row: 55 users, 54 students, 4 groups, 10 group applications, 12 memberships,
+7 buddy requests, 4 connections and 31 notifications.
+
+Dry run. On that restored copy, a preview of the backfill found no `REJECTED` application with
+a `:withdrawn` event key and no withdrawal notification to relabel. `scripts/migrate-database.sh`
+from the PR branch (`9bd9264`) then applied the complete ordered set twice, and the packaged
+application from that commit started against it with `ddl-auto=validate`. The disposable
+database was deleted afterwards.
+
+Rollout. Supabase's migration history already held five entries from the 7 and 13 October
+hosted rollouts under their own timestamps. Placeholder files with those versions let
+`supabase db push --linked` match them, so it applied only the new file, preceded by the
+application's advisory lock (`pg_advisory_xact_lock(4422026)`), at 10:50 UTC. The history now
+also records version `20261023090000`. The E2 file's change to `NOT VALID` was not replayed on
+the shared database; it only matters for future full replays, where the new file revalidates
+the final list. Before the rollout, the `postgres` role held 12 connections and no query was
+running; the count was the same on a second check.
+
+Post-rollout checks confirmed:
+
+- `group_join_requests_status_check` allows `WITHDRAWN`, and `notifications_type_check` allows
+  `GROUP_JOIN_REQUEST_WITHDRAWN`, `GROUP_MEMBER_LEFT` and the six session types. Both are validated.
+- A second schema dump differs from the backup only in those two constraints.
+- All 21 `public` tables have the same row counts as the backup.
+- The packaged application from `9bd9264` started against the shared database with
+  `ddl-auto=validate`, demo seeding and live weather disabled, then was stopped.
+
+Compatibility: the backend before PR #67 has no `WITHDRAWN` status or the two new
+notification types. It works against this schema until the new code writes one of them; after
+that, an older backend fails on screens that load those rows. Pull `main` once #67 merges
+before running the backend against the shared database again.
+
+### Study room invitation type — 24 October 2026
+
+`20261024010000_study_room_started_notification.sql` only widens `notifications_type_check` to
+allow `GROUP_STUDY_ROOM_STARTED`; it changes no rows. It was applied to the shared database at
+about 01:25 SGT, directly with `psql` from the `postgres:17` image in one transaction, because a
+branch backend already writing the new type had made starting a study-room timer fail.
+
+- No backup or dry run on a restored copy was taken, unlike the earlier rollouts. Before
+  applying, a read-only check found every existing notification type already in the new list.
+- Supabase's migration history does **not** record version `20261024010000`. The file drops
+  and re-adds the constraint, so a later `supabase db push` or `scripts/migrate-database.sh`
+  can apply it again without effect.
+- Afterwards the constraint allowed the new type and was validated, and the table still held
+  its 31 notifications.
+
+The backend also sends these invitations in a separate transaction after the timer start
+commits, so a database missing this file logs the failure instead of rejecting the start.
 
 ## Privacy and access verification
 

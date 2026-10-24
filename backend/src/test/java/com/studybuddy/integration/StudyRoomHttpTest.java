@@ -165,6 +165,46 @@ class StudyRoomHttpTest extends PostgresHttpTest {
     }
 
     @Test
+    void startingTheTimerInvitesAbsentMembersOnceUntilTheyReadTheInvitation() {
+        String invitations = "select count(*) from notifications where type='GROUP_STUDY_ROOM_STARTED' and recipient_id=?";
+        join(member, UUID.randomUUID());
+        var started = expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        assertEquals(1, count(invitations, otherId));
+        assertEquals(0, count(invitations, memberId));
+        assertEquals(0, count(invitations, leaderId));
+        assertEquals(1, count("select count(*) from notifications where type='GROUP_STUDY_ROOM_STARTED' and resource_type='GROUP' and resource_id=?", groupId));
+
+        var paused = expect(command(leader, "PAUSE", started.path("version").asLong()), 200);
+        var resumed = expect(command(leader, "RESUME", paused.path("version").asLong()), 200);
+        var reset = expect(command(leader, "RESET", resumed.path("version").asLong()), 200);
+        var restarted = expect(command(leader, "START", reset.path("version").asLong()), 200);
+        assertEquals(1, count(invitations, otherId));
+
+        database.update("update notifications set read=true where type='GROUP_STUDY_ROOM_STARTED' and recipient_id=?", otherId);
+        var resetAgain = expect(command(leader, "RESET", restarted.path("version").asLong()), 200);
+        expect(command(leader, "START", resetAgain.path("version").asLong()), 200);
+        assertEquals(2, count(invitations, otherId));
+    }
+
+    @Test
+    void aDatabaseThatRejectsTheInvitationStillStartsTheTimer() {
+        // Reproduces a database missing the GROUP_STUDY_ROOM_STARTED migration.
+        String allowed = database.queryForObject(
+            "select pg_get_constraintdef(oid) from pg_constraint where conname='notifications_type_check'", String.class);
+        database.execute("alter table notifications drop constraint notifications_type_check");
+        database.execute("alter table notifications add constraint notifications_type_check check (type <> 'GROUP_STUDY_ROOM_STARTED')");
+        try {
+            var started = expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+            assertEquals("RUNNING", started.path("timer").path("status").asString());
+            assertEquals("RUNNING", state(member).path("timer").path("status").asString());
+            assertEquals(0, count("select count(*) from notifications where type='GROUP_STUDY_ROOM_STARTED'"));
+        } finally {
+            database.execute("alter table notifications drop constraint notifications_type_check");
+            database.execute("alter table notifications add constraint notifications_type_check " + allowed);
+        }
+    }
+
+    @Test
     void settingsValidateBoundsRolesCapacityAndDurationChanges() {
         long version = state(leader).path("version").asLong();
         for (int invalidFocus : new int[]{0, 181}) {

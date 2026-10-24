@@ -38,6 +38,8 @@ export default function Dialog({ title, onClose, busy = false, children }: {
   )
 
   function handleKeyDown(event: React.KeyboardEvent) {
+    // React bubbles portal events to parent dialogs; a nested dialog handles its own keys.
+    if (event.key === 'Escape' || event.key === 'Tab') event.stopPropagation()
     if (event.key === 'Escape' && !busy) {
       event.preventDefault()
       onClose()

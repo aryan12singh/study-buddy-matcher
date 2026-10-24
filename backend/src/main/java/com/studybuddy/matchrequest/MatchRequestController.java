@@ -47,4 +47,9 @@ public class MatchRequestController {
     public MatchRequestDto decline(@PathVariable Long id, @AuthenticationPrincipal AccountPrincipal actor) {
         return service.decline(id, actor.id());
     }
+
+    @PostMapping("/{id}/cancel")
+    public MatchRequestDto cancel(@PathVariable Long id, @AuthenticationPrincipal AccountPrincipal actor) {
+        return service.cancel(id, actor.id());
+    }
 }

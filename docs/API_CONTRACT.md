@@ -28,7 +28,10 @@ value is unique in PostgreSQL, including inactive accounts. New passwords requir
 eight characters and at most 72 UTF-8 bytes. Login retains annotated request validation;
 otherwise-valid input exceeding the UTF-8 byte limit gets the same 401 `INVALID_CREDENTIALS`
 as a wrong password before BCrypt comparison. Malformed/over-character-limit fields still
-return 400. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
+return 400. After `app.auth.login-throttle.max-failures` wrong passwords in a row for one
+normalized email, known or unknown, login for it returns 429 `TOO_MANY_LOGIN_ATTEMPTS` for
+`app.auth.login-throttle.lockout` after the last attempt; a successful login clears the count.
+Each attempt is counted before its password is checked, so parallel guesses cannot exceed it. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
 request, connection, group and notification responses.
 
 Contact input accepts local Singapore 8-digit numbers beginning 6/8/9, or `+` followed by
@@ -70,9 +73,10 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 401 | `UNAUTHENTICATED` | Missing, invalid, expired, revoked token; missing/inactive current account |
 | 401 | `INVALID_CREDENTIALS` | Login email/password does not match an account (checked before account state) |
 | 403 | `ACCOUNT_DEACTIVATED` | Login with the correct password for a deactivated account |
+| 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
 | 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
-| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated decision, closed/full group, self-removal |
+| 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated or stale decision, closed/full group, self-removal, leader leaving |
 | 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
 | 409 | `STALE_MATCHING_CONFIG` | Expected configuration revision no longer matches; reload before saving/restoring |
 | 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
@@ -92,8 +96,10 @@ student only. Account role selection belongs to the administrator creation endpo
 | POST | `/api/auth/login` | `{email,password}` | 200 `AuthResultDto` | Public |
 | POST | `/api/auth/register` | `RegisterRequest` | 201 `AuthResultDto` | Public |
 | GET | `/api/auth/me` | none | 200 `CurrentAccountDto` | Active account |
+| POST | `/api/auth/logout` | none | 204 | Active account; increments the account's token version, so every token issued to it so far (all tabs and devices) gets 401 |
 | GET | `/api/courses` | none | 200 `CourseDto[]`, course-code order | Student |
 | GET | `/api/students/me/summary` | none | 200 `StudentActivityDto` | Student |
+| GET | `/api/achievements/me` | none | 200 `AchievementsDto` | Student |
 
 `RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
 (integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
@@ -165,6 +171,7 @@ draft state is local form state, not an added API/DTO field.
 | GET | `/api/match-requests/outgoing` | none | 200 `MatchRequestDto[]`, all statuses newest first | Student |
 | POST | `/api/match-requests/{id}/accept` | none | 200 `MatchRequestDto`, `ACCEPTED` | Receiver |
 | POST | `/api/match-requests/{id}/decline` | none | 200 `MatchRequestDto`, `DECLINED` | Receiver |
+| POST | `/api/match-requests/{id}/cancel` | none | 200 `MatchRequestDto`, `CANCELLED` | Sender |
 | GET | `/api/connections` | none | 200 `ConnectionDto[]`, active only newest first | Student |
 | DELETE | `/api/connections/{id}` | none | 204 | Participant |
 | GET | `/api/students/{id}/profile` | none | 200 `PublicProfileDto` or `ConnectedProfileDto` | Student |
@@ -211,11 +218,16 @@ any active connection between the pair are 409. Inactive/missing recipients are 
 ```
 
 Nullable course/context values remain explicit nulls. Request status is `PENDING`, `ACCEPTED`,
-`DECLINED` or `CANCELLED`. `CANCELLED` means nobody answered because one of the two accounts was
-deactivated or deleted. Decisions are one-way. Acceptance creates exactly one symmetric active
+`DECLINED` or `CANCELLED`. `CANCELLED` means nobody answered: the sender withdrew the request,
+or one of the two accounts was deactivated or deleted. Decisions are one-way, and a withdrawn
+request frees the pair to send a new one. Acceptance creates exactly one symmetric active
 connection. Repeated decisions produce a conflict and no duplicate event. Answered history
 and ended connections remain available to admin counts and request history; ended connections
 are not returned by the connection list.
+
+Withdrawing does not erase the request: the recipient sees its `CANCELLED` status under
+Past requests and cannot accept it. UI confirmations capture the original request/connection
+and signed-in account; navigation or a refreshed replacement relation requires fresh consent.
 
 `ConnectionDto` is `{id,otherStudentId,otherStudentName,createdAt}`, written from the caller's
 side. It has no contact number. Disconnect is one-way and notifies the other participant.
@@ -271,15 +283,27 @@ private profile after a failed refresh.
 | PUT | `/api/groups/{id}` | `StudyGroupDetails`, all editable fields replaced | 200 detail | Leader |
 | POST | `/api/groups/{id}/close` | none | 200 detail, `active:false` | Leader |
 | DELETE | `/api/groups/{id}/members/{studentId}` | none | 204 | Leader |
+| POST | `/api/groups/{id}/leave` | none | 204; 409 for the leader, a non-member or a closed group | Member |
 | POST | `/api/groups/{id}/join-requests` | `{message?:string}` | 201 `GroupJoinRequestDto` | Student |
 | GET | `/api/groups/{id}/join-requests` | none | 200 pending application DTOs, newest first | Leader |
 | POST | `/api/groups/{id}/join-requests/{requestId}/accept` | none | 200 application DTO, `ACCEPTED` | Leader |
 | POST | `/api/groups/{id}/join-requests/{requestId}/reject` | none | 200 application DTO, `REJECTED` | Leader |
 | GET | `/api/group-join-requests/mine` | none | 200 own application DTOs, every status newest first | Student |
+| POST | `/api/group-join-requests/{requestId}/withdraw` | none | 200 application DTO, `WITHDRAWN`; 404 for another student's application | Applicant |
 
 A leader is a relationship to one group, not an account role. The creator becomes the first
-accepted member and counts toward capacity. Pending applications do not count. No self-leave,
-leader transfer or group reopening is added.
+accepted member and counts toward capacity. Pending applications do not count. A member may
+leave an open group; the leader closes the group instead, and a closed group keeps its members as
+history. An applicant may withdraw a pending application and apply again later. Application
+status is `PENDING`, `ACCEPTED`, `REJECTED` (the leader's answer or closure) or `WITHDRAWN` (the
+applicant's choice, or their account was deactivated or deleted). Leader transfer and group
+reopening are not added.
+
+Group confirmations likewise bind to the original group, application or membership tenure.
+Changing the route/account, replacing a pending application, or leaving and rejoining clears
+an earlier confirmation. An unchanged refresh preserves the current confirmation. Leaving
+revokes room presence/roles and private session/calendar access in the membership transaction;
+the group's sessions remain available to its remaining members.
 
 ```json
 {
@@ -627,13 +651,16 @@ and descriptions at their valid limits cannot cause a notification-column overfl
 | --- | --- | --- |
 | Buddy send | Receiver, one | `MATCH_REQUEST_RECEIVED` |
 | Accept / decline | Sender, one | `MATCH_REQUEST_ACCEPTED` / `MATCH_REQUEST_DECLINED` |
-| Request cancelled by deactivation or deletion | Other participant, one | `MATCH_REQUEST_CANCELLED` |
+| Request withdrawn by its sender, or cancelled by deactivation or deletion | Other participant, one | `MATCH_REQUEST_CANCELLED` |
 | Disconnect | Other participant, one | `CONNECTION_ENDED` |
 | Group application | Leader, one | `GROUP_JOIN_REQUEST_RECEIVED` |
 | Group accept / reject | Applicant, one | `GROUP_JOIN_REQUEST_ACCEPTED` / `GROUP_JOIN_REQUEST_REJECTED` |
+| Application withdrawal | Leader, one | `GROUP_JOIN_REQUEST_WITHDRAWN` |
 | Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
+| Member leaves | Leader, one | `GROUP_MEMBER_LEFT` |
+| Study room timer started (not resumed) | Each active member not in the room, except whoever started it, and only if they have no unread notice for that group's room; links to the room. Sent in a separate transaction after the start commits; a failed invitation is logged and never undoes the start | `GROUP_STUDY_ROOM_STARTED` |
 | Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
-| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/removed events; the ended-connection notice has no profile link |
+| Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/withdrawn/removed events; the ended-connection notice has no profile link |
 | Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |
 
 Failed/conflicting domain actions create no notification. Locked transitions and the partial
@@ -694,7 +721,7 @@ open groups including leadership. Counts are real; absent relations produce zero
 
 Deactivation retains account/profile/history, revokes access, ends active connections,
 cancels pending buddy requests both ways, closes led groups and rejects their pending
-applicants, rejects the student's pending applications and removes their memberships in open
+applicants, withdraws the student's pending applications and removes their memberships in open
 groups they do not lead. Closed groups keep their members, including the leader, as history. Reactivation restores access through fresh login only; it restores no
 ended relation or membership. Repeated status operations are 409.
 
@@ -990,6 +1017,59 @@ Quota is a per-process daily budget, reset on restart; it is not a durable multi
 billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
 duplicate cache rows only. See [E1 testing](E1_TESTING.md) for evidence and remaining acceptance.
 
+## Study plans (AI study assistant)
+
+Proposed bonus extension on `feat/team-b/study-roadmap`; not part of the agreed selected extras
+until the team accepts it. Student only. This section covers personal plans; session plans for
+a group or buddy session are added with their own endpoints.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/study-plans` | `multipart/form-data`: `PersonalPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto` | Student |
+| GET | `/api/study-plans` | none | 200 `StudyPlanSummaryDto[]`, own personal plans newest first | Student |
+| GET | `/api/study-plans/{planId}` | none | 200 `StudyPlanDto` | Owner |
+| PUT | `/api/study-plans/{planId}/entries/{entryId}/progress` | `{ "completed": true }` | 200 `StudyPlanDto` | Owner |
+| DELETE | `/api/study-plans/{planId}` | none | 204 | Owner |
+
+```text
+PersonalPlanInput   (multipart form fields)
+  courseId, hoursPerWeek (1 to max-hours-per-week), examDate? (yyyy-MM-dd), studyGoal?, topicsText?
+StudyPlanDto
+  { id, scope: PERSONAL/SESSION, course: CourseDto, sessionId|null, firstBlockDate, blockCount,
+    minutesPerBlock, examDate|null, studyGoal|null, sourceKind: UPLOAD/PASTE, sourceFilenames[],
+    sourceTopics[], canManage, createdAt, updatedAt,
+    entries: [{ id, sequence, scheduledDate, title, plannedMinutes, tasks[], completed }] }
+StudyPlanSummaryDto
+  { id, scope, course, firstBlockDate, blockCount, examDate|null, studyGoal|null,
+    entryCount, completedCount, createdAt }
+```
+
+A plan starts today in `Asia/Singapore` (`study-plan.time-zone`). Without `examDate` it covers
+this week alone; with one it covers every week up to the exam, so an exam 1 to 7 days away is one
+week and 8 to 14 days two. The exam must be after today and within `max-weeks` weeks. Each
+week holds `hoursPerWeek` hours. Week *n* of a plan starts on `firstBlockDate` plus 7 × (*n* − 1)
+days, which is each entry's `scheduledDate`.
+
+The material is one or more `files` (PDF, `.txt` or `.md`) or `topicsText`, never both. Files
+together must fit `max-upload-size` and `max-text-file-characters`, and each file's contents must
+match its extension. Files are sent to Google Gemini for this one request and never stored; only
+their names are kept. The roadmap Gemini returns must pass the checks in the README's
+"AI study assistant" configuration section; a student may keep several plans for one course.
+
+Errors, in the order they are checked, so a bad request never spends the student's AI allowance:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 400 | `INVALID_INPUT` | A missing or malformed field; an unknown `courseId`; `hoursPerWeek` out of range; an exam today, in the past or beyond `max-weeks`; no material, or both files and topics; too many files; an empty file; topics too long |
+| 413 | `FILE_TOO_LARGE` | Files together over `max-upload-size`, or text files over `max-text-file-characters` |
+| 415 | `UNSUPPORTED_FILE_TYPE` | A file other than PDF, `.txt` or `.md`, or whose contents do not match its extension |
+| 503 | `AI_UNAVAILABLE` | The assistant is switched off, over its daily allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+| 404 | `NOT_FOUND` | Reading, ticking or deleting a plan that does not exist or is not the student's own, or an entry not in that plan |
+
+The plan is created in three steps: a short read that checks the request, the Gemini call, and
+a short write that checks the student is still active before saving. No database transaction or
+account lock is held while Gemini answers.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview
@@ -1023,11 +1103,65 @@ no-store/session-purge rules govern that read. Group-link copy uses the client o
 Create/update/delete destination feedback contains generic outcome text and no DTO/private
 fields.
 
-E2 student routes are `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
+E2 student routes are `/study-room`, `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
 `/sessions/{id}/edit`, `/groups/{id}/sessions` and `/connections/{id}/sessions`;
-each parent list has a `/new` editor for its authorized managers. Group detail
+each parent list has a `/new` editor for its authorized managers. The Study Room tab
+combines a personal browser timer with one sidebar populated by `/api/groups/mine`.
+Open groups link to their existing private rooms and closed groups to their history;
+opening the tab does not join a room. The personal timer uses no additional API and
+does not change the group's shared timer. Group detail
 loads a dated-session agenda only for accepted members of an open group, while
 Connections offers a session link for each active buddy. Session notification
 links target `/sessions/{id}` and recheck permission through the detail endpoint.
 Local browser drafts, room host roles and notification metadata never grant
 session management or calendar access.
+
+### AchievementsDto
+
+`GET /api/achievements/me` returns the authenticated student's private current standing. It is
+read-only and recomputed from existing records; there is no award table or permanent badge history.
+Anonymous requests receive 401 and administrators receive 403. There is no achievement endpoint
+for another student, and public, connected and administrator profile payloads never embed this data.
+
+```
+AchievementsDto { level, maxLevel, points, maxPoints, pointsToNextLevel, pointsPerLevel, earnedCount, totalCount,
+                  streak: StreakDto, badges: BadgeDto[] }
+StreakDto       { currentWeeks, bestWeeks, currentRunWeeks: LocalDate[], weekZone }   // Mondays, oldest first
+BadgeDto        { key, title, description, tier: BRONZE|SILVER|GOLD|null, nextTier: BRONZE|SILVER|GOLD|null,
+                  current, target, earned, earnedHint }
+```
+
+| Badge key | Count and lifecycle |
+| --- | --- |
+| `CONNECTOR` | Active accepted connections; ending one lowers the count |
+| `FIRST_MOVE` | Retained sent match requests in any status, including declined/cancelled/accepted; disconnecting does not erase those requests |
+| `TEAM_PLAYER` | Current memberships in open groups the student does not lead; leaving, removal or closure lowers the count |
+| `FOUNDER` | Retained groups created by the student, including closed groups |
+| `PLANNER` | Individual non-cancelled scheduled occurrences on currently accessible open-group/active-buddy schedules, including past and future occurrences, from the start of the current membership or exact connection onward |
+| `GROVE_KEEPER` | Longest consecutive planned-week run derived from those currently eligible occurrences; it can decrease if the source schedules change or become inaccessible |
+
+The schedule read uses one projection query including each membership's `joinedAt` or connection's
+`createdAt`. A newcomer or readmitted member does not inherit occurrences before that current tenure.
+Inactive buddies, ended connections, closed groups, removed memberships and cancelled sessions are
+ineligible. Each weekly recurrence counts separately for Planner, even when its date is in a future week.
+
+For the streak, weeks start on Monday in `app.achievements.week-zone`, returned as `weekZone`.
+Each distinct eligible week counts once. Future weeks are excluded, but an occurrence later in the
+current week counts immediately because the metric measures planning. A run ending last week remains
+current while this week is still open; a gap of a whole week resets the current run. `bestWeeks` is the
+longest run in currently eligible data, not a stored all-time record. Removing/cancelling/editing a
+schedule can change both streak values. Neither scheduling nor the room timer records attendance,
+completed focus time or study quality.
+
+Thresholds are positive and nondecreasing bronze/silver/gold values from `app.achievements.*`;
+`points-per-level` must be positive. `earned` means a badge currently has a tier. Only the highest tier
+contributes points (Bronze 1, Silver 2, Gold 3); tiers are not added together. `target` is the next
+tier's threshold, or the Gold threshold with `nextTier=null` at Gold. Counts may exceed a Gold target.
+Six Gold badges yield `maxPoints=18`; the default maximum is level 7. The last level step is shortened
+when needed so every configured maximum is reachable. At maximum standing `pointsToNextLevel=0`.
+Tiers, points and level can fall when eligible records decrease; retained request/group history only
+disappears when its underlying records do.
+
+Badge actions are a frontend allowlist keyed by the fixed badge catalogue; the API never supplies
+arbitrary navigation URLs. The own-profile summary fetches `/me` only after the signed-in student's
+role, route id, profile id and `SELF` relationship agree. It unmounts/aborts on owner or profile changes.

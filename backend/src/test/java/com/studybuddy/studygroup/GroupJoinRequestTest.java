@@ -81,6 +81,23 @@ class GroupJoinRequestTest {
     }
 
     @Test
+    void withdrawMovesPendingRequestToWithdrawn() {
+        request.withdraw();
+
+        assertEquals(GroupJoinRequestStatus.WITHDRAWN, request.getStatus());
+        assertFalse(request.isPending());
+        assertNotNull(request.getRespondedAt());
+    }
+
+    @Test
+    void withdrawThrowsOnceTheLeaderHasAnswered() {
+        request.reject();
+
+        assertThrows(IllegalStateException.class, request::withdraw);
+        assertEquals(GroupJoinRequestStatus.REJECTED, request.getStatus());
+    }
+
+    @Test
     void belongsToIsTrueOnlyForItsOwnGroup() {
         assertTrue(request.belongsTo(5L));
         assertFalse(request.belongsTo(6L));
