@@ -14,7 +14,7 @@ import java.util.Optional;
 public class SpotifyConnectionService {
     private static final Logger LOG = LoggerFactory.getLogger(SpotifyConnectionService.class);
 
-    /** The outcome the Music page shows after Spotify sends the student back. */
+    /** The outcome the Study Room shows after Spotify sends the student back. */
     enum Outcome { CONNECTED, DENIED, EXPIRED, FAILED }
 
     private final SpotifyProperties properties;
@@ -36,7 +36,8 @@ public class SpotifyConnectionService {
 
     public SpotifyStatusDto status(Long studentId) {
         boolean configured = properties.ready();
-        return new SpotifyStatusDto(configured, configured && tokens.find(studentId).isPresent());
+        return new SpotifyStatusDto(configured, configured && tokens.find(studentId).isPresent(),
+                properties.embedPlaylistId());
     }
 
     public SpotifyAuthorizationDto startAuthorization(Long studentId) {
@@ -53,7 +54,7 @@ public class SpotifyConnectionService {
 
     /**
      * Handles Spotify's redirect after sign-in and returns where to send the browser next. Never
-     * throws: the student always lands back on the Music page with an outcome to show.
+     * throws: the student always lands back on the Study Room with an outcome to show.
      */
     public String completeAuthorization(String state, String code, String error) {
         Optional<Long> studentId = authorizations.finish(state);

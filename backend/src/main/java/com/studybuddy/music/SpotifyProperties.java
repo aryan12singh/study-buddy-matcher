@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -30,7 +31,9 @@ public record SpotifyProperties(
         @NotNull Duration tokenRefreshMargin,
         // Spotify's search returns at most 10 results per request since February 2026.
         @Positive @Max(10) int searchLimit,
-        @Positive int maxQueryLength) {
+        @Positive int maxQueryLength,
+        // Spotify IDs are base-62; the frontend puts this into an embed URL.
+        @NotBlank @Pattern(regexp = "[A-Za-z0-9]+") String embedPlaylistId) {
 
     public SpotifyProperties {
         // A zero timeout makes the HTTP client fail at startup with an unclear error.

@@ -563,7 +563,7 @@ and the manual choices remain available. `prefers-reduced-motion` stops animatio
 Weather data attribution links to [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
 provider outages do not change shared timer/audio state or block a room/session action.
 
-## Ambient sounds (Music tab)
+## Ambient sounds (Study Room music)
 
 Both endpoints use the existing authenticated student API guard. The backend calls Freesound
 with the server-held key; the key never reaches the browser.
@@ -586,7 +586,7 @@ An unknown category returns 404 `NOT_FOUND`. No configured key, a provider failu
 or no playable result returns 503 `AMBIENT_UNAVAILABLE`. Preview URLs play directly from
 Freesound's CDN and need no key.
 
-## Spotify (Music tab)
+## Spotify (Study Room music)
 
 All endpoints use the existing authenticated student API guard except `GET /api/spotify/callback`,
 which Spotify's sign-in redirect reaches without an app token. It is tied to the student by a
@@ -594,7 +594,7 @@ random, single-use `state` that expires after `app.spotify.authorization-lifetim
 
 | Endpoint | Returns |
 | --- | --- |
-| `GET /api/spotify/status` | `SpotifyStatusDto { configured, connected }` |
+| `GET /api/spotify/status` | `SpotifyStatusDto { configured, connected, embedPlaylistId }` |
 | `POST /api/spotify/authorization` | `SpotifyAuthorizationDto { url }`: the Spotify sign-in page to open |
 | `GET /api/spotify/callback?state&code&error` | 302 to `app.spotify.return-url?spotify=connected/denied/expired/failed` |
 | `GET /api/spotify/token` | `SpotifyAccessTokenDto { accessToken, expiresAt }` for the in-browser player, renewed when close to expiry |

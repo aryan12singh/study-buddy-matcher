@@ -25,10 +25,10 @@ class SpotifyConnectionServiceTest {
     private final SpotifyConnectionService service = service(SpotifyTestSettings.configured());
 
     @Test void statusReflectsConfigurationAndConnection() {
-        assertEquals(new SpotifyStatusDto(false, false), service(SpotifyTestSettings.withCredentials("", "")).status(7L));
-        assertEquals(new SpotifyStatusDto(true, false), service.status(7L));
+        assertEquals(new SpotifyStatusDto(false, false, "3bZTQGrvewbkJJe6UpTFKc"), service(SpotifyTestSettings.withCredentials("", "")).status(7L));
+        assertEquals(new SpotifyStatusDto(true, false, "3bZTQGrvewbkJJe6UpTFKc"), service.status(7L));
         tokens.save(7L, new SpotifyTokens("access", "refresh", now.plusSeconds(3600)));
-        assertEquals(new SpotifyStatusDto(true, true), service.status(7L));
+        assertEquals(new SpotifyStatusDto(true, true, "3bZTQGrvewbkJJe6UpTFKc"), service.status(7L));
     }
 
     @Test void authorizationUrlCarriesClientRedirectScopesAndState() {
@@ -50,7 +50,7 @@ class SpotifyConnectionServiceTest {
     @Test void successfulCallbackSavesTokensForTheStudentWhoStarted() throws Exception {
         when(authorizations.finish("state-1")).thenReturn(Optional.of(7L));
         when(accounts.exchangeCode("code-1")).thenReturn(new SpotifyTokens("access", "refresh", now.plusSeconds(3600)));
-        assertEquals("http://localhost:5173/music?spotify=connected", service.completeAuthorization("state-1", "code-1", null));
+        assertEquals("http://localhost:5173/study-room?spotify=connected", service.completeAuthorization("state-1", "code-1", null));
         assertEquals("access", tokens.find(7L).orElseThrow().accessToken());
     }
 
@@ -59,9 +59,9 @@ class SpotifyConnectionServiceTest {
         when(authorizations.finish("denied")).thenReturn(Optional.of(7L));
         when(authorizations.finish("failing")).thenReturn(Optional.of(7L));
         when(accounts.exchangeCode("code-2")).thenThrow(new IOException("down"));
-        assertEquals("http://localhost:5173/music?spotify=expired", service.completeAuthorization("forged", "code-1", null));
-        assertEquals("http://localhost:5173/music?spotify=denied", service.completeAuthorization("denied", null, "access_denied"));
-        assertEquals("http://localhost:5173/music?spotify=failed", service.completeAuthorization("failing", "code-2", null));
+        assertEquals("http://localhost:5173/study-room?spotify=expired", service.completeAuthorization("forged", "code-1", null));
+        assertEquals("http://localhost:5173/study-room?spotify=denied", service.completeAuthorization("denied", null, "access_denied"));
+        assertEquals("http://localhost:5173/study-room?spotify=failed", service.completeAuthorization("failing", "code-2", null));
         verify(accounts, never()).exchangeCode("code-1");
         assertTrue(tokens.find(7L).isEmpty());
     }
