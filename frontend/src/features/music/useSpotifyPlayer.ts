@@ -9,6 +9,10 @@ export type NowPlaying = {
   artists: string
   imageUrl?: string
   paused: boolean
+  positionMs: number
+  durationMs: number
+  /** When Spotify reported `positionMs`, so the position can be advanced between reports. */
+  reportedAt: number
 }
 
 type PlayerState = {
@@ -19,6 +23,7 @@ type PlayerState = {
 }
 
 const PLAYER_NAME = 'Study Buddy Matcher'
+export const DEFAULT_VOLUME = 0.5
 const PREMIUM_REQUIRED = 'Spotify only plays music here for Premium accounts.'
 
 function nowPlayingFrom(state: SpotifyPlayerState | null): NowPlaying | undefined {
@@ -28,6 +33,9 @@ function nowPlayingFrom(state: SpotifyPlayerState | null): NowPlaying | undefine
     artists: track.artists.map(artist => artist.name).join(', '),
     imageUrl: track.album.images[0]?.url,
     paused: state.paused,
+    positionMs: state.position,
+    durationMs: state.duration,
+    reportedAt: Date.now(),
   } : undefined
 }
 
@@ -49,6 +57,7 @@ export function useSpotifyPlayer(connected: boolean) {
       if (disposed) return
       const created = new sdk.Player({
         name: PLAYER_NAME,
+        volume: DEFAULT_VOLUME,
         // Spotify asks again whenever its token is about to expire; the backend renews it.
         getOAuthToken: callback => { getSpotifyAccessToken().then(token => callback(token.accessToken), error => fail(errorMessage(error))) },
       })
@@ -72,11 +81,10 @@ export function useSpotifyPlayer(connected: boolean) {
 
   return {
     ...state,
-    /** Must run inside a click, or some browsers block the sound that follows. */
-    activate: () => player.current?.activateElement() ?? Promise.resolve(),
     togglePlay: () => void player.current?.togglePlay(),
     nextTrack: () => void player.current?.nextTrack(),
     previousTrack: () => void player.current?.previousTrack(),
     setVolume: (volume: number) => void player.current?.setVolume(volume),
+    seek: (positionMs: number) => void player.current?.seek(positionMs),
   }
 }

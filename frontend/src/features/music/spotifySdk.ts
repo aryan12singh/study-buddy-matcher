@@ -1,6 +1,9 @@
 /** The parts of Spotify's Web Playback SDK this app uses. Spotify publishes no npm types for it. */
 export type SpotifyPlayerState = {
   paused: boolean
+  /** Both in milliseconds. */
+  position: number
+  duration: number
   track_window: {
     current_track: {
       name: string
@@ -21,6 +24,7 @@ export interface SpotifyPlayer {
   nextTrack(): Promise<void>
   previousTrack(): Promise<void>
   setVolume(volume: number): Promise<void>
+  seek(positionMs: number): Promise<void>
   activateElement(): Promise<void>
 }
 
