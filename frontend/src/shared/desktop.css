@@ -95,6 +95,8 @@
 .window-content { padding: clamp(1rem, 2.5vw, 1.8rem); }
 .page-heading { padding-bottom: 1.25rem; border-bottom: 1px solid #d6e0e4; margin-bottom: 1.25rem; }
 .page-heading p { font-size: .95rem; margin-bottom: 0; }
+/* Page descriptions run wider than body copy so a one-sentence summary stays on one line. */
+.desktop .page-heading p { max-width: 110ch; }
 .retro-button { padding: .5rem 1rem; transition: background-color 120ms, box-shadow 120ms; }
 .retro-button.primary { background: #2d459d; }
 .actions { gap: .65rem; }
@@ -141,6 +143,11 @@
 .detail-facts dt { font-size: .88rem; }
 .detail-facts dd { font-size: .93rem; }
 .detail-panel .actions { margin-top: .85rem; }
+/* Side-by-side panels share one bottom edge; the grid, not the last panel, owns the gap below. */
+.detail-grid { margin-bottom: 1.25rem; }
+.detail-grid > .detail-panel { margin-bottom: 0; }
+/* Privacy notes are boxes, so they fill their column rather than stopping at the paragraph measure. */
+.desktop p.privacy-note { max-width: none; }
 .privacy-note { background: #edf3fa; border-color: #abc0d3; color: #2e465c; margin-top: .8rem; }
 .privacy-note h3 { margin-top: 0; }
 .filters { background: #edf2f4; border-color: #b5c2ca; padding: 1.1rem; gap: 1rem; margin-bottom: .65rem; }
@@ -428,6 +435,16 @@
 .match-group h2 .row-meta { font-weight: 400; }
 .match-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: .75rem 1.25rem; margin-bottom: .5rem; }
 .match-toolbar p { margin: 0; }
+.match-toolbar-text { flex: 1; min-width: min(100%, 280px); display: grid; gap: .35rem; }
+.desktop .match-toolbar-text p { max-width: none; line-height: 1.55; }
+.match-refine { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; margin: .7rem 0 1rem; }
+.match-refine > .filter-summary { margin: 0; }
+.match-refine > .filter-summary:empty { display: none; }
+.match-sort { display: flex; margin-left: auto; }
+.desktop .home-finder .row-meta { max-width: none; }
+.match-sort .form-field { display: flex; flex-direction: row; align-items: center; gap: .6rem; margin: 0; }
+.match-sort label { white-space: nowrap; }
+.match-sort select { width: auto; min-width: 210px; }
 .match-count { font-weight: 700; }
 .match-filters { max-width: none; padding: 1rem; margin: .5rem 0; background: #edeeea; border: 1px solid #a8afb1; }
 .match-filters .form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

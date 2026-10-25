@@ -52,7 +52,7 @@
 .desktop .study-corner-groups-heading h2 { font-size: 1.05rem; margin: 0; color: #354333; }
 .study-corner-group-count { min-width: 23px; height: 23px; display: grid; place-items: center; padding: 0 .3rem; border: 1px solid #c3cbb5; background: #ebefdc; font-size: .7rem; border-radius: 3px; }
 .desktop .study-corner-groups-heading p { font-size: .8rem; line-height: 1.6; color: var(--study-corner-muted); margin: .65rem 0 0; }
-.study-corner-group-list { display: grid; align-content: start; gap: .85rem; margin-bottom: 1rem; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+.study-corner-group-list { display: grid; align-content: start; gap: .85rem; margin-bottom: 1rem; min-height: 0; overflow-y: auto; }
 .desktop a.study-corner-group { display: block; padding: 1rem .85rem .8rem; background: #f5f5e7; border: 1px solid #c9ceba; border-radius: 4px; text-decoration: none; color: #3e4c36; box-shadow: 0 2px #dbe0cb55; overflow-wrap: anywhere; }
 .desktop a.study-corner-group:hover { background: #eaf0dc; border-color: #82956d; }
 .study-corner-group-course { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .4rem; font-size: .7rem; font-weight: 700; color: #5e6840; letter-spacing: .04em; }
