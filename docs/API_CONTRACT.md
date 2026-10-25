@@ -1068,6 +1068,61 @@ The plan is created in three steps: a short read that checks the request, the Ge
 a short write that checks the student is still active before saving. No database transaction or
 account lock is held while Gemini answers.
 
+## Group quizzes (AI study assistant)
+
+Proposed bonus extension on `feat/team-b/group-quiz`; not part of the agreed selected extras until
+the team accepts it. Student only. Accepted members of an open group see and take its quizzes;
+the group leader and the study room's host and co-host also start and close them.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/groups/{groupId}/quizzes` | `StartQuizInput` | 201 `GroupQuizDto` | Leader, host, co-host |
+| GET | `/api/groups/{groupId}/quizzes` | none | 200 `GroupQuizDto[]`, newest first | Member |
+| GET | `/api/quizzes/{quizId}` | none | 200 `GroupQuizDto` | Member |
+| POST | `/api/quizzes/{quizId}/start` | none | 200 `QuizQuestionsDto`; records the start time, and repeat calls return the same attempt | Member |
+| POST | `/api/quizzes/{quizId}/attempts` | `QuizSubmissionInput` | 201 `AttemptResultDto` | Member who started |
+| GET | `/api/quizzes/{quizId}/leaderboard` | none | 200 `LeaderboardDto` | Member |
+| POST | `/api/quizzes/{quizId}/close` | none | 200 `GroupQuizDto` | Leader, host, co-host |
+| GET | `/api/quizzes/{quizId}/review` | none | 200 `QuizReviewDto` once closed | Member |
+
+```text
+StartQuizInput      { topics (1 to max-topics-characters), sessionId? (a scheduled session of this group) }
+QuizSubmissionInput { answers: [{ questionId, optionIndex: 0-3 }] }   // every question exactly once
+GroupQuizDto
+  { id, groupId, sessionId|null, topics, status: OPEN/CLOSED, createdBy, createdAt, closesAt,
+    closedAt|null, questionCount, submittedCount, myAttempt: NOT_STARTED/STARTED/SUBMITTED, canHost }
+QuizQuestionsDto    { quizId, startedAt, closesAt, questions: [{ id, prompt, options[4] }] }   // no answers
+AttemptResultDto    { score, total, timeTakenSeconds, rank }
+LeaderboardDto
+  { quizId, status, submittedCount, notSubmittedCount,
+    entries: [{ rank, studentId, displayName, score, total, timeTakenSeconds, me }] }
+QuizReviewDto
+  { quizId, score|null, total|null,
+    questions: [{ id, prompt, options[4], correctOption, chosenOption|null, explanation }] }
+```
+
+A quiz has `quiz.question-count` questions and stays open for `quiz.open-duration`, or until a
+host closes it. `status` already reads an open quiz past `closesAt` as `CLOSED`. The correct
+options and explanations stay on the server until the quiz closes. The leaderboard ranks current
+members who have submitted by score, then time taken, then submit time, and holds display names
+and scores only. A member who leaves or is deactivated drops off it but keeps their attempt.
+
+Errors:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 400 | `INVALID_INPUT` | Blank or too long topics; a `sessionId` that is not a scheduled session of this group; answers missing, repeated, for another quiz's question or outside 0-3 |
+| 403 | `FORBIDDEN` | Listing a group's quizzes as a non-member; starting or closing a quiz as a member who is not the leader, host or co-host |
+| 404 | `NOT_FOUND` | A quiz that does not exist or belongs to a group the student is not a member of |
+| 409 | `QUIZ_CLOSED` | Starting or submitting after the quiz closed |
+| 409 | `ALREADY_SUBMITTED` | Starting or submitting again after submitting |
+| 409 | `QUIZ_NOT_STARTED` | Submitting without starting first |
+| 409 | `QUIZ_NOT_CLOSED` | Asking for the review while the quiz is open |
+| 503 | `AI_UNAVAILABLE` | The assistant is off, over its allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+
+Starting a quiz takes a short read that checks the request, the Gemini call, and a short write that
+checks the actor may still host. No database transaction is held while Gemini answers.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview
