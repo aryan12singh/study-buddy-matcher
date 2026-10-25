@@ -30,11 +30,11 @@ it('lets the window show day or night regardless of campus time and remembers th
   renderPage(<RoomWeatherPanel onChange={change} />)
   fireEvent.change(screen.getByLabelText('Time of day'), { target: { value: 'NIGHT' } })
   expect(change).toHaveBeenLastCalledWith(expect.objectContaining({ condition: 'CLEAR', night: true }))
-  expect(screen.getByText('Night study')).toBeInTheDocument()
+  expect(document.querySelector('.atmosphere-scene')).toHaveAttribute('data-night', 'true')
   expect(localStorage.getItem('study-room-daylight')).toBe('NIGHT')
   fireEvent.change(screen.getByLabelText('Time of day'), { target: { value: 'DAY' } })
   expect(change).toHaveBeenLastCalledWith(expect.objectContaining({ condition: 'CLEAR', night: false }))
-  expect(screen.getByText('Day study')).toBeInTheDocument()
+  expect(document.querySelector('.atmosphere-scene')).toHaveAttribute('data-night', 'false')
 })
 it('offers several rooms that all keep the chosen weather and time of day', () => {
   const change = vi.fn()

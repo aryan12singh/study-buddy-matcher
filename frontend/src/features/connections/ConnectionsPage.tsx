@@ -46,6 +46,7 @@ export default function ConnectionsPage() {
         key={request.id}
         studentId={id}
         name={name}
+        badges={<Badge tone={request.status === 'PENDING' ? 'pending' : request.status === 'ACCEPTED' ? 'good' : 'neutral'}>{label(request.status)}</Badge>}
         actions={request.status !== 'PENDING' ? undefined : tab === 'outgoing' ? (
           <Button
             disabled={action.pending}
@@ -67,13 +68,10 @@ export default function ConnectionsPage() {
           </>
         )}
       >
-        <Badge
-            tone={request.status === 'PENDING' ? 'pending' : request.status === 'ACCEPTED' ? 'good' : 'neutral'}
-          >{label(request.status)}</Badge>
-          {request.message && (
-            <p className="message-text">{request.message}</p>
-          )}
-          <p className="row-meta">Sent {formatTimestamp(request.createdAt)} (SGT){request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
+        {request.message && (
+          <p className="message-text">{request.message}</p>
+        )}
+        <p className="row-meta">Sent {formatTimestamp(request.createdAt)} (SGT){request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
         {request.context && contextSummary(request.context) && (
           <p className="row-meta">{contextSummary(request.context)}</p>
         )}
@@ -136,6 +134,7 @@ export default function ConnectionsPage() {
                 key={connection.id}
                 studentId={connection.otherStudentId}
                 name={connection.otherStudentName}
+                badges={<Badge tone="good">Connected</Badge>}
                 actions={
                   <>
                   <Link className="retro-button" to={`/connections/${connection.id}/sessions`}>Plan study sessions</Link>
@@ -153,7 +152,6 @@ export default function ConnectionsPage() {
                 }
               >
                 <p className="row-meta">Connected since {formatTimestamp(connection.createdAt)} (SGT)</p>
-                <Badge tone="good">Connected</Badge>
               </PersonCard>
             ))}
           </div>

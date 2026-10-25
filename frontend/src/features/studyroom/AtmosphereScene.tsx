@@ -21,6 +21,5 @@ export default function AtmosphereScene({ scene, condition, night, className = '
         </div>
       </>}
     </div>
-    <span className="atmosphere-caption">{night ? 'Night study' : 'Day study'}</span>
   </div>
 }

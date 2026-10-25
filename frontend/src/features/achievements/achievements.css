@@ -1,7 +1,7 @@
 .achievements { display: grid; gap: 1.5rem; --grove-sky: #dff0f6; --metal-edge: #777; }
 .achievements h2, .achievements h3 { margin: 0; }
 .achievements-heading { font-size: 1.1rem; margin-bottom: .75rem !important; }
-.achievement-policy { margin: 0 0 1rem; color: #3f474b; max-width: 85ch; }
+.desktop .achievement-policy { margin: 0 0 1rem; color: #3f474b; max-width: none; }
 .achievement-help { border: 1px solid #7c898e; background: #f6f7f2; padding: .75rem 1rem; }
 .achievement-help summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; font-weight: 700; }
 .achievement-help summary:focus-visible { outline: 3px solid #19398e; outline-offset: 3px; }
@@ -21,13 +21,14 @@
 .achievement-summary-compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .own-achievements-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; }
 .own-achievements-heading h2 { margin: 0; font-size: 1.1rem; }
-.own-achievements > p { margin: .75rem 0; color: #3f474b; }
+.desktop .own-achievements > p { margin: .75rem 0; max-width: none; color: #3f474b; }
 
 /* Study grove */
 .grove { border: 2px solid; border-color: #fff #808080 #808080 #fff; background: linear-gradient(180deg, var(--grove-sky), #f4f9ec 75%); padding: 1rem; }
 .grove-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; margin-bottom: .75rem; }
 .grove-heading h2 { font-size: 1.1rem; }
 .grove-heading p, .grove-more { margin: 0; font-size: .9rem; color: #3f474b; }
+.desktop .grove-heading p { max-width: none; }
 .grove-row { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0; }
 .grove-plot { display: grid; justify-items: center; gap: .3rem; width: 72px; animation: grove-rise .5s steps(5, end) both; }
 .grove-plot svg { width: 72px; height: 120px; display: block; image-rendering: pixelated; }

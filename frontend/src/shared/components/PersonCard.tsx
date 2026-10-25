@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import Avatar from './Avatar'
 
 /**
- * One student in a list: name and "View profile" on the top line, details below,
+ * One student in a list: name, any role badges and "View profile" on the top line, details below,
  * and any decisions about that student (accept, approve, remove) on the bottom line.
  */
-export default function PersonCard({ studentId, name, compact = false, children, actions }: {
+export default function PersonCard({ studentId, name, compact = false, badges, children, actions }: {
   studentId: number
   name: string
   compact?: boolean
+  badges?: ReactNode
   children?: ReactNode
   actions?: ReactNode
 }) {
@@ -19,6 +20,7 @@ export default function PersonCard({ studentId, name, compact = false, children,
       <div className="person-heading">
         <Avatar name={name} small={compact} />
         <h2><Link to={profile}>{name}</Link></h2>
+        {badges}
         <Link className="retro-button profile-link" to={profile}>View profile</Link>
       </div>
       {children}
