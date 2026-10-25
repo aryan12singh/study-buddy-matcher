@@ -462,6 +462,9 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.study-plan.max-weeks` | `16` | Most weeks a personal plan covers, so the exam can be at most this far away |
 | `app.ai.assistant.study-plan.max-hours-per-week` | `40` | Most study hours per week a student can plan |
 | `app.ai.assistant.study-plan.time-zone` | `Asia/Singapore` | Calendar that decides "today", the first day of a personal plan |
+| `app.ai.assistant.quiz.question-count` | `10` | Exactly how many questions every group quiz has; stated in the prompt, and a reply with any other number is rejected |
+| `app.ai.assistant.quiz.open-duration` | `15m` | How long a group quiz stays open before it reads as closed; the host can close it sooner |
+| `app.ai.assistant.quiz.max-topics-characters` | `1000` | Longest topics text a quiz can be started on |
 
 A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
 slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the

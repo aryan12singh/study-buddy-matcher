@@ -171,6 +171,12 @@ app:
         max-hours-per-week: 40
         # "Today", for a plan's first week, follows the students' calendar, not the server's.
         time-zone: Asia/Singapore
+      quiz:
+        # Stated in the prompt and checked again on Gemini's reply.
+        question-count: 10
+        # An open quiz past this reads as closed, so no scheduler is needed.
+        open-duration: 15m
+        max-topics-characters: 1000
   ambient:
     # Sounds are unavailable until application-local.yml sets api-key. Never put the key here.
     base-url: https://freesound.org/apiv2

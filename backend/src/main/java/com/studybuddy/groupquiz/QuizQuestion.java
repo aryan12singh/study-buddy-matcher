@@ -23,18 +23,22 @@ import java.util.List;
 @Table(name = "quiz_questions")
 public class QuizQuestion {
     public static final int OPTION_COUNT = 4;
+    /** Column sizes, which Gemini's reply must also fit. */
+    public static final int PROMPT_LIMIT = 500;
+    public static final int OPTION_LIMIT = 255;
+    public static final int EXPLANATION_LIMIT = 1000;
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(optional = false) @JoinColumn(name = "quiz_id", nullable = false) private GroupQuiz quiz;
     @Column(nullable = false) private int position;
-    @Column(nullable = false, length = 500) private String prompt;
+    @Column(nullable = false, length = PROMPT_LIMIT) private String prompt;
     @ElementCollection
     @CollectionTable(name = "quiz_question_options", joinColumns = @JoinColumn(name = "question_id"))
     @OrderColumn(name = "position")
-    @Column(name = "text", nullable = false)
+    @Column(name = "text", nullable = false, length = OPTION_LIMIT)
     private List<String> options = new ArrayList<>();
     @Column(name = "correct_option", nullable = false) private int correctOption;
-    @Column(nullable = false, length = 1000) private String explanation;
+    @Column(nullable = false, length = EXPLANATION_LIMIT) private String explanation;
 
     protected QuizQuestion() { }
 
