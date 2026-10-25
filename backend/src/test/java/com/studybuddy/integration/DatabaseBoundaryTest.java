@@ -18,7 +18,7 @@ class DatabaseBoundaryTest extends PostgresHttpTest {
                     "select * from match_explanations", "select * from matching_enabled_criteria",
                     "select * from study_plans", "select * from study_plan_source_files", "select * from study_plan_source_topics",
                     "select * from study_plan_entries", "select * from study_plan_entry_tasks",
-                    "select * from group_quizzes", "select * from quiz_questions", "select * from quiz_question_options",
+                    "select * from quizzes", "select * from quiz_questions", "select * from quiz_question_options",
                     "select * from quiz_attempts", "select * from quiz_attempt_answers",
                     "insert into matching_enabled_criteria(setting_id,criterion) values (1,'COURSE')", "insert into courses(code,name) values ('FORBIDDEN','Forbidden')"}) {
                 String state = database.execute((ConnectionCallback<String>) connection -> {

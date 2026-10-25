@@ -176,7 +176,8 @@ app:
         question-count: 10
         # An open quiz past this reads as closed, so no scheduler is needed.
         open-duration: 15m
-        max-topics-characters: 1000
+        # The optional "what to focus on" text, which also titles the quiz, so at most 255.
+        max-focus-characters: 200
   ambient:
     # Sounds are unavailable until application-local.yml sets api-key. Never put the key here.
     base-url: https://freesound.org/apiv2

@@ -21,6 +21,7 @@ import WindowControls from './WindowControls'
 import HiddenPanelTools from './HiddenPanelTools'
 import RoomRolesPanel from './RoomRolesPanel'
 import RoomTimerSettingsPanel from './RoomTimerSettingsPanel'
+import QuizBotLauncher from '../quiz/QuizBotLauncher'
 import { useRoomFullscreen } from './useRoomFullscreen'
 import { usePanelVisibility } from './usePanelVisibility'
 import { DEFAULT_ATMOSPHERE } from './weatherTheme'
@@ -144,7 +145,11 @@ function RoomPage({ groupId }: { groupId: number }) {
           <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
           <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
             <header className="group-room-header">
-              <NowPlayingMini personal />
+              <div className="room-corner-tools">
+                <NowPlayingMini personal />
+                <QuizBotLauncher home={{ scope: 'GROUP', groupId }}
+                  canStart={room.leader || (!!account && (room.hostId === account.id || room.coHostId === account.id))} />
+              </div>
               <div className="group-room-title">
                 <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
                 <h2 id="group-room-heading">{room.groupName}</h2>
