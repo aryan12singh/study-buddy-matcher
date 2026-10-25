@@ -7,6 +7,23 @@ import { errorMessage } from '../../shared/api/client'
 import { AI_QUIZ_LABEL, beginAttempt, formatDuration, submitAnswers } from './api'
 import type { AttemptResult, Quiz, QuizQuestions } from './api'
 
+/** A group quiz shows its countdown once it is this close to closing. */
+const SHOW_TIMER_BELOW_SECONDS = 60 * 60
+
+/**
+ * Whole seconds until a group quiz closes, ticking every second; undefined until the questions
+ * arrive, and for a practice quiz, which has no time limit.
+ */
+function useSecondsLeft(closesAt: string | null | undefined) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!closesAt) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [closesAt])
+  return closesAt ? Math.max(0, Math.ceil((new Date(closesAt).getTime() - now) / 1000)) : undefined
+}
+
 /**
  * Takes one quiz: asks the server for the questions (which records the start time), then marks the
  * answers. Every question must be answered before submitting, as the server also requires.
@@ -21,6 +38,8 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
   const [result, setResult] = useState<AttemptResult>()
   const [error, setError] = useState<string>()
   const [pending, setPending] = useState(false)
+  const secondsLeft = useSecondsLeft(questions?.closesAt)
+  const timedOut = secondsLeft !== undefined && secondsLeft <= 0
 
   useEffect(() => {
     let current = true
@@ -32,7 +51,7 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (!questions) return
+    if (!questions || timedOut) return
     const unanswered = questions.questions.some(question => chosen[question.id] === undefined)
     setMissing(unanswered)
     if (unanswered) return
@@ -65,7 +84,11 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
   return <Dialog title={`Quiz: ${quiz.title}`} busy={pending} onClose={onClose}>
     <StatePanel loading={!questions && !loadError} error={loadError} />
     {questions && <form className="quiz-take-form" onSubmit={event => void submit(event)} noValidate>
-      <p className="field-hint">{AI_QUIZ_LABEL} Closes at {new Date(questions.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.</p>
+      {secondsLeft !== undefined && secondsLeft < SHOW_TIMER_BELOW_SECONDS && <p
+        className={`quiz-timer${timedOut ? ' is-over' : secondsLeft <= 60 ? ' is-low' : ''}`} role={timedOut ? 'alert' : undefined}>
+        {timedOut ? "Time's up: this quiz has closed, so these answers can't be submitted." : <>⏱ <strong>{formatDuration(secondsLeft)}</strong> left to submit</>}
+      </p>}
+      <p className="field-hint">{AI_QUIZ_LABEL}</p>
       <ol className="quiz-questions">
         {questions.questions.map((question, number) => <li key={question.id}>
           <fieldset className={missing && chosen[question.id] === undefined ? 'quiz-question is-missing' : 'quiz-question'}>
@@ -82,7 +105,7 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
       {error && <p className="field-error" role="alert">{error}</p>}
       <div className="actions dialog-actions">
         <Button onClick={onClose} disabled={pending}>Finish later</Button>
-        <Button type="submit" variant="primary" disabled={pending}>{pending ? 'Submitting…' : 'Submit answers'}</Button>
+        <Button type="submit" variant="primary" disabled={pending || timedOut}>{pending ? 'Submitting…' : 'Submit answers'}</Button>
       </div>
     </form>}
   </Dialog>

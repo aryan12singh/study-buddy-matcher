@@ -12,7 +12,8 @@ import java.time.Duration;
  * Gemini in the prompt and enforced again on its reply.
  *
  * @param questionCount exactly how many questions every quiz has
- * @param openDuration how long a quiz stays open before it closes by itself
+ * @param openDuration how long a group quiz stays open before it closes by itself; a personal quiz
+ *        has no time limit
  * @param maxFocusCharacters the longest focus a student may give; it also titles the quiz
  */
 @Validated

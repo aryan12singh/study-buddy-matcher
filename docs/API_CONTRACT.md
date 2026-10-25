@@ -1095,9 +1095,9 @@ PersonalQuizInput   (multipart form fields) courseId, notesText?, focus? (up to 
 QuizSubmissionInput { answers: [{ questionId, optionIndex: 0-3 }] }   // every question exactly once
 QuizDto
   { id, scope: GROUP/PERSONAL, course: CourseDto, groupId|null, sessionId|null, title,
-    status: OPEN/CLOSED, createdBy, createdAt, closesAt,
+    status: OPEN/CLOSED, createdBy, createdAt, closesAt|null,
     closedAt|null, questionCount, submittedCount, myAttempt: NOT_STARTED/STARTED/SUBMITTED, canHost }
-QuizQuestionsDto    { quizId, startedAt, closesAt, questions: [{ id, prompt, options[4] }] }   // no answers
+QuizQuestionsDto    { quizId, startedAt, closesAt|null, questions: [{ id, prompt, options[4] }] }   // no answers
 AttemptResultDto    { score, total, timeTakenSeconds, rank }
 LeaderboardDto
   { quizId, status, submittedCount, notSubmittedCount,
@@ -1113,8 +1113,9 @@ attached to the Gemini request and text goes into the prompt; the material is us
 request and never stored. `title` is the `focus` if one was given, otherwise the files' names, or
 "Pasted notes".
 
-A quiz has `quiz.question-count` questions and stays open for `quiz.open-duration`, or until a
-host closes it. `status` already reads an open quiz past `closesAt` as `CLOSED`. The correct
+A quiz has `quiz.question-count` questions. A group quiz stays open for `quiz.open-duration`, or
+until a host closes it. A personal quiz has no time limit (`closesAt` is null): it stays open until
+its student submits it, and then closes. `status` already reads an open quiz past `closesAt` as `CLOSED`. The correct
 options and explanations stay on the server until the quiz closes. The leaderboard ranks current
 members who have submitted by score, then time taken, then submit time, and holds display names
 and scores only. A member who leaves or is deactivated drops off it but keeps their attempt.

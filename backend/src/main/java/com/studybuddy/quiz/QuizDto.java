@@ -6,7 +6,8 @@ import java.time.Instant;
 
 /**
  * A quiz as one taker sees it, without its questions. {@code status} already treats an open quiz
- * past {@code closesAt} as closed. {@code groupId} and {@code sessionId} are null for a personal quiz.
+ * past {@code closesAt} as closed. {@code groupId}, {@code sessionId} and {@code closesAt} are null
+ * for a personal quiz, which stays open until its student submits it.
  *
  * @param canHost whether the signed-in student may close this quiz, and for a group, start others
  */

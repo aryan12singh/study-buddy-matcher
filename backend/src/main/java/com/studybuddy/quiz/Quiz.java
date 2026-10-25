@@ -26,9 +26,10 @@ import java.util.Objects;
 
 /**
  * A multiple-choice quiz with the questions Gemini wrote: either for every member of a study group,
- * started by the leader or the room's host or co-host, or one student's own practice. It stays open
- * until {@code closesAt} or until it is closed early; an open quiz past {@code closesAt} reads as
- * closed, so no scheduler is needed. The same rules are enforced by the table's check constraints.
+ * started by the leader or the room's host or co-host, or one student's own practice. A group quiz
+ * stays open until {@code closesAt} or until it is closed early; an open quiz past {@code closesAt}
+ * reads as closed, so no scheduler is needed. A personal quiz has no closing time: it stays open
+ * until its student submits it. The same rules are enforced by the table's check constraints.
  */
 @Entity
 @Table(name = "quizzes")
@@ -50,22 +51,21 @@ public class Quiz {
     @OrderBy("position")
     private List<QuizQuestion> questions = new ArrayList<>();
     @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
-    @Column(name = "closes_at", nullable = false) private Instant closesAt;
+    /** When a group quiz's open window ends; null for a personal quiz, which has no time limit. */
+    @Column(name = "closes_at") private Instant closesAt;
     /** Set only when the quiz was closed before it ran out of time. */
     @Column(name = "closed_at") private Instant closedAt;
 
     protected Quiz() { }
 
-    private Quiz(QuizScope scope, Course course, Long actorId, String title, QuizDraft draft, Instant now, Duration openFor) {
+    private Quiz(QuizScope scope, Course course, Long actorId, String title, QuizDraft draft, Instant now) {
         if (draft.questions().isEmpty()) throw new IllegalArgumentException("A quiz needs at least one question");
-        if (openFor.isZero() || openFor.isNegative()) throw new IllegalArgumentException("A quiz must stay open for some time");
         this.scope = scope;
         this.course = Objects.requireNonNull(course, "course");
         this.createdBy = actorId;
         this.title = Objects.requireNonNull(title, "title");
         this.status = QuizStatus.OPEN;
         this.createdAt = now;
-        this.closesAt = now.plus(openFor);
         for (QuizDraft.Question question : draft.questions()) {
             questions.add(new QuizQuestion(this, questions.size(), question.prompt(), question.options(),
                     question.correctOption(), question.explanation()));
@@ -73,30 +73,31 @@ public class Quiz {
     }
 
     /**
-     * A quiz every member of the group may take once, on the group's course.
+     * A quiz every member of the group may take once, on the group's course, for a limited time.
      *
      * @param session the group session the quiz belongs to, or null for one started from the room
      */
     public static Quiz forGroup(StudyGroup group, StudySession session, Long actorId, String title,
             QuizDraft draft, Instant now, Duration openFor) {
-        Quiz quiz = new Quiz(QuizScope.GROUP, Objects.requireNonNull(group, "group").getCourse(), actorId, title,
-                draft, now, openFor);
+        if (openFor.isZero() || openFor.isNegative()) throw new IllegalArgumentException("A group quiz must stay open for some time");
+        Quiz quiz = new Quiz(QuizScope.GROUP, Objects.requireNonNull(group, "group").getCourse(), actorId, title, draft, now);
+        quiz.closesAt = now.plus(openFor);
         quiz.studyGroup = group;
         quiz.session = session;
         return quiz;
     }
 
-    /** A practice quiz only this student sees and takes. */
-    public static Quiz personal(Student student, Course course, String title, QuizDraft draft, Instant now, Duration openFor) {
+    /** A practice quiz only this student sees and takes, open until they submit it. */
+    public static Quiz personal(Student student, Course course, String title, QuizDraft draft, Instant now) {
         Quiz quiz = new Quiz(QuizScope.PERSONAL, course, Objects.requireNonNull(student, "student").getId(), title,
-                draft, now, openFor);
+                draft, now);
         quiz.student = student;
         return quiz;
     }
 
-    /** The status takers see now: an open quiz past its closing time counts as closed. */
+    /** The status takers see now: a group quiz past its closing time counts as closed. */
     public QuizStatus statusAt(Instant now) {
-        return status == QuizStatus.OPEN && now.isBefore(closesAt) ? QuizStatus.OPEN : QuizStatus.CLOSED;
+        return status == QuizStatus.OPEN && !isPastClosingTime(now) ? QuizStatus.OPEN : QuizStatus.CLOSED;
     }
 
     public boolean isOpenAt(Instant now) {
@@ -109,8 +110,12 @@ public class Quiz {
      */
     public void close(Instant now) {
         if (status == QuizStatus.CLOSED) return;
-        if (now.isBefore(closesAt)) closedAt = now;
+        if (!isPastClosingTime(now)) closedAt = now;
         status = QuizStatus.CLOSED;
+    }
+
+    private boolean isPastClosingTime(Instant now) {
+        return closesAt != null && !now.isBefore(closesAt);
     }
 
     /** A personal quiz has one taker, so it closes, revealing the answers, once they submit. */
@@ -118,7 +123,7 @@ public class Quiz {
         if (scope == QuizScope.PERSONAL) close(now);
     }
 
-    /** When takers stopped being able to submit: closed early, or the end of the open window. */
+    /** When takers stopped being able to submit: closed early, or the end of a group quiz's window. */
     public Instant endedAt() {
         return closedAt != null ? closedAt : closesAt;
     }
@@ -141,6 +146,7 @@ public class Quiz {
     public QuizStatus getStatus() { return status; }
     public List<QuizQuestion> getQuestions() { return List.copyOf(questions); }
     public Instant getCreatedAt() { return createdAt; }
+    /** The end of a group quiz's window; null for a personal quiz. */
     public Instant getClosesAt() { return closesAt; }
     public Instant getClosedAt() { return closedAt; }
 }

@@ -18,7 +18,7 @@ function quiz(overrides: Partial<Quiz> = {}): Quiz {
   }
 }
 const questions = {
-  quizId: 7, startedAt: '2026-10-25T02:01:00Z', closesAt: '2026-10-25T02:15:00Z', questions: [
+  quizId: 7, startedAt: '2026-10-25T02:01:00Z', closesAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), questions: [
     { id: 101, prompt: 'What hides state?', options: ['Encapsulation', 'Inheritance', 'Polymorphism', 'Abstraction'] },
     { id: 102, prompt: 'What overrides at runtime?', options: ['Encapsulation', 'Inheritance', 'Polymorphism', 'Abstraction'] },
   ],
@@ -169,6 +169,26 @@ describe('Quiz Buddy', () => {
     }))
     expect(await screen.findByText('#2')).toBeTruthy()
     expect(screen.getByText(/Time taken 1:35/)).toBeTruthy()
+  })
+
+  it('counts down a timed group quiz and stops a submit once time is up', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([quiz()]))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response({ ...questions, closesAt: new Date(Date.now() - 1000).toISOString() }))
+    openBot({ scope: 'GROUP', groupId: 3 }, false)
+    fireEvent.click(await screen.findByRole('button', { name: 'Take quiz' }))
+
+    expect(await screen.findByText(/Time's up: this quiz has closed/)).toBeTruthy()
+    expect((screen.getByRole('button', { name: 'Submit answers' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(post).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the time left on a quiz that closes within the hour', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([quiz()]))
+    vi.spyOn(api, 'post').mockResolvedValue(response({ ...questions, closesAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() }))
+    openBot({ scope: 'GROUP', groupId: 3 }, false)
+    fireEvent.click(await screen.findByRole('button', { name: 'Take quiz' }))
+
+    expect(await screen.findByText(/left to submit/)).toBeTruthy()
   })
 
   it('highlights the signed-in member on the leaderboard', async () => {

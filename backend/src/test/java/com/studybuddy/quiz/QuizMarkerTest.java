@@ -6,7 +6,6 @@ import com.studybuddy.student.Student;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +26,7 @@ class QuizMarkerTest {
                 new QuizDraft.Question("Q2", OPTIONS, 1, "E2"),
                 new QuizDraft.Question("Q3", OPTIONS, 2, "E3")));
         var quiz = Quiz.personal(mock(Student.class), new Course("IS442", "OOP"), "Topics", draft,
-                Instant.parse("2026-10-25T02:00:00Z"), Duration.ofMinutes(15));
+                Instant.parse("2026-10-25T02:00:00Z"));
         List<QuizQuestion> questions = quiz.getQuestions();
         for (int i = 0; i < questions.size(); i++) {
             ReflectionTestUtils.setField(questions.get(i), "id", 101L + i);

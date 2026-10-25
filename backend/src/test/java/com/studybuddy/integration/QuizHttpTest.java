@@ -305,6 +305,11 @@ class QuizHttpTest extends PostgresHttpTest {
         expect(call("GET", "/quizzes/" + quizId, leader, null), 404);
         expect(call("POST", "/quizzes/" + quizId + "/start", leader, null), 404);
 
+        assertTrue(created.path("closesAt").isNull(), "A practice quiz has no time limit");
+        // Long after a group quiz's window, a practice quiz is still waiting for its student.
+        database.update("update quizzes set created_at=now()-interval '30 days' where id=?", quizId);
+        assertEquals("OPEN", expect(call("GET", "/quizzes/" + quizId, member, null), 200).path("status").asString());
+
         JsonNode questions = expect(call("POST", "/quizzes/" + quizId + "/start", member, null), 200).path("questions");
         conflict(call("GET", "/quizzes/" + quizId + "/review", member, null), "QUIZ_NOT_CLOSED");
         JsonNode result = expect(submit(quizId, member, answers(questions, 7)), 201);

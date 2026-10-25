@@ -102,7 +102,7 @@ public class QuizService {
         Long courseId = request.course().getId();
         Course course = courses.findById(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
         Instant now = clock.instant();
-        Quiz quiz = quizzes.save(Quiz.personal(student, course, title, draft, now, properties.openDuration()));
+        Quiz quiz = quizzes.save(Quiz.personal(student, course, title, draft, now));
         return assembler.toDto(quiz, Optional.empty(), 0, true, now);
     }
 

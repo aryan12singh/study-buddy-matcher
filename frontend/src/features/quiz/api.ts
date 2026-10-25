@@ -9,11 +9,11 @@ export type QuizAttemptState = 'NOT_STARTED' | 'STARTED' | 'SUBMITTED'
 
 export type Quiz = {
   id: number; scope: QuizScope; course: Course; groupId: number | null; sessionId: number | null
-  title: string; status: QuizStatus; createdBy: number | null; createdAt: string; closesAt: string
+  title: string; status: QuizStatus; createdBy: number | null; createdAt: string; closesAt: string | null
   closedAt: string | null; questionCount: number; submittedCount: number; myAttempt: QuizAttemptState; canHost: boolean
 }
 /** The questions as sent while the quiz is open: never the correct options. */
-export type QuizQuestions = { quizId: number; startedAt: string; closesAt: string; questions: { id: number; prompt: string; options: string[] }[] }
+export type QuizQuestions = { quizId: number; startedAt: string; closesAt: string | null; questions: { id: number; prompt: string; options: string[] }[] }
 export type QuizAnswer = { questionId: number; optionIndex: number }
 export type AttemptResult = { score: number; total: number; timeTakenSeconds: number; rank: number }
 export type LeaderboardEntry = { rank: number; studentId: number; displayName: string; score: number; total: number; timeTakenSeconds: number; me: boolean }

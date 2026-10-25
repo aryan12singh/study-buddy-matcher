@@ -75,7 +75,8 @@ function QuizRow({ quiz, onOpen }: { quiz: Quiz; onOpen: (kind: OpenDialog['kind
       {quiz.course.code} · {quiz.questionCount} questions
       {group && <> · {quiz.submittedCount} submitted</>}
       {submitted && <> · you submitted</>}
-      {open && !submitted && <> · closes {new Date(quiz.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</>}
+      {open && !submitted && quiz.closesAt && <> · closes {new Date(quiz.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</>}
+      {open && !group && quiz.myAttempt === 'STARTED' && <> · in progress</>}
     </p>
     <div className="actions">
       {open && !submitted && <Button variant="primary" onClick={() => onOpen('take')}>{quiz.myAttempt === 'STARTED' ? 'Continue quiz' : 'Take quiz'}</Button>}

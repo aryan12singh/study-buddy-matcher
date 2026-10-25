@@ -43,7 +43,7 @@ class QuizTest {
     }
 
     private static Quiz personalQuiz() {
-        return Quiz.personal(student(11L), IS442, "OOP pillars", DRAFT, STARTED, FIFTEEN_MINUTES);
+        return Quiz.personal(student(11L), IS442, "OOP pillars", DRAFT, STARTED);
     }
 
     @Test
@@ -135,6 +135,14 @@ class QuizTest {
         assertTrue(quiz.isOwnedBy(11L));
         assertFalse(quiz.isOwnedBy(12L));
         assertFalse(openQuiz().isOwnedBy(7L), "Nobody owns a group quiz");
+    }
+
+    @Test
+    void aPersonalQuizHasNoTimeLimit() {
+        Quiz quiz = personalQuiz();
+
+        assertNull(quiz.getClosesAt());
+        assertTrue(quiz.isOpenAt(STARTED.plus(Duration.ofDays(365))), "It waits for its student however long they take");
     }
 
     @Test
