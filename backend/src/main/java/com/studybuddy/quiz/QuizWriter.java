@@ -4,6 +4,8 @@ import com.studybuddy.ai.AiClient;
 import com.studybuddy.ai.AiUnavailableException;
 import com.studybuddy.course.Course;
 import com.studybuddy.studyplan.StudyMaterial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class QuizWriter {
+    private static final Logger LOG = LoggerFactory.getLogger(QuizWriter.class);
     private final QuizPromptBuilder prompts;
     private final AiClient ai;
     private final QuizOutputValidator validator;
@@ -30,6 +33,9 @@ public class QuizWriter {
      */
     public QuizDraft write(Long studentId, Course course, String focus, StudyMaterial material) {
         String reply = ai.generateJson(studentId, prompts.build(course, focus, material), material.attachments());
-        return validator.validate(reply).orElseThrow(AiUnavailableException::new);
+        return validator.validate(reply).orElseThrow(() -> {
+            LOG.warn("Gemini quiz reply rejected by the quiz checks");
+            return new AiUnavailableException();
+        });
     }
 }

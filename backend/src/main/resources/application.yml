@@ -143,8 +143,9 @@ app:
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
       model: gemini-3.5-flash
-      # Reading a PDF and writing a whole roadmap takes far longer than E1's one sentence.
-      timeout: 30s
+      # Reading a PDF and writing a whole roadmap or a ten-question quiz takes far longer than E1's
+      # one sentence: a quiz from a lecture PDF can take Gemini well over 30 seconds.
+      timeout: 90s
       max-output-tokens: 4000
       # Google's free tier allows 20 generate requests per day per project and model.
       daily-call-limit: 18

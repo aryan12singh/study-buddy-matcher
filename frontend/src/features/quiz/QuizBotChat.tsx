@@ -181,7 +181,7 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
           </div>)}
       {writing && <div className="quiz-bot-message is-bot">
         <span className="quiz-bot-avatar" aria-hidden="true"><PixelIcon kind="robot" /></span>
-        <p role="status"><span className="quiz-bot-typing">Reading your notes and writing questions</span></p>
+        <p role="status"><span className="quiz-bot-typing">Reading your notes and writing questions. This can take up to a minute</span></p>
       </div>}
     </div>
 

@@ -36,8 +36,11 @@ export const MAX_NOTES_CHARACTERS = 4000
 export const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md']
 /** Matches app.ai.assistant.quiz.max-focus-characters. */
 export const MAX_FOCUS_CHARACTERS = 200
-/** Reading a PDF and writing ten questions can take Gemini far longer than the client's usual timeout. */
-const WRITING_TIMEOUT_MS = 60000
+/**
+ * Reading a PDF and writing ten questions can take Gemini far longer than the client's usual
+ * timeout; this waits a little longer than the server's own 90-second limit on Gemini.
+ */
+const WRITING_TIMEOUT_MS = 120000
 
 /** What the quiz is written from: uploaded files, or notes pasted into the chat. */
 export type QuizMaterial = { kind: 'files'; files: File[] } | { kind: 'notes'; text: string }
