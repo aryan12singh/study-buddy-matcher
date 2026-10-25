@@ -52,6 +52,8 @@ describe('private room screen', () => {
     expect(atmosphere).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByLabelText('Window view')).toBeVisible()
     fireEvent.keyDown(atmosphere, { key: 'ArrowRight' })
+    expect(screen.getByRole('tab', { name: 'Music' })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Music' }), { key: 'End' })
     expect(screen.getByRole('tab', { name: 'Room roles' })).toHaveAttribute('aria-selected', 'true')
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Room roles' }), { key: 'Escape' })
     expect(settings).toHaveAttribute('aria-expanded', 'false')
