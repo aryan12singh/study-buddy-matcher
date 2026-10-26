@@ -159,9 +159,9 @@ function RoomPage({ groupId }: { groupId: number }) {
                   content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
                 { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
                   content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
+                { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
                 { id: 'roles', label: 'Room roles', icon: '★',
                   content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-                { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
               ]} />
             </header>
             <RoomParticipants room={room} accountId={account?.id} joinedHere={resource.joinedHere} />

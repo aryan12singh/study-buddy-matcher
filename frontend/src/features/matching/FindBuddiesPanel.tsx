@@ -57,6 +57,8 @@ export default function FindBuddiesPanel() {
   const sortLabel = SORT_OPTIONS.find(option => option.value === selectedSort)?.label
   const filterCount = Object.keys(search).filter(key => key !== 'sort' && key !== 'limit').length
   const profileEditLink = account ? `/students/${account.id}/edit` : undefined
+  // Sorting only means something once a search has results; an empty search has nothing to order.
+  const canSort = hasSearchContext(search) && (matches ? matches.length > 0 : true)
   const incomplete = profile.data && (!profile.data.coursesTaken?.length || !profile.data.preferredStudyMode || !profile.data.availability?.length)
 
   function apply(next: MatchSearch) {
@@ -88,25 +90,18 @@ export default function FindBuddiesPanel() {
         </div>
       )}
       <div className="match-toolbar">
-        <div>
+        <div className="match-toolbar-text">
           <p className="match-count">{hasSearchContext(search) ? resultText(matches?.length, results.data?.totalMatches) : 'Choose a course or study goal to start'}</p>
-          <p className="row-meta">
-            {strategy ? selectedSort === 'BEST_MATCH'
+          {strategy && <p className="row-meta">
+            {selectedSort === 'BEST_MATCH'
               ? `Ranked by ${strategy.label} matching. ${strategy.description}`
-              : `Sorted by ${sortLabel}. ${strategy.label} matching breaks ties. ${strategy.description}` : ''}
-            {strategy && ` Configuration version ${results.data?.configurationVersion}.`}
-            {' '}Your saved target course helps compare preferences; it does not select this search.
-          </p>
+              : `Sorted by ${sortLabel}. ${strategy.label} matching breaks ties. ${strategy.description}`}
+          </p>}
         </div>
         <Button aria-expanded={filtersOpen} aria-controls={FILTERS_ID} onClick={() => setFiltersOpen(open => !open)}>
           {filterCount ? `Filters · ${filterCount}` : 'Filters'}
         </Button>
       </div>
-      <Field id="match-sort" label="Sort matches">
-        <select id="match-sort" value={search.sort || 'BEST_MATCH'} disabled={!hasSearchContext(search)} onChange={event => apply({ ...search, sort: event.target.value as MatchSearch['sort'] })}>
-          {SORT_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-        </select>
-      </Field>
       {filtersOpen && (
         <MatchFilters
           id={FILTERS_ID}
@@ -127,7 +122,19 @@ export default function FindBuddiesPanel() {
       )}
       {courses.error && filtersOpen && <Button onClick={() => courses.reload(true)}>Retry courses</Button>}
       {profile.error && <p className="field-hint">Your profile could not be loaded. You can still search. <Button onClick={() => profile.reload(true)}>Retry profile</Button></p>}
-      <FilterSummary filters={chips} onClear={() => { apply({}); setFiltersOpen(true) }} />
+      {/* Active filters and sorting share one row: refine on the left, order on the right. */}
+      <div className="match-refine">
+        <FilterSummary filters={chips} onClear={() => { apply({}); setFiltersOpen(true) }} />
+        {canSort && (
+          <div className="match-sort">
+            <Field id="match-sort" label="Sort matches">
+              <select id="match-sort" value={search.sort || 'BEST_MATCH'} onChange={event => apply({ ...search, sort: event.target.value as MatchSearch['sort'] })}>
+                {SORT_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </Field>
+          </div>
+        )}
+      </div>
       {!hasSearchContext(search) && <StatePanel empty emptyTitle="Start your first matching search" emptyMessage="Choose a course or study goal above. Add optional filters to compare students who suit your plans." emptyKind="search" emptyAction={<Link to="/help#help-matching">How matching and filters work</Link>} />}
       <ActionNotice success={notice} />
       <StatePanel

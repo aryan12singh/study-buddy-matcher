@@ -166,6 +166,7 @@ describe('Find buddies page', () => {
     openPage()
     expect(await screen.findByText('No students match this search')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Understand scores and empty searches' })).toHaveAttribute('href', '/help#help-matching')
+    expect(screen.queryByLabelText('Sort matches')).not.toBeInTheDocument()
     await openFilters()
     fireEvent.change(screen.getByLabelText('Study goal'), { target: { value: 'EXAM_PREPARATION' } })
     fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
@@ -403,7 +404,7 @@ describe('Find buddies page', () => {
     expect(await screen.findByText('Start your first matching search')).toBeInTheDocument()
     await screen.findByRole('option', { name: 'IS442 Object Oriented Programming' })
     expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(0)
-    expect(screen.getByLabelText('Sort matches')).toBeDisabled()
+    expect(screen.queryByLabelText('Sort matches')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Find study buddies' }))
     expect(screen.getAllByText('Choose a course or study goal before searching.')).toHaveLength(2)
     expect(get.mock.calls.filter(([url]) => url === '/matches')).toHaveLength(0)
@@ -435,7 +436,7 @@ describe('Find buddies page', () => {
     expect(within(row).queryByText('Course aligned; study goals disabled.')).not.toBeInTheDocument()
     expect(within(row).getByText('Relevant course: IS442 Object Oriented Programming')).toBeInTheDocument()
     expect(within(row).getByRole('meter', { name: 'Study goal score' })).toHaveAttribute('aria-valuetext', 'Disabled by administrator')
-    expect(screen.getByText(/Configuration version 2/)).toBeInTheDocument()
+    expect(screen.queryByText(/Configuration version/)).not.toBeInTheDocument()
   })
 
   it('explains a bounded result and resets without requesting a context-free search', async () => {
