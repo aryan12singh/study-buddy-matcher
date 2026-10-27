@@ -485,10 +485,13 @@ file's type is checked from its contents as well as its extension: a `.pdf` must
 PDF signature and a text file must be UTF-8, otherwise 415. PDFs are attached to the Gemini
 request in upload order; text goes into the prompt. Only the file names are stored.
 
-The roadmap prompt (`prompts/study-plan-v1.txt`) states these limits and the time each week or
-meeting can hold. Gemini's reply is then checked against them: every week or meeting has at
-least one entry, no entry falls outside the plan, a block's minutes fit its limit and every text
-fits its column. Any other reply is rejected with `AI_UNAVAILABLE`. These checks bound the
+The roadmap prompt (`prompts/study-plan-v2.txt`) states these limits and the time each week or
+meeting can hold. When a week has more topics than `max-entries-per-block`, the prompt asks
+Gemini to group related topics into one entry, so a one-week plan works for a full lecture deck.
+Gemini's reply is then checked against the limits: every week or meeting has at least one entry,
+no entry falls outside the plan, a block's minutes fit its limit and every text fits its column.
+A reply that is the object wrapped in a one-item list is read as the object. Any other reply is
+rejected with `AI_UNAVAILABLE`, and the backend logs which check it failed. These checks bound the
 shape and size of a roadmap; they do not prove its advice is good.
 
 </details>

@@ -1,6 +1,8 @@
 package com.studybuddy.studyplan;
 
 import com.studybuddy.common.InputRules;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -21,9 +23,11 @@ import java.util.Set;
  * if it has the agreed shape, every entry names a block of the frame, every block has between one
  * and the configured number of entries, a block's minutes fit its limit, and every text fits its
  * column. These are bounded checks on shape and size; they cannot prove the plan is good advice.
+ * Each rejection logs which check failed, never the reply itself, which may quote the material.
  */
 @Component
 public class StudyPlanOutputValidator {
+    private static final Logger LOG = LoggerFactory.getLogger(StudyPlanOutputValidator.class);
     private final StudyPlanProperties properties;
     private final JsonMapper json;
 
@@ -35,16 +39,35 @@ public class StudyPlanOutputValidator {
     public Optional<RoadmapDraft> validate(String raw, RoadmapFrame frame) {
         JsonNode reply;
         try {
-            reply = json.readTree(raw == null ? "" : raw);
+            reply = unwrapped(json.readTree(raw == null ? "" : raw));
         } catch (JacksonException notJson) {
-            return Optional.empty();
+            return rejected("the reply is not JSON");
         }
         Optional<List<String>> topics = sourceTopicsOf(reply.path("sourceTopics"));
+        if (topics.isEmpty()) {
+            return rejected("sourceTopics is missing, has a blank or non-text title, or has none or more than "
+                    + properties.maxSourceTopics() + " distinct topics");
+        }
         Optional<List<RoadmapDraft.Entry>> entries = entriesOf(reply.path("entries"));
-        if (topics.isEmpty() || entries.isEmpty() || !fitsFrame(entries.get(), frame)) {
-            return Optional.empty();
+        if (entries.isEmpty()) {
+            return rejected("entries is missing or empty, or an entry has a bad sequence, minutes, title or more than "
+                    + properties.maxTasksPerEntry() + " tasks");
+        }
+        Optional<String> misfit = misfitWithFrame(entries.get(), frame);
+        if (misfit.isPresent()) {
+            return rejected(misfit.get());
         }
         return Optional.of(new RoadmapDraft(topics.get(), inBlockOrder(entries.get())));
+    }
+
+    /** Gemini sometimes wraps the object in a one-item list; that list is read as the object inside. */
+    private static JsonNode unwrapped(JsonNode reply) {
+        return reply.isArray() && reply.size() == 1 && reply.get(0).isObject() ? reply.get(0) : reply;
+    }
+
+    private static Optional<RoadmapDraft> rejected(String reason) {
+        LOG.warn("Gemini roadmap reply rejected: {}", reason);
+        return Optional.empty();
     }
 
     /** One to the configured number of distinct topics; a repeat (ignoring case) is dropped. */
@@ -92,25 +115,37 @@ public class StudyPlanOutputValidator {
         return Optional.of(new RoadmapDraft.Entry(sequence.asInt(), title.get(), minutes.asInt(), tasks.get()));
     }
 
-    /** Every block is covered, no entry names a block outside the frame, and each block's time fits. */
-    private boolean fitsFrame(List<RoadmapDraft.Entry> entries, RoadmapFrame frame) {
+    /**
+     * Why the entries do not fit the frame, or nothing when every block is covered, no entry names a
+     * block outside the frame, and each block's entries and time fit.
+     */
+    private Optional<String> misfitWithFrame(List<RoadmapDraft.Entry> entries, RoadmapFrame frame) {
         Map<Integer, Integer> entriesPerBlock = new HashMap<>();
         Map<Integer, Integer> minutesPerBlock = new HashMap<>();
         for (RoadmapDraft.Entry entry : entries) {
             if (frame.block(entry.sequence()).isEmpty()) {
-                return false;
+                return Optional.of("an entry names block " + entry.sequence() + ", outside the plan's "
+                        + frame.blocks().size() + " blocks");
             }
             entriesPerBlock.merge(entry.sequence(), 1, Integer::sum);
             minutesPerBlock.merge(entry.sequence(), entry.plannedMinutes(), Integer::sum);
         }
         for (RoadmapBlock block : frame.blocks()) {
             int count = entriesPerBlock.getOrDefault(block.sequence(), 0);
-            if (count == 0 || count > properties.maxEntriesPerBlock()
-                    || minutesPerBlock.get(block.sequence()) > block.availableMinutes()) {
-                return false;
+            if (count == 0) {
+                return Optional.of("block " + block.sequence() + " has no entries");
+            }
+            if (count > properties.maxEntriesPerBlock()) {
+                return Optional.of("block " + block.sequence() + " has " + count + " entries, more than "
+                        + properties.maxEntriesPerBlock());
+            }
+            int minutes = minutesPerBlock.get(block.sequence());
+            if (minutes > block.availableMinutes()) {
+                return Optional.of("block " + block.sequence() + " plans " + minutes + " minutes, more than its "
+                        + block.availableMinutes());
             }
         }
-        return true;
+        return Optional.empty();
     }
 
     /** Sorted by block; entries within a block keep the order Gemini gave them. */

@@ -82,6 +82,30 @@ class StudyPlanOutputValidatorTest {
         assertTrue(validate(extra).isPresent());
     }
 
+    /** Seen from real Gemini with a lecture PDF: the agreed object, wrapped in a one-item list. */
+    @Test
+    void readsAPlanWrappedInAOneItemList() {
+        RoadmapDraft draft = validate("[" + reply(TOPICS, entries(WEEK_ONE, WEEK_TWO)) + "]").orElseThrow();
+
+        assertEquals(List.of("Encapsulation", "Polymorphism"), draft.sourceTopics());
+        assertEquals(2, draft.entries().size());
+    }
+
+    @Test
+    void stillChecksAPlanInsideAOneItemList() {
+        assertTrue(validate("[" + reply(TOPICS, entries(WEEK_ONE)) + "]").isEmpty());
+    }
+
+    @Test
+    void rejectsAListOfSeveralPlansOrOfSomethingElse() {
+        String plan = reply(TOPICS, entries(WEEK_ONE, WEEK_TWO));
+
+        assertTrue(validate("[" + plan + ", " + plan + "]").isEmpty());
+        assertTrue(validate("[]").isEmpty());
+        assertTrue(validate("[\"" + "plan" + "\"]").isEmpty());
+        assertTrue(validate("[[" + plan + "]]").isEmpty());
+    }
+
     @Test
     void rejectsAReplyThatIsNotTheAgreedJson() {
         assertTrue(validate(null).isEmpty());
