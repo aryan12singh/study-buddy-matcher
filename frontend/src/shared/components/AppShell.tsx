@@ -8,6 +8,7 @@ import Avatar from './Avatar'
 import PixelIcon from './PixelIcon'
 import AchievementNavIcon from '../../features/achievements/AchievementNavIcon'
 import RouteNotice from './RouteNotice'
+import AssistantLauncher from '../../features/assistant/AssistantLauncher'
 
 export default function AppShell() {
   const { account, logout } = useAuth()
@@ -71,6 +72,7 @@ export default function AppShell() {
         </main>
       </div>
       <footer className="desktop-footer">Study together, at your own pace.</footer>
+      {account?.role === 'STUDENT' && <AssistantLauncher />}
     </div>
   )
 }

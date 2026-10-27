@@ -1143,6 +1143,47 @@ Starting a quiz takes a short read that checks the request, the Gemini call, and
 checks the actor may still host (or, for a personal quiz, is still active). No database transaction
 is held while Gemini answers.
 
+## Study assistant (AI study assistant)
+
+Proposed bonus extension on `feat/team-b/ai-chat-assistant`. Student only. Shown to students as
+**Pixel**: one message box, opened from a button fixed to the bottom-right corner of every student
+page. Gemini only reads what
+a message asks for; the answer comes from the app's existing services, read-only. Each message is
+handled on its own, with no memory of earlier ones.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/assistant/messages` | `{ "message": "..." }` (1 to `chat.max-message-characters`) | 200 `AssistantReplyDto` | Student |
+
+```text
+AssistantReplyDto
+  { intent: FIND_BUDDIES/WHEN_TO_MEET/QUIZ_ME/PLAN_STUDY/MY_TO_DO/NAVIGATE/UNKNOWN, text, filters[],
+    matches: MatchResultDto[], slots: SharedSlotDto[], todos: [{ text, label, link }],
+    action: { kind: OPEN_PAGE/OPEN_QUIZ_BUDDY, label, link|null, prefill: { name: value } } | null }
+```
+
+| Intent | What answers it |
+| --- | --- |
+| `FIND_BUDDIES` | `MatchService.search` with the stated course, goal, mode, group size and shared hours, top `chat.matches-shown`. Needs a course or goal, so it asks for one otherwise. Time of day is not a search filter; it only sorts by shared hours |
+| `WHEN_TO_MEET` | The student's open group named (or their only one), then `StudySessionService.groupAvailability`, keeping slots at least as long as the meeting |
+| `QUIZ_ME` | Opens Quiz Buddy; `prefill` carries `topic` and `courseId` |
+| `PLAN_STUDY` | Links to the Study plans page (see below) |
+| `MY_TO_DO` | Pending incoming buddy requests, pending applications to groups the student leads, open quizzes they have not taken in their groups, sessions starting within 7 days and unread notifications, each as a `todos` item linking to the page that handles it |
+| `NAVIGATE` | One page from the assistant's fixed list (`AppPage`: home, find buddies, buddy requests, connections, study groups, create group, sessions, study room, achievements, notifications, profile, edit profile, help) with what it is for and a link. Gemini only picks the page name |
+| `UNKNOWN` | A short message listing what the assistant can do |
+
+`text` is written from templates, never by Gemini. Matches are the same privacy-safe cards as Find
+buddies, with no email or contact number, and only the student's own message goes to Gemini.
+
+**Study plans page link.** `PLAN_STUDY` links to `/study-plan` with the details the student stated
+as optional query parameters: `courseId`, `examDate` (`yyyy-MM-dd`) and `hoursPerWeek`, for
+example `/study-plan?courseId=4&examDate=2026-11-20&hoursPerWeek=6`. The Study plans screen
+should read these to fill in its form.
+
+Errors: 400 `INVALID_INPUT` for a blank or too long message (checked before Gemini is asked); 503
+`AI_UNAVAILABLE` when the assistant is off, over its allowance, rate limited or timed out, or the
+reply failed the checks. Each message uses one call of the shared `app.ai.assistant` allowance.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview
