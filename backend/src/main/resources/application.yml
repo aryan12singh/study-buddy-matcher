@@ -144,8 +144,9 @@ app:
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
       model: gemini-3.5-flash
-      # Reading a PDF and writing a whole roadmap takes far longer than E1's one sentence.
-      timeout: 30s
+      # Reading a PDF and writing a whole roadmap or a ten-question quiz takes far longer than E1's
+      # one sentence: a quiz from a lecture PDF can take Gemini well over 30 seconds.
+      timeout: 90s
       max-output-tokens: 4000
       # Google's free tier allows 20 generate requests per day per project and model.
       daily-call-limit: 18
@@ -172,6 +173,13 @@ app:
         max-hours-per-week: 40
         # "Today", for a plan's first week, follows the students' calendar, not the server's.
         time-zone: Asia/Singapore
+      quiz:
+        # Stated in the prompt and checked again on Gemini's reply.
+        question-count: 10
+        # An open quiz past this reads as closed, so no scheduler is needed.
+        open-duration: 15m
+        # The optional "what to focus on" text, which also titles the quiz, so at most 255.
+        max-focus-characters: 200
   ambient:
     # Sounds are unavailable until application-local.yml sets api-key. Never put the key here.
     base-url: https://freesound.org/apiv2

@@ -447,7 +447,7 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.api-key` | none; set only in `application-local.yml` | Gemini API key from a different Google project than E1's, so the two features do not share a quota. Never committed, logged or sent to the browser |
 | `app.ai.assistant.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `app.ai.assistant.model` | `gemini-3.5-flash` | Gemini model ID, the same as E1 |
-| `app.ai.assistant.timeout` | `30s` | Connect timeout and read timeout, each. Longer than E1's because reading a PDF and writing a roadmap takes far longer than one sentence |
+| `app.ai.assistant.timeout` | `90s` | Connect timeout and read timeout, each. Longer than E1's because reading a PDF and writing a roadmap or a ten-question quiz takes far longer than one sentence; a quiz from a lecture PDF can take Gemini over 30 seconds |
 | `app.ai.assistant.max-output-tokens` | `4000` | Upper bound on Gemini's reply length |
 | `app.ai.assistant.daily-call-limit` | `18` | Assistant calls per day before returning `AI_UNAVAILABLE`; just under the free tier's 20 requests per day per project and model. In memory and resets at midnight in `quota-zone` |
 | `app.ai.assistant.daily-call-limit-per-student` | `5` | Assistant calls one student can trigger per day, so one student cannot use up the shared allowance |
@@ -463,6 +463,9 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.study-plan.max-weeks` | `16` | Most weeks a personal plan covers, so the exam can be at most this far away |
 | `app.ai.assistant.study-plan.max-hours-per-week` | `40` | Most study hours per week a student can plan |
 | `app.ai.assistant.study-plan.time-zone` | `Asia/Singapore` | Calendar that decides "today", the first day of a personal plan |
+| `app.ai.assistant.quiz.question-count` | `10` | Exactly how many questions every group quiz has; stated in the prompt, and a reply with any other number is rejected |
+| `app.ai.assistant.quiz.open-duration` | `15m` | How long a group quiz stays open before it reads as closed; the host can close it sooner |
+| `app.ai.assistant.quiz.max-focus-characters` | `200` | Longest optional focus a student can give a quiz ("what should it ask about?"); it also titles the quiz, so it may be at most 255. The material itself (uploaded files or pasted notes) uses the `study-plan` upload limits above |
 
 A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
 slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the

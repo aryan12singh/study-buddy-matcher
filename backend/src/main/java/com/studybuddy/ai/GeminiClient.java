@@ -54,7 +54,12 @@ public class GeminiClient implements AiClient {
     @Override
     public String generateJson(Long studentId, String prompt, List<AiAttachment> attachments) {
         // Checked before the quota, so a switched-off assistant never spends anyone's allowance.
-        if (!properties.ready() || !quota.tryAcquire(studentId)) {
+        if (!properties.ready()) {
+            LOG.warn("Gemini assistant is switched off or has no api-key under app.ai.assistant");
+            throw new AiUnavailableException();
+        }
+        if (!quota.tryAcquire(studentId)) {
+            LOG.warn("Gemini assistant call refused: over the daily allowance or pausing after a rate limit");
             throw new AiUnavailableException();
         }
         try {
@@ -100,7 +105,9 @@ public class GeminiClient implements AiClient {
             return Optional.empty();
         }
         JsonNode candidate = json.readTree(reply).path("candidates").path(0);
-        if (!FINISHED_NORMALLY.equals(candidate.path("finishReason").asString(""))) {
+        String finishReason = candidate.path("finishReason").asString("");
+        if (!FINISHED_NORMALLY.equals(finishReason)) {
+            LOG.warn("Gemini assistant reply unusable: finish reason {}", finishReason.isEmpty() ? "missing" : finishReason);
             return Optional.empty();
         }
         StringBuilder text = new StringBuilder();

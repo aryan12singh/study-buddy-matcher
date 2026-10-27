@@ -324,6 +324,25 @@ branch backend already writing the new type had made starting a study-room timer
 The backend also sends these invitations in a separate transaction after the timer start
 commits, so a database missing this file logs the failure instead of rejecting the start.
 
+### Quizzes — 25 October 2026
+
+`20261025090000_quizzes.sql` (branch `feat/team-b/group-quiz`) only creates five new tables:
+`quizzes`, `quiz_questions`, `quiz_question_options`, `quiz_attempts` and
+`quiz_attempt_answers`, with RLS on and browser roles revoked. It changes no existing table or
+row. It was applied to the shared database at about 23:02 SGT, directly with `psql` from the
+`postgres:17` image in one transaction (`--single-transaction`, `ON_ERROR_STOP`), so the branch
+backend could be tested against shared data.
+
+- No backup or dry run on a restored copy was taken, because the file only adds tables. Before
+  applying, a read-only check found none of the five tables present and all four referenced
+  tables (`courses`, `students`, `study_groups`, `study_sessions`) in place.
+- Supabase's migration history does **not** record version `20261025090000`. Every statement
+  uses `IF NOT EXISTS` or is a repeatable grant, so a later `scripts/migrate-database.sh` applies
+  it again without effect.
+- Afterwards all five tables had RLS on, `anon` could not select from `quizzes`, and `users`
+  still held its 55 rows.
+- The file is now applied: change the quiz schema only with a new migration.
+
 ## Privacy and access verification
 
 After the recorded merged E2 migration set, all 20 application tables had RLS enabled;
@@ -421,3 +440,19 @@ After rollout, verify all three E2 tables and sequences deny `PUBLIC`, `anon` an
 uses a bounded in-memory backend cache and adds no database table or browser grant.
 Record the actual target/time/migration-history name separately from local results in
 [E2_TESTING.md](E2_TESTING.md).
+
+### Untimed personal quizzes — 25 October 2026
+
+`20261025233000_untimed_personal_quizzes.sql` lets a personal practice quiz have no closing time,
+since it stays open until its student submits it. It makes `quizzes.closes_at` nullable, keeps it
+required for group quizzes with `quizzes_group_closing_time_check`, re-adds
+`quizzes_closes_after_created_check` to allow null, and clears `closes_at` on existing personal
+quizzes. It was applied to the shared database at about 23:30 SGT the same way as the quiz tables
+(`psql` from `postgres:17`, one transaction), with no backup because it only relaxes a column
+and touches only `quizzes`.
+
+- Before: one personal quiz, with a closing time, and `closes_at` not nullable. After: the quiz
+  had no closing time (which reopened it, unsubmitted), `closes_at` was nullable, both checks
+  existed, and `users` still held its 55 rows.
+- Supabase's migration history does not record version `20261025233000`; the file drops each
+  constraint before re-adding it, so it can be applied again without effect.

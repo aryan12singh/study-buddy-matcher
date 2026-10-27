@@ -1072,6 +1072,77 @@ The plan is created in three steps: a short read that checks the request, the Ge
 a short write that checks the student is still active before saving. No database transaction or
 account lock is held while Gemini answers.
 
+## Quizzes (AI study assistant)
+
+Proposed bonus extension on `feat/team-b/group-quiz`; not part of the agreed selected extras until
+the team accepts it. Student only. A quiz is either for a group (`scope: GROUP`) or one student's
+own practice (`scope: PERSONAL`). Accepted members of an open group see and take its quizzes; the
+group leader and the study room's host and co-host also start and close them. A personal quiz is
+seen, taken and closed by its owner alone, and closes as soon as they submit it.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/groups/{groupId}/quizzes` | `multipart/form-data`: `StartQuizInput` fields plus 0 to `max-files` parts named `files` | 201 `QuizDto` | Leader, host, co-host |
+| GET | `/api/groups/{groupId}/quizzes` | none | 200 `QuizDto[]`, newest first | Member |
+| POST | `/api/quizzes` | `multipart/form-data`: `PersonalQuizInput` fields plus 0 to `max-files` parts named `files` | 201 `QuizDto` | Student |
+| GET | `/api/quizzes` | none | 200 `QuizDto[]`, own personal quizzes newest first | Student |
+| GET | `/api/quizzes/{quizId}` | none | 200 `QuizDto` | Member or owner |
+| POST | `/api/quizzes/{quizId}/start` | none | 200 `QuizQuestionsDto`; records the start time, and repeat calls return the same attempt | Member or owner |
+| POST | `/api/quizzes/{quizId}/attempts` | `QuizSubmissionInput` | 201 `AttemptResultDto` | Member or owner who started |
+| GET | `/api/quizzes/{quizId}/leaderboard` | none | 200 `LeaderboardDto` | Member or owner |
+| POST | `/api/quizzes/{quizId}/close` | none | 200 `QuizDto` | Leader, host, co-host, or owner |
+| GET | `/api/quizzes/{quizId}/review` | none | 200 `QuizReviewDto` once closed | Member or owner |
+
+```text
+StartQuizInput      (multipart form fields) notesText?, focus? (up to max-focus-characters), sessionId? (a scheduled session of this group)
+PersonalQuizInput   (multipart form fields) courseId, notesText?, focus? (up to max-focus-characters)
+QuizSubmissionInput { answers: [{ questionId, optionIndex: 0-3 }] }   // every question exactly once
+QuizDto
+  { id, scope: GROUP/PERSONAL, course: CourseDto, groupId|null, sessionId|null, title,
+    status: OPEN/CLOSED, createdBy, createdAt, closesAt|null,
+    closedAt|null, questionCount, submittedCount, myAttempt: NOT_STARTED/STARTED/SUBMITTED, canHost }
+QuizQuestionsDto    { quizId, startedAt, closesAt|null, questions: [{ id, prompt, options[4] }] }   // no answers
+AttemptResultDto    { score, total, timeTakenSeconds, rank }
+LeaderboardDto
+  { quizId, status, submittedCount, notSubmittedCount,
+    entries: [{ rank, studentId, displayName, score, total, timeTakenSeconds, me }] }
+QuizReviewDto
+  { quizId, score|null, total|null,
+    questions: [{ id, prompt, options[4], correctOption, chosenOption|null, explanation }] }
+```
+
+The material is one or more `files` (PDF, `.txt` or `.md`) or pasted `notesText`, never both,
+checked exactly as for study plans and within the same `study-plan` upload limits. PDFs are
+attached to the Gemini request and text goes into the prompt; the material is used for this one
+request and never stored. `title` is the `focus` if one was given, otherwise the files' names, or
+"Pasted notes".
+
+A quiz has `quiz.question-count` questions. A group quiz stays open for `quiz.open-duration`, or
+until a host closes it. A personal quiz has no time limit (`closesAt` is null): it stays open until
+its student submits it, and then closes. `status` already reads an open quiz past `closesAt` as `CLOSED`. The correct
+options and explanations stay on the server until the quiz closes. The leaderboard ranks current
+members who have submitted by score, then time taken, then submit time, and holds display names
+and scores only. A member who leaves or is deactivated drops off it but keeps their attempt.
+
+Errors:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 400 | `INVALID_INPUT` | No material, or both files and notes; too many files; an empty file; notes or focus too long; an unknown `courseId`; a `sessionId` that is not a scheduled session of this group; answers missing, repeated, for another quiz's question or outside 0-3 |
+| 413 | `FILE_TOO_LARGE` | Files together over `max-upload-size`, or text files over `max-text-file-characters` |
+| 415 | `UNSUPPORTED_FILE_TYPE` | A file other than PDF, `.txt` or `.md`, or whose contents do not match its extension |
+| 403 | `FORBIDDEN` | Listing a group's quizzes as a non-member; starting or closing a quiz as a member who is not the leader, host or co-host |
+| 404 | `NOT_FOUND` | A quiz that does not exist, belongs to a group the student is not a member of, or is another student's personal quiz |
+| 409 | `QUIZ_CLOSED` | Starting or submitting after the quiz closed |
+| 409 | `ALREADY_SUBMITTED` | Starting or submitting again after submitting |
+| 409 | `QUIZ_NOT_STARTED` | Submitting without starting first |
+| 409 | `QUIZ_NOT_CLOSED` | Asking for the review while the quiz is open |
+| 503 | `AI_UNAVAILABLE` | The assistant is off, over its allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+
+Starting a quiz takes a short read that checks the request, the Gemini call, and a short write that
+checks the actor may still host (or, for a personal quiz, is still active). No database transaction
+is held while Gemini answers.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview

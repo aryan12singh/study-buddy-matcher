@@ -6,7 +6,7 @@
 .group-room .room-timer-actions .retro-button { min-height: 40px; min-width: 104px; }
 /* Two rows: the personal mini player and the window controls on top, then the centred tag and name. */
 .group-room-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "music controls" "title title"; align-items: start; gap: .8rem 1rem; }
-.group-room-header > .now-playing-mini { grid-area: music; }
+.group-room-header > .room-corner-tools { grid-area: music; margin: 0; }
 .group-room-header > .window-controls { grid-area: controls; }
 .group-room-title { grid-area: title; display: flex; flex-direction: column; align-items: center; gap: .7rem; min-width: 0; text-align: center; }
 .group-room-workspace.is-minimal > .group-room { background: none; border-color: transparent; box-shadow: none; }
@@ -16,7 +16,7 @@
 .group-room-header .window-controls { margin: -.35rem -.6rem 0 0; }
 /* Here the mini player sits in the header's top row rather than in the panel's flow. */
 .group-room .now-playing-mini { margin: 0; }
-.group-room-workspace.is-minimal .now-playing-mini { display: none; }
+.group-room-workspace.is-minimal .room-corner-tools { display: none; }
 .study-room-workspace.is-minimal .room-timer-cue { color: #fffcef; text-shadow: 1px 2px 0 #17201c99; }
 .group-room-workspace.is-expanded > .group-room { max-width: 860px; }
 .desktop .group-room-workspace.is-expanded .personal-pomodoro-clock { font-size: clamp(4.5rem, 12vw, 8rem); }
