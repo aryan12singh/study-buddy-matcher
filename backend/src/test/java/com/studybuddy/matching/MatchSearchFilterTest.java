@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MatchSearchFilterTest {
 
-    private final MatchSearchFilter filter = new MatchSearchFilter(new ProfileProperties(5, 8), MatchingFixtures.rules());
+    private final MatchSearchFilter filter = new MatchSearchFilter(new ProfileProperties(5, 8, 6), MatchingFixtures.rules());
     private final MatchingProfile searcher = profile(student(1, "Priya"), slot(MONDAY, "09:00", "12:00"));
     private final Student them = student(2, "Jamie");
 

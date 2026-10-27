@@ -36,7 +36,7 @@ function SessionDetail({ id }: { id: number }) {
     if (result.ok) setConfirm(false)
     else session.reload()
   }
-  return <WindowPage title={data?.title ?? 'Study session'} description="A shared plan, with times displayed in the session’s timezone."
+  return <WindowPage title={data?.title ?? 'Study session'} description="A shared study plan."
     actions={<Link className="retro-button" to={data ? sessionParent(data) : '/sessions'}>Back to sessions</Link>}>
     <ActionNotice error={action.error} success={action.success} />
     <StatePanel loading={session.loading && !data} error={valid ? session.error : 'This session link is invalid.'} onRetry={valid ? () => session.reload() : undefined} />
@@ -45,8 +45,7 @@ function SessionDetail({ id }: { id: number }) {
         <div className="tag-list"><Badge tone={nextSessionOccurrence(data, now) ? 'good' : 'neutral'}>{sessionStatusLabel(data, now)}</Badge>
           <Badge>{data.scope === 'GROUP' ? 'Group session' : 'Buddy session'}</Badge></div>
         <h2>When and where</h2>
-        <p>{occurrenceLabel(displayedOccurrence(data, now), data.timeZone)}</p>
-        <p><strong>Timezone:</strong> {data.timeZone}</p>
+        <p>{occurrenceLabel(displayedOccurrence(data, now))}</p>
         <p><strong>Location:</strong> {data.location || 'To be agreed'}</p>
         <h3>Agenda</h3><p className="message-text">{data.agenda || 'No agenda saved yet.'}</p>
         <div className="actions">
@@ -59,7 +58,7 @@ function SessionDetail({ id }: { id: number }) {
         {data.status === 'CANCELLED' && <p className="muted">This plan is cancelled. Download the cancellation snapshot to update your calendar.</p>}
       </section>
       <section className="detail-panel"><h2>{data.occurrenceCount > 1 ? `${data.occurrenceCount} weekly dates` : 'Session date'}</h2>
-        <ul className="session-times">{data.occurrences.map(item => <li key={item.startAt}>{occurrenceLabel(item, data.timeZone)}</li>)}</ul>
+        <ul className="session-times">{data.occurrences.map(item => <li key={item.startAt}>{occurrenceLabel(item)}</li>)}</ul>
       </section>
     </>}
     {confirm && data?.canManage && <Dialog title="Cancel study session?" busy={action.pending} onClose={() => setConfirm(false)}>

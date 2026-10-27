@@ -38,7 +38,7 @@ export function helpNextStep(studentId: number, sources: HelpProgress, now: numb
     .sort((left, right) => Date.parse(nextSessionOccurrence(left, now)!.startAt) - Date.parse(nextSessionOccurrence(right, now)!.startAt))[0]
   if (nextSession) return { step: {
     title: 'Review your next study session',
-    detail: `${nextSession.title}: ${occurrenceLabel(nextSessionOccurrence(nextSession, now)!, nextSession.timeZone)} (${nextSession.timeZone}). Check the plan and export it if needed.`,
+    detail: `${nextSession.title}: ${occurrenceLabel(nextSessionOccurrence(nextSession, now)!)}. Check the plan and export it if needed.`,
     action: 'View study session', to: `/sessions/${nextSession.id}`
   } }
 

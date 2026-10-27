@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/auth/useAuth'
 import { useAction } from '../../shared/api/useAction'
 import WindowPage from '../../shared/components/WindowPage'
 import Field from '../../shared/components/Field'
+import PasswordInput from '../../shared/components/PasswordInput'
 import Button from '../../shared/components/Button'
 import ActionNotice from '../../shared/components/ActionNotice'
 
@@ -58,14 +59,14 @@ function LoginPage() {
             label="Password"
             error={errors.password || action.errors.password}
           >
-            <input
+            <PasswordInput
               id="login-password"
-              type="password"
               autoComplete="current-password"
               value={password}
               onChange={event => setPassword(event.target.value)}
               required
               aria-invalid={Boolean(errors.password || action.errors.password)}
+              aria-describedby={errors.password || action.errors.password ? 'login-password-error' : undefined}
             />
           </Field>
           <ActionNotice error={action.error} />

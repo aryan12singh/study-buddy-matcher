@@ -22,7 +22,7 @@ describe('shared time details', () => {
     for (const description of descriptions) {
       expect(within(table).getByTitle(description.textContent!)).toBeInTheDocument()
     }
-    expect(screen.getByText('All times are in SGT. Other day parts have no shared time.')).toBeInTheDocument()
+    expect(screen.getByText('Other day parts have no shared time.')).toBeInTheDocument()
   })
 
   it('updates the text when shared availability changes and explains an empty result', () => {

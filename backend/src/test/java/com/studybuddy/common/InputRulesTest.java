@@ -26,6 +26,18 @@ class InputRulesTest {
         assertEquals("+6581234567", InputRules.contactNumber("8.123.4567"));
         assertEquals("+6591234567", InputRules.contactNumber("\t9 123 4567\n"));
     }
+    @Test void singaporeCountryCodeNeedsAFullLocalNumber() {
+        assertEquals("+6591234567", InputRules.contactNumber("+65 9123 4567"));
+        assertEquals("+6561234567", InputRules.contactNumber("+65-6123-4567"));
+    }
+    @Test void yearOfStudyIsBetweenOneAndTheConfiguredMaximum() {
+        assertDoesNotThrow(() -> InputRules.year(1, 6));
+        assertDoesNotThrow(() -> InputRules.year(6, 6));
+        for (Integer year : new Integer[] {null, 0, 7, 13}) {
+            var error = assertThrows(InvalidInputException.class, () -> InputRules.year(year, 6), "Year: " + year);
+            assertTrue(error.getFieldErrors().containsKey("yearOfStudy"));
+        }
+    }
     @Test void internationalContactsRemoveSeparatorsAndAcceptBothDigitBounds() {
         assertEquals("+12025550100", InputRules.contactNumber(" +1 (202) 555-0100 "));
         assertEquals("+1234567", InputRules.contactNumber("+1234567"));
@@ -36,7 +48,8 @@ class InputRulesTest {
         String[] invalid = {null, "", " \t ", "---()...", "12345678", "71234567", "9123456", "912345678",
             "+123456", "+1234567890123456", "+01234567", "65 9123 4567", "++6591234567",
             "659+1234567", "9123ABCD", "+12025550100 ext 2", "+12025550100x2", "+1/202/555/0100",
-            "９１２３４５６７", " ".repeat(240) + "+123456789012345"};
+            "９１２３４５６７", " ".repeat(240) + "+123456789012345",
+            "+65999999", "+65 9123 456", "+65 9123 45678", "+65 1234 5678"};
         for (String value : invalid) {
             var error = assertThrows(InvalidInputException.class, () -> InputRules.contactNumber(value), "Contact: " + value);
             assertTrue(error.getFieldErrors().containsKey("contactNumber"));

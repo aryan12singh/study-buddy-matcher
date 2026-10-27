@@ -114,7 +114,7 @@ describe('dated study session workflows', () => {
     const title = await screen.findByLabelText('Session title')
     fireEvent.change(title, { target: { value: 'Focused revision' } })
     fireEvent.change(screen.getByLabelText('Agenda (optional)'), { target: { value: 'Keep this draft agenda' } })
-    const start = screen.getByLabelText('Starts (session timezone)') as HTMLInputElement
+    const start = screen.getByLabelText('Starts') as HTMLInputElement
     const initialStart = start.value
     const duration = screen.getByLabelText('Suggested session duration (minutes)')
     expect(duration).toHaveValue(60)
@@ -126,11 +126,9 @@ describe('dated study session workflows', () => {
     expect(screen.getByText('Enter a positive whole number of minutes for suggestions.')).toBeInTheDocument()
     expect(start).toHaveValue(initialStart)
     fireEvent.change(duration, { target: { value: '45' } })
-    fireEvent.change(screen.getByLabelText('Session timezone'), { target: { value: 'Europe/London' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Use next Monday 10:00–10:45 (SGT, 45 min)' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use next Monday 10:00–10:45 (45 min)' }))
     expect(start).toHaveValue('2026-10-19T10:00')
-    expect(screen.getByLabelText('Ends (session timezone)')).toHaveValue('2026-10-19T10:45')
-    expect(screen.getByLabelText('Session timezone')).toHaveValue('Asia/Singapore')
+    expect(screen.getByLabelText('Ends')).toHaveValue('2026-10-19T10:45')
     expect(screen.getByLabelText('Agenda (optional)')).toHaveValue('Keep this draft agenda')
     expect(post).not.toHaveBeenCalled()
     fireEvent.click(screen.getAllByRole('link', { name: 'Cancel' })[0])
@@ -149,10 +147,10 @@ describe('dated study session workflows', () => {
     renderPage(<SessionFormPage kind="GROUP" />, '/groups/5/sessions/new', '/groups/:id/sessions/new')
     fireEvent.change(await screen.findByLabelText('Session title'), { target: { value: 'Manually agreed plan' } })
     fireEvent.change(screen.getByLabelText('Suggested session duration (minutes)'), { target: { value: '' } })
-    fireEvent.change(screen.getByLabelText('Starts (session timezone)'), { target: { value: '2026-10-20T10:00' } })
-    fireEvent.change(screen.getByLabelText('Ends (session timezone)'), { target: { value: '2026-10-20T10:45' } })
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-10-20T10:00' } })
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-10-20T10:45' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create study session' }))
-    await waitFor(() => expect(post).toHaveBeenCalledWith('/groups/5/sessions', expect.objectContaining({ title: 'Manually agreed plan', startLocal: '2026-10-20T10:00', endLocal: '2026-10-20T10:45' })))
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/groups/5/sessions', expect.objectContaining({ title: 'Manually agreed plan', startLocal: '2026-10-20T10:00', endLocal: '2026-10-20T10:45', occurrenceCount: 1, timeZone: 'Asia/Singapore' })))
   })
 
   it('retains separate list permissions and explains an empty agenda', async () => {
@@ -170,7 +168,7 @@ describe('dated study session workflows', () => {
     expect(await screen.findByRole('link', { name: 'Plan study session' })).toHaveAttribute('href', '/connections/8/sessions/new')
   })
 
-  it('validates before writes and applies a shared-time suggestion in Singapore time', async () => {
+  it('validates before writes and saves a weekly plan from a shared-time suggestion', async () => {
     serve()
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(session))
     const { router } = renderPage(<SessionFormPage kind="GROUP" />, '/groups/5/sessions/new', '/groups/:id/sessions/new')
@@ -178,10 +176,15 @@ describe('dated study session workflows', () => {
     expect(screen.getByText('Enter a title of 1–255 characters.')).toBeInTheDocument()
     expect(post).not.toHaveBeenCalled()
     fireEvent.change(screen.getByLabelText('Session title'), { target: { value: '  Exam revision  ' } })
-    fireEvent.change(screen.getByLabelText('Session timezone'), { target: { value: 'Europe/London' } })
+    expect(screen.queryByLabelText('Session timezone')).not.toBeInTheDocument()
     fireEvent.click(await screen.findByRole('button', { name: /Use next Monday/ }))
-    expect(screen.getByLabelText('Session timezone')).toHaveValue('Asia/Singapore')
-    fireEvent.change(screen.getByLabelText('Number of weekly dates'), { target: { value: '3' } })
+    expect(screen.queryByLabelText('Number of weekly sessions')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('Repeats weekly'))
+    fireEvent.change(screen.getByLabelText('Number of weekly sessions'), { target: { value: '1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create study session' }))
+    expect(screen.getByText('Choose 2–52 weekly sessions.')).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText('Number of weekly sessions'), { target: { value: '3' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create study session' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/sessions/11'))
     expect(post).toHaveBeenCalledWith('/groups/5/sessions', expect.objectContaining({ title: 'Exam revision', occurrenceCount: 3, timeZone: 'Asia/Singapore', roomLink: '/groups/5/room' }))
@@ -200,16 +203,15 @@ describe('dated study session workflows', () => {
     expect(put).toHaveBeenCalledWith('/sessions/11', expect.objectContaining({ title: 'My careful edits', expectedVersion: 3 }))
   })
 
-  it('displays server daylight-saving errors without discarding entered times', async () => {
+  it('displays server time errors without discarding entered times', async () => {
     serve()
     vi.spyOn(api, 'put').mockRejectedValue(failure(400, 'Invalid session times', { startLocal: 'This local time does not exist in the selected timezone' }))
     renderPage(<SessionFormPage />, '/sessions/11/edit', '/sessions/:id/edit')
-    fireEvent.change(await screen.findByLabelText('Session timezone'), { target: { value: 'America/New_York' } })
-    fireEvent.change(screen.getByLabelText('Starts (session timezone)'), { target: { value: '2027-03-14T02:30' } })
-    fireEvent.change(screen.getByLabelText('Ends (session timezone)'), { target: { value: '2027-03-14T04:00' } })
+    fireEvent.change(await screen.findByLabelText('Starts'), { target: { value: '2027-03-14T02:30' } })
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2027-03-14T04:00' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save session changes' }))
     expect(await screen.findByText('This local time does not exist in the selected timezone')).toBeInTheDocument()
-    expect(screen.getByLabelText('Starts (session timezone)')).toHaveValue('2027-03-14T02:30')
+    expect(screen.getByLabelText('Starts')).toHaveValue('2027-03-14T02:30')
   })
 
   it('blocks unsaved navigation and discards private form data when write permission is revoked', async () => {
@@ -285,12 +287,12 @@ describe('dated study session workflows', () => {
     expect(create).not.toHaveBeenCalled()
   })
 
-  it('checks dates, bounded repeats, safe links and next weekly suggestions without timezone coercion', () => {
+  it('checks dates, bounded repeats, safe links and next weekly suggestions', () => {
     const form = initialSessionForm(session, 5)
     expect(validateSessionForm({ ...form, endLocal: '2026-10-21T01:00' }, 5)).toEqual({})
-    expect(validateSessionForm({ ...form, startLocal: '2026-02-30T10:00', occurrenceCount: '53', roomLink: 'https://meet.example/room?token=private' }, 5)).toMatchObject({ startLocal: expect.any(String), occurrenceCount: expect.any(String), roomLink: expect.any(String) })
-    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '11:00' }, 60, new Date('2026-10-19T03:00:00Z'))).toEqual({ startLocal: '2026-10-26T10:00', endLocal: '2026-10-26T11:00', timeZone: 'Asia/Singapore' })
-    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00' }, 45, new Date('2026-10-18T15:30:00Z'))).toEqual({ startLocal: '2026-10-19T10:00', endLocal: '2026-10-19T10:45', timeZone: 'Asia/Singapore' })
+    expect(validateSessionForm({ ...form, startLocal: '2026-02-30T10:00', repeat: 'WEEKLY', occurrenceCount: '53', roomLink: 'https://meet.example/room?token=private' }, 5)).toMatchObject({ startLocal: expect.any(String), occurrenceCount: expect.any(String), roomLink: expect.any(String) })
+    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '11:00' }, 60, new Date('2026-10-19T03:00:00Z'))).toEqual({ startLocal: '2026-10-26T10:00', endLocal: '2026-10-26T11:00' })
+    expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '12:00' }, 45, new Date('2026-10-18T15:30:00Z'))).toEqual({ startLocal: '2026-10-19T10:00', endLocal: '2026-10-19T10:45' })
     expect(nextSuggestedTimes({ dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '10:30' }, 45)).toBeNull()
     expect(['', '0', '-1', '2.5', 'Infinity'].map(suggestionDurationMinutes)).toEqual([null, null, null, null, null])
   })

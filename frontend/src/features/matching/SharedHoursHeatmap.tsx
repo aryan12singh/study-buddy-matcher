@@ -17,7 +17,7 @@ export default function SharedHoursHeatmap({ slots }: { slots: WeeklySlot[] }) {
   return (
     <div className="shared-time">
       <table className="shared-heatmap">
-        <caption className="visually-hidden">Shared free time by day and part of the day (SGT)</caption>
+        <caption className="visually-hidden">Shared free time by day and part of the day</caption>
         <colgroup><col className="heatmap-labels" /></colgroup>
         <thead>
           <tr>
@@ -42,7 +42,7 @@ export default function SharedHoursHeatmap({ slots }: { slots: WeeklySlot[] }) {
         <summary>Shared time details</summary>
         {sharedParts.length ? <>
           <ul>{sharedParts.map(part => <li key={part}>{part}</li>)}</ul>
-          <p className="field-hint">All times are in SGT. Other day parts have no shared time.</p>
+          <p className="field-hint">Other day parts have no shared time.</p>
         </> : <p className="field-hint">No shared free time.</p>}
       </details>
     </div>

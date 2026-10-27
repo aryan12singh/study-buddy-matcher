@@ -1,7 +1,8 @@
 import type { StudySession, SessionOccurrence } from './api'
+import { CAMPUS_TIMEZONE } from '../../shared/api/types'
 
-export function occurrenceLabel(occurrence: SessionOccurrence, timeZone: string) {
-  const format = new Intl.DateTimeFormat('en-SG', { dateStyle: 'medium', timeStyle: 'short', timeZone })
+export function occurrenceLabel(occurrence: SessionOccurrence) {
+  const format = new Intl.DateTimeFormat('en-SG', { dateStyle: 'medium', timeStyle: 'short', timeZone: CAMPUS_TIMEZONE })
   return `${format.format(new Date(occurrence.startAt))} – ${format.format(new Date(occurrence.endAt))}`
 }
 /** The occurrence list remains authoritative when a cached nextOccurrence has ended. */

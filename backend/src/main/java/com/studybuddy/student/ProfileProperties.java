@@ -9,5 +9,6 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties("app.profile")
 public record ProfileProperties(
         @Min(3) int groupSizeMax,
-        @Min(1) int maxCourses) {
+        @Min(1) int maxCourses,
+        @Min(1) int yearOfStudyMax) {
 }

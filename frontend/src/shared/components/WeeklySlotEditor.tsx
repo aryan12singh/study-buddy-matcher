@@ -173,7 +173,7 @@ export default function WeeklySlotEditor({ value, onChange, drafts, onDraftsChan
   return (
     <fieldset className="weekly-editor" disabled={disabled}>
       <legend>Weekly availability</legend>
-      <p className="field-hint">Asia/Singapore (SGT), 24-hour time. Leave empty if a weekly time has not been agreed.</p>
+      <p className="field-hint">24-hour time. Leave empty if a weekly time has not been agreed.</p>
       {value.length === 0 && empty}
       {value.length > 0 && (
         <div className="slot-row slot-head" aria-hidden="true">
@@ -223,7 +223,7 @@ export default function WeeklySlotEditor({ value, onChange, drafts, onDraftsChan
         <WeeklySchedule slots={value} />
       </section>
       {copying && <Dialog title="Copy time block to other days" onClose={() => setCopying(null)} busy={disabled}>
-        <p>Copy {copying.slot.startTime.slice(0, 5) || '--:--'}–{copying.slot.endTime.slice(0, 5) || '--:--'} (SGT) to the selected days. Identical existing blocks are kept once.</p>
+        <p>Copy {copying.slot.startTime.slice(0, 5) || '--:--'}–{copying.slot.endTime.slice(0, 5) || '--:--'} to the selected days. Identical existing blocks are kept once.</p>
         <fieldset className="fieldset" disabled={disabled}>
           <legend>Choose days</legend>
           <div className="check-options">{WEEK_DAYS.filter(day => day !== copying.slot.dayOfWeek).map(day => <label key={day}>
