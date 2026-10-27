@@ -2,8 +2,10 @@ import type { StudySession, SessionInput } from './api'
 import type { WeeklySlot } from '../../shared/api/types'
 import { CAMPUS_TIMEZONE, WEEK_DAYS } from '../../shared/api/types'
 
-export type SessionForm = Omit<SessionInput, 'occurrenceCount' | 'agenda' | 'location' | 'roomLink'> & {
-  occurrenceCount: string; agenda: string; location: string; roomLink: string
+/** Sessions always use Singapore time, so the form has no timezone; a one-off session has a single date. */
+export type SessionRepeat = 'ONCE' | 'WEEKLY'
+export type SessionForm = Omit<SessionInput, 'occurrenceCount' | 'agenda' | 'location' | 'roomLink' | 'timeZone'> & {
+  repeat: SessionRepeat; occurrenceCount: string; agenda: string; location: string; roomLink: string
 }
 export function localDateTime(value: Date, timeZone = CAMPUS_TIMEZONE) {
   const values = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -13,8 +15,9 @@ export function localDateTime(value: Date, timeZone = CAMPUS_TIMEZONE) {
 export function initialSessionForm(session?: StudySession, groupId?: number): SessionForm {
   const start = new Date(Date.now() + 60 * 60 * 1000), end = new Date(start.getTime() + 60 * 60 * 1000)
   return session ? { title: session.title, startLocal: session.startLocal.slice(0, 16), endLocal: session.endLocal.slice(0, 16),
-    timeZone: session.timeZone, occurrenceCount: String(session.occurrenceCount), agenda: session.agenda ?? '', location: session.location ?? '', roomLink: session.roomLink ?? '' }
-    : { title: '', startLocal: localDateTime(start), endLocal: localDateTime(end), timeZone: CAMPUS_TIMEZONE, occurrenceCount: '1', agenda: '', location: '', roomLink: groupId ? `/groups/${groupId}/room` : '' }
+    repeat: session.occurrenceCount > 1 ? 'WEEKLY' : 'ONCE', occurrenceCount: String(Math.max(session.occurrenceCount, 2)),
+    agenda: session.agenda ?? '', location: session.location ?? '', roomLink: session.roomLink ?? '' }
+    : { title: '', startLocal: localDateTime(start), endLocal: localDateTime(end), repeat: 'ONCE', occurrenceCount: '2', agenda: '', location: '', roomLink: groupId ? `/groups/${groupId}/room` : '' }
 }
 function validLocal(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return false
@@ -27,11 +30,8 @@ export function validateSessionForm(form: SessionForm, groupId?: number) {
   if (!validLocal(form.startLocal)) errors.startLocal = 'Enter a complete date and time to the minute.'
   if (!validLocal(form.endLocal)) errors.endLocal = 'Enter a complete date and time to the minute.'
   if (!errors.startLocal && !errors.endLocal && form.endLocal <= form.startLocal) errors.endLocal = 'End time must be after the start time.'
-  try { new Intl.DateTimeFormat('en', { timeZone: form.timeZone.trim() }).format() }
-  catch { errors.timeZone = 'Enter a valid IANA timezone, such as Asia/Singapore.' }
-  if (!form.timeZone.trim() || form.timeZone.length > 100) errors.timeZone = 'Enter a valid IANA timezone of at most 100 characters.'
   const count = Number(form.occurrenceCount)
-  if (!Number.isInteger(count) || count < 1 || count > 52) errors.occurrenceCount = 'Choose 1–52 weekly dates; 1 means a one-off session.'
+  if (form.repeat === 'WEEKLY' && (!Number.isInteger(count) || count < 2 || count > 52)) errors.occurrenceCount = 'Choose 2–52 weekly sessions.'
   if (form.agenda.length > 4000) errors.agenda = 'Keep the agenda within 4000 characters.'
   if (form.location.length > 255) errors.location = 'Keep the location within 255 characters.'
   const link = form.roomLink.trim()
@@ -45,14 +45,15 @@ export function validateSessionForm(form: SessionForm, groupId?: number) {
   return errors
 }
 export function sessionInput(form: SessionForm): SessionInput {
-  return { ...form, title: form.title.trim(), timeZone: form.timeZone.trim(), occurrenceCount: Number(form.occurrenceCount),
+  return { title: form.title.trim(), startLocal: form.startLocal, endLocal: form.endLocal, timeZone: CAMPUS_TIMEZONE,
+    occurrenceCount: form.repeat === 'WEEKLY' ? Number(form.occurrenceCount) : 1,
     agenda: form.agenda.trim() || null, location: form.location.trim() || null, roomLink: form.roomLink.trim() || null }
 }
 export function suggestionDurationMinutes(value: string) {
   const duration = Number(value)
   return Number.isSafeInteger(duration) && duration > 0 ? duration : null
 }
-/** Weekly availability is campus-local, independently of the session's selected timezone. */
+/** Weekly availability and session times are both campus-local Singapore time. */
 export function nextSuggestedTimes(slot: WeeklySlot, durationMinutes = 60, now = new Date()) {
   const startMinutes = Number(slot.startTime.slice(0, 2)) * 60 + Number(slot.startTime.slice(3, 5))
   const endMinutes = Number(slot.endTime.slice(0, 2)) * 60 + Number(slot.endTime.slice(3, 5))
@@ -69,5 +70,5 @@ export function nextSuggestedTimes(slot: WeeklySlot, durationMinutes = 60, now =
   // This date is a civil-time calculation; campus time has no daylight-saving changes.
   const end = new Date(`${startLocal}:00Z`)
   end.setUTCMinutes(end.getUTCMinutes() + durationMinutes)
-  return { startLocal, endLocal: end.toISOString().slice(0, 16), timeZone: CAMPUS_TIMEZONE }
+  return { startLocal, endLocal: end.toISOString().slice(0, 16) }
 }

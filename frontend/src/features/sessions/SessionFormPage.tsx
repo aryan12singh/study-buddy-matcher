@@ -106,21 +106,29 @@ function SessionEditor({ context }: { context: EditorContext }) {
     {!denied && <form noValidate onSubmit={submit} className="stack-form session-form">
       <div className="form-grid">
         <Field id="session-title" label="Session title" error={errors.title}><input id="session-title" value={form.title} maxLength={255} disabled={pending} onChange={event => edit('title', event.target.value)} /></Field>
-        <Field id="session-timezone" label="Session timezone" error={errors.timeZone} hint="An IANA name such as Asia/Singapore, Europe/London or America/New_York."><input id="session-timezone" list="session-timezones" value={form.timeZone} maxLength={100} disabled={pending} onChange={event => edit('timeZone', event.target.value)} /></Field>
-        <datalist id="session-timezones"><option value="Asia/Singapore" /><option value="UTC" /><option value="Europe/London" /><option value="America/New_York" /><option value="Australia/Sydney" /></datalist>
-        <Field id="session-start" label="Starts (session timezone)" error={errors.startLocal}><input id="session-start" type="datetime-local" step="60" value={form.startLocal} disabled={pending} onChange={event => edit('startLocal', event.target.value)} /></Field>
-        <Field id="session-end" label="Ends (session timezone)" error={errors.endLocal}><input id="session-end" type="datetime-local" step="60" value={form.endLocal} disabled={pending} onChange={event => edit('endLocal', event.target.value)} /></Field>
-        <Field id="session-count" label="Number of weekly dates" error={errors.occurrenceCount} hint="1 is a one-off session. 2–52 repeats weekly at these local times."><input id="session-count" type="number" min="1" max="52" step="1" value={form.occurrenceCount} disabled={pending} onChange={event => edit('occurrenceCount', event.target.value)} /></Field>
         <Field id="session-location" label="Location (optional)" error={errors.location}><input id="session-location" value={form.location} maxLength={255} disabled={pending} onChange={event => edit('location', event.target.value)} /></Field>
+        <Field id="session-start" label="Starts" error={errors.startLocal}><input id="session-start" type="datetime-local" step="60" value={form.startLocal} disabled={pending} onChange={event => edit('startLocal', event.target.value)} /></Field>
+        <Field id="session-end" label="Ends" error={errors.endLocal}><input id="session-end" type="datetime-local" step="60" value={form.endLocal} disabled={pending} onChange={event => edit('endLocal', event.target.value)} /></Field>
       </div>
+      <fieldset className="fieldset" disabled={pending}>
+        <legend>How often?</legend>
+        <div className="check-options">
+          <label><input type="radio" name="session-repeat" checked={form.repeat === 'ONCE'} onChange={() => edit('repeat', 'ONCE')} /> One-off session</label>
+          <label><input type="radio" name="session-repeat" checked={form.repeat === 'WEEKLY'} onChange={() => edit('repeat', 'WEEKLY')} /> Repeats weekly</label>
+        </div>
+      </fieldset>
+      {form.repeat === 'WEEKLY' && <Field id="session-count" label="Number of weekly sessions" error={errors.occurrenceCount} hint="Between 2 and 52, starting on the date above.">
+        <input id="session-count" type="number" min="2" max="52" step="1" value={form.occurrenceCount} disabled={pending} onChange={event => edit('occurrenceCount', event.target.value)} />
+      </Field>}
       <Field id="session-agenda" label="Agenda (optional)" error={errors.agenda}><textarea id="session-agenda" value={form.agenda} maxLength={4000} disabled={pending} onChange={event => edit('agenda', event.target.value)} /></Field>
-      <Field id="session-link" label="Room or meeting link (optional)" error={errors.roomLink} hint={groupId ? `Use /groups/${groupId}/room, or a public HTTPS URL without credentials, query parameters or fragments.` : 'Use a public HTTPS URL without credentials, query parameters or fragments.'}>
+      <Field id="session-link" label="Room or meeting link (optional)" error={errors.roomLink} hint={groupId
+        ? `Where everyone joins the session. Keep /groups/${groupId}/room to meet in this group's study room (shared focus timer and music), or paste an online meeting link such as Zoom or Teams (https://…, no passwords or ?query). A meeting link also goes into calendar exports.`
+        : 'Where you both join the session: paste an online meeting link such as Zoom or Teams (https://…, no passwords or ?query). It is shown on the session page and included in calendar exports.'}>
         <input id="session-link" value={form.roomLink} maxLength={2048} disabled={pending} onChange={event => edit('roomLink', event.target.value)} />
       </Field>
-      <p className="muted session-form-help">Overnight dated sessions are supported. The server checks duration limits and every weekly date, and rejects ambiguous or missing clock times during daylight-saving changes. Editing applies to the whole plan.</p>
       <section className="detail-panel session-availability">
         <h2>Mutual weekly availability</h2>
-        <p className="muted">These suggestions use Singapore time and current participants’ weekly availability. They suggest a time, not confirmed attendance.</p>
+        <p className="muted">These suggestions use current participants’ weekly availability. They suggest a time, not confirmed attendance.</p>
         <Field id="session-suggestion-duration" label="Suggested session duration (minutes)"
           error={durationMinutes === null ? 'Enter a positive whole number of minutes for suggestions.' : undefined}
           hint="Defaults to 60 minutes. Changing this only filters suggestions; your entered dates stay unchanged until you choose a time.">
@@ -132,8 +140,8 @@ function SessionEditor({ context }: { context: EditorContext }) {
           <div className="actions">{suggestions.map(({ slot, times }, index) => <Button key={index} disabled={pending} onClick={() => {
             const currentTimes = durationMinutes ? nextSuggestedTimes(slot, durationMinutes) : null
             if (!currentTimes) return
-            setForm(previous => ({ ...previous, ...currentTimes })); setErrors(previous => { const next = { ...previous }; delete next.startLocal; delete next.endLocal; delete next.timeZone; return next })
-          }}>Use next {label(slot.dayOfWeek)} {times.startLocal.slice(11)}–{times.endLocal.slice(11)} (SGT, {durationMinutes} min)</Button>)}</div>
+            setForm(previous => ({ ...previous, ...currentTimes })); setErrors(previous => { const next = { ...previous }; delete next.startLocal; delete next.endLocal; return next })
+          }}>Use next {label(slot.dayOfWeek)} {times.startLocal.slice(11)}–{times.endLocal.slice(11)} ({durationMinutes} min)</Button>)}</div>
           {!availability.data.sharedSlots.length && <p className="muted">No shared weekly time is saved. Agree a date together and enter it manually.</p>}
           {!!availability.data.sharedSlots.length && durationMinutes !== null && !suggestions.length && <p className="muted">No shared weekly window fits {durationMinutes} minutes. Choose a shorter duration or agree a date together and enter it manually.</p>}
         </>}
