@@ -173,10 +173,7 @@ function GroupDetailContent({ actorId }: { actorId?: number }) {
             ) : (
               <div className="data-list">
                 {group.members.map(member => (
-                  <PersonCard key={member.studentId} studentId={member.studentId} name={member.name} compact>
-                    {member.leader && (
-                      <Badge>Leader</Badge>
-                    )}
+                  <PersonCard key={member.studentId} badges={member.leader && <Badge>Leader</Badge>} studentId={member.studentId} name={member.name} compact>
                     <p className="row-meta">Joined {formatTimestamp(member.joinedAt)}</p>
                   </PersonCard>
                 ))}

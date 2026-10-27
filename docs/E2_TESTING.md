@@ -42,7 +42,7 @@ Keep tests at meaningful boundaries:
 | Session schedule/export | Whole-minute/date/duration/occurrence bounds; DST gap/fold rejection; weekly wall-time preservation; stable UID/revision/cancellation, UTC times, escaping and UTF-8 folding |
 | Session HTTP/database | Group leader versus member; buddy participants versus strangers/admins; parent-end revocation; stale writes; transactional notifications; private calendar/availability reads |
 | Civil-time round trip | Personal/group weekly `10:00` stays `10:00` in SQL/API under Singapore and UTC JVM defaults; session local civil fields and generated UTC instants remain distinct |
-| Frontend interaction | Empty/loading/error/retry; invalid/dirty form guards; recoverable actions; separate audio controls/silent fallback; current sessions in Home and agendas |
+| Frontend interaction | Empty/loading/error/retry; invalid/dirty form guards; recoverable actions; current sessions in Home and agendas |
 | Weather | Fixed-condition mapping, timeout/cache/stale/unavailable behavior; original selectable fallback and reduced motion; no account/device-location payload |
 
 Use the existing pipeline and dependencies. A private real-browser walkthrough
@@ -50,6 +50,29 @@ provides integration evidence that mocks cannot; neither it nor a green suite
 automatically verifies author understanding, latest Figma or external calendar clients.
 
 ## End-to-end walkthrough
+
+### Study Room entry preview — 22 October 2026
+
+The user-supplied reference is implemented as a personal Pomodoro and one groups
+sidebar, with original CSS scenery and the existing shared UI primitives.
+
+- Targeted frontend verification: 29 tests across personal Pomodoro, Study Room
+  navigation, timer projection and the existing private room screen passed. Lint
+  and the production build passed.
+- Chromium preview used synthetic account/group API responses. At 1500px, the
+  timer and groups appeared side by side; at 390px and 320px they stacked without
+  horizontal overflow. Long group names wrapped and the desktop group list scrolled.
+- Browser interaction verified start/pause (25:00 to 24:59), the settings dialog's
+  focus placement and restoration of the paused 24:59 after refresh. Automated
+  checks also cover elapsed focus/break recovery, reset confirmation, invalid
+  duration edits, account separation and unavailable/corrupted browser storage.
+- A follow-up Chromium check verified the progress icon's 4px vertical bob while
+  running, with no animation while idle, paused or using reduced motion.
+- The groups endpoint and shared room actions retain their existing backend
+  contract. The preview used intercepted API responses; live database workflow
+  verification is the separate walkthrough below.
+
+### Live group and session walkthrough
 
 Use disposable seeded accounts and an open group with a leader and at least two
 accepted members. Keep a separate connected buddy pair and a stranger/admin.
@@ -59,16 +82,17 @@ Do not put private passwords or tokens in screenshots, evidence or PR comments.
    host/co-host, starts/pauses/resumes/resets, changes idle durations and adjusts
    capacity. Verify delegated roles cannot reassign roles. Record the observed
    countdown difference, configured poll period and network delay; do not claim
-   exact tick or audio-position synchronization.
+   exact tick synchronization.
 2. Refresh, disconnect/reconnect and leave one of several tabs. Confirm durable
-   timer/audio state, one-student capacity counting, lease expiry and explicit
+   timer state, one-student capacity counting, lease expiry and explicit
    rejoin. Remove a member, fill the freed room place with another member, then
    readmit the removed member: old heartbeat must fail and fresh join must respect
-   the participant limit. Close/deactivate and confirm lost access and stopped audio.
-3. Enable audio intentionally in each browser. Play music and ambience together,
-   switch ambience, pause either layer and change each local volume/mute independently.
-   Verify shared selection and local sound controls. Force unsupported/failed audio,
-   navigate away and revoke access; the room stays usable and audio stops.
+   the participant limit. Close/deactivate and confirm lost access.
+3. Open the Music tab of the settings menu in the personal and a group room. Play the
+   free Spotify playlist and layer two ambient sounds; change volumes, remix and stop all.
+   Confirm another member's browser hears nothing from yours, closing the menu keeps
+   playing, the personal room's corner prompt opens the tab, and leaving the page stops
+   every sound.
 4. Create a dated group series with timezone, agenda and location, then edit and
    cancel it. Confirm the agenda and Home read actual saved sessions and affected
    recipients receive correct change notices. Repeat for the connected buddy pair.
@@ -87,11 +111,13 @@ Do not put private passwords or tokens in screenshots, evidence or PR comments.
 8. Select each pixel weather theme/day-night mode. In automatic mode verify live,
    stale and unavailable labels and source attribution; disconnect the provider and
    continue using manual fallback. Reduced motion must stop scene animation, and
-   timer/audio/session actions must remain usable throughout.
+   timer/session actions must remain usable throughout.
 
 ## Verification record
 
-The completion source passed the checks below on 14 October 2026. Final hosted CI and
+The completion source passed the checks below on 14 October 2026. The shared room audio
+those checks covered was removed on 24 October; its rows and observations are kept as a
+dated record and are not evidence for the current Music tab. Final hosted CI and
 independent review must be recorded against the final published commit.
 
 | Gate | Current completion evidence |

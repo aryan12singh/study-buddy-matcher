@@ -8,10 +8,14 @@ import com.studybuddy.studygroup.GroupMembershipRepository;
 import com.studybuddy.studygroup.StudyGroup;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,17 +29,19 @@ public class StudyRoomService {
     private final RoomAccess access;
     private final RoomAssembler assembler;
     private final RoomSettings settings;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public StudyRoomService(StudyRoomRepository rooms, RoomPresenceRepository presences,
         GroupMembershipRepository memberships, RoomAccess access, RoomAssembler assembler,
-        RoomSettings settings, @Qualifier("studyRoomClock") Clock clock) {
+        RoomSettings settings, ApplicationEventPublisher events, @Qualifier("studyRoomClock") Clock clock) {
         this.rooms = rooms;
         this.presences = presences;
         this.memberships = memberships;
         this.access = access;
         this.assembler = assembler;
         this.settings = settings;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -50,8 +56,14 @@ public class StudyRoomService {
         StudyGroup group = access.lockMember(groupId, actorId);
         StudyRoom room = persistedRoom(group);
         Instant now = clock.instant();
+        // Tabs closed without leaving count as departures once their leases have expired.
+        Set<Long> expired = presences.findByStudyRoomIdAndExpiresAtLessThanEqual(room.getId(), now).stream()
+            .map(p -> p.getStudent().getId()).collect(Collectors.toCollection(HashSet::new));
+        // The student joining is back, not gone, even if an old tab of theirs had expired.
+        expired.remove(actorId);
         presences.deleteByStudyRoomIdAndExpiresAtLessThanEqual(room.getId(), now);
         presences.flush();
+        afterDeparture(room, group, expired, now);
         var current = presences.findEligible(room.getId(), now);
         boolean alreadyHere = current.stream().anyMatch(p -> p.getStudent().getId().equals(actorId));
         if (!alreadyHere && participantCount(current) >= Math.min(room.getParticipantLimit(), group.getMaxGroupSize())) {
@@ -90,30 +102,49 @@ public class StudyRoomService {
     }
 
     public void leave(Long groupId, Long actorId, UUID clientId) {
-        access.lockMember(groupId, actorId);
-        rooms.findByStudyGroupId(groupId).ifPresent(room ->
-            presences.deleteByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId));
+        StudyGroup group = access.lockMember(groupId, actorId);
+        rooms.findByStudyGroupId(groupId).ifPresent(room -> {
+            presences.deleteByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId);
+            presences.flush();
+            afterDeparture(room, group, Set.of(actorId), clock.instant());
+        });
+    }
+
+    /**
+     * Keeps the room sensible after people leave. When the last person goes, the session ends.
+     * When the host goes and others stay, the present co-host takes over, or else the most recently
+     * active person. A host who has not arrived yet keeps the role, and a session the leader
+     * started in an empty room keeps running, because neither of those is a departure.
+     */
+    private void afterDeparture(StudyRoom room, StudyGroup group, Set<Long> departed, Instant now) {
+        if (departed.isEmpty()) return;
+        var present = presences.findEligible(room.getId(), now);
+        Set<Long> presentIds = present.stream().map(p -> p.getStudent().getId()).collect(Collectors.toSet());
+        if (present.isEmpty()) {
+            if (room.timer().status() != TimerStatus.IDLE) room.endSession();
+            return;
+        }
+        Long hostId = room.getHost() != null ? room.getHost().getId() : group.getLeader().getId();
+        if (!departed.contains(hostId) || presentIds.contains(hostId)) return;
+        Student coHost = room.getCoHost();
+        room.handOverHost(coHost != null && presentIds.contains(coHost.getId()) ? coHost : present.getFirst().getStudent());
     }
 
     public StudyRoomDto controlTimer(Long groupId, Long actorId, RoomTimerInput input) {
         StudyRoom room = persistedRoom(access.lockMember(groupId, actorId));
         requireControl(room, actorId, input.expectedVersion());
+        Instant now = clock.instant();
         try {
-            room.applyTimer(input.command().apply(room.timer(), clock.instant()));
+            room.applyTimer(input.command().apply(room.timer(), now));
         } catch (IllegalStateException invalid) {
             throw new ConflictException(invalid.getMessage());
         }
         rooms.flush();
-        return detail(room, actorId);
-    }
-
-    public StudyRoomDto audio(Long groupId, Long actorId, RoomAudioInput input) {
-        StudyRoom room = persistedRoom(access.lockMember(groupId, actorId));
-        requireControl(room, actorId, input.expectedVersion());
-        validateLayer(input.musicPreset(), input.musicPlaying(), "MUSIC", "music");
-        validateLayer(input.ambientPreset(), input.ambientPlaying(), "AMBIENT", "ambient");
-        room.selectAudio(input.musicPreset(), input.musicPlaying(), input.ambientPreset(), input.ambientPlaying());
-        rooms.flush();
+        // Only a fresh start invites people; resuming a paused session does not. Invitations go
+        // out after this commits, so a failed invitation can never undo the start.
+        if (input.command() == TimerCommand.START) {
+            events.publishEvent(new RoomStarted(room.getId(), actorId, now));
+        }
         return detail(room, actorId);
     }
 
@@ -158,15 +189,6 @@ public class StudyRoomService {
             throw new ForbiddenActionException("Only the leader or a present host/co-host can control the room");
         }
         requireVersion(room, version);
-    }
-
-    private void validateLayer(AudioPreset preset, boolean playing, String kind, String field) {
-        if (preset != null && !preset.kind().equals(kind)) {
-            throw new InvalidInputException(field + "Preset", "Choose a " + kind.toLowerCase() + " preset for this layer");
-        }
-        if (playing && preset == null) {
-            throw new InvalidInputException(field + "Playing", "Choose a preset before playing this layer");
-        }
     }
 
     private void requireVersion(StudyRoom room, Long expectedVersion) {

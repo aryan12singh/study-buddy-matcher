@@ -10,6 +10,7 @@ GPT models and Claude assisted with:
 - **Interface and assets:** retro UI polish, accessibility checks and the original pixel-book favicon.
 - **Matching engine review (`fix/team-a/matching-engine`):** Claude, at a Team C member's request, proposed and implemented the matching fixes, tests and decision report in [MATCHING_ENGINE_CHANGES.md](MATCHING_ENGINE_CHANGES.md), and a follow-up review's fixes. Team A owns the engine and must review and be able to explain it before merging.
 - **E2 study experience:** private rooms, timers, presence, original layered audio, sessions/calendar, weather themes and related integration in PR #52; this is outside the compulsory baseline. Claude, at a Team C member's request, also reviewed PR #52 and made its room-polling, presence-locking, weather-cache, merge and README fixes.
+- **Study Room entry:** Codex added the separate room tab and, following the user's visual reference, a personal Pomodoro with a groups sidebar and original CSS scenery, plus a gentle running-state progress-icon animation that respects reduced motion. It reused the existing group-room APIs, timer calculations and UI components, with navigation, loading/error and personal-timer regression checks. Human review remains pending.
 
 Team members remain responsible for verifying retained work and explaining it in the viva.
 Development assistance is separate from the application's E1 AI match-explanation feature.

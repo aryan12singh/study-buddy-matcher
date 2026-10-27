@@ -166,6 +166,7 @@ function GroupManageContent({ enabled }: { enabled: boolean }) {
                     key={member.studentId}
                     studentId={member.studentId}
                     name={member.name}
+                    badges={member.leader && <Badge>Leader</Badge>}
                     actions={group.active && !member.leader && (
                       <Button
                         variant="danger"
@@ -179,9 +180,6 @@ function GroupManageContent({ enabled }: { enabled: boolean }) {
                       </Button>
                     )}
                   >
-                    {member.leader && (
-                      <Badge>Leader</Badge>
-                    )}
                     <p className="row-meta">Joined {formatTimestamp(member.joinedAt)}</p>
                   </PersonCard>
                 ))}

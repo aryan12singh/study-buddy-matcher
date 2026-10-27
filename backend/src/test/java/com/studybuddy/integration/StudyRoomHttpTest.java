@@ -165,6 +165,46 @@ class StudyRoomHttpTest extends PostgresHttpTest {
     }
 
     @Test
+    void startingTheTimerInvitesAbsentMembersOnceUntilTheyReadTheInvitation() {
+        String invitations = "select count(*) from notifications where type='GROUP_STUDY_ROOM_STARTED' and recipient_id=?";
+        join(member, UUID.randomUUID());
+        var started = expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        assertEquals(1, count(invitations, otherId));
+        assertEquals(0, count(invitations, memberId));
+        assertEquals(0, count(invitations, leaderId));
+        assertEquals(1, count("select count(*) from notifications where type='GROUP_STUDY_ROOM_STARTED' and resource_type='GROUP' and resource_id=?", groupId));
+
+        var paused = expect(command(leader, "PAUSE", started.path("version").asLong()), 200);
+        var resumed = expect(command(leader, "RESUME", paused.path("version").asLong()), 200);
+        var reset = expect(command(leader, "RESET", resumed.path("version").asLong()), 200);
+        var restarted = expect(command(leader, "START", reset.path("version").asLong()), 200);
+        assertEquals(1, count(invitations, otherId));
+
+        database.update("update notifications set read=true where type='GROUP_STUDY_ROOM_STARTED' and recipient_id=?", otherId);
+        var resetAgain = expect(command(leader, "RESET", restarted.path("version").asLong()), 200);
+        expect(command(leader, "START", resetAgain.path("version").asLong()), 200);
+        assertEquals(2, count(invitations, otherId));
+    }
+
+    @Test
+    void aDatabaseThatRejectsTheInvitationStillStartsTheTimer() {
+        // Reproduces a database missing the GROUP_STUDY_ROOM_STARTED migration.
+        String allowed = database.queryForObject(
+            "select pg_get_constraintdef(oid) from pg_constraint where conname='notifications_type_check'", String.class);
+        database.execute("alter table notifications drop constraint notifications_type_check");
+        database.execute("alter table notifications add constraint notifications_type_check check (type <> 'GROUP_STUDY_ROOM_STARTED')");
+        try {
+            var started = expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+            assertEquals("RUNNING", started.path("timer").path("status").asString());
+            assertEquals("RUNNING", state(member).path("timer").path("status").asString());
+            assertEquals(0, count("select count(*) from notifications where type='GROUP_STUDY_ROOM_STARTED'"));
+        } finally {
+            database.execute("alter table notifications drop constraint notifications_type_check");
+            database.execute("alter table notifications add constraint notifications_type_check " + allowed);
+        }
+    }
+
+    @Test
     void settingsValidateBoundsRolesCapacityAndDurationChanges() {
         long version = state(leader).path("version").asLong();
         for (int invalidFocus : new int[]{0, 181}) {
@@ -179,6 +219,45 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         var reset = expect(command(leader, "RESET", started.path("version").asLong()), 200);
         var changed = configure(reset.path("version").asLong(), 30, 4, memberId, null);
         assertEquals(1_800_000, changed.path("timer").path("remainingMillis").asLong());
+    }
+
+    @Test
+    void theLastPersonLeavingEndsTheSession() {
+        UUID leaderTab = UUID.randomUUID(), memberTab = UUID.randomUUID();
+        join(leader, leaderTab); join(member, memberTab);
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        expect(call("DELETE", path() + "/presence/" + leaderTab, leader, null), 204);
+        assertEquals("RUNNING", state(member).path("timer").path("status").asString(), "Someone is still studying");
+        expect(call("DELETE", path() + "/presence/" + memberTab, member, null), 204);
+        assertEquals("IDLE", state(leader).path("timer").path("status").asString());
+    }
+
+    @Test
+    void aSessionStartedInAnEmptyRoomIsNotEndedByTheFirstJoin() {
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        assertEquals("RUNNING", join(member, UUID.randomUUID()).path("timer").path("status").asString());
+    }
+
+    @Test
+    void aLeavingHostHandsOverToThePresentCoHostOrElseSomeoneStillHere() {
+        configure(0, 25, 4, memberId, otherId);
+        UUID memberTab = UUID.randomUUID(), otherTab = UUID.randomUUID();
+        join(member, memberTab); join(other, otherTab); join(leader, UUID.randomUUID());
+        expect(call("DELETE", path() + "/presence/" + memberTab, member, null), 204);
+        var room = state(leader);
+        assertEquals(otherId, room.path("hostId").asLong(), "The present co-host takes over");
+        assertTrue(room.path("coHostId").isNull());
+        expect(call("DELETE", path() + "/presence/" + otherTab, other, null), 204);
+        assertEquals(leaderId, state(leader).path("hostId").asLong(), "The only person left takes over");
+    }
+
+    @Test
+    void anAssignedHostWhoHasNotArrivedKeepsTheRole() {
+        configure(0, 25, 4, memberId, null);
+        UUID otherTab = UUID.randomUUID();
+        join(other, otherTab); join(leader, UUID.randomUUID());
+        expect(call("DELETE", path() + "/presence/" + otherTab, other, null), 204);
+        assertEquals(memberId, state(leader).path("hostId").asLong());
     }
 
     @Test
@@ -206,34 +285,8 @@ class StudyRoomHttpTest extends PostgresHttpTest {
     void concurrentControlsRejectAStaleCommandInsteadOfOverwriting() throws Exception {
         join(leader, UUID.randomUUID());
         statuses(race(() -> command(leader, "START", 0),
-            () -> call("PUT", path() + "/audio", leader, audio(0, null, false, "RAIN", true))), 200, 409);
+            () -> call("PUT", path() + "/settings", leader, configuration(0, 25, 4, null, null))), 200, 409);
         assertEquals(1, state(leader).path("version").asLong());
-    }
-
-    @Test
-    void sharedAudioValidatesRolesAndNeverStoresLocalVolume() {
-        join(member, UUID.randomUUID());
-        expect(call("PUT", path() + "/audio", member, audio(0, "CALM_MUSIC", true, "RAIN", true)), 403);
-        var room = expect(call("PUT", path() + "/audio", leader, audio(0, "CALM_MUSIC", true, "RAIN", true)), 200);
-        assertEquals("CALM_MUSIC", room.path("audio").path("musicPreset").asString());
-        assertEquals("RAIN", room.path("audio").path("ambientPreset").asString());
-        assertTrue(state(member).path("audio").path("musicPlaying").asBoolean());
-        assertTrue(state(member).path("audio").path("ambientPlaying").asBoolean());
-        assertEquals(4, room.path("audio").size(), "Only shared selections/playback are persisted; volumes stay local");
-        long version = room.path("version").asLong();
-        expect(call("PUT", path() + "/audio", leader, audio(version, "UNKNOWN", true, null, false)), 400);
-        expect(call("PUT", path() + "/audio", leader, audio(version, "RAIN", true, null, false)), 400);
-        expect(call("PUT", path() + "/audio", leader, audio(version, null, false, "CALM_MUSIC", true)), 400);
-        expect(call("PUT", path() + "/audio", leader, audio(version, null, true, "RAIN", true)), 400);
-        expect(call("PUT", path() + "/audio", leader, audio(version, "CALM_MUSIC", true, null, true)), 400);
-        assertEquals(room.path("audio"), state(member).path("audio"), "Rejected selections never partially update a layer");
-        var musicOnly = expect(call("PUT", path() + "/audio", leader, audio(version, "CALM_MUSIC", true, null, false)), 200);
-        assertTrue(musicOnly.path("audio").path("musicPlaying").asBoolean());
-        assertTrue(musicOnly.path("audio").path("ambientPreset").isNull());
-        var silent = expect(call("PUT", path() + "/audio", leader,
-            audio(musicOnly.path("version").asLong(), null, false, null, false)), 200);
-        assertFalse(silent.path("audio").path("musicPlaying").asBoolean());
-        assertFalse(silent.path("audio").path("ambientPlaying").asBoolean());
     }
 
     @Test
@@ -251,13 +304,10 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         assertEquals(0, state(leader).path("participants").size());
         assertTrue(state(leader).path("coHostId").isNull());
         join(leader, UUID.randomUUID());
-        var started = expect(command(leader, "START", state(leader).path("version").asLong()), 200);
-        expect(call("PUT", path() + "/audio", leader,
-            audio(started.path("version").asLong(), "CALM_MUSIC", true, "RAIN", true)), 200);
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
         expect(call("POST", "/groups/" + groupId + "/close", leader, null), 200);
         assertEquals(0, count("select count(*) from room_presences"));
         assertEquals("IDLE", database.queryForObject("select timer_status from study_rooms where study_group_id=?", String.class, groupId));
-        assertEquals(0, count("select count(*) from study_rooms where music_playing or ambient_playing"));
         expect(call("GET", path(), leader, null), 409);
         expect(command(leader, "START", 0), 409);
     }
@@ -337,13 +387,6 @@ class StudyRoomHttpTest extends PostgresHttpTest {
         Map<String, Object> input = new HashMap<>();
         input.put("focusMinutes", focus); input.put("breakMinutes", 1); input.put("participantLimit", capacity);
         input.put("hostId", host); input.put("coHostId", coHost); input.put("expectedVersion", version);
-        return input;
-    }
-    private Map<String, Object> audio(long version, String music, boolean playMusic, String ambient, boolean playAmbient) {
-        Map<String, Object> input = new HashMap<>();
-        input.put("musicPreset", music); input.put("musicPlaying", playMusic);
-        input.put("ambientPreset", ambient); input.put("ambientPlaying", playAmbient);
-        input.put("expectedVersion", version);
         return input;
     }
     private void expire(long studentId) {

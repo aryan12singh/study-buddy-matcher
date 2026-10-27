@@ -44,14 +44,14 @@
 <text x="595" y="308" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and view current participants</text>
 <text x="955" y="282" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Accepted active group member;</text>
 <text x="955" y="307" font-size="18" fill="#506474" font-weight="400" text-anchor="start">distinct students count toward capacity.</text>
-<text x="595" y="399" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Control Pomodoro, shared</text>
-<text x="595" y="423" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">audio and room configuration</text>
+<text x="595" y="399" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Control Pomodoro</text>
+<text x="595" y="423" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and room configuration</text>
 <text x="955" y="397" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Group leader or present assigned host/co-host;</text>
 <text x="955" y="422" font-size="18" fill="#506474" font-weight="400" text-anchor="start">only the leader assigns host roles.</text>
-<text x="595" y="514" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Choose local volume / mute</text>
-<text x="595" y="538" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and enable browser audio</text>
-<text x="955" y="512" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Intentional per-browser consent;</text>
-<text x="955" y="537" font-size="18" fill="#506474" font-weight="400" text-anchor="start">playback position and volume stay local.</text>
+<text x="595" y="514" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Play Spotify and</text>
+<text x="595" y="538" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">ambient sounds</text>
+<text x="955" y="512" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Music tab in room settings;</text>
+<text x="955" y="537" font-size="18" fill="#506474" font-weight="400" text-anchor="start">heard only in this browser.</text>
 <text x="595" y="629" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Plan / edit / cancel</text>
 <text x="595" y="653" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">group or buddy sessions</text>
 <text x="955" y="627" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Group leader or active buddy participant;</text>

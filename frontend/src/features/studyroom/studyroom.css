@@ -1,9 +1,72 @@
-.room-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; margin-bottom: 1.25rem; }
-.room-layout > .detail-panel { margin: 0; }
-.room-entry { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; }
-.room-timer-panel { text-align: center; background: #f1f7f6; }
-.room-timer-panel .actions { justify-content: center; }
-.room-clock { font-family: ui-monospace, monospace; font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.06em; color: #193c3d; margin: .6rem 0; }
-.room-participants { list-style: none; padding: 0; display: grid; gap: .65rem; }
-.room-participants .tag-list { margin-top: .6rem; }
-@media (max-width: 800px) { .room-layout { grid-template-columns: 1fr; }.room-entry { flex-direction: column; align-items: stretch; } }
+.group-room { position: relative; display: flex; flex-direction: column; gap: .9rem; width: 100%; max-width: 760px; margin-inline: auto; padding: 1.3rem clamp(1rem, 3vw, 2.2rem) 1.2rem; box-sizing: border-box; }
+.desktop .group-room .personal-pomodoro-clock { font-size: clamp(4rem, 10vw, 6.2rem); margin: .2rem auto .6rem; border-bottom-width: 3px; }
+.group-room .room-timer-panel .pomodoro-journey { margin-top: .75rem; padding-block: .25rem; }
+.desktop .group-room .pomodoro-rhythm { margin-top: 1rem; }
+.group-room .room-timer-actions { margin-top: .9rem; }
+.group-room .room-timer-actions .retro-button { min-height: 40px; min-width: 104px; }
+/* Two rows: the personal mini player and the window controls on top, then the centred tag and name. */
+.group-room-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "music controls" "title title"; align-items: start; gap: .8rem 1rem; }
+.group-room-header > .now-playing-mini { grid-area: music; }
+.group-room-header > .window-controls { grid-area: controls; }
+.group-room-title { grid-area: title; display: flex; flex-direction: column; align-items: center; gap: .7rem; min-width: 0; text-align: center; }
+.group-room-workspace.is-minimal > .group-room { background: none; border-color: transparent; box-shadow: none; }
+.group-room-workspace.is-minimal .group-room-header, .group-room-workspace.is-minimal .group-room-footer,
+.group-room-workspace.is-minimal .pomodoro-journey, .group-room-workspace.is-minimal .room-timer-actions,
+.group-room-workspace.is-minimal .room-timer-note { display: none; }
+.group-room-header .window-controls { margin: -.35rem -.6rem 0 0; }
+/* Here the mini player sits in the header's top row rather than in the panel's flow. */
+.group-room .now-playing-mini { margin: 0; }
+.group-room-workspace.is-minimal .now-playing-mini { display: none; }
+.study-room-workspace.is-minimal .room-timer-cue { color: #fffcef; text-shadow: 1px 2px 0 #17201c99; }
+.group-room-workspace.is-expanded > .group-room { max-width: 860px; }
+.desktop .group-room-workspace.is-expanded .personal-pomodoro-clock { font-size: clamp(4.5rem, 12vw, 8rem); }
+.group-room-tag { display: inline-block; padding: .3rem .95rem; border: 2px solid #67705c; border-radius: 999px; background: #edf1df; color: #50633b; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.group-room-tag:not(.is-joined) { background: #f1f0e6; color: #626d57; border-style: dashed; }
+.desktop .group-room-header h2 { margin: 0; font-size: clamp(1.05rem, 1.8vw, 1.25rem); color: #343e34; overflow-wrap: anywhere; }
+.desktop .group-room-notices { max-width: none; margin: 0 0 1.25rem; padding: .75rem 1rem; background: #f5f5e7; border: 1px dashed #b9c0ac; border-radius: 5px; font-size: .78rem; line-height: 1.6; color: #626d57; }
+.group-room-notices strong { color: #3e4c36; }
+.room-timer-panel { display: flex; flex-direction: column; align-items: center; text-align: center; padding: .5rem 0 0; }
+.room-timer-cue { min-height: 1.3em; margin: 0 0 .6rem; font-size: .8rem; font-weight: 700; color: #4c653c; }
+.room-timer-panel .pomodoro-journey { max-width: 620px; margin-top: 1.25rem; }
+.room-timer-actions { justify-content: center; gap: .8rem; margin-top: 1.25rem; }
+.room-timer-actions .retro-button { min-width: 118px; min-height: 46px; }
+.room-timer-note { max-width: 420px; margin: 1.25rem auto 0; font-size: .75rem; color: #626d57; }
+.group-room-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; padding-top: .8rem; border-top: 1px solid #dfe3d1; }
+.desktop .group-room-quiet { margin: 0 auto 0 0; max-width: 340px; font-size: .74rem; line-height: 1.6; color: #626d57; }
+.group-room-quiet strong { color: #3e4c36; }
+.group-room-footer .retro-button { flex-shrink: 0; min-height: 40px; margin-left: auto; }
+.study-room-workspace .retro-button.danger { background: #fff4ee; color: #8f3324; border-color: #a8503f; }
+.study-room-workspace .retro-button.danger:hover:not(:disabled) { background: #fbe4da; }
+.group-room-extras { display: grid; gap: 1.25rem; margin-top: 1.25rem; }
+.group-room-extras > .detail-panel { margin: 0; }
+.dialog-window .detail-panel { margin: 0; padding: 0; border: 0; box-shadow: none; background: none; }
+@media (max-width: 550px) {
+  .group-room-footer { flex-direction: column; align-items: stretch; }
+  .desktop .group-room-quiet { max-width: none; }
+}
+
+/* The room's crew inside the timer panel: small avatars that bob out of step with each other. */
+.room-crew { display: grid; justify-items: center; gap: .55rem; }
+.desktop .room-crew-heading { display: flex; align-items: center; gap: .5rem; margin: 0; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #66765e; }
+.room-crew-count { padding: .05rem .4rem; border: 1px solid #c3cbb5; border-radius: 3px; background: #ebefdc; letter-spacing: 0; }
+.room-crew-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem 1rem; }
+.room-crew-member { display: flex; flex-direction: column; align-items: center; gap: .2rem; width: 64px; text-align: center; }
+.room-crew-avatar { position: relative; display: block; }
+.room-crew .initials-avatar { width: 44px; height: 44px; flex-basis: 44px; border: 2px solid #57664a; border-radius: 50%; box-shadow: 2px 3px 0 #3c4a3530; font-size: .82rem; }
+.room-crew-dot { position: absolute; right: -1px; bottom: 1px; width: 12px; height: 12px; border: 2px solid #fffcef; border-radius: 50%; background: #b6bfa6; }
+.room-crew-member.is-focus .room-crew-dot { background: #53694a; }
+.room-crew-member.is-break .room-crew-dot { background: #6f98a8; }
+.room-crew-badge { position: absolute; top: -7px; left: -5px; display: grid; place-items: center; width: 18px; height: 18px; border: 1.5px solid #57664a; border-radius: 50%; background: #f3e3a6; color: #6b5718; font-size: .6rem; line-height: 1; }
+.room-crew-name { max-width: 100%; font-size: .7rem; font-weight: 700; color: #3e4c36; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.room-crew-role { font-size: .58rem; color: #626d57; }
+.group-room-workspace.is-minimal .room-crew { display: none; }
+@keyframes crew-pop { from { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } to { transform: scale(1); } }
+@keyframes crew-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes crew-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .room-crew-member { animation: crew-pop .45s ease-out both; }
+  /* Focusing heads bob steadily; people on a break sway as if stretching. */
+  .room-crew-avatar { animation: crew-bob 2.4s ease-in-out infinite; animation-delay: var(--crew-delay, 0s); }
+  .room-crew-member.is-break .room-crew-avatar { animation-name: crew-sway; animation-duration: 3s; }
+  .room-crew-member:hover .room-crew-avatar { animation-duration: .8s; }
+}

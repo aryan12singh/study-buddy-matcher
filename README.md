@@ -34,7 +34,7 @@
 | <img src="docs/assets/icons/match.svg" width="28" height="28" alt="" /> | **Matching** | Scores other students on course, weekly availability, study mode, goals and group size, with three ranking strategies and a breakdown of every score |
 | <img src="docs/assets/icons/connection.svg" width="28" height="28" alt="" /> | **Connections and privacy** | Match requests become connections on acceptance; a contact number is revealed only to an active, accepted buddy |
 | <img src="docs/assets/icons/group.svg" width="28" height="28" alt="" /> | **Study groups** | Create, browse and apply to groups; leaders approve applicants, remove members and close groups |
-| <img src="docs/assets/icons/room.svg" width="28" height="28" alt="" /> | **Collaborative study** | Private group rooms with a shared Pomodoro timer, original layered audio and live campus weather scenes |
+| <img src="docs/assets/icons/room.svg" width="28" height="28" alt="" /> | **Collaborative study** | Private group rooms with a shared Pomodoro timer, personal Spotify and ambient sound music, and live campus weather scenes |
 | <img src="docs/assets/icons/calendar.svg" width="28" height="28" alt="" /> | **Study sessions** | One-off or weekly group and buddy sessions with mutual-availability suggestions and calendar (`.ics`) export |
 | <img src="docs/assets/icons/bell.svg" width="28" height="28" alt="" /> | **Notifications** | Recipient-scoped updates for requests, groups, membership and sessions |
 | <img src="docs/assets/icons/docs.svg" width="28" height="28" alt="" /> | **Help and getting started** | A current-data next action, profile-to-session guide, contextual topic links and searchable answers about matching, AI, privacy, groups and rooms |
@@ -273,10 +273,16 @@ are in the [matching decisions](docs/DESIGN_DECISIONS.md#matching-decisions-team
 
 ## Collaborative study
 
-**Study rooms.** Each open group has one private room for its accepted members. Members share a
+**Study rooms.** The **Study Room** navigation tab opens a personal Pomodoro beside one panel
+listing all your groups. The personal timer starts at 25 minutes of focus and 5 minutes of break,
+supports pause/resume, confirmed reset and adjustable whole-minute durations (focus 1–180,
+break 1–60), and restores its elapsed time in the same browser tab for the signed-in account.
+Group loading or errors do not interrupt it. Open groups link to their private rooms; closed
+groups link to their history. Each open group has one private room for its accepted members. Members share a
 Pomodoro timer that survives refreshes and restarts, the leader assigns a host and co-host,
-and present hosts can change durations and capacity. Original layered music and ambience play
-only after each browser opts in; volume and mute stay local. Pixel weather scenes follow live
+and present hosts can change durations and capacity. Both study rooms have a Music tab in
+their settings menu with a Spotify player and a Freesound ambient mixer, and the personal room
+shows a mini player in the timer's corner; what a student plays is heard only in their own browser. Pixel weather scenes follow live
 campus conditions, with selectable themes as a fallback. Accessible cues announce focus and
 break changes. Removal from the group, deactivation or group closure ends room access immediately.
 
@@ -348,6 +354,7 @@ or the property in `application-local.yml`.
 | --- | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | `local` | Loads `application-local.yml` in development |
 | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | Required unless set locally | Backend database connection |
+| `DB_MAX_POOL_SIZE` / `spring.datasource.hikari.maximum-pool-size` | `5` | Most database connections one backend keeps open. Spring's default of 10 would let one developer fill most of the shared Supabase Session pooler's 15 clients |
 | `JWT_SECRET` / `jwt.secret` | Required, at least 32 characters | Signs sign-in tokens |
 | `JWT_EXPIRATION_MS` / `jwt.expiration-ms` | `86400000` (24 hours) | Token lifetime |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
@@ -402,6 +409,24 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.daily-call-limit-per-student` | `5` | Gemini calls one student can trigger per day, so one student cannot use up the shared allowance. Cached explanations cost nothing. In memory, resetting at Singapore midnight with the shared limit |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
 | `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
+| `app.ambient.api-key` | none; set only in `application-local.yml` | Freesound API key for the study rooms' Music tab. Without it a sound request returns 503 `AMBIENT_UNAVAILABLE`. Never committed, logged or sent to the browser |
+| `app.ambient.base-url` | `https://freesound.org/apiv2` | Freesound API base URL |
+| `app.ambient.timeout` | `5s` | Connect and read timeout for Freesound |
+| `app.ambient.candidate-count` | `15` | Search results a random sound is picked from |
+| `app.ambient.min-duration-seconds` / `max-duration-seconds` | `30` / `600` | Sound lengths asked for; shorter clips loop audibly, longer ones start slowly |
+| `app.ambient.license` | `Creative Commons 0` | Freesound licence sounds must have. CC0 needs no credit; changing it to one that does means crediting each author on screen again |
+| `app.ambient.categories` | rain, cafe, forest, ocean, fireplace, wind | Channels in the study rooms' Music tab: `id`, display `label` and the Freesound search `query` |
+| `app.spotify.client-id` / `client-secret` | none; set only in `application-local.yml` | Spotify app credentials from the developer dashboard. Without both, the Premium player says Spotify sign-in is not set up. The secret is never committed, logged or sent to the browser |
+| `SPOTIFY_REDIRECT_URI` / `app.spotify.redirect-uri` | `http://127.0.0.1:8080/api/spotify/callback` | Where Spotify returns after sign-in; must be registered in the Spotify dashboard. Spotify rejects `localhost` |
+| `SPOTIFY_RETURN_URL` / `app.spotify.return-url` | `http://localhost:5173/study-room` | The Study Room page the browser returns to (its Music settings tab opens), with `?spotify=connected/denied/expired/failed` |
+| `app.spotify.accounts-url` / `api-url` | `https://accounts.spotify.com` / `https://api.spotify.com/v1` | Spotify sign-in and Web API base URLs |
+| `app.spotify.scopes` | `streaming`, `user-read-email`, `user-read-private`, `user-modify-playback-state` | Permissions asked for; the first three are required by the Web Playback SDK |
+| `app.spotify.timeout` | `5s` | Connect and read timeout for Spotify |
+| `app.spotify.authorization-lifetime` | `10m` | How long a started sign-in stays valid |
+| `app.spotify.token-refresh-margin` | `60s` | Renew a student's Spotify token this long before it expires |
+| `app.spotify.search-limit` | `10` | Playlists per search; Spotify's maximum since February 2026 |
+| `app.spotify.max-query-length` | `100` | Longest playlist search accepted |
+| `app.spotify.embed-playlist-id` | `3bZTQGrvewbkJJe6UpTFKc` (the team's study playlist) | Playlist in the embedded player for students without Premium; works without app credentials |
 
 The cache uses rounded anonymous evidence plus prompt version (`v5`) and model, separately
 from the exact card evaluation ID. Two evaluations may reuse equivalent wording after each
@@ -428,14 +453,32 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.daily-call-limit-per-student` | `5` | Assistant calls one student can trigger per day, so one student cannot use up the shared allowance |
 | `app.ai.assistant.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limits |
 | `app.ai.assistant.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further assistant calls are made for this long |
-| `app.ai.assistant.study-plan.max-upload-size` | `10MB` | Largest study material upload; larger files get 413. Spring's `spring.servlet.multipart` limits read this value. Base64 makes an attached PDF a third larger, which stays inside Gemini's inline request limit |
+| `app.ai.assistant.study-plan.max-upload-size` | `10MB` | Most that all of one plan's files may add up to; more gets 413. Spring's `spring.servlet.multipart` limits read this value. Base64 makes attached PDFs a third larger, which stays inside Gemini's inline request limit |
+| `app.ai.assistant.study-plan.max-files` | `6` | Most files for one plan, such as one week's slides each |
 | `app.ai.assistant.study-plan.max-topics-characters` | `4000` | Longest pasted topics text |
-| `app.ai.assistant.study-plan.max-text-file-characters` | `100000` | Most text an uploaded `.txt` or `.md` file may hold (about 25,000 tokens), since its text goes into the prompt; more gets 413 |
+| `app.ai.assistant.study-plan.max-text-file-characters` | `100000` | Most text all of one plan's `.txt` and `.md` files may hold together (about 25,000 tokens), since their text goes into the prompt; more gets 413 |
+| `app.ai.assistant.study-plan.max-source-topics` | `40` | Most topics Gemini may list from the material |
+| `app.ai.assistant.study-plan.max-entries-per-block` | `5` | Most entries in one week or meeting of a roadmap |
+| `app.ai.assistant.study-plan.max-tasks-per-entry` | `5` | Most tasks in one roadmap entry |
+| `app.ai.assistant.study-plan.max-weeks` | `16` | Most weeks a personal plan covers, so the exam can be at most this far away |
+| `app.ai.assistant.study-plan.max-hours-per-week` | `40` | Most study hours per week a student can plan |
+| `app.ai.assistant.study-plan.time-zone` | `Asia/Singapore` | Calendar that decides "today", the first day of a personal plan |
 
-Study material is a PDF, `.txt` or `.md` file, or pasted topics, never both. The type is checked
-from the contents as well as the extension: a `.pdf` must start with the PDF signature and a text
-file must be UTF-8, otherwise 415. A PDF is attached to the Gemini request; text goes into the
-prompt. Neither is stored.
+A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
+slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the
+exam. When the material is shorter than the plan, the later weeks revise and practise earlier
+topics. A student may keep several plans; a new one never replaces an old one.
+
+Study material is one or more PDF, `.txt` or `.md` files, or pasted topics, never both. Each
+file's type is checked from its contents as well as its extension: a `.pdf` must start with the
+PDF signature and a text file must be UTF-8, otherwise 415. PDFs are attached to the Gemini
+request in upload order; text goes into the prompt. Only the file names are stored.
+
+The roadmap prompt (`prompts/study-plan-v1.txt`) states these limits and the time each week or
+meeting can hold. Gemini's reply is then checked against them: every week or meeting has at
+least one entry, no entry falls outside the plan, a block's minutes fit its limit and every text
+fits its column. Any other reply is rejected with `AI_UNAVAILABLE`. These checks bound the
+shape and size of a roadmap; they do not prove its advice is good.
 
 </details>
 
@@ -577,7 +620,7 @@ design already allows it.
 | [E1 verification](docs/E1_TESTING.md) | AI match explanation checks and acceptance |
 | [E2 scope](docs/E2_SCOPE.md) | What E2 delivered and its boundaries |
 | [Achievements verification](docs/ACHIEVEMENTS_TESTING.md) | Private current standings, planned-week metrics, owner-summary privacy and regression checks |
-| [E2 verification](docs/E2_TESTING.md) | Room, session, audio, weather and calendar checks |
+| [E2 verification](docs/E2_TESTING.md) | Room, session, weather and calendar checks |
 | [Help verification](docs/HELP_TESTING.md) | Current-state onboarding, next-action priority, contextual links, permissions and responsive keyboard checks |
 | [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
@@ -620,6 +663,8 @@ table may be added without team agreement.
 | source-map-js (transitive) | 1.2.2 | Source maps; patched lock entry | BSD-3-Clause, [source-map-js](https://github.com/7rulnik/source-map-js), [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
 | Supabase | Hosted service | Managed PostgreSQL, reached only by backend JDBC; no browser SDK | [Supabase](https://supabase.com/) |
 | Google Gemini API (free tier) | model set by `app.ai.explanation.model` | Optional AI wording of match explanations (E1); off without a key | Google [Gemini API terms](https://ai.google.dev/gemini-api/terms). On the free tier Google uses submitted content to improve its products and human reviewers may read it, so only anonymous `ExplanationEvidence` is sent. Users must be 18 or older |
+| Freesound API | Hosted API, `apiv2` | Ambient sounds in the Study Room; off without a key | [API terms](https://freesound.org/help/tos_api/). Searches are limited to CC0 (public domain) sounds, which need no credit, so the mixer shows no per-sound attribution |
+| Spotify Web API and Web Playback SDK | Hosted API; SDK script loaded from `sdk.scdn.co` at runtime | Students connect their own Spotify account and play music in the Study Room (a free embedded playlist needs no account); off without app credentials | [Developer terms](https://developer.spotify.com/terms). Development mode needs the app owner on Premium and allows 5 listed users; playback needs each student on Premium. Tokens are kept in server memory only |
 | Open-Meteo | Hosted API | Campus weather for the study room; no SDK or key | CC BY 4.0 data, non-commercial; [documentation](https://open-meteo.com/en/docs), [terms](https://open-meteo.com/en/terms) |
 
 </details>
@@ -638,7 +683,7 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 | README icons (`docs/assets/icons/`) | Original pixel SVGs in the logo palette |
 | Interface icons, avatar initials and patterns | Original drawings in `PixelIcon.tsx`, `Avatar.tsx` and `desktop.css` |
 | Achievement medallions and grove | Original SVG medallions and pixel-tree patterns in `features/achievements/`; no external image or icon dependency |
-| Study room scenery and audio | Original CSS pixel scenes and native Web Audio synthesis; no sound files |
+| Study room scenery | Original CSS pixel scenes, including the personal timer's meadow backdrop. Room music comes from the Spotify and Freesound services above. The timer's start and end chimes are synthesised in the browser with Web Audio; no sound files are shipped |
 | Weather data | Open-Meteo, with CC BY 4.0 attribution on the room screen; only the configured campus coordinates are sent |
 | Fonts | Tahoma, Verdana and system fonts; `index.css` also imports Inter and Fraunces from Google Fonts under SIL OFL 1.1 ([Inter](https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt), [Fraunces](https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/OFL.txt)), falling back to system fonts offline |
 

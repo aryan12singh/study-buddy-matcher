@@ -111,7 +111,7 @@ export const FAQS: Faq[] = [
   },
   {
     id: 'room-audio', question: 'Why is a study room silent, or why can I not control the timer?',
-    answer: 'Join the room and choose to enable music or ambience in your browser; sound does not start automatically. Volume and mute stay on your device, and you can study silently if playback fails. The group leader and authorized host or co-host control the shared timer; other members can view it and set their own focus or break status.'
+    answer: 'Sound never starts on its own. Open the Music tab in the room’s settings (⚙) to play a Spotify playlist or ambient sounds; what you play is heard only on your device. The group leader and authorized host or co-host control the shared timer; other members can view it and set their own focus or break status.'
   },
   {
     id: 'schedule', question: 'Who can schedule a study session?',

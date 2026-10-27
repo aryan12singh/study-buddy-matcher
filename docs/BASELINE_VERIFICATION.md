@@ -183,7 +183,7 @@ browsers and disposable containers were removed afterwards. The initial local fr
 under concurrent Java/browser load exceeded asynchronous test timeouts; the unchanged suite
 passed with two workers. No timeout increase, test deletion or CI job was added.
 
-Physical iPhone/Safari and Android/Chrome checks remain for audio consent/interruption,
+Physical iPhone/Safari and Android/Chrome checks remain for music playback/interruption,
 background recovery, virtual keyboard, text zoom, clipboard and calendar import. The
 existing Outlook acceptance deferral remains. These targeted results do not establish
 latest-Figma approval, a physical-projector check, hosting, an LMS deadline or submission.

@@ -367,13 +367,12 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | PUT | `/api/groups/{groupId}/room/presence` | `{clientId: UUID, presence: PRESENT / FOCUS / BREAK}`; renewed DTO, 200 |
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
-| PUT | `/api/groups/{groupId}/room/audio` | `{musicPreset, musicPlaying, ambientPreset, ambientPlaying, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid
 timer transition returns 409. Only the leader or a currently present assigned
-host/co-host can change timer/audio/settings. The leader retains these controls without
+host/co-host can change timer/settings. The leader retains these controls without
 joining, so room capacity cannot block administrative recovery. Only the leader
 assigns roles; a present delegated host/co-host can change durations/capacity only
 while preserving the effective current role assignments in the settings body.
@@ -392,7 +391,7 @@ Each heartbeat extends its lease by the configured lifetime. An unknown/expired
 lease returns 409 and requires an explicit join; it cannot bypass capacity by
 renewing. Polled state reads use `RoomAccess.readMember` without a group-row lock.
 Heartbeats use the same authorization check and update only an existing, unexpired
-tab lease; a concurrently deleted lease fails renewal. Join, leave, timer/audio
+tab lease; a concurrently deleted lease fails renewal. Join, leave, timer
 control and configuration use `lockMember`, taking account locks before the group
 lock. This serializes admission and shared-state transitions without queuing every
 poll or lease renewal on the group row. Inactive/removed members are excluded; closed groups return
@@ -400,9 +399,14 @@ poll or lease renewal on the group row. Inactive/removed members are excluded; c
 A removed/deactivated member loses all tab leases and assigned roles within the
 membership/account transaction; later readmission/reactivation cannot revive an
 old heartbeat. A removed/deleted/inactive host falls back to the leader, and invalid
-co-hosts are omitted. Group closure removes leases, resets the timer and stops both
-audio layers. Account deletion cascades presences; leader/group deletion removes
-the room. Clients purge snapshots/stop audio on refresh failure, then retry and
+co-hosts are omitted. Group closure removes leases, resets the timer.
+When the effective host leaves (`DELETE .../presence/{clientId}` for their last tab, or an
+expired lease pruned on the next join) and others are present, the role passes to the present
+co-host, who then stops being co-host, or else to the most recently active person present.
+A host who has not joined keeps the role. When the last present student leaves, a running or
+paused session ends and the timer resets to IDLE; a session the leader started in an empty
+room is not ended by the first join. Both changes increment the room version. Account deletion cascades presences; leader/group deletion removes
+the room. Clients purge snapshots on refresh failure, then retry and
 explicitly rejoin. Browser timer rendering does not confer control authority.
 
 `StudyRoomDto` fields:
@@ -416,21 +420,15 @@ leader, canControl, joined (actor present in any tab)
 pollIntervalMillis, leaseLifetimeMillis
 timer {phase: FOCUS/BREAK, status: IDLE/RUNNING/PAUSED,
        remainingMillis (at serverTime), focusMillis, breakMillis}
-audio {musicPreset: CALM_MUSIC|null, musicPlaying: boolean,
-       ambientPreset: RAIN/WHITE_NOISE/CAFE|null, ambientPlaying: boolean}
-audioPresets [{id, label, kind: MUSIC/AMBIENT}]
 participants [{studentId, name, presence, expiresAt, leader, host, coHost}]
 members [{studentId, name}] (active accepted members for role selectors)
 ```
 
 The browser renders elapsed time from each server snapshot and reconciles on the
-server-provided poll interval (default two seconds). Local enable/volume/mute are
-not sent to the API. Original synthesized music and ambient layers have independent
-shared selection/play state and independent local volume/mute. A null preset is
-allowed only when that layer is paused; sending an ambient preset to the music
-layer, or vice versa, is 400. Playback requires local consent and failure leaves
-the room usable silently. Playback positions are not synchronized. No external
-music credentials/assets are required.
+server-provided poll interval (default two seconds). Rooms have no shared audio: music
+and ambient sounds come from each study room's Music settings tab, play only in each student's
+own browser and are not sent to the room API. The former shared audio endpoint was
+removed on 24 October; its `study_rooms` columns remain, unused, until a later migration.
 
 ## Dated study sessions and calendar (E2 #16)
 
@@ -565,7 +563,54 @@ selected clear/cloudy/rain/storm/snow/fog. Manual choices are decorative and sav
 only in that browser. Without usable live data, the scene follows Singapore day/night
 and the manual choices remain available. `prefers-reduced-motion` stops animations.
 Weather data attribution links to [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
-provider outages do not change shared timer/audio state or block a room/session action.
+provider outages do not change shared timer state or block a room/session action.
+
+## Ambient sounds (Study Room music)
+
+Both endpoints use the existing authenticated student API guard. The backend calls Freesound
+with the server-held key; the key never reaches the browser.
+
+`GET /api/ambient/categories` returns the configured channels in order.
+
+```text
+AmbientCategoryDto[] { id, label }
+```
+
+`GET /api/ambient/categories/{categoryId}/sound?exclude={soundId}` returns one random sound
+with an MP3 preview from that category's search. `exclude` is optional: the sound already
+playing, skipped when another choice exists.
+
+```text
+AmbientSoundDto { categoryId, id, name, author, license (URL), previewUrl }
+```
+
+An unknown category returns 404 `NOT_FOUND`. No configured key, a provider failure or timeout,
+or no playable result returns 503 `AMBIENT_UNAVAILABLE`. Preview URLs play directly from
+Freesound's CDN and need no key.
+
+## Spotify (Study Room music)
+
+All endpoints use the existing authenticated student API guard except `GET /api/spotify/callback`,
+which Spotify's sign-in redirect reaches without an app token. It is tied to the student by a
+random, single-use `state` that expires after `app.spotify.authorization-lifetime`.
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET /api/spotify/status` | `SpotifyStatusDto { configured, connected, embedPlaylistId }` |
+| `POST /api/spotify/authorization` | `SpotifyAuthorizationDto { url }`: the Spotify sign-in page to open |
+| `GET /api/spotify/callback?state&code&error` | 302 to `app.spotify.return-url?spotify=connected/denied/expired/failed` |
+| `GET /api/spotify/token` | `SpotifyAccessTokenDto { accessToken, expiresAt }` for the in-browser player, renewed when close to expiry |
+| `GET /api/spotify/playlists?query=` | `SpotifyPlaylistDto[] { id, uri, name, owner, imageUrl|null }`, at most 10 |
+| `POST /api/spotify/play` `{ deviceId, playlistUri }` | 204; starts the playlist on the student's player in this tab |
+| `DELETE /api/spotify/connection` | 204; forgets the student's Spotify tokens |
+
+The refresh token never leaves the server, and tokens are held in memory only, so a server
+restart asks students to connect again. No app credentials returns 503 `SPOTIFY_UNAVAILABLE`, as
+does a Spotify outage. Not connected, or a connection Spotify no longer accepts, returns 409
+`SPOTIFY_NOT_CONNECTED` (not 401, which would sign the student out of this app). Spotify refusing
+playback (player not ready, or no Premium) returns 409 `SPOTIFY_PLAYBACK_REFUSED`. A blank or
+overlong search returns 400 `INVALID_INPUT`; a `playlistUri` that is not `spotify:playlist:…`
+returns 400.
 
 ## Notifications
 
@@ -615,6 +660,7 @@ and descriptions at their valid limits cannot cause a notification-column overfl
 | Application withdrawal | Leader, one | `GROUP_JOIN_REQUEST_WITHDRAWN` |
 | Member removal | Removed member, one | `GROUP_MEMBER_REMOVED` |
 | Member leaves | Leader, one | `GROUP_MEMBER_LEFT` |
+| Study room timer started (not resumed) | Each active member not in the room, except whoever started it, and only if they have no unread notice for that group's room; links to the room. Sent in a separate transaction after the start commits; a failed invitation is logged and never undoes the start | `GROUP_STUDY_ROOM_STARTED` |
 | Group closure | Each pending applicant, one rejection; each accepted member other than leader, one closure | `GROUP_JOIN_REQUEST_REJECTED`, `GROUP_CLOSED` |
 | Student deactivation | Each active buddy and pending buddy counterpart; led-group closure recipients; leaders of withdrawn applications and removed memberships | Corresponding ended/cancelled/rejected/withdrawn/removed events; the ended-connection notice has no profile link |
 | Permanent deletion | Active buddies, pending buddy counterparts, each remaining member/pending applicant in deleted led groups, and leaders affected by removed membership/application | Same safe event types; deleted target references removed |
@@ -973,6 +1019,59 @@ Quota is a per-process daily budget, reset on restart; it is not a durable multi
 billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
 duplicate cache rows only. See [E1 testing](E1_TESTING.md) for evidence and remaining acceptance.
 
+## Study plans (AI study assistant)
+
+Proposed bonus extension on `feat/team-b/study-roadmap`; not part of the agreed selected extras
+until the team accepts it. Student only. This section covers personal plans; session plans for
+a group or buddy session are added with their own endpoints.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/study-plans` | `multipart/form-data`: `PersonalPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto` | Student |
+| GET | `/api/study-plans` | none | 200 `StudyPlanSummaryDto[]`, own personal plans newest first | Student |
+| GET | `/api/study-plans/{planId}` | none | 200 `StudyPlanDto` | Owner |
+| PUT | `/api/study-plans/{planId}/entries/{entryId}/progress` | `{ "completed": true }` | 200 `StudyPlanDto` | Owner |
+| DELETE | `/api/study-plans/{planId}` | none | 204 | Owner |
+
+```text
+PersonalPlanInput   (multipart form fields)
+  courseId, hoursPerWeek (1 to max-hours-per-week), examDate? (yyyy-MM-dd), studyGoal?, topicsText?
+StudyPlanDto
+  { id, scope: PERSONAL/SESSION, course: CourseDto, sessionId|null, firstBlockDate, blockCount,
+    minutesPerBlock, examDate|null, studyGoal|null, sourceKind: UPLOAD/PASTE, sourceFilenames[],
+    sourceTopics[], canManage, createdAt, updatedAt,
+    entries: [{ id, sequence, scheduledDate, title, plannedMinutes, tasks[], completed }] }
+StudyPlanSummaryDto
+  { id, scope, course, firstBlockDate, blockCount, examDate|null, studyGoal|null,
+    entryCount, completedCount, createdAt }
+```
+
+A plan starts today in `Asia/Singapore` (`study-plan.time-zone`). Without `examDate` it covers
+this week alone; with one it covers every week up to the exam, so an exam 1 to 7 days away is one
+week and 8 to 14 days two. The exam must be after today and within `max-weeks` weeks. Each
+week holds `hoursPerWeek` hours. Week *n* of a plan starts on `firstBlockDate` plus 7 × (*n* − 1)
+days, which is each entry's `scheduledDate`.
+
+The material is one or more `files` (PDF, `.txt` or `.md`) or `topicsText`, never both. Files
+together must fit `max-upload-size` and `max-text-file-characters`, and each file's contents must
+match its extension. Files are sent to Google Gemini for this one request and never stored; only
+their names are kept. The roadmap Gemini returns must pass the checks in the README's
+"AI study assistant" configuration section; a student may keep several plans for one course.
+
+Errors, in the order they are checked, so a bad request never spends the student's AI allowance:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 400 | `INVALID_INPUT` | A missing or malformed field; an unknown `courseId`; `hoursPerWeek` out of range; an exam today, in the past or beyond `max-weeks`; no material, or both files and topics; too many files; an empty file; topics too long |
+| 413 | `FILE_TOO_LARGE` | Files together over `max-upload-size`, or text files over `max-text-file-characters` |
+| 415 | `UNSUPPORTED_FILE_TYPE` | A file other than PDF, `.txt` or `.md`, or whose contents do not match its extension |
+| 503 | `AI_UNAVAILABLE` | The assistant is switched off, over its daily allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+| 404 | `NOT_FOUND` | Reading, ticking or deleting a plan that does not exist or is not the student's own, or an entry not in that plan |
+
+The plan is created in three steps: a short read that checks the request, the Gemini call, and
+a short write that checks the student is still active before saving. No database transaction or
+account lock is held while Gemini answers.
+
 ## UI use of the existing contract
 
 The student home page (`/home`, Team B) reads existing endpoints. Team A's matching preview
@@ -1006,9 +1105,13 @@ no-store/session-purge rules govern that read. Group-link copy uses the client o
 Create/update/delete destination feedback contains generic outcome text and no DTO/private
 fields.
 
-E2 student routes are `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
+E2 student routes are `/study-room`, `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
 `/sessions/{id}/edit`, `/groups/{id}/sessions` and `/connections/{id}/sessions`;
-each parent list has a `/new` editor for its authorized managers. Group detail
+each parent list has a `/new` editor for its authorized managers. The Study Room tab
+combines a personal browser timer with one sidebar populated by `/api/groups/mine`.
+Open groups link to their existing private rooms and closed groups to their history;
+opening the tab does not join a room. The personal timer uses no additional API and
+does not change the group's shared timer. Group detail
 loads a dated-session agenda only for accepted members of an open group, while
 Connections offers a session link for each active buddy. Session notification
 links target `/sessions/{id}` and recheck permission through the detail endpoint.

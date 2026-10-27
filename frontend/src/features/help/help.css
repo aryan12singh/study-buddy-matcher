@@ -26,10 +26,10 @@
 .help-meter-track i.confirmed { background: var(--help-done); }
 .help-meter-track i.loading, .help-meter-track i.unknown { background: repeating-linear-gradient(135deg, #d9dedf 0 3px, #fff 3px 6px); }
 .help-meter-track i.unavailable { background: #f0d2d2; border: 1px dashed var(--danger); }
-.help-progress-note { margin: 0 0 1rem; max-width: 78ch; font-size: .88rem; color: #3f484c; }
+.desktop .help-progress-note { margin: 0 0 1rem; max-width: none; font-size: .88rem; color: #3f484c; }
 .help-next { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #fff; border: 2px solid var(--primary); box-shadow: 3px 3px 0 rgba(32, 37, 39, .14); }
 .help-next h3 { margin: .15rem 0 .35rem; font-size: 1.15rem; }
-.help-next p { margin: 0; max-width: 72ch; font-size: .93rem; overflow-wrap: anywhere; }
+.desktop .help-next p { margin: 0; max-width: none; font-size: .93rem; overflow-wrap: anywhere; }
 .help-next .retro-button { white-space: normal; text-align: center; max-width: 15rem; }
 
 .help-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin: 0 0 .8rem; padding: .55rem .75rem; border: 1px dashed var(--surface-border, #adb9bf); background: #fff; font-size: .9rem; }
@@ -52,18 +52,19 @@
 .help-step.is-done .help-step-state { color: var(--help-done); }
 .help-step-state[data-state="unavailable"] { color: #8a2424; }
 .help-step .retro-button { white-space: nowrap; }
+.desktop .help-step-text p { max-width: none; }
 
 /* How it works */
-.help-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: .9rem; }
+.help-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 1.4rem; }
 .help-card { display: flex; flex-direction: column; background: #fff; border: 1px solid #6f7a7f; box-shadow: 3px 3px 0 rgba(32, 37, 39, .14); }
-.help-card-head { display: flex; align-items: center; gap: .6rem; padding: .55rem .75rem; background: var(--window-title, #d1d2d0); border-bottom: 1px solid #777; box-shadow: inset 0 1px #fff; }
+.help-card-head { display: flex; align-items: center; gap: .75rem; padding: .7rem 1.1rem; background: var(--window-title, #d1d2d0); border-bottom: 1px solid #777; box-shadow: inset 0 1px #fff; }
 .help-card-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; background: #fff; border: 1px solid #3c4143; color: var(--primary); }
 .help-card-icon .pixel-icon { width: 22px; height: 22px; flex-basis: 22px; }
 .help-card-head h3 { margin: 0; font-size: 1rem; }
-.help-card .help-card-summary { margin: .75rem .85rem .4rem; font-weight: 600; font-size: .93rem; }
-.help-card ul { margin: 0 .85rem .9rem; padding-left: 1.1rem; list-style: square; font-size: .88rem; color: #3f484c; display: grid; gap: .3rem; }
+.desktop .help-card-summary { margin: 1.1rem 1.35rem .85rem; font-weight: 600; font-size: .93rem; line-height: 1.6; }
+.help-card ul { margin: 0 1.35rem 1.1rem; padding-left: 1.2rem; list-style: square; font-size: .88rem; line-height: 1.65; color: #3f484c; display: grid; gap: .65rem; }
 .help-card li::marker { color: var(--primary); }
-.help-card-link { display: inline-flex; align-items: center; min-height: 44px; margin: auto .85rem .5rem; padding: .35rem 0; font-weight: 600; font-size: .88rem; }
+.help-card-link { display: inline-flex; align-items: center; min-height: 44px; margin: auto 1.35rem .85rem; padding: .35rem 0; font-weight: 600; font-size: .88rem; }
 
 /* FAQ */
 .help-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .35rem 1rem; margin-bottom: .9rem; }

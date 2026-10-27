@@ -20,7 +20,7 @@ applying the complete ordered migration set. The shared project received the ful
 | `20261009010000_study_rooms.sql` | Private room/timer state and expiring presence leases; backend-only tables/sequences |
 | `20261011090000_matching_weights_per_strategy.sql` | Matching weights belong to a strategy: adds `matching_configs.strategy` (existing rows become Balanced) and replaces one weight per criterion with one per strategy and criterion |
 | `20261013090000_complete_matching_configuration.sql` | Singleton matching settings, minimum score, persistent revision/override state and `matching_enabled_criteria`; preserves valid legacy overrides and denies browser access to the new table |
-| `20261014010000_room_audio_layers.sql` | Independent music/ambient columns and checks; backfills legacy selections once and preserves changed layer state on repetition |
+| `20261014010000_room_audio_layers.sql` | Independent music/ambient columns and checks; backfills legacy selections once and preserves changed layer state on repetition. Unused since room audio was removed on 24 October; kept so the ordered history still applies |
 | `20261014020000_study_sessions.sql` | Private group/buddy dated sessions, bounded schedule/parent/status checks, calendar UID and scoped query indexes; backend-only table/sequence |
 
 These are versioned source files. The historical shared
@@ -306,6 +306,24 @@ notification types. It works against this schema until the new code writes one o
 that, an older backend fails on screens that load those rows. Pull `main` once #67 merges
 before running the backend against the shared database again.
 
+### Study room invitation type — 24 October 2026
+
+`20261024010000_study_room_started_notification.sql` only widens `notifications_type_check` to
+allow `GROUP_STUDY_ROOM_STARTED`; it changes no rows. It was applied to the shared database at
+about 01:25 SGT, directly with `psql` from the `postgres:17` image in one transaction, because a
+branch backend already writing the new type had made starting a study-room timer fail.
+
+- No backup or dry run on a restored copy was taken, unlike the earlier rollouts. Before
+  applying, a read-only check found every existing notification type already in the new list.
+- Supabase's migration history does **not** record version `20261024010000`. The file drops
+  and re-adds the constraint, so a later `supabase db push` or `scripts/migrate-database.sh`
+  can apply it again without effect.
+- Afterwards the constraint allowed the new type and was validated, and the table still held
+  its 31 notifications.
+
+The backend also sends these invitations in a separate transaction after the timer start
+commits, so a database missing this file logs the failure instead of rejecting the start.
+
 ## Privacy and access verification
 
 After the recorded merged E2 migration set, all 20 application tables had RLS enabled;
@@ -374,6 +392,11 @@ music choice becomes the music layer and a legacy ambient choice becomes the amb
 layer. Repeating SQL must preserve current selections and never restart paused audio.
 New clients use independent music/ambient fields; old single-preset clients are not
 the E2 API contract. Deploy the upgraded backend and frontend together.
+
+Room audio was removed from the application on 24 October. The backend no longer maps any
+`study_rooms` audio column; all of them have defaults or allow null, so new rooms still
+insert. They stay in place until a dropping migration is applied after every running
+backend has the change, because older backends still write them.
 
 `study_sessions` belongs to exactly one group or connection, enforced by a database
 check. Its local date-time fields are intentional civil times in the saved IANA zone;
