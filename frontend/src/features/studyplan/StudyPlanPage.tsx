@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../shared/auth/useAuth'
 import { useResource } from '../../shared/api/useResource'
 import { label } from '../../shared/api/types'
@@ -10,16 +10,24 @@ import type { StudyPlanSummary } from './api'
 import { formatPlanDate, weekCountLabel } from './planDates'
 import './studyplan.css'
 
+/** The details Pixel's PLAN_STUDY link may carry, which belong to the create form. */
+const PREFILL_PARAMETERS = ['courseId', 'examDate', 'hoursPerWeek']
+
 /** The student's own personal study plans, newest first. */
 export default function StudyPlanPage() {
   const { account } = useAuth()
-  const plans = useResource(`study-plans-${account?.id}`, listStudyPlans)
+  const { search } = useLocation()
+  const prefilled = PREFILL_PARAMETERS.some(name => new URLSearchParams(search).has(name))
+  const plans = useResource(`study-plans-${account?.id}`, listStudyPlans, !prefilled)
+  if (prefilled) return <Navigate to={`/study-plan/new${search}`} replace />
+  const create = <Link className="retro-button primary" to="/study-plan/new">Create study plan</Link>
   return <WindowPage title="Study plans"
-    description="Week-by-week roadmaps for your courses, paced to your exam and the hours you have each week.">
+    description="Week-by-week roadmaps for your courses, paced to your exam and the hours you have each week." actions={create}>
     <StatePanel loading={plans.loading && !plans.data} error={plans.error} onRetry={() => plans.reload()} />
     {plans.data && <>
       <StatePanel empty={!plans.data.length} emptyTitle="No study plans yet" emptyKind="clock"
-        emptyMessage="Upload your lecture slides or paste the topics, and Gemini drafts a week-by-week roadmap up to your exam." />
+        emptyMessage="Upload your lecture slides or paste the topics, and Gemini drafts a week-by-week roadmap up to your exam."
+        emptyAction={create} />
       {!!plans.data.length && <ul className="data-list study-plan-list" aria-label="Study plans">
         {plans.data.map(plan => <StudyPlanRow key={plan.id} plan={plan} />)}
       </ul>}

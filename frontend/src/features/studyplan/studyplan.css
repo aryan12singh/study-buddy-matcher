@@ -1,3 +1,7 @@
 .study-plan-list { list-style: none; padding: 0; }
 .study-plan-list h3 { margin: 0 0 .45rem; }
 .study-plan-list p { margin: .4rem 0; }
+.study-material-files { list-style: none; padding: 0; display: grid; gap: .4rem; }
+.study-material-files li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .4rem .55rem; border: 1px solid var(--border, #8b8170); background: var(--panel, #fff8e8); }
+.study-material-files span { overflow-wrap: anywhere; }
