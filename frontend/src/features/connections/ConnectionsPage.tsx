@@ -73,7 +73,7 @@ export default function ConnectionsPage() {
           {request.message && (
             <p className="message-text">{request.message}</p>
           )}
-          <p className="row-meta">Sent {formatTimestamp(request.createdAt)} (SGT){request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
+          <p className="row-meta">Sent {formatTimestamp(request.createdAt)}{request.respondedAt && ` · Answered ${formatTimestamp(request.respondedAt)}`}</p>
         {request.context && contextSummary(request.context) && (
           <p className="row-meta">{contextSummary(request.context)}</p>
         )}
@@ -152,7 +152,7 @@ export default function ConnectionsPage() {
                   </>
                 }
               >
-                <p className="row-meta">Connected since {formatTimestamp(connection.createdAt)} (SGT)</p>
+                <p className="row-meta">Connected since {formatTimestamp(connection.createdAt)}</p>
                 <Badge tone="good">Connected</Badge>
               </PersonCard>
             ))}

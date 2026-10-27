@@ -143,7 +143,7 @@ export default function GroupsPage() {
                   {application.message && (
                     <p className="message-text">{application.message}</p>
                   )}
-                  <p className="row-meta">Applied {formatTimestamp(application.createdAt)} (SGT){application.respondedAt && ` · Answered ${formatTimestamp(application.respondedAt)}`}</p>
+                  <p className="row-meta">Applied {formatTimestamp(application.createdAt)}{application.respondedAt && ` · Answered ${formatTimestamp(application.respondedAt)}`}</p>
                 </div>
                 <Link className="retro-button" to={`/groups/${application.groupId}`}>View group</Link>
               </article>

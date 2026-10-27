@@ -107,7 +107,7 @@ function GroupDetailContent({ actorId }: { actorId?: number }) {
               <dt>Study mode</dt>
               <dd>{label(group.preferredStudyMode)}</dd>
               <dt>Created</dt>
-              <dd>{formatTimestamp(group.createdAt)} (SGT)</dd>
+              <dd>{formatTimestamp(group.createdAt)}</dd>
             </dl>
             <h3>Study goals</h3>
             <div className="tag-list">
@@ -177,7 +177,7 @@ function GroupDetailContent({ actorId }: { actorId?: number }) {
                     {member.leader && (
                       <Badge>Leader</Badge>
                     )}
-                    <p className="row-meta">Joined {formatTimestamp(member.joinedAt)} (SGT)</p>
+                    <p className="row-meta">Joined {formatTimestamp(member.joinedAt)}</p>
                   </PersonCard>
                 ))}
               </div>

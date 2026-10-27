@@ -152,7 +152,7 @@ function GroupManageContent({ enabled }: { enabled: boolean }) {
                     {application.message && (
                       <p className="message-text">{application.message}</p>
                     )}
-                    <p className="row-meta">Requested {formatTimestamp(application.createdAt)} (SGT)</p>
+                    <p className="row-meta">Requested {formatTimestamp(application.createdAt)}</p>
                   </PersonCard>
                 ))}
               </div>
@@ -182,7 +182,7 @@ function GroupManageContent({ enabled }: { enabled: boolean }) {
                     {member.leader && (
                       <Badge>Leader</Badge>
                     )}
-                    <p className="row-meta">Joined {formatTimestamp(member.joinedAt)} (SGT)</p>
+                    <p className="row-meta">Joined {formatTimestamp(member.joinedAt)}</p>
                   </PersonCard>
                 ))}
               </div>

@@ -21,7 +21,7 @@ export default function NotificationsPage() {
   return (
     <WindowPage
       title="Notifications"
-      description="Buddy requests, group and session updates, and account changes. Times shown in Singapore time."
+      description="Buddy requests, group and session updates, and account changes."
       actions={<Button
         disabled={action.pending}
         onClick={() => action.run(readAllNotifications, 'All notifications marked as read.')}
@@ -78,7 +78,7 @@ export default function NotificationsPage() {
                         )}
                       </div>
                       <p className="message-text">{notification.message}</p>
-                      <p className="row-meta">{formatTimestamp(notification.createdAt)} (SGT)</p>
+                      <p className="row-meta">{formatTimestamp(notification.createdAt)}</p>
                       {!link && (
                         <p className="row-meta">This update has no available action.</p>
                       )}

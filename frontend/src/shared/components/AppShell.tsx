@@ -66,7 +66,7 @@ export default function AppShell() {
           <Outlet />
         </main>
       </div>
-      <footer className="desktop-footer">Study together, at your own pace. <span>Weekly availability uses Singapore time; dated sessions show their timezone.</span></footer>
+      <footer className="desktop-footer">Study together, at your own pace.</footer>
     </div>
   )
 }

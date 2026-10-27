@@ -47,10 +47,10 @@ export default function RoomWeatherPanel({ liveEnabled = false, onChange }: {
         {weather.loading ? <p>Checking campus weather…</p> : live ? <p>
           {live.location}: {weatherLabels[live.condition]}{live.temperatureCelsius !== null ? `, ${Math.round(live.temperatureCelsius)} °C` : ''}.
           {live.stale ? ' Last known conditions; the weather service is unavailable.' : ' Current campus conditions.'}
-          {live.observedAt && <span className="muted"> Updated {new Intl.DateTimeFormat('en-SG', { timeZone: 'Asia/Singapore', hour: '2-digit', minute: '2-digit' }).format(new Date(live.observedAt))} SGT.</span>}
+          {live.observedAt && <span className="muted"> Updated {new Intl.DateTimeFormat('en-SG', { timeZone: 'Asia/Singapore', hour: '2-digit', minute: '2-digit' }).format(new Date(live.observedAt))}.</span>}
         </p> : <p>Live weather is unavailable. The window follows campus daylight; you can select any atmosphere.</p>}
         <Button disabled={weather.loading} onClick={() => weather.reload()}>Refresh weather</Button>
-      </div> : <p className="muted">{choice === 'AUTO' ? 'Daylight follows Singapore time.' : 'Selected atmosphere; this is not a weather forecast.'}</p>}
+      </div> : <p className="muted">{choice === 'AUTO' ? 'The window follows the time of day.' : 'Selected atmosphere; this is not a weather forecast.'}</p>}
       <p className="field-hint">{liveEnabled && <>Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> (CC BY 4.0). </>}The scene is decorative. It does not change shared audio or timer settings.</p>
     </div>
   </section>
