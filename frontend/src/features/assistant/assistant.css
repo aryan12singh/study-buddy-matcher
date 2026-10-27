@@ -1,0 +1,48 @@
+/* The floating study assistant: a round button in the bottom-right corner and a chat panel above
+   it, in the study room's cream, olive and ink palette. */
+.assistant-launcher { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 900; display: grid; justify-items: end; gap: .75rem; font-family: Tahoma, Verdana, system-ui, sans-serif; }
+.assistant-fab { display: grid; place-items: center; width: 72px; height: 72px; border: 3px solid #414a40; border-radius: 50%; background: #56634f; color: #fffcef; font-size: 1.9rem; cursor: pointer; box-shadow: 3px 4px 0 #34433480; transition: transform .15s; }
+.assistant-fab:hover { transform: translateY(-2px); }
+.assistant-fab:focus-visible { outline: 3px solid #2d459d; outline-offset: 3px; }
+.assistant-fab .pixel-icon { width: 32px; height: 32px; flex-basis: 32px; }
+.assistant-fab.is-open { background: #fffcef; color: #343e34; }
+
+.assistant-panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; width: min(500px, calc(100vw - 2.5rem)); height: min(760px, calc(100dvh - 8.5rem)); background: #fffcef; border: 2px solid #414a40; border-radius: 10px; box-shadow: 5px 6px 0 #34433470; overflow: hidden; color: #343e34; }
+.assistant-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; padding: .65rem .75rem; background: linear-gradient(#e7edce, #d9e1bf); border-bottom: 2px solid #414a40; }
+.assistant-header h2 { margin: 0; font-size: 1.1rem; }
+.assistant-header p { margin: 0; font-size: .72rem; color: #56634f; }
+.assistant-header-icon { display: grid; place-items: center; width: 34px; height: 34px; background: #fffcef; border: 2px solid #414a40; border-radius: 50%; color: #53694a; }
+.assistant-header-icon .pixel-icon { width: 16px; height: 16px; flex-basis: 16px; }
+.assistant-close { width: 36px; height: 36px; border: 2px solid #414a40; border-radius: 6px; background: #fffcef; font-size: 1.2rem; cursor: pointer; }
+
+.assistant-log { display: grid; align-content: start; gap: .6rem; padding: .75rem; overflow-y: auto; background: #f4f6e8; }
+.assistant-log .quiz-bot-message p { font-size: .95rem; }
+.assistant-bubble { display: grid; gap: .45rem; max-width: 88%; }
+.assistant-bubble > p { max-width: 100%; }
+.assistant-reply-extras { display: grid; gap: .45rem; }
+.assistant-reply-extras:empty { display: none; }
+.assistant-reply-extras .retro-button { justify-self: start; min-height: 36px; padding: .2rem .75rem; font-size: .85rem; text-decoration: none; }
+.assistant-filters { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.assistant-filters li { padding: .1rem .5rem; background: #e7edce; border: 1px solid #67705c; border-radius: 999px; font-size: .72rem; }
+.assistant-matches, .assistant-slots { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.assistant-match { padding: .45rem .55rem; background: #fff; border: 2px solid #414a40; border-radius: 6px; }
+.assistant-match-heading { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.assistant-match p { margin: .15rem 0 0; font-size: .75rem; color: #56634f; }
+.assistant-todos { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.assistant-todos li { display: grid; gap: .2rem; padding: .45rem .55rem; background: #fff; border: 2px solid #414a40; border-left-width: 5px; border-radius: 6px; font-size: .88rem; }
+.assistant-todos a { justify-self: start; font-weight: 700; color: #2d459d; }
+.assistant-slots li { padding: .3rem .55rem; background: #fff; border: 2px solid #414a40; border-radius: 6px; font-size: .85rem; font-variant-numeric: tabular-nums; }
+
+.assistant-suggestions { display: flex; flex-wrap: wrap; gap: .35rem; padding: .55rem .75rem 0; }
+.assistant-suggestions .retro-button { min-height: 32px; padding: .15rem .6rem; border-radius: 999px; font-size: .75rem; text-align: left; }
+.assistant-composer { display: flex; align-items: flex-end; gap: .4rem; margin: .6rem .75rem .75rem; padding: .3rem; background: #fff; border: 2px solid #414a40; border-radius: 8px; }
+.assistant-composer:focus-within { outline: 3px solid #2d459d55; outline-offset: 1px; }
+.assistant-composer textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 120px; padding: .45rem .5rem; border: 0; resize: none; font: inherit; font-size: .9rem; background: transparent; outline: none; }
+.assistant-composer .retro-button { min-height: 44px; }
+
+@media (max-width: 560px) {
+  .assistant-launcher { right: .75rem; bottom: .75rem; }
+  .assistant-fab { width: 60px; height: 60px; }
+  .assistant-panel { width: calc(100vw - 1.5rem); height: calc(100dvh - 7.5rem); }
+}
+@media (prefers-reduced-motion: reduce) { .assistant-fab { transition: none; } }
