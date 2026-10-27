@@ -63,6 +63,7 @@ app:
   profile:
     group-size-max: ${PROFILE_GROUP_SIZE_MAX:5}
     max-courses: ${PROFILE_MAX_COURSES:8}
+    year-of-study-max: ${PROFILE_YEAR_OF_STUDY_MAX:6}
   achievements:
     # Weeks start on Monday in this zone when counting the study streak.
     week-zone: Asia/Singapore

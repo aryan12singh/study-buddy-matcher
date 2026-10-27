@@ -36,7 +36,8 @@ request, connection, group and notification responses.
 
 Contact input accepts local Singapore 8-digit numbers beginning 6/8/9, or `+` followed by
 7–15 international digits beginning 1–9. ASCII whitespace, hyphens, parentheses and dots are removed;
-local input gains `+65`. Invalid replacements return 400 with a `contactNumber` field error.
+local input gains `+65`. A number given with `+65` must still be a full Singapore number (8 digits
+beginning 6/8/9). Invalid replacements return 400 with a `contactNumber` field error.
 The rule applies to registration, own-profile replacement and admin creation/replacement;
 omitted admin contact preserves the stored value. Existing values are not bulk rewritten,
 and administrator responses still omit contacts. This is format, not reachability, validation.
@@ -102,7 +103,10 @@ student only. Account role selection belongs to the administrator creation endpo
 | GET | `/api/achievements/me` | none | 200 `AchievementsDto` | Student |
 
 `RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
-(integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
+(integer from 1 to `app.profile.year-of-study-max`, default 6) and `contactNumber`. The app is for
+SMU students, so `school` is one of SMU's school codes (`SOA`, `LKCSB`, `SOE`, `SCIS`, `YPHSL`, `SOSS`, `CIS`;
+any case, stored upper case); anything else returns 400 with a `school` field error. The same school
+and year rules apply to own-profile updates and admin creation/edits. Identity/profile strings are at most 255 characters.
 Contact numbers are required at creation and follow the accepted format/normalization contract above.
 Registration saves the identity and `@MapsId` student profile atomically and signs in the account.
 

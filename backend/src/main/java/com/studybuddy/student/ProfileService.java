@@ -51,10 +51,10 @@ public class ProfileService {
             throw new InvalidInputException("Profile details are required");
         }
         String name = InputRules.required(request.name(), "Name", InputRules.TEXT_LIMIT);
-        String school = InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT);
+        String school = SmuSchool.code(InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT));
         String programme = InputRules.required(request.programme(), "Programme", InputRules.TEXT_LIMIT);
         String contactNumber = InputRules.contactNumber(request.contactNumber());
-        InputRules.year(request.yearOfStudy());
+        InputRules.year(request.yearOfStudy(), properties.yearOfStudyMax());
         List<Course> taken = coursesTaken(request.courseIds());
         Course target = targetCourse(request.targetCourseId());
         StudyMode mode = required(request.preferredStudyMode(), "preferredStudyMode", "Choose a preferred study mode");

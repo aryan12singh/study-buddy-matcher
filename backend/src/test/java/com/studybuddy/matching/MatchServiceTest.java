@@ -90,7 +90,7 @@ class MatchServiceTest {
         WeightedMatchScorer scorer = new WeightedMatchScorer(List.of(new CourseScorer(MatchingFixtures.rules()), new AvailabilityOverlapScorer(MatchingFixtures.rules()),
                 new StudyModeScorer(), new StudyGoalScorer(), new GroupSizeScorer()), properties.quality(), properties.scoring());
         service = new MatchService(access, students, availabilitySlots, courses, config, properties,
-                new MatchSearchFilter(new ProfileProperties(5, 8), properties.scoring()), scorer,
+                new MatchSearchFilter(new ProfileProperties(5, 8, 6), properties.scoring()), scorer,
                 new MatchResultAssembler(properties.scoring(), new TemplateMatchExplainer(), new MatchEvaluationFingerprint(JsonMapper.builder().build())),
                 new MatchRelationships(connections, requests));
 

@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import com.studybuddy.auth.AccountCreation;
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.InputRules;
+import com.studybuddy.student.ProfileProperties;
+import com.studybuddy.student.SmuSchool;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
 import com.studybuddy.user.User;
@@ -31,9 +33,11 @@ public class AdminUserService {
     private final StudentDeletion deletion;
     private final AccountCreation creation;
     private final AccountAccess access;
+    private final ProfileProperties profileLimits;
 
     public AdminUserService(UserRepository users, StudentRepository students, StudentNameRepository studentNames, AdminUserAssembler assembler, UserUsageCounter usage,
-        StudentDeactivation deactivation, StudentDeletion deletion, AccountCreation creation, AccountAccess access) {
+        StudentDeactivation deactivation, StudentDeletion deletion, AccountCreation creation, AccountAccess access,
+        ProfileProperties profileLimits) {
         this.users = users;
         this.students = students;
         this.studentNames = studentNames;
@@ -43,6 +47,7 @@ public class AdminUserService {
         this.deletion = deletion;
         this.creation = creation;
         this.access = access;
+        this.profileLimits = profileLimits;
     }
 
     @Transactional(readOnly = true)
@@ -93,9 +98,9 @@ public class AdminUserService {
         }
         if (student != null) {
             String name = InputRules.required(request.name(), "Name", InputRules.TEXT_LIMIT);
-            String school = InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT);
+            String school = SmuSchool.code(InputRules.required(request.school(), "School", InputRules.TEXT_LIMIT));
             String programme = InputRules.required(request.programme(), "Programme", InputRules.TEXT_LIMIT);
-            InputRules.year(request.yearOfStudy());
+            InputRules.year(request.yearOfStudy(), profileLimits.yearOfStudyMax());
             String contact = request.contactNumber() == null ? null : InputRules.contactNumber(request.contactNumber());
             student.setName(name);
             student.setSchool(school);

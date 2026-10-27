@@ -12,7 +12,13 @@ describe('form contract limits', () => {
   })
   it('allows blank contact replacement on edit and enforces public field widths', () => {
     expect(validateAccountFields({ ...student, contactNumber: '' }, true, false)).toEqual({})
-    expect(validateAccountFields({ ...student, name: 'a'.repeat(256) }, true, false).name).toBeDefined()
+    expect(validateAccountFields({ ...student, name: 'a'.repeat(256) }, true, false).name).toBe('Use up to 255 characters.')
+  })
+  it('asks for a value when a required account field is blank or the password is short', () => {
+    const errors = validateAccountFields({ ...student, password: 'short', name: ' ', school: '', programme: '' }, true, true)
+    expect(errors.password).toBe('Please enter a value, of at least 8 characters')
+    expect([errors.name, errors.school, errors.programme]).toEqual(['Please enter a value', 'Please enter a value', 'Please enter a value'])
+    expect(validateAccountFields({ ...student, password: '' }, true, true).password).toBe('Please enter a value, of at least 8 characters')
   })
   it('rejects equal time boundaries regardless of precision and permits optional/overlapping slots', () => {
     expect(validateSlots([])).toBeUndefined()

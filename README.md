@@ -356,6 +356,7 @@ or the property in `application-local.yml`.
 | `LOGIN_LOCKOUT` / `app.auth.login-throttle.lockout` | `15m` | How long sign-in for that email is refused, counted from its last unsuccessful attempt. Kept in memory, so a restart clears it |
 | `PROFILE_GROUP_SIZE_MAX` / `app.profile.group-size-max` | `5` (minimum `3`) | Largest group a "small group" or "either" preference covers |
 | `PROFILE_MAX_COURSES` / `app.profile.max-courses` | `8` | Most courses a student can list |
+| `PROFILE_YEAR_OF_STUDY_MAX` / `app.profile.year-of-study-max` | `6` | Highest year of study a student can enter; the forms mirror this value |
 | `app.achievements.week-zone` | `Asia/Singapore` | Zone whose Monday starts each planned-session week; later this week counts, future weeks wait |
 | `app.achievements.points-per-level` | `3` | Positive badge points per level; only the highest tier counts (bronze 1, silver 2, gold 3); the attainable final step caps at all Gold |
 | `app.achievements.connections` / `requests-sent` / `groups-joined` / `groups-led` | `1/3/5`, `1/5/10`, `1/2/3`, `1/2/3` | Bronze/silver/gold counts for the Connector, First Move, Team Player and Founder badges |
@@ -547,7 +548,7 @@ design already allows it.
 | --- | --- |
 | Change, forgot and admin-reset password; self-service deactivation or deletion | Reuse `User.revokeTokens()` so other sessions end, and the existing admin lifecycle services |
 | Admin role changes and moderation of groups and requests | The brief limits the admin to accounts and matching |
-| Upper bounds for year of study and group capacity | Only lower bounds are enforced today; add configured maximums |
+| Upper bound for group capacity | Only a lower bound is enforced today; add a configured maximum (year of study now uses `app.profile.year-of-study-max`) |
 | Course catalogue as a migration | A fresh install has no courses unless the opt-in demo seed runs |
 | Shared state across several backend instances | Sign-in throttling, the AI allowance and the weather cache live in memory, which suits one instance |
 
