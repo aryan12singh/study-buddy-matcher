@@ -128,8 +128,8 @@ describe('help page', () => {
     for (const name of ['Matching', 'AI assistance and its limits', 'Requests and privacy', 'Study groups', 'Study rooms', 'Study sessions', 'Notifications']) {
       expect(screen.getByRole('article', { name })).toBeInTheDocument()
     }
-    expect(screen.getByRole('article', { name: 'AI assistance and its limits' })).toHaveTextContent('output checks cannot prove every statement')
-    expect(screen.getByRole('article', { name: 'Study rooms' })).toHaveTextContent('Opening a group or session link does not join you')
+    expect(screen.getByRole('article', { name: 'AI assistance and its limits' })).toHaveTextContent('AI wording is labelled and may be inaccurate')
+    expect(screen.getByRole('article', { name: 'Study rooms' })).toHaveTextContent('Opening a group or session link does not automatically add you to the private room')
     expect(screen.getByRole('article', { name: 'Study sessions' })).toHaveTextContent('downloads do not sync or prove attendance')
     fireEvent.click(screen.getByRole('link', { name: 'Sessions and calendar' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Study sessions' })).toHaveFocus())

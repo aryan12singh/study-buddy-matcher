@@ -60,7 +60,7 @@
 .help-card-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; background: #fff; border: 1px solid #3c4143; color: var(--primary); }
 .help-card-icon .pixel-icon { width: 22px; height: 22px; flex-basis: 22px; }
 .help-card-head h3 { margin: 0; font-size: 1rem; }
-.help-card-summary { margin: .75rem .85rem .4rem; font-weight: 600; font-size: .93rem; }
+.help-card .help-card-summary { margin: .75rem .85rem .4rem; font-weight: 600; font-size: .93rem; }
 .help-card ul { margin: 0 .85rem .9rem; padding-left: 1.1rem; list-style: square; font-size: .88rem; color: #3f484c; display: grid; gap: .3rem; }
 .help-card li::marker { color: var(--primary); }
 .help-card-link { display: inline-flex; align-items: center; min-height: 44px; margin: auto .85rem .5rem; padding: .35rem 0; font-weight: 600; font-size: .88rem; }
