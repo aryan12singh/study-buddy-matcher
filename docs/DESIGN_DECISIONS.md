@@ -121,6 +121,15 @@ a local build/export proves submission. No LMS confirmation is claimed here.
 | Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
 | Nested dialogs | Scroll remains locked until the last modal closes, even when a route exit removes dialogs out of order; each dialog retains its keyboard focus/Escape handling |
 
+## Achievements keep earned tiers (28 October)
+
+| Question | Accepted choice and reason | Limits / alternative |
+| --- | --- | --- |
+| Can a badge go down? | No. Counts stay live, but `earned_badges` keeps the highest tier per badge, so losing a connection or leaving a group no longer takes away a medal or level. Students expect an earned achievement to stay earned | The first version stored nothing and let tiers fall; it was simpler but felt like a penalty for others' actions |
+| When is a tier saved? | When the student opens their achievements (page or own-profile summary), inside the same request | A tier reached and lost between two visits is not recorded. Hooking every connection, group and session service would cross team boundaries |
+| Concurrency | One upsert whose `WHERE` keeps the higher tier, so the database itself enforces "never lower" | — |
+| Account lifecycle | `ON DELETE CASCADE` from students: permanent deletion removes the rows, deactivation keeps them with the rest of the history | — |
+
 ## Collaborative study experience (E2 #16)
 
 The project owner expanded PR #52 from a room foundation to the complete selected

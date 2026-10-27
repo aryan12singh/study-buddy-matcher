@@ -8,9 +8,11 @@ The [API contract](API_CONTRACT.md#achievementsdto) is the detailed metric polic
 ## Scope and ownership
 
 The implementation derives six private badge standings and a planned-session grove from
-existing records. It adds no schema, award ledger, attendance or completed-focus tracking.
-Current live counts may fall; retained sent requests and created groups remain history
-while their records exist. The longest run is recomputed from currently eligible schedules.
+existing records. Since 28 October the highest tier each badge reaches is saved in
+`earned_badges`, so earned tiers, points and level never drop. It adds no attendance or
+completed-focus tracking. Live counts may fall; retained sent requests and created groups
+remain history while their records exist. The longest run is recomputed from currently
+eligible schedules.
 
 Achievement code owns the controller, service, assembler, typed configuration, pure badge
 and streak rules, and a read-only schedule projection. The projection retrieves schedule
@@ -49,8 +51,9 @@ needed for these checks.
 | Summary and cap | `AchievementAssemblerTest`: all-Gold level cap; non-divisible final level; level step larger than all available points |
 | Configuration | `AchievementPropertiesTest`: zero/negative/unsorted thresholds and zero level step rejected before counting/division |
 | Streak policy | `WeeklyStreakCalculatorTest`: empty, duplicate-week, consecutive, gap, previous-week grace, two-week expiry, timezone/Monday boundary, later-this-week and future-week rules |
-| Service | `AchievementServiceTest`: exact metric sources, current-tier points, tenure boundary, downward recomputation and student guard before repository reads |
-| Real HTTP/JPA | `AchievementHttpTest`: anonymous 401/admin 403, principal-only `/me` including an ignored `studentId` selector, separate accounts and public-profile payloads; active/ended connections; retained request/group history; open/non-led memberships; GROUP-only and combined GROUP/BUDDY schedules; exact current tenure; removal/readmission/cancellation; closed groups and inactive buddies |
+| Service | `AchievementServiceTest`: exact metric sources, earned-tier points, tenure boundary, kept tiers and level after counts fall, and student guard before repository reads |
+| Earned tiers | `BadgeEvaluatorTest` and `EarnedBadgeRecorderTest`: the higher of live and saved tiers wins, progress aims above the earned tier, only higher tiers are saved |
+| Real HTTP/JPA | `AchievementHttpTest`: anonymous 401/admin 403, principal-only `/me` including an ignored `studentId` selector, separate accounts and public-profile payloads; active/ended connections; retained request/group history; kept tiers after disconnect/closure; racing first saves and deletion with the account; open/non-led memberships; GROUP-only and combined GROUP/BUDDY schedules; exact current tenure; removal/readmission/cancellation; closed groups and inactive buddies |
 | Page | `AchievementsPage.test.tsx`: allowlisted destinations, current/next tier and labelled progress, precise planning explanation, seed and empty actions, bounded tree list, Gold cap, loading/retry/purged failure, aborted/obsolete account responses and logout/admin guard |
 | Own profile | `StudentProfilePage.test.tsx`: conditional owner fetch; no other/admin fetch; independent failure/retry; abort plus late response after navigating away; account change/logout immediately hides the summary |
 
@@ -87,7 +90,8 @@ backend are a separate verification layer.
    individual eligible occurrences. Streaks count distinct Monday-based weeks only through
    the current week; a plan later this week counts now, and next week waits.
 4. Remove a membership, cancel or edit a schedule, or disconnect. Refresh and confirm that
-   current live counts and affected runs recompute. Founder still includes closed retained
+   current live counts and affected runs recompute, while each earned tier, the points and the
+   level stay; a fallen badge says what its current count alone reaches. Founder still includes closed retained
    groups, and First Move still includes retained requests in any status.
 5. Readmit a member to a group with old sessions: older occurrences before the new membership
    do not count. The same temporal boundary applies to an exact buddy connection.

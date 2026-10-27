@@ -293,9 +293,9 @@ Upcoming sessions appear on Home and in group agendas.
 
 **Achievements.** Students can open their private badge page or its compact summary on their own
 profile. Six original medallions and a pixel grove reflect existing connection, request, group and
-planned-session records. Tiers and levels are current standings and may decrease when eligible
-records change; sent requests and created groups remain counted while retained, including closed
-groups for Founder. The grove counts consecutive planned-session weeks in the configured zone,
+planned-session records. Counts follow current records and can fall, but the highest tier each
+badge reaches is saved, so earned tiers and the level never drop; sent requests and created groups
+remain counted while retained, including closed groups for Founder. The grove counts consecutive planned-session weeks in the configured zone,
 including a session later this week, rather than attendance or completed focus. New memberships
 and buddy connections do not inherit earlier occurrences. Each badge links to an existing next
 action, and all Gold caps the level. See the [metric contract](docs/API_CONTRACT.md#achievementsdto)
