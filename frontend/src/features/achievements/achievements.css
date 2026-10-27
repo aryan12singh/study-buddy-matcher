@@ -62,6 +62,7 @@
 .badge-count { font-variant-numeric: tabular-nums; }
 .badge-count strong { color: var(--ink); }
 .badge-hint { font-style: italic; }
+.badge-kept { font-size: .85rem; color: #4b5559; }
 .badge-action { margin-top: .75rem; max-width: 100%; overflow-wrap: anywhere; text-align: center; }
 
 @media (max-width: 720px) {

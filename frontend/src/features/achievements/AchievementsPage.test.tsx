@@ -33,11 +33,24 @@ describe('achievements page', () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(achievementStanding))
     renderPage(<AchievementsPage />)
     await screen.findByRole('heading', { name: 'Current standing' })
-    expect(screen.getByText(/Sent requests and created groups count while their records are retained/)).toBeInTheDocument()
+    expect(screen.getByText(/Badge tiers you reach are kept, so your level never goes down/)).toBeInTheDocument()
     expect(screen.getByText(/Monday in Asia\/Singapore/)).toHaveTextContent('A session later this week counts now; future weeks wait until they begin.')
     fireEvent.click(screen.getByText('How these numbers work'))
     expect(screen.getByText(/from your current connection or membership start date onward/)).toBeVisible()
     expect(screen.getByText(/does not record attendance, completed focus time or study quality/)).toBeVisible()
+  })
+
+  it('keeps an earned tier and says what the current count reaches when it has fallen', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...achievementStanding,
+      badges: achievementStanding.badges.map(badge => badge.key === 'CONNECTOR'
+        ? { ...badge, tier: 'SILVER', currentTier: null, current: 0, target: 5, nextTier: 'GOLD', earnedHint: '5 more active connections to reach Gold.' }
+        : badge) }))
+    renderPage(<AchievementsPage />)
+    const connector = await screen.findByRole('listitem', { name: 'Connector, Silver, 0 of 5 toward Gold' })
+    expect(connector).toHaveClass('badge-silver')
+    expect(within(connector).getByText('Silver stays earned. Your current count alone reaches no tier.')).toBeInTheDocument()
+    const firstMove = screen.getByRole('listitem', { name: 'First Move, Bronze, 1 of 5 toward Silver' })
+    expect(within(firstMove).queryByText(/stays earned/)).not.toBeInTheDocument()
   })
 
   it('shows a seed and working actions for a new student with all badges locked', async () => {
@@ -55,13 +68,13 @@ describe('achievements page', () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ ...achievementStanding,
       level: 7, points: 18, pointsToNextLevel: 0, earnedCount: 6,
       badges: achievementStanding.badges.map(badge => ({ ...badge, tier: 'GOLD', nextTier: null, current: 99, target: 5,
-        earned: true, earnedHint: 'Gold is your current tier. No higher tier.' })) }))
+        earned: true, earnedHint: 'Gold earned. No higher tier.' })) }))
     renderPage(<AchievementsPage />)
     expect(await screen.findByText('Maximum level · all badges Gold')).toBeInTheDocument()
     expect(screen.queryByText(/to level 8/)).not.toBeInTheDocument()
     const connector = screen.getByRole('progressbar', { name: 'Connector Gold progress' })
     expect(connector).toHaveAttribute('aria-valuenow', '5')
-    expect(connector).toHaveAttribute('aria-valuetext', 'Gold threshold reached; current count 99')
+    expect(connector).toHaveAttribute('aria-valuetext', 'Gold earned; current count 99')
     expect(screen.getAllByText('· Gold at 5')).toHaveLength(6)
   })
 
