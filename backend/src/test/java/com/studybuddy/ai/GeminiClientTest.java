@@ -100,6 +100,17 @@ class GeminiClientTest {
     }
 
     @Test
+    void leavesOutTheThinkingSettingForModelsWithoutAThinkingStep() {
+        AiAssistantProperties properties = new AiAssistantProperties(true,
+                "http://127.0.0.1:" + server.getAddress().getPort(), "lite-model", "test-key",
+                Duration.ofMillis(500), 400, 10, 10, "UTC", Duration.ofSeconds(60));
+        new GeminiClient(properties, JSON, new AiQuota(properties), false).generateJson(STUDENT_ID, "PROMPT");
+
+        assertFalse(requestBody.get().contains("thinkingConfig"), requestBody.get());
+        assertTrue(requestBody.get().contains("\"maxOutputTokens\":400"), requestBody.get());
+    }
+
+    @Test
     void sendsAnAttachedFileInlineBeforeThePrompt() {
         byte[] notes = "Week 3: polymorphism".getBytes(StandardCharsets.UTF_8);
 

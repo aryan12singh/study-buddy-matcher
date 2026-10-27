@@ -2,6 +2,7 @@ package com.studybuddy.ai;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,9 +42,20 @@ public class GeminiClient implements AiClient {
     private final JsonMapper json;
     private final AiQuota quota;
     private final RestClient client;
+    private final boolean turnOffThinking;
 
+    @Autowired
     public GeminiClient(AiAssistantProperties properties, JsonMapper json, AiQuota quota) {
+        this(properties, json, quota, true);
+    }
+
+    /**
+     * @param turnOffThinking whether to ask the model to skip its thinking step; models without one,
+     *        such as the lite models, reject the setting, so it must then be left out
+     */
+    public GeminiClient(AiAssistantProperties properties, JsonMapper json, AiQuota quota, boolean turnOffThinking) {
         this.properties = properties;
+        this.turnOffThinking = turnOffThinking;
         this.json = json;
         this.quota = quota;
         HttpClient http = HttpClient.newBuilder().connectTimeout(properties.timeout()).build();
@@ -91,12 +104,15 @@ public class GeminiClient implements AiClient {
                     "data", Base64.getEncoder().encodeToString(attachment.data()))));
         }
         parts.add(Map.of("text", prompt));
+        Map<String, Object> generation = new LinkedHashMap<>();
+        generation.put("responseMimeType", "application/json");
+        generation.put("maxOutputTokens", properties.maxOutputTokens());
+        if (turnOffThinking) {
+            generation.put("thinkingConfig", Map.of("thinkingBudget", NO_THINKING));
+        }
         return Map.of(
                 "contents", List.of(Map.of("role", "user", "parts", parts)),
-                "generationConfig", Map.of(
-                        "responseMimeType", "application/json",
-                        "maxOutputTokens", properties.maxOutputTokens(),
-                        "thinkingConfig", Map.of("thinkingBudget", NO_THINKING)));
+                "generationConfig", generation);
     }
 
     /** The text of the first candidate, only if Gemini finished normally. Thought parts are skipped. */

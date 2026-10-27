@@ -469,6 +469,11 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.chat.max-message-characters` | `500` | Longest message a student can send the study assistant |
 | `app.ai.assistant.chat.matches-shown` | `3` | Buddy matches shown in an assistant reply; the rest are on Find buddies |
 | `app.ai.assistant.chat.time-zone` | `Asia/Singapore` | Calendar the assistant uses for "today", to read dates such as "exam on 20 Nov" |
+| `app.ai.assistant.chat.model` | `gemini-3.5-flash-lite` | Lighter Gemini model that reads assistant messages, with its own free-tier limit, so chatting never spends the quiz and study plan allowance. Clear messages such as the suggested questions are read without any AI call |
+| `app.ai.assistant.chat.max-output-tokens` | `400` | Upper bound on the reply that classifies a message |
+| `app.ai.assistant.chat.timeout` | `20s` | Connect and read timeout for reading a message |
+| `app.ai.assistant.chat.daily-call-limit` | `200` | Assistant messages sent to the AI per day, for all students; set just under the chat model's free daily limit in Google AI Studio |
+| `app.ai.assistant.chat.daily-call-limit-per-student` | `30` | Assistant messages one student can send to the AI per day |
 
 A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
 slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the

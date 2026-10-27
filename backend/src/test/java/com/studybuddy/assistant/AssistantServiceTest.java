@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AssistantServiceTest {
-    private static final AssistantProperties PROPERTIES = new AssistantProperties(20, 3, "Asia/Singapore");
+    private static final AssistantProperties PROPERTIES = new AssistantProperties(20, 3, "Asia/Singapore", "lite", 400, java.time.Duration.ofSeconds(20), 200, 30);
     private final IntentParser parser = mock(IntentParser.class);
 
     /** One stand-in intent per type, replying with its own type's name. */

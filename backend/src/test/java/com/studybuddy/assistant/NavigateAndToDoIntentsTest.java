@@ -67,7 +67,7 @@ class NavigateAndToDoIntentsTest {
     private final StudySessionService sessions = mock(StudySessionService.class);
     private final NotificationService notifications = mock(NotificationService.class);
     private final MyToDoIntent todo = new MyToDoIntent(requests, groups, applications, quizzes, sessions, notifications,
-            new AssistantProperties(500, 3, "Asia/Singapore"), Clock.fixed(NOW, ZoneOffset.UTC));
+            new AssistantProperties(500, 3, "Asia/Singapore", "lite", 400, java.time.Duration.ofSeconds(20), 200, 30), Clock.fixed(NOW, ZoneOffset.UTC));
 
     private static StudyGroupSummaryDto group(long id, String name, long leaderId) {
         return new StudyGroupSummaryDto(id, name, 4L, "IS442", "OOP", leaderId, "Lead", StudyMode.IN_PERSON, Set.of(), 5, 3, true, null);

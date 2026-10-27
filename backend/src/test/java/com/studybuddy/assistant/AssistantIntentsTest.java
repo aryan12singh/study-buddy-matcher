@@ -35,7 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AssistantIntentsTest {
-    private static final AssistantProperties PROPERTIES = new AssistantProperties(500, 3, "Asia/Singapore");
+    private static final AssistantProperties PROPERTIES = new AssistantProperties(500, 3, "Asia/Singapore", "lite", 400, java.time.Duration.ofSeconds(20), 200, 30);
     private static final Course IS442 = course(4L, "IS442", "Object Oriented Programming");
     private final AssistantCourses courses = mock(AssistantCourses.class);
 

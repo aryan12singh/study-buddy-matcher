@@ -1,6 +1,5 @@
 package com.studybuddy.assistant;
 
-import com.studybuddy.ai.AiClient;
 import com.studybuddy.ai.AiUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,24 +8,28 @@ import org.springframework.stereotype.Component;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Optional;
 
 /**
- * Asks the AI what a message wants and which details it states. This is the only AI call the
- * assistant makes; everything it then tells the student comes from the app's own services.
- * Runs outside any database transaction, because the AI can take seconds to answer.
+ * Works out what a message wants and which details it states: first with plain rules for the
+ * clearest messages, which costs no AI call, and otherwise by asking the assistant's own AI. That is
+ * the only AI call the assistant makes; everything it then tells the student comes from the app's
+ * own services. Runs outside any database transaction, because the AI can take seconds to answer.
  */
 @Component
 public class IntentParser {
     private static final Logger LOG = LoggerFactory.getLogger(IntentParser.class);
 
+    private final QuickIntentReader quick;
     private final AssistantPromptBuilder prompts;
-    private final AiClient ai;
+    private final AssistantAi ai;
     private final AssistantOutputValidator validator;
     private final AssistantProperties properties;
     private final Clock clock;
 
-    public IntentParser(AssistantPromptBuilder prompts, AiClient ai, AssistantOutputValidator validator,
-            AssistantProperties properties, Clock clock) {
+    public IntentParser(QuickIntentReader quick, AssistantPromptBuilder prompts, AssistantAi ai,
+            AssistantOutputValidator validator, AssistantProperties properties, Clock clock) {
+        this.quick = quick;
         this.prompts = prompts;
         this.ai = ai;
         this.validator = validator;
@@ -40,6 +43,10 @@ public class IntentParser {
      * @throws AiUnavailableException when the AI is unavailable or its reply is rejected
      */
     public AssistantRequest parse(Long studentId, String message) {
+        Optional<AssistantRequest> clear = quick.read(message);
+        if (clear.isPresent()) {
+            return clear.get();
+        }
         LocalDate today = LocalDate.now(clock.withZone(ZoneId.of(properties.timeZone())));
         String reply = ai.generateJson(studentId, prompts.build(message, today));
         return validator.validate(reply).orElseThrow(() -> {

@@ -1180,9 +1180,15 @@ as optional query parameters: `courseId`, `examDate` (`yyyy-MM-dd`) and `hoursPe
 example `/study-plan?courseId=4&examDate=2026-11-20&hoursPerWeek=6`. The Study plans screen
 should read these to fill in its form.
 
+**AI use.** Clear messages, including every suggested question, greetings, "what do I need to
+do?", "how do I …?" and plain buddy searches, are read by rules (`QuickIntentReader`) with no AI
+call. Anything else goes to the chat's own lighter model (`chat.model`) with its own daily
+allowance (`chat.daily-call-limit`, `chat.daily-call-limit-per-student`), so chatting never spends
+the quiz and study plan allowance.
+
 Errors: 400 `INVALID_INPUT` for a blank or too long message (checked before Gemini is asked); 503
-`AI_UNAVAILABLE` when the assistant is off, over its allowance, rate limited or timed out, or the
-reply failed the checks. Each message uses one call of the shared `app.ai.assistant` allowance.
+`AI_UNAVAILABLE` when the assistant is off, over the chat allowance, rate limited or timed out, or
+the reply failed the checks.
 
 ## UI use of the existing contract
 
