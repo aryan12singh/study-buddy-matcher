@@ -36,6 +36,18 @@ export async function listStudyPlans(signal?: AbortSignal) {
   return (await api.get<StudyPlanSummary[]>('/study-plans', { signal })).data
 }
 
+export async function getStudyPlan(planId: number, signal?: AbortSignal) {
+  return (await api.get<StudyPlan>(`/study-plans/${planId}`, { signal })).data
+}
+
+export async function markEntry(planId: number, entryId: number, completed: boolean) {
+  return (await api.put<StudyPlan>(`/study-plans/${planId}/entries/${entryId}/progress`, { completed })).data
+}
+
+export async function deleteStudyPlan(planId: number) {
+  await api.delete(`/study-plans/${planId}`)
+}
+
 export async function createStudyPlan(input: PersonalPlanInput, material: StudyMaterial) {
   const form = new FormData()
   form.append('courseId', String(input.courseId))

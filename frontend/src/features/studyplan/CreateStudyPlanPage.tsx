@@ -68,9 +68,9 @@ function StudyPlanFormView({ courses }: { courses: Course[] }) {
     const { input, material } = planRequest(form)
     setPending(true)
     try {
-      await createStudyPlan(input, material)
+      const created = await createStudyPlan(input, material)
       exit.allowSavedNavigation()
-      navigate('/study-plan', { state: { notice: 'Study plan created.' } })
+      navigate(`/study-plan/${created.id}`, { state: { notice: 'Study plan created.' } })
     } catch (error) {
       setErrors(fieldErrors(error))
       setFailure(isAiUnavailable(error) ? AI_UNAVAILABLE : errorMessage(error))

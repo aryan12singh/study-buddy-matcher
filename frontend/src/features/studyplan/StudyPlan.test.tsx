@@ -5,6 +5,7 @@ import { api } from '../../shared/api/client'
 import { renderPage, response } from '../../test/renderApp'
 import StudyPlanPage from './StudyPlanPage'
 import CreateStudyPlanPage from './CreateStudyPlanPage'
+import StudyPlanDetailPage from './StudyPlanDetailPage'
 import type { StudyPlan, StudyPlanSummary } from './api'
 import { initialStudyPlanForm, validateStudyPlanForm } from './studyPlanForm'
 import type { StudyPlanForm } from './studyPlanForm'
@@ -132,7 +133,7 @@ describe('creating a study plan', () => {
     expect(post).not.toHaveBeenCalled()
   })
 
-  it('uploads the chosen files with the details and returns to the list', async () => {
+  it('uploads the chosen files with the details and opens the new plan', async () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(plan))
     const { router } = open()
     fireEvent.change(await screen.findByLabelText('Course'), { target: { value: '4' } })
@@ -141,7 +142,7 @@ describe('creating a study plan', () => {
     fireEvent.change(screen.getByLabelText('Lecture slides or notes'), { target: { files: [pdf()] } })
     expect(within(screen.getByRole('list', { name: 'Chosen files' })).getByText('week1.pdf')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Create study plan' }))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/study-plan'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/study-plan/7'))
     const [path, body] = post.mock.calls[0] as [string, FormData]
     expect(path).toBe('/study-plans')
     expect(body.get('courseId')).toBe('4')
@@ -185,5 +186,85 @@ describe('creating a study plan', () => {
     fireEvent.change(screen.getByLabelText('Topics to cover'), { target: { value: 'Encapsulation' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create study plan' }))
     expect(await screen.findByText('The exam must be within 16 weeks.')).toBeInTheDocument()
+  })
+})
+
+describe('a study plan’s roadmap', () => {
+  const entry = (id: number, sequence: number, title: string, completed = false) => ({
+    id, sequence, scheduledDate: sequence === 1 ? '2026-10-28' : '2026-11-04', title, plannedMinutes: 90,
+    tasks: [`Re-read the ${title} slides`], completed,
+  })
+  const roadmap: StudyPlan = {
+    ...plan, studyGoal: 'EXAM_PREPARATION', sourceKind: 'UPLOAD', sourceFilenames: ['week1.pdf', 'week2.pdf'],
+    sourceTopics: ['Encapsulation', 'Inheritance', 'Polymorphism'],
+    entries: [entry(1, 1, 'Encapsulation', true), entry(2, 1, 'Inheritance'), entry(3, 2, 'Polymorphism')],
+  }
+  function open(data: StudyPlan = roadmap, path = '/study-plan/7') {
+    vi.spyOn(api, 'get').mockResolvedValue(response(data))
+    return renderPage(<StudyPlanDetailPage />, path, '/study-plan/:id')
+  }
+
+  it('shows each week with its topics, time, tasks and progress', async () => {
+    open()
+    const weeks = within(await screen.findByRole('list', { name: 'Roadmap' })).getAllByRole('heading', { level: 3 })
+    expect(weeks.map(week => week.textContent)).toEqual([
+      'Week 1 · from 28 Oct 2026 · 3 h of 6 h planned', 'Week 2 · from 4 Nov 2026 · 1 h 30 min of 6 h planned',
+    ])
+    expect(screen.getByRole('checkbox', { name: /Encapsulation/ })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /Polymorphism/ })).not.toBeChecked()
+    expect(within(screen.getByRole('list', { name: 'Tasks for Inheritance' })).getByText('Re-read the Inheritance slides')).toBeInTheDocument()
+    expect(screen.getByText('1 of 3 topics done')).toBeInTheDocument()
+    expect(screen.getByText(/Drafted from week1.pdf, week2.pdf/)).toBeInTheDocument()
+    expect(screen.getByText('Roadmap written by Gemini; it may be inaccurate.')).toBeInTheDocument()
+  })
+
+  it('ticks a topic off and shows the saved plan', async () => {
+    const put = vi.spyOn(api, 'put').mockResolvedValue(response({
+      ...roadmap, entries: roadmap.entries.map(each => each.id === 3 ? { ...each, completed: true } : each),
+    }))
+    open()
+    fireEvent.click(await screen.findByRole('checkbox', { name: /Polymorphism/ }))
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: /Polymorphism/ })).toBeChecked())
+    expect(put).toHaveBeenCalledWith('/study-plans/7/entries/3/progress', { completed: true })
+    expect(screen.getByText('2 of 3 topics done')).toBeInTheDocument()
+  })
+
+  it('keeps the topic as it was when saving fails', async () => {
+    vi.spyOn(api, 'put').mockRejectedValue(failure(500, 'Progress could not be saved.'))
+    open()
+    fireEvent.click(await screen.findByRole('checkbox', { name: /Encapsulation/ }))
+    expect(await screen.findByText('Progress could not be saved.')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /Encapsulation/ })).toBeChecked()
+  })
+
+  it('deletes the plan only after confirming', async () => {
+    const remove = vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
+    const { router } = open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete study plan' }))
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(remove).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete study plan' }))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete study plan' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/study-plan'))
+    expect(remove).toHaveBeenCalledWith('/study-plans/7')
+    expect(router.state.location.state).toMatchObject({ notice: 'Study plan deleted.' })
+  })
+
+  it('offers no ticking or deleting to someone who cannot manage the plan', async () => {
+    open({ ...roadmap, canManage: false })
+    expect(await screen.findByRole('checkbox', { name: /Polymorphism/ })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Delete study plan' })).not.toBeInTheDocument()
+  })
+
+  it('says so when the plan cannot be found or the link is wrong', async () => {
+    vi.spyOn(api, 'get').mockRejectedValue(failure(404, 'Study plan not found.'))
+    renderPage(<StudyPlanDetailPage />, '/study-plan/99', '/study-plan/:id')
+    expect(await screen.findByText('Study plan not found.')).toBeInTheDocument()
+    vi.restoreAllMocks()
+    const get = vi.spyOn(api, 'get')
+    renderPage(<StudyPlanDetailPage />, '/study-plan/abc', '/study-plan/:id')
+    expect(await screen.findByText('This study plan link is invalid.')).toBeInTheDocument()
+    expect(get).not.toHaveBeenCalled()
   })
 })

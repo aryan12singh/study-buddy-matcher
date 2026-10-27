@@ -24,6 +24,7 @@ import MatchingSettingsPage from './features/matching/MatchingSettingsPage'
 import FindBuddiesPage from './features/matching/FindBuddiesPage'
 import StudyPlanPage from './features/studyplan/StudyPlanPage'
 import CreateStudyPlanPage from './features/studyplan/CreateStudyPlanPage'
+import StudyPlanDetailPage from './features/studyplan/StudyPlanDetailPage'
 import StatePanel from './shared/components/StatePanel'
 import { AchievementsPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
 
@@ -50,6 +51,7 @@ export const appRoutes = createRoutesFromElements(
             <Route path="/groups/:id/manage" element={<GroupManagePage />} />
             <Route path="/study-plan" element={<StudyPlanPage />} />
             <Route path="/study-plan/new" element={<CreateStudyPlanPage />} />
+            <Route path="/study-plan/:id" element={<StudyPlanDetailPage />} />
             <Route element={<Suspense fallback={<StatePanel loading />}><Outlet /></Suspense>}>
               <Route path="/study-room" element={<StudyRoomsPage />} />
               <Route path="/groups/:id/room" element={<StudyRoomPage />} />
