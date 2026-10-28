@@ -1,5 +1,8 @@
 package com.studybuddy.integration;
 
+import com.studybuddy.achievement.AchievementService;
+import com.studybuddy.achievement.BadgeDto;
+import com.studybuddy.achievement.BadgeTier;
 import com.studybuddy.matching.MatchResultDto;
 import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.MatchService;
@@ -34,6 +37,8 @@ class DemoSeedTest extends PostgresHttpTest {
     private DemoSeedService seed;
     @Autowired
     private MatchService matches;
+    @Autowired
+    private AchievementService achievements;
 
     @Test
     void seedsAtLeastTheBriefsMinimumCoursesAndStudents() {
@@ -111,10 +116,63 @@ class DemoSeedTest extends PostgresHttpTest {
     }
 
     @Test
+    void preparesThePresentersGroupAndBuddySessions() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+        long led = count("select id from study_groups where leader_id=? and active", presenter);
+
+        assertEquals(1, count("select count(*) from study_sessions where study_group_id=? and status='SCHEDULED' "
+            + "and occurrence_count > 1 and start_at > now()", led));
+        assertEquals(1, count("select count(*) from study_sessions s join connections c on c.id=s.connection_id "
+            + "where (c.student_a_id=? or c.student_b_id=?) and c.ended_at is null and s.start_at > now()", presenter, presenter));
+    }
+
+    @Test
+    void preparesAClosedGroupQuizWithALeaderboardAndASubmittedPracticeQuiz() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+        long led = count("select id from study_groups where leader_id=? and active", presenter);
+        long groupQuiz = count("select id from quizzes where group_id=?", led);
+
+        assertEquals("CLOSED", database.queryForObject("select status from quizzes where id=?", String.class, groupQuiz));
+        assertEquals(10, count("select count(*) from quiz_questions where quiz_id=?", groupQuiz));
+        assertTrue(count("select count(*) from quiz_attempts where quiz_id=? and submitted_at is not null", groupQuiz) >= 3,
+            "a leaderboard needs several members' scores");
+        assertTrue(count("select count(distinct score) from quiz_attempts where quiz_id=?", groupQuiz) > 1,
+            "members should not all tie");
+        assertEquals(1, count("select count(*) from quizzes q join quiz_attempts a on a.quiz_id=q.id "
+            + "where q.student_id=? and q.scope='PERSONAL' and a.submitted_at is not null", presenter));
+    }
+
+    @Test
+    void preparesAStudyPlanWithSomeTopicsTickedOff() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+        long plan = count("select id from study_plans where student_id=?", presenter);
+
+        long entries = count("select count(*) from study_plan_entries where plan_id=?", plan);
+        long done = count("select count(*) from study_plan_entries where plan_id=? and completed", plan);
+        assertTrue(entries > 3, "a roadmap of several weeks");
+        assertTrue(done > 0 && done < entries, done + " of " + entries + " topics ticked off");
+    }
+
+    @Test
+    void thePresenterOpensAchievementsWithBadgesAlreadyEarned() {
+        seed.seed();
+
+        List<BadgeDto> badges = achievements.forStudent(idOf(PRESENTER)).badges();
+
+        assertTrue(badges.stream().filter(BadgeDto::earned).count() >= 4, "most badges earned");
+        assertEquals(BadgeTier.SILVER, badges.stream().filter(badge -> badge.key().equals("PLANNER"))
+            .findFirst().orElseThrow().tier(), "planner shows progress towards gold");
+    }
+
+    @Test
     void seedingAgainLeavesExistingDataUntouched() {
         seed.seed();
         String[] tables = {"users", "courses", "match_requests", "connections", "study_groups",
-            "group_memberships", "group_join_requests", "notifications", "availability_slots"};
+            "group_memberships", "group_join_requests", "notifications", "availability_slots", "study_sessions",
+            "quizzes", "quiz_attempts", "study_plans", "study_plan_entries"};
         long[] before = Arrays.stream(tables).mapToLong(table -> count("select count(*) from " + table)).toArray();
 
         seed.seed();
