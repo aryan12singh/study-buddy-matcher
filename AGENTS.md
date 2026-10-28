@@ -3,9 +3,8 @@
 How we work in this repository: architecture rules, coding conventions, design direction and
 process. One file, so there is one place to look and nothing to drift out of step.
 
-Read it before you write code. Claude Code, Copilot, Cursor and Gemini CLI all pick this file
-up automatically, so pointing your assistant here costs nothing, and it is why eight people
-with AI assistance can avoid producing eight different architectures.
+Read it before you write code. Coding assistants pick this file up automatically, which is how
+eight people working with AI assistance avoid producing eight different architectures.
 
 ---
 
@@ -38,26 +37,22 @@ frontend/   React application (Vite)
 docs/       API contract, UML diagrams
 ```
 
-## Open questions to settle before coding
+## Settled decisions
 
-- **Preferred group size: decided by Team A.** Both readings, layered. Students choose
-  categorically ("one-to-one, small group, or either"), and the profile stores the choice as a
-  minimum and maximum number of people. `GroupSizeScorer` scores interval overlap, as Appendix A
-  does ("2-3 students" against "2 students" is compatible), and the search filter keeps students
-  whose range overlaps the chosen category. Details in the matching section of
-  [`README.md`](README.md#matching-engine).
-- **Admin deletion vs deactivation: decided by Team C.** Two separate actions. Deactivate is
-  reversible: it revokes sign-in, ends active connections and group memberships, and keeps
-  history. Delete is permanent and removes the account and its dependent records. Details in
-  [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md).
-- **Basic usage information: decided by Team C.** Last successful sign-in, number of active
-  connections, and number of open groups the student belongs to (including ones they lead).
-- **Window chrome: implemented as decorative.** Conventional routes and shared retro
-  primitives are in the merged application. See [Visual direction](#visual-direction).
-- **Learning style and contact format: decided by the team.** The defined study preferences
-  cover the otherwise undefined learning-style wording; this is the team's interpretation,
-  not a claim of professor confirmation. Contacts accept Singapore or international formats
-  with shared normalization. See the [baseline contract](docs/DESIGN_DECISIONS.md#baseline-requirement-contract).
+- **Preferred group size (Team A).** Students choose one-to-one, small group or either; the
+  profile stores it as a minimum and maximum number of people. `GroupSizeScorer` scores interval
+  overlap, as Appendix A does, and the search filter keeps students whose range overlaps the
+  chosen category. See the [matching engine](README.md#matching-engine).
+- **Deactivation vs deletion (Team C).** Deactivate is reversible: it revokes sign-in, ends
+  active connections and group memberships, and keeps history. Delete is permanent and removes
+  the account and its dependent records. See [design decisions](docs/DESIGN_DECISIONS.md).
+- **Basic usage information (Team C).** Last successful sign-in, number of active connections,
+  and number of open groups the student belongs to (including ones they lead).
+- **Window chrome.** Decorative title bars with conventional routes and shared retro
+  primitives. See [Visual direction](#visual-direction).
+- **Learning style and contact format (team).** The defined study preferences cover the
+  brief's undefined learning-style wording. Contacts accept Singapore or international formats
+  with shared normalisation. See the [baseline contract](docs/DESIGN_DECISIONS.md#baseline-requirement-contract).
 
 ---
 
@@ -226,9 +221,7 @@ the pull request description.
 | Materials/rehearsal target | 8 Nov | Supporting materials and timed demo/Q&A rehearsal |
 | Final handoff target | 15 Nov 2026, 11:59 PM SGT | Team target; verify the actual LMS deadline and submission receipt |
 
-The formal brief states Week 13. Repository dates are team planning targets and do not
-independently verify the LMS deadline. Record the confirmed deadline in the
-[schedule record](docs/DESIGN_DECISIONS.md#schedule-and-submission-record).
+The brief sets the final deadline as Week 13; these dates are the team's planning targets.
 
 ### Picking up work
 

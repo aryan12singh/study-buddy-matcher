@@ -1,13 +1,14 @@
 # Team C implementation diagrams
 
-These diagrams describe the implemented composition/DTO/transaction model. The earlier
-discussion's Student Leader inheritance sketch is not the implementation: `Student`
-has a one-to-one `User` association with a shared `@MapsId` identity, and
-`StudyGroup.leader` refers to an ordinary student.
+These diagrams describe the implemented composition, DTO and transaction model. There is no
+Student/Leader inheritance: `Student` has a one-to-one `User` association with a shared
+`@MapsId` identity, and `StudyGroup.leader` refers to an ordinary student.
 `Role` contains only STUDENT and ADMIN. Matching strategies/scorers remain Team A scope.
 The [API contract](../API_CONTRACT.md) contains full DTO fields/endpoints and the
 [decisions](../DESIGN_DECISIONS.md) explain privacy, lifecycle and locking choices.
-Use the [diagram index](README.md) for the controlled SVG exports and review status.
+Presentation panels: [relationships and groups](exports/relationship-domain.svg),
+[E2 use cases](exports/e2-use-cases.svg) and [E2 collaborators](exports/collaborative-study.svg);
+the [diagram index](README.md) lists every export.
 
 ## Use cases and permissions
 
@@ -105,8 +106,8 @@ Each dated session belongs to exactly one group or connection. Group leaders and
 the relevant buddy pair manage their own series; current parent eligibility gates
 detail, suggestions and calendar export. `SessionSchedule` generates bounded UTC
 occurrences from local civil time and an IANA zone; missing/ambiguous DST endpoints
-are rejected. Assemblers expose no private contact/email/token fields. E1 matching
-explanations remain separate work.
+are rejected. Assemblers expose no private contact/email/token fields. E1 match
+explanations are described separately in [E1.md](E1.md).
 
 ## Session changes, events and calendar export
 
@@ -146,8 +147,7 @@ Parent closure/connection end/deactivation cancels affected future schedules and
 revokes access; a notification link does not restore authorization. Cancellation
 files are available only while the parent remains accessible. Offline imported
 events are independent copies, so shortening/cancellation/revocation cannot erase
-them. Re-export/import limitations and real-client acceptance are in
-[E2_TESTING.md](../E2_TESTING.md).
+them.
 
 ## Lifecycles (state machines)
 
@@ -434,10 +434,10 @@ erDiagram
         bigint version
         bigint host_id FK
         bigint co_host_id FK
-        varchar music_preset "unused since 24 Oct"
-        boolean music_playing "unused since 24 Oct"
-        varchar ambient_preset "unused since 24 Oct"
-        boolean ambient_playing "unused since 24 Oct"
+        varchar music_preset "unused, no longer mapped"
+        boolean music_playing "unused, no longer mapped"
+        varchar ambient_preset "unused, no longer mapped"
+        boolean ambient_playing "unused, no longer mapped"
     }
     room_presences {
         bigint id PK
@@ -540,7 +540,7 @@ sequenceDiagram
         Events->>DB: insert event
         Service->>DB: commit all
         Service-->>Leader: accepted request DTO
-    else full / closed / stale / unauthorized
+    else full / closed / stale / unauthorised
         Service-->>Leader: safe 400/403/404/409; rollback
     end
     Note over Service,DB: Approval, capacity edits, removal and closure serialize on the same group row

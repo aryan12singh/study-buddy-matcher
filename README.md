@@ -37,6 +37,9 @@
 | <img src="docs/assets/icons/room.svg" width="28" height="28" alt="" /> | **Collaborative study** | Private group rooms with a shared Pomodoro timer, personal Spotify and ambient sound music, and live campus weather scenes |
 | <img src="docs/assets/icons/calendar.svg" width="28" height="28" alt="" /> | **Study sessions** | One-off or weekly group and buddy sessions with mutual-availability suggestions and calendar (`.ics`) export |
 | <img src="docs/assets/icons/bell.svg" width="28" height="28" alt="" /> | **Notifications** | Recipient-scoped updates for requests, groups, membership and sessions |
+| <img src="docs/assets/icons/check.svg" width="28" height="28" alt="" /> | **Achievements** | A private badge page with six medallions and a pixel grove drawn from a student's connections, requests, groups and planned sessions |
+| <img src="docs/assets/icons/layers.svg" width="28" height="28" alt="" /> | **Quizzes and study plans** | Gemini writes ten-question group or personal quizzes and week-by-week study roadmaps from uploaded slides, notes or pasted topics |
+| <img src="docs/assets/icons/setup.svg" width="28" height="28" alt="" /> | **Pixel study assistant** | A floating message box that finds buddies, suggests meeting times, lists to-dos, opens quizzes and study plans, and navigates the app |
 | <img src="docs/assets/icons/docs.svg" width="28" height="28" alt="" /> | **Help and getting started** | A current-data next action, profile-to-session guide, contextual topic links and searchable answers about matching, AI, privacy, groups and rooms |
 | <img src="docs/assets/icons/admin.svg" width="28" height="28" alt="" /> | **Administration** | Create and edit accounts, view usage, deactivate, reactivate or delete accounts, and tune matching weights |
 
@@ -44,18 +47,15 @@
 
 | Role | Can |
 | --- | --- |
-| Student | Register and sign in; edit profile, courses, preferences and weekly availability; search and compare matches; send and answer requests; end connections; browse, create and apply to groups; join private study rooms; schedule buddy sessions; read notifications |
-| Group leader | Everything a student can, plus edit their group, decide applications, remove members, close the group, schedule group sessions and assign study-room hosts |
+| Student | Register and sign in; edit profile, courses, preferences and weekly availability; search and compare matches; send and answer requests; end connections; browse, create and apply to groups; join private study rooms; schedule buddy sessions; take quizzes and create study plans; ask Pixel; view their achievements; read notifications |
+| Group leader | Everything a student can, plus edit their group, decide applications, remove members, close the group, schedule group sessions, assign study-room hosts and start or close group quizzes |
 | Administrator | Manage accounts and their status, view basic usage, and configure matching criteria, weights and strategy |
 
-A group leader is a student with authority over one group, not a separate account role.
-Compulsory scope and the selected E1/E2 extensions are mapped in the
-[requirement coverage map](docs/REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
-The baseline and E2 design views are checked against revision `9592fd2` (18 October 2026).
-E1 AI explanations have a separate contract and delivery record on
-[PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61).
-The [16 October E2 database rollout](docs/DATABASE_OPERATIONS.md#e2-rollout--16-october-2026)
-is recorded; team acceptance and persistent application hosting are separate from that record.
+A group leader is a student with authority over one group, not a separate account role. A
+study room's host and co-host may also start and close its quizzes. Every requirement, the
+selected E1 (AI match explanations) and E2 (collaborative study) extensions and the additional
+features are mapped to their classes and tests in the
+[requirement coverage map](docs/REQUIREMENT_COVERAGE.md).
 
 ---
 
@@ -120,8 +120,8 @@ scripts/migrate-database.sh
 The migrations own the schema. The backend runs with `ddl-auto: validate`, so it never
 changes the database and refuses to start if a mapped table or column is missing. Validation
 does not check constraints, indexes or row-level security, so always apply every migration
-first. For the shared database, follow the
-[deployment and recovery record](docs/DATABASE_OPERATIONS.md) and never reset it for tests.
+first. For the shared database, follow the [database guide](docs/DATABASE.md) and never reset
+it for tests.
 
 ### 4. Run
 
@@ -163,8 +163,8 @@ business rules behave exactly as in live use.
 Set `DEMO_SEED_ENABLED=true`, `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` for one
 approved startup, then disable seeding. Repeat runs only add missing courses and accounts and
 never change existing data; the demo history replays only when none of the 50 students existed.
-Contacts use the fictional +1 202-555-01xx range. See
-[safe seeding](docs/DATABASE_OPERATIONS.md#safe-demo-seed).
+Contacts use the fictional +1 202-555-01xx range. See the
+[database guide](docs/DATABASE.md) for seeding and demo reset.
 
 </details>
 
@@ -208,7 +208,7 @@ also the privacy mechanism: a contact number is withheld by choosing a DTO, not 
 backend/    Spring Boot feature packages, SQL migrations and tests
 frontend/   React screens in src/features; client, auth and shared UI in src/shared
 scripts/    Migration runner and disposable PostgreSQL test harness
-docs/       API contract, decisions, coverage, diagrams and verification records
+docs/       API contract, design decisions, coverage, testing, database and diagrams
 ```
 
 The [diagram index](docs/diagrams/README.md) contains the scalable architecture, UML
@@ -259,8 +259,8 @@ require a refresh first. Search and numeric scores do not depend on Gemini. Disa
 quota exhaustion, provider failure, rejected output or a cache-read failure show the labelled
 standard explanation. A cache-write failure retains the already validated AI answer. AI text
 is labelled as potentially inaccurate; bounded output checks do not prove every statement.
-The [E1 contract](docs/API_CONTRACT.md#match-explanation-e1) and
-[test guide](docs/E1_TESTING.md) describe identity, privacy, cache policy and acceptance.
+The [E1 contract](docs/API_CONTRACT.md#match-explanation-e1) describes identity, privacy and
+cache policy.
 
 Weekly slots use recurring Asia/Singapore time with half-open boundaries, so touching slots
 share no minutes. The categorical group-size choice maps to ranges: one-to-one 2–2, small group
@@ -299,11 +299,41 @@ groups for Founder. The grove counts consecutive planned-session weeks in the co
 including a session later this week, rather than attendance or completed focus. New memberships
 and buddy connections do not inherit earlier occurrences. Each badge links to an existing next
 action, and all Gold caps the level. See the [metric contract](docs/API_CONTRACT.md#achievementsdto)
-and [verification guide](docs/ACHIEVEMENTS_TESTING.md).
+and [testing guide](docs/TESTING.md).
 
 **Calendar export.** Each session downloads as a private `.ics` snapshot with correct timezone
-and daylight-saving handling. Snapshots do not sync, so re-export after changes. Calendar
-compatibility and evidence are in [E2 verification](docs/E2_TESTING.md).
+and daylight-saving handling. Snapshots do not sync, so re-export after changes.
+
+---
+
+## AI study tools
+
+Three student features use Google Gemini through one shared client (`GeminiClient`), on a
+separate Google project and daily allowance from E1's match explanations. With AI switched off
+or the allowance spent, each returns 503 `AI_UNAVAILABLE` and the screen offers the manual path.
+
+**Quizzes.** A group quiz is started by the leader or the room's host or co-host from uploaded
+PDF, `.txt` or `.md` material or pasted notes; accepted members take it while it is open and
+see a leaderboard. A personal quiz is one student's own practice. Every quiz has exactly
+`quiz.question-count` questions, and Gemini's reply is rejected unless it has that shape.
+
+**Study plans.** A student gives a course, weekly hours, an optional exam date and their
+material, and gets a week-by-week roadmap to the exam (or for this week alone without a date),
+with topics they can tick off. A student may keep several plans. A study session can also have one
+shared roadmap for its upcoming meetings, planned by the group leader or either buddy from the
+session page and read by every participant. Replies are checked against the
+plan's weeks, minutes and column lengths. Pixel's "plan my study" opens the form with the course,
+exam date and hours it read from the message already filled in.
+
+**Pixel.** A message box on every student page answers "find me a buddy", "when can my group
+meet?", "what do I need to do?", "quiz me", "plan my study" and "what are we covering next
+session?", or opens the right page. Gemini
+only classifies the message; the answer comes from the existing services and templates, read
+only, with the same privacy-safe match cards as Find buddies. Common questions are read by
+rules with no AI call, and the rest use a lighter model with its own allowance.
+
+Endpoints are in the [API contract](docs/API_CONTRACT.md#study-plans-ai-study-assistant) and
+design choices in [design decisions](docs/DESIGN_DECISIONS.md).
 
 ---
 
@@ -320,7 +350,7 @@ Loading, failed and untracked states have explicit labels. Search history, room 
 calendar downloads and attendance are not inferred from other activity. Group room links
 open a preview and require an explicit join. The guide also explains deterministic scores,
 optional AI wording and its privacy/accuracy limits, scheduling permissions and calendar
-snapshots. See [Help verification](docs/HELP_TESTING.md) for scope and repeatable checks.
+snapshots.
 
 ---
 
@@ -402,10 +432,10 @@ or the property in `application-local.yml`.
 | `app.ai.explanation.api-key` | none; set only in `application-local.yml` | Gemini API key. Never committed, logged or sent to the browser |
 | `app.ai.explanation.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `app.ai.explanation.model` | `gemini-3.5-flash` | Gemini model ID; part of the explanation cache key. `gemini-2.5-flash` returns 404 for new projects |
-| `app.ai.explanation.timeout` | `5s` | Connect timeout and read timeout, each; the worst-case wait is about twice this before falling back to the standard explanation. 3s was too short: a first call on a fresh connection took over 3s |
+| `app.ai.explanation.timeout` | `5s` | Connect timeout and read timeout, each; the worst-case wait is about twice this before falling back to the standard explanation. A first call on a fresh connection can take over 3 seconds |
 | `app.ai.explanation.max-output-tokens` | `200` | Upper bound on Gemini's reply length |
 | `app.ai.explanation.max-characters` | `600` | Longest AI explanation shown; fresh and cached text are checked, with standard fallback on rejection |
-| `app.ai.explanation.daily-call-limit` | `18` | Gemini calls per day before falling back; just under the free tier's 20 requests per day per project and model (checked 18 Oct). In memory and resets at Singapore midnight, while Google's limit resets on Pacific time, so they can drift apart. Usage is visible at https://ai.dev/rate-limit |
+| `app.ai.explanation.daily-call-limit` | `18` | Gemini calls per day before falling back; just under the free tier's 20 requests per day per project and model. In memory and resets at Singapore midnight, while Google's limit resets on Pacific time, so they can drift apart. Usage is visible at https://ai.dev/rate-limit |
 | `app.ai.explanation.daily-call-limit-per-student` | `5` | Gemini calls one student can trigger per day, so one student cannot use up the shared allowance. Cached explanations cost nothing. In memory, resetting at Singapore midnight with the shared limit |
 | `app.ai.explanation.quota-zone` | `Asia/Singapore` | Time zone whose midnight resets the daily limit |
 | `app.ai.explanation.rate-limit-cooldown` | `60s` | After Gemini answers 429 (too many requests), no further calls are made for this long; students get the standard explanation meanwhile |
@@ -424,7 +454,7 @@ or the property in `application-local.yml`.
 | `app.spotify.timeout` | `5s` | Connect and read timeout for Spotify |
 | `app.spotify.authorization-lifetime` | `10m` | How long a started sign-in stays valid |
 | `app.spotify.token-refresh-margin` | `60s` | Renew a student's Spotify token this long before it expires |
-| `app.spotify.search-limit` | `10` | Playlists per search; Spotify's maximum since February 2026 |
+| `app.spotify.search-limit` | `10` | Playlists per search; Spotify's maximum |
 | `app.spotify.max-query-length` | `100` | Longest playlist search accepted |
 | `app.spotify.embed-playlist-id` | `3bZTQGrvewbkJJe6UpTFKc` (the team's study playlist) | Playlist in the embedded player for students without Premium; works without app credentials |
 
@@ -573,8 +603,8 @@ cd backend
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-Dated results and regression evidence are recorded in
-[baseline verification](docs/BASELINE_VERIFICATION.md) and [E2 verification](docs/E2_TESTING.md).
+The [testing guide](docs/TESTING.md) covers the test strategy, what each area's tests cover,
+focused suites and demo walkthroughs.
 
 
 ---
@@ -628,18 +658,10 @@ design already allows it.
 | --- | --- |
 | [API contract](docs/API_CONTRACT.md) | Endpoints, request and response shapes, authorization and errors |
 | [Design decisions](docs/DESIGN_DECISIONS.md) | Agreed contracts, alternatives considered and scope boundaries |
-| [Requirement coverage](docs/REQUIREMENT_COVERAGE.md) | Each requirement mapped to source and tests |
-| [Baseline verification](docs/BASELINE_VERIFICATION.md) | Repeatable checks and delivery evidence |
-| [Database operations](docs/DATABASE_OPERATIONS.md) | Migrations, seeding, access and recovery |
-| [Matching engine changes](docs/MATCHING_ENGINE_CHANGES.md) | Matching fixes and the decisions behind them |
-| [Team A testing guide](docs/TEAM_A_TESTING.md) | Matching algorithm, API, matching page and admin configuration checks |
-| [Team C verification](docs/TEAM_C_TESTING.md) | Requests, connections, groups, notifications and admin account checks |
-| [E1 verification](docs/E1_TESTING.md) | AI match explanation checks and acceptance |
-| [E2 scope](docs/E2_SCOPE.md) | What E2 delivered and its boundaries |
-| [Achievements verification](docs/ACHIEVEMENTS_TESTING.md) | Private current standings, planned-week metrics, owner-summary privacy and regression checks |
-| [E2 verification](docs/E2_TESTING.md) | Room, session, weather and calendar checks |
-| [Help verification](docs/HELP_TESTING.md) | Current-state onboarding, next-action priority, contextual links, permissions and responsive keyboard checks |
-| [Diagram index and exports](docs/diagrams/README.md) | Architecture, UML use cases/classes and matching sequence; editable sources and rebuild instructions |
+| [Requirement coverage](docs/REQUIREMENT_COVERAGE.md) | Each requirement mapped to its classes and tests |
+| [Testing](docs/TESTING.md) | Test strategy, how to run the suites, coverage by area and demo walkthroughs |
+| [Database](docs/DATABASE.md) | Access model, migrations, schema, seeding and the release runbook |
+| [Diagrams](docs/diagrams/README.md) | Architecture, UML use cases and classes, matching sequence; editable sources and rebuild instructions |
 | [AI usage](docs/AI_USAGE.md) | Where development assistance was used |
 | [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |
 
@@ -719,19 +741,9 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 Within Team C, Charlize built the group and join-request rules, queries, DTOs and services.
 Aryan built requests, connections, profile privacy, notifications, admin accounts and their
 controllers, screens, migrations and tests, and the E2 collaborative study extension. Each
-member must confirm their retained contributions and be able to explain the implementation in the viva.
+member can explain the implementation of their part.
 
 **Contributing.** Read [AGENTS.md](AGENTS.md), branch from an up-to-date `main` and keep commits
 focused. Open a pull request with the related issue, test evidence and any shared-file effects,
 get a review from another team, then **Squash and merge**. Secrets and build output stay
 untracked.
-
-| Milestone | Target |
-| --- | --- |
-| Internal feature freeze | 24 October |
-| Extras integration | 25 October |
-| Materials and rehearsal | 8 November |
-| Final handoff | 15 November 2026, 23:59 SGT (team target; the brief specifies Week 13) |
-
-The exact LMS deadline and submission receipt remain unconfirmed in the
-[schedule record](docs/DESIGN_DECISIONS.md#schedule-and-submission-record).
