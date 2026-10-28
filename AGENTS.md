@@ -143,7 +143,7 @@ Streamline's pixel range is an inspiration option, not a shipped dependency.
 Current wireframes take the metaphor literally: each page is a window with a title bar: Home,
 Student profile, Matching, Notifications, Study prep, study timer.
 
-**Implemented choices and remaining acceptance:**
+**Implemented choices and what is still to check:**
 
 - Decorative title bars and conventional navigation are the current implementation; there
   is no movable stacking-window manager.
@@ -155,9 +155,9 @@ Student profile, Matching, Notifications, Study prep, study timer.
   navigation, forms, weekly schedules and admin rows rather than declaring desktop-only use.
 - Original `PixelIcon` CSS drawings are reused. Inventory shipped assets/services in the
   README and verify any newly added third-party licence before distribution.
-- Local Chromium/keyboard/layout evidence is recorded in the test guides. Latest-Figma
-  comparison, all-screen contrast/browser acceptance and physical-projector readability
-  still need the team's review; implemented styles do not constitute that sign-off.
+- Narrow-layout and keyboard checks are listed in [docs/TESTING.md](docs/TESTING.md).
+  Comparing screens with the latest Figma, contrast on every screen and readability on the
+  projector are still for the team to check.
 
 ### Shared components
 
@@ -197,9 +197,9 @@ The implemented set to reuse:
 
 | Team | Members | Owns |
 | ---- | ------- | ---- |
-| Team A | nat, cy, jo | Matching engine: scorers, `TimeSlot` maths, strategies, `MatchScore`, matching config, matching and admin-config UI |
-| Team B | angel, averyl, gh | Spring Boot and React skeletons, entities, enums, repositories, Spring Security and JWT, `ProfileService`, data seeder, shared UI shell, auth and profile screens |
-| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens |
+| Team A | nat, cy, jo | Matching engine: scorers, `TimeSlot` maths, strategies, `MatchScore`, matching config, matching and admin-config UI; Study Room music (`music` package, Spotify and Freesound) |
+| Team B | angel, averyl, gh | Spring Boot and React skeletons, entities, enums, repositories, Spring Security and JWT, `ProfileService`, data seeder, shared UI shell, auth and profile screens; AI study tools: `ai` client and quota, `quiz`, `studyplan` (personal and session roadmaps), `assistant` (Pixel) and their screens |
+| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 `matchexplanation`, E2 `studyroom` / `studysession` / `weather`, help guide and `achievement` |
 
 Do not refactor another team's code as a side effect of your task. If their code blocks you,
 raise it rather than rewriting it. A surprise refactor in someone else's file is how merge

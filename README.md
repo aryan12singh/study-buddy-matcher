@@ -21,9 +21,10 @@
 | | | |
 | --- | --- | --- |
 | <img src="docs/assets/icons/match.svg" width="20" height="20" alt="" /> [Features](#features) | <img src="docs/assets/icons/setup.svg" width="20" height="20" alt="" /> [Getting started](#getting-started) | <img src="docs/assets/icons/layers.svg" width="20" height="20" alt="" /> [Architecture](#architecture) |
-| <img src="docs/assets/icons/group.svg" width="20" height="20" alt="" /> [Matching engine](#matching-engine) | <img src="docs/assets/icons/room.svg" width="20" height="20" alt="" /> [Collaborative study](#collaborative-study) | <img src="docs/assets/icons/connection.svg" width="20" height="20" alt="" /> [Privacy and relationships](#privacy-and-relationships) |
-| <img src="docs/assets/icons/sliders.svg" width="20" height="20" alt="" /> [Configuration](#configuration) | <img src="docs/assets/icons/check.svg" width="20" height="20" alt="" /> [Testing](#testing) | <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Documentation](#documentation) |
-| <img src="docs/assets/icons/package.svg" width="20" height="20" alt="" /> [Libraries and assets](#libraries-and-assets) | <img src="docs/assets/icons/team.svg" width="20" height="20" alt="" /> [Team and workflow](#team-and-workflow) | <img src="docs/assets/icons/calendar.svg" width="20" height="20" alt="" /> [Known limitations and future work](#known-limitations-and-future-work) |
+| <img src="docs/assets/icons/group.svg" width="20" height="20" alt="" /> [Matching engine](#matching-engine) | <img src="docs/assets/icons/room.svg" width="20" height="20" alt="" /> [Collaborative study](#collaborative-study) | <img src="docs/assets/icons/layers.svg" width="20" height="20" alt="" /> [AI study tools](#ai-study-tools) |
+| <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Help and getting started](#help-and-getting-started) | <img src="docs/assets/icons/connection.svg" width="20" height="20" alt="" /> [Privacy and relationships](#privacy-and-relationships) | <img src="docs/assets/icons/sliders.svg" width="20" height="20" alt="" /> [Configuration](#configuration) |
+| <img src="docs/assets/icons/check.svg" width="20" height="20" alt="" /> [Testing](#testing) | <img src="docs/assets/icons/calendar.svg" width="20" height="20" alt="" /> [Known limitations and future work](#known-limitations-and-future-work) | <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Documentation](#documentation) |
+| <img src="docs/assets/icons/package.svg" width="20" height="20" alt="" /> [Libraries and assets](#libraries-and-assets) | <img src="docs/assets/icons/team.svg" width="20" height="20" alt="" /> [Team and workflow](#team-and-workflow) |   |
 
 ---
 
@@ -734,13 +735,14 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 
 | Team | Members | Responsibility |
 | --- | --- | --- |
-| A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration |
-| B | Angel, Averyl, Guang Hao | Platform, authentication, own profile, availability, seed, dashboard and shell |
-| C | Aryan, Charlize | Requests and connections, contact privacy, study groups, notifications, admin accounts and collaborative study |
+| A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration; Study Room music (Spotify and Freesound) |
+| B | Angel, Averyl, Guang Hao | Platform, authentication, own profile, availability, seed, dashboard and shell; the AI study tools (shared Gemini client, quizzes, personal and session study plans, Pixel) |
+| C | Aryan, Charlize | Requests and connections, contact privacy, study groups, notifications and admin accounts; E1 match explanations, E2 collaborative study, help and achievements |
 
-Within Team C, Charlize built the group and join-request rules, queries, DTOs and services.
-Aryan built requests, connections, profile privacy, notifications, admin accounts and their
-controllers, screens, migrations and tests, and the E2 collaborative study extension. Each
+Within Team C, Charlize built the group and join-request rules, queries, DTOs and services, E1
+match explanations, the help guide and achievements. Aryan built requests, connections, profile
+privacy, notifications, admin accounts and their controllers, screens, migrations and tests, and
+the E2 collaborative study extension. Each
 member can explain the implementation of their part.
 
 **Contributing.** Read [AGENTS.md](AGENTS.md), branch from an up-to-date `main` and keep commits
