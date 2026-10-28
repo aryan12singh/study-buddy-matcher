@@ -735,7 +735,7 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 
 | Team | Members | Responsibility |
 | --- | --- | --- |
-| A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration; Study Room music (Spotify and Freesound) |
+| A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration; the Study Room tab (personal Pomodoro and groups panel) and its music (Spotify and Freesound) |
 | B | Angel, Averyl, Guang Hao | Platform, authentication, own profile, availability, seed, dashboard and shell; the AI study tools (shared Gemini client, quizzes, personal and session study plans, Pixel) |
 | C | Aryan, Charlize | Requests and connections, contact privacy, study groups, notifications and admin accounts; E1 match explanations, E2 collaborative study, help and achievements |
 

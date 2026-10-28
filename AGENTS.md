@@ -197,9 +197,9 @@ The implemented set to reuse:
 
 | Team | Members | Owns |
 | ---- | ------- | ---- |
-| Team A | nat, cy, jo | Matching engine: scorers, `TimeSlot` maths, strategies, `MatchScore`, matching config, matching and admin-config UI; Study Room music (`music` package, Spotify and Freesound) |
+| Team A | nat, cy, jo | Matching engine: scorers, `TimeSlot` maths, strategies, `MatchScore`, matching config, matching and admin-config UI; the Study Room tab (personal Pomodoro and groups panel) and its music (`music` package, Spotify and Freesound) |
 | Team B | angel, averyl, gh | Spring Boot and React skeletons, entities, enums, repositories, Spring Security and JWT, `ProfileService`, data seeder, shared UI shell, auth and profile screens; AI study tools: `ai` client and quota, `quiz`, `studyplan` (personal and session roadmaps), `assistant` (Pixel) and their screens |
-| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 `matchexplanation`, E2 `studyroom` / `studysession` / `weather`, help guide and `achievement` |
+| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 `matchexplanation`, E2 group rooms (`studyroom`), `studysession` and `weather`, help guide and `achievement` |
 
 Do not refactor another team's code as a side effect of your task. If their code blocks you,
 raise it rather than rewriting it. A surprise refactor in someone else's file is how merge
