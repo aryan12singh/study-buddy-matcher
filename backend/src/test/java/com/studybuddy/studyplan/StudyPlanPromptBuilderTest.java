@@ -39,6 +39,16 @@ class StudyPlanPromptBuilderTest {
         assertFalse(prompt.contains("{{"), prompt);
     }
 
+    /** A full lecture deck has more topics than one week's entries, so the prompt must allow grouping. */
+    @Test
+    void asksForRelatedTopicsToBeGroupedRatherThanOverTheEntryLimit() {
+        String prompt = prompt(StudyMaterial.pastedTopics("Polymorphism"));
+
+        assertTrue(prompt.contains("Never give a\n  block more than 5 entries"), prompt);
+        assertTrue(prompt.contains("group neighbouring related topics into one entry"), prompt);
+        assertTrue(prompt.contains("exactly one JSON object of this shape, not a list"), prompt);
+    }
+
     /** Fails on a Windows checkout with autocrlf if the template's line endings are not normalised. */
     @Test
     void thePromptHasTheSameLineEndingsOnEveryMachine() {

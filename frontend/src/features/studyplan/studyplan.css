@@ -1,0 +1,18 @@
+.study-plan-list { list-style: none; padding: 0; }
+.study-plan-list h3 { margin: 0 0 .45rem; }
+.study-plan-list p { margin: .4rem 0; }
+.study-material-files { list-style: none; padding: 0; display: grid; gap: .4rem; }
+.study-material-files li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .4rem .55rem; border: 1px solid var(--border, #8b8170); background: var(--panel, #fff8e8); }
+.study-material-files span { overflow-wrap: anywhere; }
+.study-plan-ai-label { font-size: .9rem; font-style: italic; }
+.study-plan-topics { margin: .75rem 0; }
+.study-plan-topics ol { margin: .5rem 0 0; }
+.roadmap { list-style: none; padding: 0; display: grid; gap: .9rem; margin: 1rem 0; }
+.roadmap-block { padding: .75rem; border: 1px solid var(--border, #8b8170); background: var(--panel, #fff8e8); }
+.roadmap-block h3 { margin: 0 0 .5rem; }
+.roadmap-entries { list-style: none; padding: 0; display: grid; gap: .55rem; margin: 0; }
+.roadmap-entry { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; cursor: pointer; }
+.roadmap-title { font-weight: 600; overflow-wrap: anywhere; }
+.roadmap-entries .is-done .roadmap-title { text-decoration: line-through; }
+.roadmap-tasks { margin: .3rem 0 0 1.75rem; padding-left: 1rem; }
