@@ -10,10 +10,11 @@ import Button from '../../shared/components/Button'
 import Badge from '../../shared/components/Badge'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
-import { AI_PLAN_LABEL, deleteStudyPlan, getStudyPlan, markEntry } from './api'
-import type { StudyPlan, StudyPlanEntry } from './api'
+import { AI_PLAN_LABEL, deleteStudyPlan, getStudyPlan } from './api'
+import type { StudyPlan } from './api'
 import { formatMinutes, formatPlanDate, weekCountLabel } from './planDates'
 import RoadmapView from './RoadmapView'
+import { useEntryProgress } from './useEntryProgress'
 import './studyplan.css'
 
 /** One of the student's plans: its details, the roadmap to tick off, and deleting it. */
@@ -33,25 +34,11 @@ export default function StudyPlanDetailPage() {
 
 function PlanView({ plan: loaded }: { plan: StudyPlan }) {
   const navigate = useViewNavigation()
-  const progress = useAction(), removal = useAction()
-  const [saving, setSaving] = useState<number>()
+  const removal = useAction()
+  const progress = useEntryProgress(loaded)
   const [confirming, setConfirming] = useState(false)
-  // A tick shows the server's reply at once; the next load of the plan replaces it.
-  const [saved, setSaved] = useState<StudyPlan>()
-  const [shownLoad, setShownLoad] = useState(loaded)
-  if (shownLoad !== loaded) {
-    setShownLoad(loaded)
-    setSaved(undefined)
-  }
-  const plan = saved ?? loaded
+  const plan = progress.plan
   const done = plan.entries.filter(entry => entry.completed).length
-
-  async function toggle(entry: StudyPlanEntry, completed: boolean) {
-    setSaving(entry.id)
-    const result = await progress.run(() => markEntry(plan.id, entry.id, completed))
-    if (result.ok) setSaved(result.value)
-    setSaving(undefined)
-  }
 
   async function remove() {
     const result = await removal.run(() => deleteStudyPlan(plan.id), undefined, true)
@@ -78,7 +65,8 @@ function PlanView({ plan: loaded }: { plan: StudyPlan }) {
     <ActionNotice error={progress.error} />
     <StatePanel empty={!plan.entries.length} emptyTitle="This plan has no topics" emptyKind="clock"
       emptyMessage="Delete it and create a new plan from your material." />
-    {!!plan.entries.length && <RoadmapView plan={plan} savingEntryId={saving} onToggle={plan.canManage ? toggle : undefined} />}
+    {!!plan.entries.length && <RoadmapView plan={plan} savingEntryId={progress.savingEntryId}
+      onToggle={plan.canManage ? progress.toggle : undefined} />}
 
     {plan.canManage && <div className="actions">
       <Button variant="danger" onClick={() => { removal.clear(); setConfirming(true) }}>Delete study plan</Button>

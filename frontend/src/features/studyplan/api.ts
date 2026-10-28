@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { api } from '../../shared/api/client'
 import type { Course, StudyGoal } from '../../shared/api/types'
 
@@ -23,6 +24,8 @@ export type StudyPlan = {
 /** What a plan is drafted from: uploaded files, or topics pasted into the form. */
 export type StudyMaterial = { kind: 'files'; files: File[] } | { kind: 'topics'; text: string }
 export type PersonalPlanInput = { courseId: number; hoursPerWeek: number; examDate: string | null; studyGoal: StudyGoal | null }
+/** `courseId` only for a buddy session; a group session always studies its group's course. */
+export type SessionPlanInput = { courseId: number | null; studyGoal: StudyGoal | null }
 
 /** Shown wherever Gemini's roadmap appears. */
 export const AI_PLAN_LABEL = 'Roadmap written by Gemini; it may be inaccurate.'
@@ -49,12 +52,35 @@ export async function deleteStudyPlan(planId: number) {
 }
 
 export async function createStudyPlan(input: PersonalPlanInput, material: StudyMaterial) {
-  const form = new FormData()
+  const form = materialForm(material)
   form.append('courseId', String(input.courseId))
   form.append('hoursPerWeek', String(input.hoursPerWeek))
   if (input.examDate) form.append('examDate', input.examDate)
   if (input.studyGoal) form.append('studyGoal', input.studyGoal)
+  return (await api.post<StudyPlan>('/study-plans', form, { timeout: WRITING_TIMEOUT_MS })).data
+}
+
+/** The session's roadmap, or null when it has none yet. */
+export async function getSessionPlan(sessionId: number, signal?: AbortSignal) {
+  try {
+    return (await api.get<StudyPlan>(`/sessions/${sessionId}/study-plan`, { signal })).data
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) return null
+    throw error
+  }
+}
+
+/** Replaces the session's roadmap; the meetings and their length come from the session. */
+export async function createSessionPlan(sessionId: number, input: SessionPlanInput, material: StudyMaterial) {
+  const form = materialForm(material)
+  if (input.courseId) form.append('courseId', String(input.courseId))
+  if (input.studyGoal) form.append('studyGoal', input.studyGoal)
+  return (await api.post<StudyPlan>(`/sessions/${sessionId}/study-plan`, form, { timeout: WRITING_TIMEOUT_MS })).data
+}
+
+function materialForm(material: StudyMaterial) {
+  const form = new FormData()
   if (material.kind === 'files') material.files.forEach(file => form.append('files', file))
   else form.append('topicsText', material.text)
-  return (await api.post<StudyPlan>('/study-plans', form, { timeout: WRITING_TIMEOUT_MS })).data
+  return form
 }

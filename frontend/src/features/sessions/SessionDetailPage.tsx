@@ -14,6 +14,7 @@ import Badge from '../../shared/components/Badge'
 import Button from '../../shared/components/Button'
 import Dialog from '../../shared/components/Dialog'
 import CalendarButton from './CalendarButton'
+import SessionRoadmapPanel from '../studyplan/SessionRoadmapPanel'
 import './sessions.css'
 
 export default function SessionDetailPage() {
@@ -57,6 +58,7 @@ function SessionDetail({ id }: { id: number }) {
         <p className="privacy-note">Calendar downloads are snapshots. Re-export after edits or cancellation, and check your calendar for duplicates. Each weekly date is exported as a separate event. No contacts or participant emails are included.</p>
         {data.status === 'CANCELLED' && <p className="muted">This plan is cancelled. Download the cancellation snapshot to update your calendar.</p>}
       </section>
+      <SessionRoadmapPanel session={data} />
       <section className="detail-panel"><h2>{data.occurrenceCount > 1 ? `${data.occurrenceCount} weekly dates` : 'Session date'}</h2>
         <ul className="session-times">{data.occurrences.map(item => <li key={item.startAt}>{occurrenceLabel(item)}</li>)}</ul>
       </section>
