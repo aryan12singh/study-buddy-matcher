@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1390" viewBox="0 0 1800 1390" role="img" aria-labelledby="title description">
 <title id="title">UML sequence — deterministic match discovery</title>
-<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
@@ -45,7 +45,6 @@
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
 <text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — deterministic match discovery</text>
 <text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">GET /api/matches: source-ordered filtering and ranking, safe DTO output, explicit failure and empty-result paths.</text>
-<text x="46" y="1363" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
 <text x="1754" y="1363" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/matching-sequence.svg</text>
 <text x="150" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Find buddies /</text>
 <text x="150" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Home preview</text>
@@ -92,6 +91,6 @@
 <text x="600.0" y="1147" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchSearchResultDto + configurationVersion</text>
 <rect x="71.26999999999998" y="1180" width="447.46000000000004" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="295.0" y="1197" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">200: ordered matches, or [] with totalMatches=0</text>
-<text x="62" y="1278" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No contact, email, credential, token or persistence entity is returned in discovery. At 9592fd2 the card renders scores, bars and shared time, not the template sentence.</text>
-<text x="62" y="1303" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Grouped lifelines are named collaborators, not additional classes. The optional E1 provider request has a separate companion view.</text>
+<text x="62" y="1278" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No contact, email, credential, token or persistence entity is returned in discovery. The card renders scores, bars and shared time; wording is fetched on request (E1).</text>
+<text x="62" y="1303" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Grouped lifelines are named collaborators, not additional classes. The optional E1 explanation request has a separate companion view.</text>
 </g></svg>

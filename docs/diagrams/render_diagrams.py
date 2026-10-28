@@ -16,7 +16,6 @@ import xml.etree.ElementTree as ET
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-REVISION = "9592fd2"
 INK = "#172d3b"
 MUTED = "#506474"
 LINE = "#647b88"
@@ -40,7 +39,6 @@ class Canvas:
         self.text(46, 85, title, 31, "#ffffff", weight=700)
         self.text(46, 110, subtitle, 17, "#d9e5ea")
         self.line([(44, height-54), (width-44, height-54)], color="#c5d2da")
-        self.text(46, height-27, f"Checked against {REVISION} · 18 October 2026 · baseline + E2", 15, MUTED)
         self.text(width-46, height-27, f"docs/diagrams/exports/{slug}.svg", 14, MUTED, anchor="end")
 
     def rect(self, x, y, w, h, fill="white", stroke="#c5d2da", radius=0, layer=None, extra=""):
@@ -140,7 +138,7 @@ class Canvas:
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.width}" height="{self.height}" '
             f'viewBox="0 0 {self.width} {self.height}" role="img" aria-labelledby="title description">',
             f'<title id="title">{escape(self.title)}</title>',
-            '<desc id="description">Source-checked Study Buddy Matcher design. Editable source: '
+            '<desc id="description">Study Buddy Matcher design diagram. Editable source: '
             'docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>',
             '<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
             f'<path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="{LINE}" stroke-width="1.6"/></marker>',
@@ -156,32 +154,43 @@ class Canvas:
 def architecture():
     c = Canvas("architecture", "Architecture and privacy boundaries", "The browser reaches application data only through the authenticated Spring API.", height=1130)
     c.panel(455,170,720,795,"SPRING BOOT BACKEND",fill="#eff4f7")
-    c.box(45,260,330,285,"React + Vite",[
+    c.box(45,260,330,205,"React + Vite",[
         "Feature screens and route guards", "Shared authenticated API client", "Local drafts and music player", "Calendar snapshot download", "No database client / browser grant"
     ])
+    c.box(45,560,330,150,"Spotify Web Playback",["SDK script from sdk.scdn.co", "Premium: token from the API", "Free: embedded playlist player"],color=AMBER,fill=WARM,size=17)
     c.box(505,230,620,105,"Spring Security",["JWT signature · active account · role · token version"])
     c.box(505,390,280,110,"Controllers",["Validate typed input", "Delegate one service call"])
     c.box(845,390,280,110,"Application services",["Authorize current actor", "Coordinate domain rules"])
     c.box(505,580,280,140,"Domain and values",["Entities retain state rules", "Scorers / strategies", "Immutable time / score values"])
     c.box(845,580,280,140,"JPA repositories",["Read and persist entities", "Ordered transition locks", "Database constraints"])
     c.box(505,800,620,126,"DTO assemblers",["ProfileViewAssembler chooses the permitted response shape.", "PublicProfileDto has no contact number; ConnectedProfileDto does."],color=TEAL)
-    c.box(1240,290,315,170,"Open-Meteo",["Optional campus weather", "Fixed coordinates only", "Timeout / cache / fallback"],color=AMBER,fill=WARM)
-    c.box(1240,590,315,170,"PostgreSQL",["Managed by Supabase", "Backend JDBC access", "RLS; browser grants revoked"],color=TEAL)
+    externals=[
+        ("Google Gemini",["Explanations, quizzes, study", "plans and the Pixel assistant"]),
+        ("Spotify Web API",["Sign-in, token refresh,", "playlist search and playback"]),
+        ("Freesound",["CC0 ambient sound search;", "the browser plays previews"]),
+        ("Open-Meteo",["Campus weather at fixed", "coordinates; cached, fallback"]),
+    ]
+    for n,(title,rows) in enumerate(externals):
+        y=175+n*136
+        c.box(1240,y,315,118,title,rows,color=AMBER,fill=WARM,size=17)
+        c.line([(1125,445),(1190,445),(1190,y+59),(1240,y+59)],end="arrow")
+    c.label(1190,318,"HTTPS",15)
+    c.box(1240,770,315,150,"PostgreSQL",["Managed by Supabase", "Backend JDBC access", "RLS; browser grants revoked"],color=TEAL)
     c.line([(375,285),(425,285),(425,280),(505,280)],end="arrow")
     c.label(393,251,"JWT + JSON",15)
+    c.line([(210,465),(210,560)],end="arrow")
+    c.label(210,518,"loads script",15)
     c.line([(650,335),(650,390)],end="arrow")
     c.line([(785,445),(845,445)],end="arrow")
     c.line([(930,500),(930,580)],end="arrow")
-    c.line([(880,500),(880,540),(645,540),(645,580)],end="arrow")
-    c.line([(1125,650),(1240,650)],end="arrow")
-    c.label(1180,629,"JDBC",16)
-    c.line([(1125,420),(1240,420)],end="arrow")
-    c.label(1182,385,["weather", "request"],15)
-    c.line([(1095,500),(1150,500),(1150,862),(1125,862)],end="arrow")
-    c.label(1150,780,"assemble",15)
-    c.line([(505,862),(215,862),(215,545)],end="arrow",color=TEAL)
-    c.label(330,839,"JSON response DTOs",18,color=TEAL)
-    c.note(45,990,1510,["Contact is returned only to its owner or an active accepted buddy. Group membership and admin authority do not grant it.", "E1 provider calls have a separate companion view; they are outside this baseline + E2 architecture at 9592fd2."],fill="#edf3f6")
+    c.line([(845,480),(805,480),(805,540),(645,540),(645,580)],end="arrow")
+    c.line([(1125,700),(1205,700),(1205,845),(1240,845)],end="arrow")
+    c.label(1205,790,"JDBC",16)
+    c.line([(865,500),(865,555),(825,555),(825,800)],end="arrow")
+    c.label(825,766,"assemble",15)
+    c.line([(505,862),(420,862),(420,430),(375,430)],end="arrow",color=TEAL)
+    c.label(420,650,["JSON","DTOs"],15,color=TEAL)
+    c.note(45,990,1510,["Contact is returned only to its owner or an active accepted buddy. Group membership and admin authority do not grant it.", "Provider keys and the Spotify client secret stay on the backend; the browser receives only a Spotify access token for its own player."],fill="#edf3f6")
     return c
 
 
@@ -222,7 +231,7 @@ def use_cases():
 
 
 def e2_use_cases():
-    c = Canvas("e2-use-cases", "UML use cases — collaborative study (E2)", "Selected extension merged with PR #52; this panel supplements the compulsory use cases.",height=1170)
+    c = Canvas("e2-use-cases", "UML use cases — collaborative study (E2)", "Selected extension; this panel supplements the compulsory use cases.",height=1170)
     c.rect(230,170,1280,820,"white","#93a9b6",8,c.back)
     c.text(255,206,"STUDY BUDDY MATCHER / E2",19,TEAL,700)
     c.actor(100,450,"Student")
@@ -239,7 +248,7 @@ def e2_use_cases():
         c.line([(138,495),(300,y)])
         c.lines(955,y-8,note,18,MUTED,gap=25)
         c.line([(890,y),(935,y)],dashed=True)
-    c.note(45,1020,1510,["No global online status, public room, chat, calendar synchronization or RSVP workflow is implied. Calendar files are private snapshots.", "E1 explanations have a separate companion view. Human/device and external-client acceptance require their own evidence."],fill="#edf3f6")
+    c.note(45,1020,1510,["No global online status, public room, chat, calendar synchronization or RSVP workflow is implied. Calendar files are private snapshots.", "E1 match explanations have a separate companion view (E1.md)."],fill="#edf3f6")
     return c
 
 
@@ -386,7 +395,7 @@ def matching_sequence():
     msg(5,2,1110,"MatchResultDto list; template explanation added",True)
     msg(2,1,1160,"MatchSearchResultDto + configurationVersion",True)
     msg(1,0,1210,"200: ordered matches, or [] with totalMatches=0",True)
-    c.note(45,1250,1710,["No contact, email, credential, token or persistence entity is returned in discovery. At 9592fd2 the card renders scores, bars and shared time, not the template sentence.", "Grouped lifelines are named collaborators, not additional classes. The optional E1 provider request has a separate companion view."],fill="#edf3f6")
+    c.note(45,1250,1710,["No contact, email, credential, token or persistence entity is returned in discovery. The card renders scores, bars and shared time; wording is fetched on request (E1).", "Grouped lifelines are named collaborators, not additional classes. The optional E1 explanation request has a separate companion view."],fill="#edf3f6")
     return c
 
 
@@ -446,7 +455,7 @@ def collaborative_study():
     c.box(1245,915,470,135,"Open-Meteo API",["Fixed campus coordinates and weather fields.", "No student identity, location or schedule."],color=AMBER,fill=WARM,size=18)
     c.line([(1480,780),(1480,915)],end="arrow")
     c.label(1480,856,"Java HTTP client + timeout",17)
-    c.note(45,1210,1710,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler return DTOs.", "PomodoroTimer is an immutable server-time value. SessionAvailability reuses WeeklyAvailability; SessionEvents writes recipient notifications transactionally.", "Detailed E2 transaction and ER diagrams remain in TEAM_C.md. E1 has its own companion view outside this baseline + E2 model."],fill="#edf3f6")
+    c.note(45,1210,1710,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler return DTOs.", "PomodoroTimer is an immutable server-time value. SessionAvailability reuses WeeklyAvailability; SessionEvents writes recipient notifications transactionally.", "Detailed E2 transaction and ER diagrams are in TEAM_C.md. E1 match explanations have their own companion view in E1.md."],fill="#edf3f6")
     return c
 
 

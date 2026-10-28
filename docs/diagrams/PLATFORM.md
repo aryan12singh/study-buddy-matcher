@@ -1,19 +1,16 @@
 # Platform and whole-system diagrams
 
-These diagrams connect the compulsory Team B authentication/profile/data foundation with
-Team A matching and Team C requests, privacy, groups, notifications and administration.
-They describe the compulsory implementation and E2 integration at revision
-`9592fd2`, checked on 18 October 2026. The E1 provider path on PR #61 has its own
-companion view and is outside this revision-scoped set. E2's schema rollout is recorded in
-[database operations](../DATABASE_OPERATIONS.md#e2-rollout--16-october-2026).
+These diagrams connect the Team B authentication/profile/data foundation with Team A
+matching and Team C requests, privacy, groups, notifications and administration, plus the
+E2 collaborative-study features and the external services the application uses.
+Presentation panels: [architecture](exports/architecture.svg),
+[use cases](exports/use-cases.svg) and [identity/profile classes](exports/identity-profile.svg).
 
-Detailed OO and transaction diagrams remain in [TEAM_A.md](TEAM_A.md) and [TEAM_C.md](TEAM_C.md).
-The [API contract](../API_CONTRACT.md), [decisions](../DESIGN_DECISIONS.md),
-[coverage map](../REQUIREMENT_COVERAGE.md) and [baseline test record](../BASELINE_VERIFICATION.md) explain fields,
-validation choices and verification limits. The [diagram index](README.md) provides
-scalable presentation exports, UML notation and rebuild instructions. These detailed
-Mermaid views remain editable supporting sources; source review and physical-projector
-acceptance are separate gates.
+Detailed OO and transaction diagrams are in [TEAM_A.md](TEAM_A.md), [TEAM_C.md](TEAM_C.md)
+and [E1.md](E1.md). The [API contract](../API_CONTRACT.md) and
+[design decisions](../DESIGN_DECISIONS.md) explain fields and validation choices;
+[database](../DATABASE.md) covers migrations and access. The [diagram index](README.md)
+lists every export, the notation and how to rebuild them.
 
 ## Compulsory capability map
 
@@ -82,6 +79,11 @@ flowchart LR
     Domain[Domain objects and matching value objects]
     Repositories[JPA repositories]
     Database[(PostgreSQL / Supabase)]
+    Gemini[Google Gemini]
+    SpotifyApi[Spotify accounts and Web API]
+    Freesound[Freesound]
+    OpenMeteo[Open-Meteo]
+    SpotifySdk[Spotify Web Playback SDK]
     Browser --> Client
     Client -->|JSON over HTTP| Security
     Security --> Controllers
@@ -93,6 +95,11 @@ flowchart LR
     Assemblers -->|response DTO| Services
     Services -->|DTO| Controllers
     Controllers -->|JSON DTO| Client
+    Services -->|HTTPS, backend-held key| Gemini
+    Services -->|HTTPS, client secret on backend| SpotifyApi
+    Services -->|HTTPS, backend-held key| Freesound
+    Services -->|HTTPS, fixed coordinates| OpenMeteo
+    Browser -->|loads script, Premium playback| SpotifySdk
 ```
 
 The browser uses the Spring API. Application tables/sequences deny browser roles, with RLS
@@ -100,6 +107,17 @@ enabled and no browser policies. Services may use repositories and domain entiti
 controllers do not inject repositories and services do not return entities to the API. The
 ordered SQL migrations define project-specific integrity/adoption/access rules beyond the
 mapped DDL that Hibernate may update.
+
+| External service | Called by | Used for |
+| --- | --- | --- |
+| Google Gemini | Backend | E1 match explanations, quizzes, study plans and the Pixel assistant |
+| Spotify accounts service and Web API | Backend | Spotify sign-in, token refresh, playlist search and starting playback |
+| Spotify Web Playback SDK | Browser | Premium playback in the study room, using an access token issued by the backend; free mode uses Spotify's embedded playlist player instead |
+| Freesound | Backend (search); browser (preview audio) | CC0 ambient sounds: the backend searches with its key, the browser plays the returned preview files |
+| Open-Meteo | Backend | Cached campus weather for fixed coordinates |
+
+API keys and the Spotify client secret are configured only in the git-ignored
+`application-local.yml`; none reaches the browser.
 
 ## E2 experience and external boundaries
 
@@ -151,8 +169,7 @@ or profile is sent to the provider.
 Membership removal, closed groups, ended connections and inactive accounts are
 server authorization boundaries on every room/session request. Lifecycle changes
 also revoke leases/roles and cancel affected future schedules; prior offline
-calendar copies cannot be revoked. E2 test/deployment/import acceptance remains
-separate in [E2_TESTING.md](../E2_TESTING.md).
+calendar copies cannot be revoked.
 
 ## Identity, profile and cross-team domain relationships
 
@@ -236,7 +253,7 @@ student fields. Group membership and connection are separate consent relationshi
 reads active profiles and canonical weekly intervals but owns neither account lifecycle nor
 contact visibility. Matching settings above are persistent admin configuration, not a student
 profile's preferences. Team A's diagram defines the scorer/strategy interfaces and immutable
-`TimeSlot`/`MatchScore` objects; Team C's diagram defines transition and lifecycle behavior.
+`TimeSlot`/`MatchScore` objects; Team C's diagram defines transition and lifecycle behaviour.
 
 ## Authentication and own-profile service boundary
 
@@ -403,17 +420,15 @@ matches. `MatchingHttpTest` and matching rendered tests cover these branches.
 
 ## Other compulsory alternatives
 
-| Flow | Empty / invalid / unauthorized alternative | Evidence |
+| Flow | Empty / invalid / unauthorised alternative | Evidence |
 | --- | --- | --- |
-| Registration/login | Creation missing fields or short/oversize password → 400; duplicate normalized email → 409; incorrect or otherwise-valid over-byte login password → 401; correct password for inactive account → 403 | `AccountCreationTest`, `AccountHttpTest`, auth rendered tests |
-| Own profile | Unknown/excess courses or missing preferences → 400; other role → 403; raw time draft remains local until complete | Profile/availability/editor tests and compulsory record |
+| Registration/login | Creation missing fields or short/oversize password → 400; duplicate normalised email → 409; incorrect or otherwise-valid over-byte login password → 401; correct password for inactive account → 403 | `AccountCreationTest`, `AccountHttpTest`, auth rendered tests |
+| Own profile | Unknown/excess courses or missing preferences → 400; other role → 403; raw time draft remains local until complete | Profile, availability and editor tests |
 | Buddy requests | No requests → empty list; self/duplicate/connected pair or repeat decision → conflict; wrong receiver → 403 | `BuddyHttpTest`, request/connection tests |
 | Privacy | Stranger/pending/group-only viewer → public DTO; inactive or missing subject → 404; after disconnect → contact withheld | Privacy assembler and HTTP tests |
 | Groups | No browse result → empty state; full/closed/repeated request → conflict; invalid capacity/time → 400; non-leader decision → 403 | `GroupHttpTest`, group and rendered tests |
 | Notifications | Empty list → empty state; another recipient's mark-read → 403; failed event write rolls back triggering transition | Notification and HTTP rollback/direction tests |
 | Admin accounts | Student/unauthenticated caller rejected; self-removal → conflict; removal never leaves an unusable last admin; deleted dependencies are removed safely | `AccountHttpTest`, admin/JWT tests |
 
-The [coverage map](../REQUIREMENT_COVERAGE.md#compulsory-integrated-acceptance-map) links the
-cross-feature checklist. Human cross-team review, author explanations, hosted rollout, Figma/projector acceptance
-and submission remain separately recorded gates. The contact/learning-style baseline contract
-is recorded in the decisions; no professor confirmation is claimed.
+The contact-format and learning-style interpretations are recorded in the
+[design decisions](../DESIGN_DECISIONS.md).

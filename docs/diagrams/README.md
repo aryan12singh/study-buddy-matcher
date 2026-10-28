@@ -1,100 +1,93 @@
 # Diagram index
 
-Baseline and E2 diagrams for Study Buddy Matcher, checked against revision `9592fd2` on
-18 October 2026. They cover the compulsory A/B/C implementation and E2 at that revision.
-The E1 provider path on [PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61)
-has its own companion view and is outside this revision-scoped set. E2's database rollout
-is recorded in [database operations](../DATABASE_OPERATIONS.md#e2-rollout--16-october-2026);
-diagram completion does not imply external-client, team, device or submission acceptance.
+Design diagrams for Study Buddy Matcher. Each SVG in [`exports/`](exports/) is a scalable,
+self-contained vector panel for slides or review; the companion Markdown documents hold the
+detailed, editable Mermaid views behind them.
 
-## Presentation and review views
+## Exported panels
 
-Open the SVG directly for a scalable view or insert it into the slide editor as a vector
-image. Keep one panel per slide; do not squeeze every class panel onto one slide.
-The architecture and matching sequence provide the main narrative. The class panels
-support the OO explanation and Q&A, while the E2 panels explain the selected extension.
-
-| View | Scalable export | Source trace and purpose |
+| Panel | What it shows | Companion document |
 | --- | --- | --- |
-| Architecture and privacy | [architecture.svg](exports/architecture.svg) | `security`, feature controllers/services, repositories, `ProfileViewAssembler`, `weather`; browser/API/DB/external-service boundaries |
-| Compulsory UML use cases (#19) | [use-cases.svg](exports/use-cases.svg) | Student/Admin capabilities, public entry points and group-scoped leader constraint |
-| E2 UML use cases | [e2-use-cases.svg](exports/e2-use-cases.svg) | Accepted members, delegated hosts and buddy/group session authority; one integrated extension |
-| Identity/profile classes (#18) | [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course`, `AvailabilitySlot`; actual `@MapsId` association and multiplicities |
-| Relationship/group classes (#18) | [relationship-domain.svg](exports/relationship-domain.svg) | Separate buddy/join request state machines, connections, accepted memberships and per-group leader |
-| Matching OO design (#18) | [matching-design.svg](exports/matching-design.svg) | Five `CriterionScorer` implementations, `MatchingStrategy`, `PriorityTierStrategy`, immutable score and service coordination |
-| Values and DTO privacy (#18) | [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability`/`TimeSlot` value composition and the actual sealed `ProfileDto` implementations |
-| Matching sequence (#20) | [matching-sequence.svg](exports/matching-sequence.svg) | Invalid/auth/empty paths; source-ordered filtering, scoring, minimum score/quality, ranking, count/limit and safe DTO assembly |
-| E2 collaborators | [collaborative-study.svg](exports/collaborative-study.svg) | Principal room/session/weather classes; independent presence, shared state, dated plans and provider boundary |
+| [architecture.svg](exports/architecture.svg) | Browser, Spring layers, PostgreSQL and the external services (Google Gemini, Spotify Web API, Freesound, Open-Meteo, and the browser-loaded Spotify Web Playback SDK), with the contact-privacy boundary | [PLATFORM.md](PLATFORM.md) |
+| [use-cases.svg](exports/use-cases.svg) | UML use cases for the compulsory features: Student and Administrator actors, with group-scoped leader authority | [PLATFORM.md](PLATFORM.md) |
+| [e2-use-cases.svg](exports/e2-use-cases.svg) | UML use cases for collaborative study (E2): rooms, Pomodoro, music, dated sessions, mutual availability and weather | [TEAM_C.md](TEAM_C.md) |
+| [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course` and `AvailabilitySlot`, with the `@MapsId` association and multiplicities | [PLATFORM.md](PLATFORM.md) |
+| [relationship-domain.svg](exports/relationship-domain.svg) | `MatchRequest`, `Connection`, `StudyGroup`, `GroupMembership` and `GroupJoinRequest`, and per-group leader authority | [TEAM_C.md](TEAM_C.md) |
+| [matching-design.svg](exports/matching-design.svg) | The five `CriterionScorer` implementations, `MatchingStrategy` and the `PriorityTierStrategy` template method, `MatchScore` and the coordinating services | [TEAM_A.md](TEAM_A.md) |
+| [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability` / `TimeSlot` value composition and the sealed `ProfileDto` response shapes chosen by `ProfileViewAssembler` | [TEAM_A.md](TEAM_A.md), [TEAM_C.md](TEAM_C.md) |
+| [matching-sequence.svg](exports/matching-sequence.svg) | UML sequence for `GET /api/matches`: authentication and validation failures, scoring loop, thresholds, ordering, limit and empty result | [TEAM_A.md](TEAM_A.md) |
+| [collaborative-study.svg](exports/collaborative-study.svg) | E2 collaborators: `StudyRoomService`, `StudySessionService`, `WeatherService` and their domain and value classes | [TEAM_C.md](TEAM_C.md) |
+| [e1-explanation.svg](exports/e1-explanation.svg) | E1 match explanation: freshness check, evidence reduction, cache, quota, Gemini call and the AI / STANDARD / problem outcomes | [E1.md](E1.md) |
 
-## Editable sources and rebuild
+The architecture panel and the matching sequence carry the main narrative; the class panels
+support the object-oriented explanation. Use one panel per slide.
 
-The presentation exports are generated from one editable source,
-[`render_diagrams.py`](render_diagrams.py). Each named function defines one panel's
-labels, UML shapes and routing. The renderer uses only the Python 3 standard library;
-it adds no Java/npm dependency, remote font, service or network request. Do not edit
-generated SVGs directly.
+## Rebuilding the exports
+
+Nine panels are generated by [`render_diagrams.py`](render_diagrams.py), using only the
+Python 3 standard library. Each named function in the script defines one panel's labels,
+shapes and coordinates. Edit the script, not the generated SVGs.
 
 ```bash
-# From the repository root; any installed Python 3 is sufficient.
+# From the repository root: rewrite the nine generated SVGs in docs/diagrams/exports/
 python3 docs/diagrams/render_diagrams.py
 
-# Confirm the committed SVGs match their source, parse as XML and name real Java classes.
+# Check only: fail if any committed SVG differs from the script's output,
+# and confirm every class box names a Java class in backend/src/main/java
 python3 docs/diagrams/render_diagrams.py --check
 ```
 
-After a model/API change, update the relevant source panel and the detailed view below,
-rebuild, inspect the full SVG at a useful size, and check that labels and associations
-remain readable. The recorded source revision is a baseline identifier, not a claim that
-the diagram was automatically inferred from every Java declaration. The class-name check
-catches missing/renamed classes; it cannot establish semantic correctness or human review.
+`--check` writes nothing. It exits with status 1 and lists stale or missing files when an
+export is out of date, and raises an error if a class panel names a class that no longer
+exists. It cannot judge whether a diagram is semantically correct, so review the rendered
+panel after any model or API change.
 
-The SVGs contain native text/shapes, an accessible title/description and no embedded raster
-images. A browser can open them directly without a build. PNG/PDF copies may be exported
-from the browser or slide editor for a specific presentation size, but the SVG remains
-the controlled vector export. Verify any presentation export on the actual projector.
+`e1-explanation.svg` is not generated by the script: it is a standalone, hand-edited SVG and
+`--check` does not cover it. Edit it directly and keep it consistent with [E1.md](E1.md).
 
-## Detailed supporting views
+All SVGs use native text and shapes with an accessible title and description, and no
+embedded raster images, so a browser opens them directly. Export PNG or PDF copies from the
+browser or slide editor when a fixed size is needed.
 
-| Editable document | Contents |
+## Companion documents
+
+| Document | Contents |
 | --- | --- |
-| [PLATFORM.md](PLATFORM.md) | Whole-system capability map, layers, E2 boundary, profile/auth domain and platform workflows |
-| [TEAM_A.md](TEAM_A.md) | Full matching collaborator view, configuration ER, search sequence and versioned save/restore |
-| [TEAM_C.md](TEAM_C.md) | E2 detail, request/privacy/group/admin classes, ER, and transaction/lifecycle sequences |
+| [PLATFORM.md](PLATFORM.md) | Capability map, runtime layers, E2 and external-service boundaries, identity/profile domain, authentication and profile flows |
+| [TEAM_A.md](TEAM_A.md) | Matching classes, configuration storage, search sequence and versioned save/restore |
+| [TEAM_C.md](TEAM_C.md) | E2 room and session design, request/group/notification lifecycles, domain and ER views, transaction sequences |
+| [E1.md](E1.md) | Match explanation identities, collaborators, request sequence and privacy constraints |
 
-These Markdown files retain editable Mermaid for detailed review. Their flowcharts are
-capability maps rather than formal UML use-case diagrams. The new SVG use-case panels use
-actor associations, ellipses and an explicit system boundary. ER diagrams describe storage
-and remain separately labeled; they do not replace the OO class diagrams.
+The Markdown flowcharts are capability maps rather than formal UML use-case diagrams; the
+SVG use-case panels use actors, associations, ellipses and a system boundary. ER diagrams
+describe storage and complement, rather than replace, the class diagrams.
 
-## Notation and source constraints
+## Notation
 
-- In class panels, `+` is public, `-` private and `#` protected. Selected fields/methods
-  are shown; constructors, ordinary accessors and repeated parameter types may be omitted.
-  Record properties stand for immutable components/accessors, not mutable public fields.
-- Plain class associations carry endpoint multiplicities. A dashed hollow-triangle arrow
-  implements an interface; a solid hollow-triangle arrow extends a class. An ordinary
-  arrow indicates a dependency. The filled diamond appears only for contained time values.
-- `Student` has a one-to-one association with concrete `User`, sharing its ID via `@MapsId`.
-  There is no Student/Admin subclass tree. Group leader is the student referenced by that
-  particular group, and the leader also occupies one accepted membership.
-- `PublicProfileDto` and `ConnectedProfileDto` independently implement `ProfileDto`; one
-  does not inherit the other. Contact disclosure is a server policy, not a display rule.
-- The sequence's grouped collaborator lifeline is explicitly labeled. `break` terminates
-  the interaction when its guard is true; `loop` scores filtered candidates. Empty success
-  is HTTP 200 with an empty list, not an error. E1 must not be presented as a scorer/strategy.
-- Room state reads and existing-lease renewals recheck access without a group-row lock.
-  Admission and timer/configuration transitions use account-before-group locking.
-  Session mutations serialize on their current parent; neither room presence nor a calendar
-  snapshot is an attendance promise.
+- In class panels, `+` is public, `-` private and `#` protected. Selected fields and methods
+  are shown; constructors, ordinary accessors and repeated parameter types are omitted.
+  Record properties stand for immutable components, not mutable public fields.
+- Plain associations carry endpoint multiplicities. A dashed line with a hollow triangle
+  implements an interface; a solid line with a hollow triangle extends a class. An ordinary
+  arrow is a dependency. The filled diamond appears only for contained time values.
+- `Student` has a one-to-one association with `User`, sharing its ID via `@MapsId`. There is
+  no Student/Admin subclass tree. A group's leader is the student that group references, and
+  the leader also holds an accepted membership.
+- `PublicProfileDto` and `ConnectedProfileDto` each implement `ProfileDto`; neither inherits
+  the other. Contact disclosure is a server policy, not a display rule.
+- In the sequence panel, `break` ends the interaction when its guard holds and `loop` scores
+  each filtered candidate. An empty result is HTTP 200 with an empty list, not an error. E1
+  explanations add wording only; they are not a scorer or strategy.
+- Room state reads and lease renewals recheck access without a group-row lock; admission and
+  timer/configuration changes lock accounts before the group. Session changes serialise on
+  their parent. Neither room presence nor a calendar snapshot is an attendance promise.
 
-## Verification and remaining acceptance
+## Not yet drawn
 
-On 18 October, the presentation sources were checked against the named Java classes and
-important signatures, all nine SVGs were rebuilt and XML/class-name/source consistency
-checks passed. All nine were rasterized with an already available local SVG renderer and
-visually inspected for legible labels, unclipped bounds and routed associations.
+The following features have no diagram in this set yet:
 
-The remaining gates for issues #18–20 are a cross-team source walkthrough, confirmation
-that both authors can explain the design, selection into the editable deck, and physical
-projector readability. No instructor approval, exact LMS deadline, deck submission or
-submission receipt is established by these files.
+- Quizzes (`com.studybuddy.quiz`)
+- Study plans (`com.studybuddy.studyplan`)
+- Pixel, the study assistant (`com.studybuddy.assistant`)
+
+These belong to Team B. They appear in the architecture panel only as uses of Google Gemini.

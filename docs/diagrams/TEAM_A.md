@@ -1,14 +1,12 @@
 # Team A diagrams
 
-Matching algorithm, discovery API/page and admin configuration for issues
-[#1](https://github.com/aryan12singh/study-buddy-matcher/issues/1),
-[#2](https://github.com/aryan12singh/study-buddy-matcher/issues/2),
-[#3](https://github.com/aryan12singh/study-buddy-matcher/issues/3) and
-[#4](https://github.com/aryan12singh/study-buddy-matcher/issues/4).
+Matching algorithm, discovery API and page, and admin configuration.
 These diagrams describe the implemented matching boundary. Team B's profile/security/data
 and Team C's request/privacy collaborators are dependencies, not duplicated matching logic.
 Use [TEAM_C.md](TEAM_C.md) for the request/contact-disclosure and account-lifecycle diagrams.
-Presentation exports and source/notation guidance are in the [diagram index](README.md).
+Presentation panels: [matching design](exports/matching-design.svg),
+[values and privacy](exports/values-and-privacy.svg) and
+[matching sequence](exports/matching-sequence.svg); notation is in the [diagram index](README.md).
 
 ## Use cases and permissions
 
@@ -214,7 +212,7 @@ classDiagram
 ```
 
 Scorers are pure collaborators: no repository or controller access. `WeeklyAvailability`
-canonicalizes intervals; `MatchScore`, `MatchingWeights` and interval records protect value
+canonicalises intervals; `MatchScore`, `MatchingWeights` and interval records protect value
 state. Strategy implementations encapsulate ranking; the two priority strategies share their
 banded ranking through the `PriorityTierStrategy` template method and only name their criterion
 and banded value. `MatchExplainer` keeps wording out of scoring and sees only the score, never a
@@ -278,7 +276,7 @@ sequenceDiagram
     Config->>DB: read version, strategy, enabled criteria, weights and threshold
     Config-->>Service: one immutable settings snapshot
     Service->>DB: active candidates, saved availability and relationships
-    Service->>Service: exclude self/connections; canonicalize weekly slots
+    Service->>Service: exclude self/connections; canonicalise weekly slots
     loop eligible candidate matching filters
         Service->>Scoring: score enabled criteria with configured weights
         Scoring-->>Service: immutable score, quality, unknown criteria and shared session hours
@@ -344,6 +342,5 @@ sequenceDiagram
 
 A failure rolls back the whole config mutation. Concurrent first saves also meet the same
 singleton lock; stale edits cannot overwrite another administrator's changes. Stored
-settings/version survive restart. The E1 provider path on PR #61 adds wording after
-deterministic matching; that path is outside these baseline/E2 views of `9592fd2`. It must not
-supply ranks or compatibility numbers.
+settings/version survive restart. The E1 match explanation ([E1.md](E1.md)) adds wording after
+deterministic matching; it never supplies ranks or compatibility numbers.
