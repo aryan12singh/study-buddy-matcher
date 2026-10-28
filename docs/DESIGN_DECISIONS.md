@@ -261,8 +261,8 @@ Study plans screen uses to prefill its create form.
 
 **What it does.** Quiz Buddy (`QuizBotLauncher`, `QuizBotWindow`) writes a ten-question
 multiple-choice quiz from uploaded or pasted notes. A personal quiz is the student's own practice,
-from the personal Study Room. A group quiz is started in a group's study room (the API also accepts an
-optional session ID); members take it, see a leaderboard and review answers after it closes.
+from the personal Study Room. A group quiz is started in a group's study room and may be for one of the group's upcoming
+sessions; members take it, see a leaderboard and review answers after it closes.
 
 | Decision | Choice and reason |
 | --- | --- |
@@ -274,6 +274,7 @@ optional session ID); members take it, see a leaderboard and review answers afte
 | Attempts | Starting records the time; asking again returns the same attempt, so a reload does not reset the clock. The member's row is locked so a double click cannot start two |
 | Marking | `QuizMarker` requires every question answered exactly once with a valid option; anything else is invalid input, so skipping cannot save time |
 | Leaderboard | `QuizLeaderboard` ranks by score, then less time, then earlier submission, then student ID, so ranks are distinct and stable between polls. A member who leaves, is removed or is deactivated keeps their attempt but drops off |
+| Quiz for a session | When the group has upcoming scheduled sessions, Quiz Buddy asks which one the quiz is for, with one button per session and "Not for a session"; the quiz list then names it. The question is optional and is skipped when the group has none or the list fails to load, so it never blocks a quiz. The server accepts only a scheduled session of the same group |
 | Session cancelled during the AI call | The quiz is saved without a session rather than failing |
 
 **Privacy.** Material is sent to Gemini for that one request and never stored; the quiz keeps only

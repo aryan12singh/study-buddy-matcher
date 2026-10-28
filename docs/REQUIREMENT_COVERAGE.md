@@ -200,6 +200,7 @@ and deletion) are recorded in the
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
 | Personal and group quizzes from notes | `QuizController`, `QuizCreationService`, `QuizWriter`, `QuizPromptBuilder`; `QuizBotLauncher`, `QuizBotWindow`, `QuizBotChat` | `QuizCreationServiceTest`, `QuizPromptBuilderTest`, `QuizHttpTest`, `QuizBotWindow.test.tsx` |
+| Quiz for one of the group's upcoming sessions | `QuizService`, `Quiz`; `QuizBotChat`, `QuizBotWindow` | `QuizHttpTest`, `QuizBotWindow.test.tsx` |
 | Reply validation | `QuizOutputValidator` | `QuizOutputValidatorTest` |
 | Who may start, take, close and review | `QuizAccess`, `QuizService` | `QuizAccessTest`, `QuizHttpTest` |
 | Timed attempts and marking | `Quiz`, `QuizAttempt`, `QuizMarker`; `TakeQuizDialog` | `QuizTest`, `QuizAttemptTest`, `QuizMarkerTest` |

@@ -313,8 +313,8 @@ separate Google project and daily allowance from E1's match explanations. With A
 or the allowance spent, each returns 503 `AI_UNAVAILABLE` and the screen offers the manual path.
 
 **Quizzes.** A group quiz is started by the leader or the room's host or co-host from uploaded
-PDF, `.txt` or `.md` material or pasted notes; accepted members take it while it is open and
-see a leaderboard. A personal quiz is one student's own practice. Every quiz has exactly
+PDF, `.txt` or `.md` material or pasted notes, optionally for one of the group's upcoming
+sessions; accepted members take it while it is open and see a leaderboard. A personal quiz is one student's own practice. Every quiz has exactly
 `quiz.question-count` questions, and Gemini's reply is rejected unless it has that shape.
 
 **Study plans.** A student gives a course, weekly hours, an optional exam date and their
