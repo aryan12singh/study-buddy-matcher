@@ -152,7 +152,11 @@ What it does, in one transaction under the same advisory lock:
   validation applies;
 - only when none of the demo students existed beforehand, replays the demo history through
   the real services: match requests, connections, four groups and one deactivation, with
-  notifications produced as in live use.
+  notifications produced as in live use. It then schedules the presenter's group and buddy
+  sessions at their time block's next occurrence, starts a group quiz and a practice quiz and
+  has members take them, and creates a study plan with some topics ticked off. The quiz
+  questions and the roadmap are written in advance in the data file and pass the same
+  validators as Gemini's replies, so no AI call is made.
 
 Existing courses, profiles and password hashes are left as they are. The seed never resets,
 repairs or reactivates existing data. It runs after startup, so startup log messages appear
@@ -168,7 +172,8 @@ depending on it, so the seed can rebuild the demo from scratch:
   availability; groups led by demo students with their memberships, applications, slots and
   goals; requests and connections involving a demo student; study sessions under those
   groups and connections; notifications sent to demo students or pointing at a removed
-  student, group, request or session.
+  student, group, request or session. Quizzes, quiz attempts, study plans and earned badges
+  go with their student or group through `ON DELETE CASCADE`.
 - **Keeps:** courses, matching configuration and every non-demo account. A non-demo account
   loses only its own links to demo accounts.
 
