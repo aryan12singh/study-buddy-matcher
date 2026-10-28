@@ -47,7 +47,7 @@ export function startSteps(studentId: number, sources: HelpProgress, now: number
     },
     {
       key: 'availability', title: 'Set your weekly availability',
-      detail: 'Mark the hours you can usually study, in Singapore time. Shared hours contribute to matching and session suggestions.',
+      detail: 'Mark the hours you can usually study. Shared hours contribute to matching and session suggestions.',
       action: 'Edit weekly availability', to: `/students/${studentId}/edit?tab=availability`,
       ...checked(profile, data => profileProgress(data).steps.find(step => step.key === 'availability')!.done, 'Saved in your profile', 'Still needed in your profile')
     },

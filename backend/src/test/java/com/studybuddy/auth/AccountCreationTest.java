@@ -2,6 +2,7 @@ package com.studybuddy.auth;
 
 import com.studybuddy.common.error.ApiException;
 import com.studybuddy.common.error.InvalidInputException;
+import com.studybuddy.student.ProfileProperties;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
@@ -25,7 +26,7 @@ class AccountCreationTest {
     @Mock private StudentRepository students;
     @Mock private PasswordEncoder passwords;
     private AccountCreation creation;
-    @BeforeEach void setUp() { creation = new AccountCreation(users,students,passwords); }
+    @BeforeEach void setUp() { creation = new AccountCreation(users,students,passwords,new ProfileProperties(5, 8, 6)); }
     @Test void creationNormalizesEmailHashesPasswordAndBuildsSharedIdentityProfile() {
         when(passwords.encode("runtime-password")).thenReturn("encoded-test-value");
         when(users.saveAndFlush(any(User.class))).thenAnswer(call -> {

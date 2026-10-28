@@ -3,6 +3,8 @@ package com.studybuddy.auth;
 import com.studybuddy.common.InputRules;
 import com.studybuddy.common.error.ApiException;
 import com.studybuddy.common.error.InvalidInputException;
+import com.studybuddy.student.ProfileProperties;
+import com.studybuddy.student.SmuSchool;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.user.Role;
@@ -18,11 +20,14 @@ public class AccountCreation {
     private final UserRepository users;
     private final StudentRepository students;
     private final PasswordEncoder passwords;
+    private final ProfileProperties profileLimits;
 
-    public AccountCreation(UserRepository users, StudentRepository students, PasswordEncoder passwords) {
+    public AccountCreation(UserRepository users, StudentRepository students, PasswordEncoder passwords,
+        ProfileProperties profileLimits) {
         this.users = users;
         this.students = students;
         this.passwords = passwords;
+        this.profileLimits = profileLimits;
     }
 
     public User create(String email, String password, Role role, String name, String school,
@@ -37,10 +42,10 @@ public class AccountCreation {
         }
         if (role == Role.STUDENT) {
             name = InputRules.required(name, "Name", InputRules.TEXT_LIMIT);
-            school = InputRules.required(school, "School", InputRules.TEXT_LIMIT);
+            school = SmuSchool.code(InputRules.required(school, "School", InputRules.TEXT_LIMIT));
             programme = InputRules.required(programme, "Programme", InputRules.TEXT_LIMIT);
             contactNumber = InputRules.contactNumber(contactNumber);
-            InputRules.year(yearOfStudy);
+            InputRules.year(yearOfStudy, profileLimits.yearOfStudyMax());
         }
         User user = users.saveAndFlush(new User(identity, passwords.encode(password), role));
         if (role == Role.STUDENT) {

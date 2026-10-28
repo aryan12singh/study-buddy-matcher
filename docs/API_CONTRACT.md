@@ -1,7 +1,8 @@
 # API contract
 
-This contract covers the integrated compulsory Team A/B/C application and the DTO/input
-shapes used by the React frontend. Selected E1/E2 extensions are separate work.
+This contract covers every endpoint of the application: the compulsory Team A/B/C features,
+the selected E1/E2 extensions and the AI study assistant features, with the DTO/input shapes
+used by the React frontend.
 
 Base path `/api`; JSON requests/responses. Protected requests use
 `Authorization: Bearer <token>`. Actor, student and administrator identity always comes from
@@ -36,13 +37,14 @@ request, connection, group and notification responses.
 
 Contact input accepts local Singapore 8-digit numbers beginning 6/8/9, or `+` followed by
 7–15 international digits beginning 1–9. ASCII whitespace, hyphens, parentheses and dots are removed;
-local input gains `+65`. Invalid replacements return 400 with a `contactNumber` field error.
+local input gains `+65`. A number given with `+65` must still be a full Singapore number (8 digits
+beginning 6/8/9). Invalid replacements return 400 with a `contactNumber` field error.
 The rule applies to registration, own-profile replacement and admin creation/replacement;
 omitted admin contact preserves the stored value. Existing values are not bulk rewritten,
 and administrator responses still omit contacts. This is format, not reachability, validation.
 
 The team interprets learning style through the existing defined preferences; no separate
-field is part of this baseline contract. This records the team decision, not professor confirmation.
+field is part of this baseline contract. This is a team decision.
 
 JWTs include account ID, role, expiry and account token version. Every protected request checks
 that the account still exists, is active, and matches the token role/version. Mutation services
@@ -102,7 +104,10 @@ student only. Account role selection belongs to the administrator creation endpo
 | GET | `/api/achievements/me` | none | 200 `AchievementsDto` | Student |
 
 `RegisterRequest` requires `email`, `password`, `name`, `school`, `programme`, `yearOfStudy`
-(integer >= 1) and `contactNumber`. Identity/profile strings are at most 255 characters.
+(integer from 1 to `app.profile.year-of-study-max`, default 6) and `contactNumber`. The app is for
+SMU students, so `school` is one of SMU's school codes (`SOA`, `LKCSB`, `SOE`, `SCIS`, `YPHSL`, `SOSS`, `CIS`;
+any case, stored upper case); anything else returns 400 with a `school` field error. The same school
+and year rules apply to own-profile updates and admin creation/edits. Identity/profile strings are at most 255 characters.
 Contact numbers are required at creation and follow the accepted format/normalization contract above.
 Registration saves the identity and `@MapsId` student profile atomically and signs in the account.
 
@@ -349,7 +354,7 @@ has no authority. Repeated decisions are 409. Editing, approving, removing and r
 blocked on closed groups. Closure rejects every pending application once and notifies current
 members other than the leader. The leader cannot be removed.
 
-## Private study room (E2 #16)
+## Private study room (E2)
 
 Accepted active student members of an open group can read its room. Pending
 applicants, non-members and admins cannot enter. A GET returns default state
@@ -423,10 +428,10 @@ members [{studentId, name}] (active accepted members for role selectors)
 The browser renders elapsed time from each server snapshot and reconciles on the
 server-provided poll interval (default two seconds). Rooms have no shared audio: music
 and ambient sounds come from each study room's Music settings tab, play only in each student's
-own browser and are not sent to the room API. The former shared audio endpoint was
-removed on 24 October; its `study_rooms` columns remain, unused, until a later migration.
+own browser and are not sent to the room API. The former shared audio endpoint has
+been removed; its `study_rooms` columns remain, unused, until a later migration.
 
-## Dated study sessions and calendar (E2 #16)
+## Dated study sessions and calendar (E2)
 
 Session permissions are checked against the current parent relationship on every
 list, detail, change, availability and export. Group sessions require an active
@@ -528,9 +533,9 @@ The file is a snapshot, with no OAuth, subscription or two-way sync. Clients may
 duplicate events or ignore changes/cancellations when re-imported; reducing a
 series count does not delete previously imported extra occurrences. Ending the
 parent relationship blocks further export and never removes an offline calendar
-copy. Client-side whole-series editing is not promised. Real Google Calendar,
-Apple Calendar and Outlook import acceptance is recorded separately in
-[E2_TESTING.md](E2_TESTING.md), never inferred from parser tests alone.
+copy. Client-side whole-series editing is not promised. Parser tests check the file format;
+import into Google Calendar, Apple Calendar and Outlook is a manual check listed in
+[TESTING.md](TESTING.md).
 
 ## Optional campus weather and local themes
 
@@ -1013,13 +1018,12 @@ retain their normal error behavior. The provider wait holds no matching database
 
 Quota is a per-process daily budget, reset on restart; it is not a durable multi-instance
 billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
-duplicate cache rows only. See [E1 testing](E1_TESTING.md) for evidence and remaining acceptance.
+duplicate cache rows only. Tests are listed in [TESTING.md](TESTING.md).
 
 ## Study plans (AI study assistant)
 
-Proposed bonus extension on `feat/team-b/study-roadmap`; not part of the agreed selected extras
-until the team accepts it. Student only. This section covers personal plans; session plans for
-a group or buddy session are added with their own endpoints.
+Student only. These endpoints create and manage personal plans. `StudyPlanScope` also defines
+`SESSION` plans for a group or buddy session, which have no endpoint yet.
 
 | Method | Path | Request | Response | Who |
 | --- | --- | --- | --- | --- |
@@ -1067,6 +1071,123 @@ Errors, in the order they are checked, so a bad request never spends the student
 The plan is created in three steps: a short read that checks the request, the Gemini call, and
 a short write that checks the student is still active before saving. No database transaction or
 account lock is held while Gemini answers.
+
+## Quizzes (AI study assistant)
+
+Student only. A quiz is either for a group (`scope: GROUP`) or one student's
+own practice (`scope: PERSONAL`). Accepted members of an open group see and take its quizzes; the
+group leader and the study room's host and co-host also start and close them. A personal quiz is
+seen, taken and closed by its owner alone, and closes as soon as they submit it.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/groups/{groupId}/quizzes` | `multipart/form-data`: `StartQuizInput` fields plus 0 to `max-files` parts named `files` | 201 `QuizDto` | Leader, host, co-host |
+| GET | `/api/groups/{groupId}/quizzes` | none | 200 `QuizDto[]`, newest first | Member |
+| POST | `/api/quizzes` | `multipart/form-data`: `PersonalQuizInput` fields plus 0 to `max-files` parts named `files` | 201 `QuizDto` | Student |
+| GET | `/api/quizzes` | none | 200 `QuizDto[]`, own personal quizzes newest first | Student |
+| GET | `/api/quizzes/{quizId}` | none | 200 `QuizDto` | Member or owner |
+| POST | `/api/quizzes/{quizId}/start` | none | 200 `QuizQuestionsDto`; records the start time, and repeat calls return the same attempt | Member or owner |
+| POST | `/api/quizzes/{quizId}/attempts` | `QuizSubmissionInput` | 201 `AttemptResultDto` | Member or owner who started |
+| GET | `/api/quizzes/{quizId}/leaderboard` | none | 200 `LeaderboardDto` | Member or owner |
+| POST | `/api/quizzes/{quizId}/close` | none | 200 `QuizDto` | Leader, host, co-host, or owner |
+| GET | `/api/quizzes/{quizId}/review` | none | 200 `QuizReviewDto` once closed | Member or owner |
+
+```text
+StartQuizInput      (multipart form fields) notesText?, focus? (up to max-focus-characters), sessionId? (a scheduled session of this group)
+PersonalQuizInput   (multipart form fields) courseId, notesText?, focus? (up to max-focus-characters)
+QuizSubmissionInput { answers: [{ questionId, optionIndex: 0-3 }] }   // every question exactly once
+QuizDto
+  { id, scope: GROUP/PERSONAL, course: CourseDto, groupId|null, sessionId|null, title,
+    status: OPEN/CLOSED, createdBy, createdAt, closesAt|null,
+    closedAt|null, questionCount, submittedCount, myAttempt: NOT_STARTED/STARTED/SUBMITTED, canHost }
+QuizQuestionsDto    { quizId, startedAt, closesAt|null, questions: [{ id, prompt, options[4] }] }   // no answers
+AttemptResultDto    { score, total, timeTakenSeconds, rank }
+LeaderboardDto
+  { quizId, status, submittedCount, notSubmittedCount,
+    entries: [{ rank, studentId, displayName, score, total, timeTakenSeconds, me }] }
+QuizReviewDto
+  { quizId, score|null, total|null,
+    questions: [{ id, prompt, options[4], correctOption, chosenOption|null, explanation }] }
+```
+
+The material is one or more `files` (PDF, `.txt` or `.md`) or pasted `notesText`, never both,
+checked exactly as for study plans and within the same `study-plan` upload limits. PDFs are
+attached to the Gemini request and text goes into the prompt; the material is used for this one
+request and never stored. `title` is the `focus` if one was given, otherwise the files' names, or
+"Pasted notes".
+
+A quiz has `quiz.question-count` questions. A group quiz stays open for `quiz.open-duration`, or
+until a host closes it. A personal quiz has no time limit (`closesAt` is null): it stays open until
+its student submits it, and then closes. `status` already reads an open quiz past `closesAt` as `CLOSED`. The correct
+options and explanations stay on the server until the quiz closes. The leaderboard ranks current
+members who have submitted by score, then time taken, then submit time, and holds display names
+and scores only. A member who leaves or is deactivated drops off it but keeps their attempt.
+
+Errors:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 400 | `INVALID_INPUT` | No material, or both files and notes; too many files; an empty file; notes or focus too long; an unknown `courseId`; a `sessionId` that is not a scheduled session of this group; answers missing, repeated, for another quiz's question or outside 0-3 |
+| 413 | `FILE_TOO_LARGE` | Files together over `max-upload-size`, or text files over `max-text-file-characters` |
+| 415 | `UNSUPPORTED_FILE_TYPE` | A file other than PDF, `.txt` or `.md`, or whose contents do not match its extension |
+| 403 | `FORBIDDEN` | Listing a group's quizzes as a non-member; starting or closing a quiz as a member who is not the leader, host or co-host |
+| 404 | `NOT_FOUND` | A quiz that does not exist, belongs to a group the student is not a member of, or is another student's personal quiz |
+| 409 | `QUIZ_CLOSED` | Starting or submitting after the quiz closed |
+| 409 | `ALREADY_SUBMITTED` | Starting or submitting again after submitting |
+| 409 | `QUIZ_NOT_STARTED` | Submitting without starting first |
+| 409 | `QUIZ_NOT_CLOSED` | Asking for the review while the quiz is open |
+| 503 | `AI_UNAVAILABLE` | The assistant is off, over its allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+
+Starting a quiz takes a short read that checks the request, the Gemini call, and a short write that
+checks the actor may still host (or, for a personal quiz, is still active). No database transaction
+is held while Gemini answers.
+
+## Study assistant (AI study assistant)
+
+Student only. Shown to students as
+**Pixel**: one message box, opened from a button fixed to the bottom-right corner of every student
+page. Gemini only reads what
+a message asks for; the answer comes from the app's existing services, read-only. Each message is
+handled on its own, with no memory of earlier ones.
+
+| Method | Path | Request | Response | Who |
+| --- | --- | --- | --- | --- |
+| POST | `/api/assistant/messages` | `{ "message": "..." }` (1 to `chat.max-message-characters`) | 200 `AssistantReplyDto` | Student |
+
+```text
+AssistantReplyDto
+  { intent: FIND_BUDDIES/WHEN_TO_MEET/QUIZ_ME/PLAN_STUDY/MY_TO_DO/NAVIGATE/UNKNOWN, text, filters[],
+    matches: MatchResultDto[], slots: SharedSlotDto[], todos: [{ text, label, link }],
+    action: { kind: OPEN_PAGE/OPEN_QUIZ_BUDDY, label, link|null, prefill: { name: value } } | null }
+```
+
+| Intent | What answers it |
+| --- | --- |
+| `FIND_BUDDIES` | `MatchService.search` with the stated course, goal, mode, group size and shared hours, top `chat.matches-shown`. Needs a course or goal, so it asks for one otherwise. Time of day is not a search filter; it only sorts by shared hours |
+| `WHEN_TO_MEET` | The student's open group named (or their only one), then `StudySessionService.groupAvailability`, keeping slots at least as long as the meeting |
+| `QUIZ_ME` | Opens Quiz Buddy; `prefill` carries `topic` and `courseId` |
+| `PLAN_STUDY` | Links to the Study plans page (see below) |
+| `MY_TO_DO` | Pending incoming buddy requests, pending applications to groups the student leads, open quizzes they have not taken in their groups, sessions starting within 7 days and unread notifications, each as a `todos` item linking to the page that handles it |
+| `NAVIGATE` | One page from the assistant's fixed list (`AppPage`: home, find buddies, buddy requests, connections, study groups, create group, sessions, study room, achievements, notifications, profile, edit profile, help) with what it is for and a link. Gemini only picks the page name |
+| `UNKNOWN` | A short message listing what the assistant can do |
+
+`text` is written from templates, never by Gemini. Matches are the same privacy-safe cards as Find
+buddies, with no email or contact number, and only the student's own message goes to Gemini.
+
+**Study plans page link.** `PLAN_STUDY` links to `/study-plan` with the details the student stated
+as optional query parameters: `courseId`, `examDate` (`yyyy-MM-dd`) and `hoursPerWeek`, for
+example `/study-plan?courseId=4&examDate=2026-11-20&hoursPerWeek=6`. The Study plans screen
+reads these and opens its create form with them filled in.
+
+**AI use.** Clear messages, including every suggested question, greetings, "what do I need to
+do?", "how do I …?" and plain buddy searches, are read by rules (`QuickIntentReader`) with no AI
+call. Anything else goes to the chat's own lighter model (`chat.model`) with its own daily
+allowance (`chat.daily-call-limit`, `chat.daily-call-limit-per-student`), so chatting never spends
+the quiz and study plan allowance.
+
+Errors: 400 `INVALID_INPUT` for a blank or too long message (checked before Gemini is asked); 503
+`AI_UNAVAILABLE` when the assistant is off, over the chat allowance, rate limited or timed out, or
+the reply failed the checks.
 
 ## UI use of the existing contract
 

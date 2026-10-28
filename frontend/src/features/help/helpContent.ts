@@ -9,16 +9,16 @@ export const EXPLAINERS: Explainer[] = [
     key: 'matching', title: 'Matching', icon: 'search',
     summary: 'Matching calculates compatibility from saved profiles and your chosen course or study goal. The ranking is deterministic.',
     points: [
-      'Five criteria: course, shared weekly availability, study mode, study goals and group size.',
-      'An administrator chooses enabled criteria, weights, a minimum score and the ranking strategy. Each card shows the breakdown.',
-      'Your filters narrow the search without changing your saved profile or the administrator’s settings. AI never sets the score or ranking.'
+      'Criteria: course, shared weekly availability, study mode, study goals and group size.',
+      'An administrator selects the criteria to enable, between weights, a minimum score and the ranking strategy. Each card will reflect the criteria breakdown.',
+      'The selected filters narrow the search without changing the saved profile or the administrator’s settings.'
     ], to: '/find-buddies', action: 'Compare study buddies'
   },
   {
     key: 'ai', title: 'AI assistance and its limits', icon: 'search',
-    summary: 'Explain this match can use Gemini to word an explanation of an existing score. It is optional assistance.',
+    summary: 'The "Explain this match" feature uses AI to word an explanation of an existing score.',
     points: [
-      'AI wording is labelled and may be inaccurate. Check it against the numeric breakdown and shared hours; output checks cannot prove every statement.',
+      'AI wording is labelled and may be inaccurate. Check it against the numeric breakdown and shared hours.',
       'The provider receives anonymous score, course and study-preference evidence. Names, contact details and exact weekly schedules are excluded.',
       'When AI is disabled, limited or unavailable, a labelled standard explanation is used. If the match changed, refresh it before asking again.'
     ], to: '/find-buddies', action: 'See match scores and explanations'
@@ -34,7 +34,7 @@ export const EXPLAINERS: Explainer[] = [
   },
   {
     key: 'groups', title: 'Study groups', icon: 'groups',
-    summary: 'Groups gather several students around one course, led by the student who created them.',
+    summary: 'Groups gather several students taking a course, led by the student who created it.',
     points: [
       'Browse open groups and apply with an optional message.',
       'The leader approves or declines applications, and groups have a maximum size.',
@@ -43,27 +43,26 @@ export const EXPLAINERS: Explainer[] = [
   },
   {
     key: 'rooms', title: 'Study rooms', icon: 'home',
-    summary: 'Each open group has a private room for its accepted members to study together.',
+    summary: 'Each open group hosts a private room for its accepted members to study together.',
     points: [
-      'Open a group’s room preview and choose Join study room explicitly. Opening a group or session link does not join you.',
-      'The shared Pomodoro keeps running through refreshes. The leader and authorized hosts control it; music and ambience need your opt-in, with volume local to your device.',
-      'Weather scenes can use campus conditions, with selectable scenery when weather is unavailable. Leaving the group or closing it ends room access.'
+      'Open a group’s room preview and choose Join study room explicitly. Opening a group or session link does not automatically add you to the private room.',
+      'Weather scenes can use campus conditions, with selectable scenery when weather is unavailable.', 'Leaving the group or closing it ends room access.'
     ], to: '/groups?view=mine', action: 'Open your groups to find a room'
   },
   {
     key: 'sessions', title: 'Study sessions', icon: 'clock',
     summary: 'Plan one-off or weekly sessions with a group or a connected buddy.',
     points: [
-      'Leaders plan from their group’s dated agenda; buddies use Plan study sessions under Connected buddies. Suggestions use shared availability, and manual times are allowed.',
-      'Plans appear on Home and Your upcoming sessions. A group session can link to its private room; membership and explicit joining are still required.',
-      'Download a saved session as a calendar file (.ics). Re-export after edits or cancellation: downloads do not sync or prove attendance.'
+      'Leaders plan sessions from their group’s dated agenda, while connected buddies can do so under Connected buddies. Suggestions use shared availability, and manual time inputs are allowed.',
+      'Plans appear on Home and Your upcoming sessions.', 'A group session can link to its own private room, where membership and explicit joining are still required.',
+      'Download a saved session as a calendar file (.ics) to add it to your calendar. Note that downloads do not sync or prove attendance.'
     ], to: '/sessions', action: 'View your dated study plans'
   },
   {
     key: 'notifications', title: 'Notifications', icon: 'notifications',
     summary: 'Updates about your requests, groups, memberships and sessions collect in one place.',
     points: [
-      'The navigation shows how many you have not read yet.',
+      'The navigation reflects the number of unread messages.',
       'Each notification links to the request, group or session it is about.'
     ], to: '/notifications', action: 'Read your notifications'
   }
@@ -72,7 +71,7 @@ export const EXPLAINERS: Explainer[] = [
 export const FAQS: Faq[] = [
   {
     id: 'contact', question: 'When can other students see my contact number?',
-    answer: 'Only after a match request between you is accepted. Being in the same study group or room does not reveal it, and neither does an administrator viewing your account. If either of you ends the connection, future profile responses hide it again; information someone already saved cannot be recalled.'
+    answer: 'Only after a match request between you is accepted. Being in the same study group or room does not reveal it, and neither does an administrator viewing your account. If either of you ends the connection, future profile responses hide it again. Note that information someone already saved cannot be recalled.'
   },
   {
     id: 'score', question: 'How is my match score worked out?',
@@ -127,8 +126,8 @@ export const FAQS: Faq[] = [
     answer: 'Profile, request, open-group membership and dated-session checks use current records. A past declined request, closed group or ended session may no longer satisfy a current check. Loading and failed checks are labelled separately. Searches, room visits, calendar downloads and attendance have no completion history in this guide, so they are never marked done from another action.'
   },
   {
-    id: 'availability-time', question: 'Which time zone is my availability in?',
-    answer: 'Weekly availability is recorded in Singapore time. Slots that only touch end to start, such as 09:00–10:00 and 10:00–11:00, do not count as shared time.'
+    id: 'availability-time', question: 'Do touching time slots count as shared time?',
+    answer: 'No. Slots that only touch end to start, such as 09:00–10:00 and 10:00–11:00, do not count as shared time.'
   }
 ]
 

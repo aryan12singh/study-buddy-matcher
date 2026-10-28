@@ -131,6 +131,7 @@ export default function AdminUserFormPage() {
             student={role === 'STUDENT'}
             creating={!id}
             disabled={action.pending}
+            passwordToggle
           />
           {role === 'STUDENT' && (
             <p className="privacy-note">Contact numbers are accepted as input and withheld from all admin responses.</p>

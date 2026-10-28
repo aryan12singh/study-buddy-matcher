@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @Component
 public class StudyPlanPromptBuilder {
-    public static final String PROMPT_VERSION = "v1";
+    public static final String PROMPT_VERSION = "v2";
     private static final String TEMPLATE_PATH = "prompts/study-plan-" + PROMPT_VERSION + ".txt";
     private static final DateTimeFormatter BLOCK_DATE = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ENGLISH);
     /** A marker inside the student's text or file names would end the material block early. */

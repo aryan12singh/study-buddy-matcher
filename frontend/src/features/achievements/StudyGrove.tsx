@@ -46,7 +46,7 @@ export default function StudyGrove({ streak }: { streak: Streak }) {
     <section className="grove" aria-labelledby="grove-title">
       <div className="grove-heading">
         <h2 id="grove-title">Planned-session grove</h2>
-        <p>One tree per consecutive week with an eligible planned session, with weeks starting Monday in {streak.weekZone}. A session later this week counts now; future weeks wait until they begin.</p>
+        <p>One tree per consecutive week with an eligible planned session, with weeks starting on Monday. A session later this week counts now; future weeks wait until they begin.</p>
       </div>
       {weeks.length === 0 ? (
         <div className="grove-empty">

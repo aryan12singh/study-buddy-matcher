@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ProfileServiceTest {
     private static final long STUDENT_ID = 4L;
-    private final ProfileProperties properties = new ProfileProperties(5, 8);
+    private final ProfileProperties properties = new ProfileProperties(5, 8, 6);
     private final Course oop = course(1L, "IS442");
     private final Course spm = course(2L, "IS212");
     private final Course bpas = course(3L, "IS210");

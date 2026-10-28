@@ -139,7 +139,6 @@ export default function AdminUsersPage() {
                   </td>
                   <td role="cell" data-label="Last successful login">
                     {formatTimestamp(user.lastLoginAt)}
-                    {user.lastLoginAt && ' (SGT)'}
                   </td>
                   <td role="cell" data-label="Actions">
                     <div className="actions">

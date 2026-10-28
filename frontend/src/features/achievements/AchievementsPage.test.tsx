@@ -29,12 +29,12 @@ describe('achievements page', () => {
     expect(api.get).toHaveBeenCalledWith('/achievements/me', expect.objectContaining({ signal: expect.any(AbortSignal) }))
   })
 
-  it('explains current records, planning, timezone and a session later this week honestly', async () => {
+  it('explains current records, planning and a session later this week honestly', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response(achievementStanding))
     renderPage(<AchievementsPage />)
     await screen.findByRole('heading', { name: 'Current standing' })
     expect(screen.getByText(/Badge tiers you reach are kept, so your level never goes down/)).toBeInTheDocument()
-    expect(screen.getByText(/Monday in Asia\/Singapore/)).toHaveTextContent('A session later this week counts now; future weeks wait until they begin.')
+    expect(screen.getByText(/weeks starting on Monday/)).toHaveTextContent('A session later this week counts now; future weeks wait until they begin.')
     fireEvent.click(screen.getByText('How these numbers work'))
     expect(screen.getByText(/from your current connection or membership start date onward/)).toBeVisible()
     expect(screen.getByText(/does not record attendance, completed focus time or study quality/)).toBeVisible()

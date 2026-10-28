@@ -22,8 +22,8 @@ export default function SessionList({ sessions, upcomingOnly = false, limit }: {
           <div className="tag-list"><Badge tone={nextSessionOccurrence(session, now) ? 'good' : 'neutral'}>{sessionStatusLabel(session, now)}</Badge>
             <Badge>{session.scope === 'GROUP' ? 'Group' : 'Buddy'}</Badge>
             {session.occurrenceCount > 1 && <Badge>{session.occurrenceCount} weekly occurrences</Badge>}</div>
-          <p>{occurrenceLabel(displayedOccurrence(session, now), session.timeZone)}</p>
-          <p className="row-meta">{session.timeZone}{session.location ? ` · ${session.location}` : ''}</p>
+          <p>{occurrenceLabel(displayedOccurrence(session, now))}</p>
+          {session.location && <p className="row-meta">{session.location}</p>}
         </div>
         <div className="actions"><Link className="retro-button" to={`/sessions/${session.id}`}>View session</Link>
           {session.scope === 'GROUP' && <SessionRoomLink session={session} now={now} />}</div>

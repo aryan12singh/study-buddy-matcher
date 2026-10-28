@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1640" viewBox="0 0 1800 1640" role="img" aria-labelledby="title description">
 <title id="title">E1: a current match, explained on demand</title>
-<desc id="description">Standalone editable SVG source for E1 on PR 61, checked against base 5377900 plus the 18 October 2026 evaluation, cache and lifecycle corrections. Numbered flow follows MatchExplanationService.explain. Supporting source trace and Mermaid diagrams: docs/diagrams/E1.md. The diagram does not assert successful live generation or acceptance.</desc>
+<desc id="description">Standalone editable SVG for the E1 match explanation. Numbered flow follows MatchExplanationService.explain. Supporting Mermaid diagrams: docs/diagrams/E1.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
@@ -58,7 +58,6 @@
 <text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">E1: a current match, explained on demand</text>
 <text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Scores and ranks remain deterministic. Freshness is checked before optional cache, quota or provider work.</text>
 <text x="1754" y="1613" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/e1-explanation.svg</text>
-<text x="46" y="1613" font-size="15" fill="#506474" font-weight="400" text-anchor="start">PR #61 · base 5377900 + 18 October 2026 corrections · see E1_TESTING.md for observed acceptance</text>
 <text x="67" y="196" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">BROWSER  /  ONE CARD</text>
 <text x="537" y="196" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">SPRING API  /  MatchExplanationService.explain</text>
 <text x="1347" y="196" font-size="18" fill="#176c63" font-weight="700" text-anchor="start">DATA AND EXTERNAL BOUNDARIES</text>
@@ -167,5 +166,5 @@
 <text x="1228" y="1441" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">400 for malformed/missing evaluation identity.</text>
 <text x="1228" y="1468" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">409 STALE_MATCH_EVALUATION for a stale card.</text>
 <text x="1228" y="1495" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">These errors are not hidden by AI fallback.</text>
-<text x="48" y="1562" font-size="17" fill="#506474" font-weight="400" text-anchor="start">The orchestration holds no database transaction across the external call. Bounded output checks do not prove every sentence factual; live-provider acceptance is separate.</text>
+<text x="48" y="1562" font-size="17" fill="#506474" font-weight="400" text-anchor="start">The orchestration holds no database transaction across the external call. Output checks are bounded: they reject known unsafe patterns, not every inaccurate sentence.</text>
 </g></svg>

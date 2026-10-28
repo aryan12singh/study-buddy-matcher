@@ -8,6 +8,7 @@ import Avatar from './Avatar'
 import PixelIcon from './PixelIcon'
 import AchievementNavIcon from '../../features/achievements/AchievementNavIcon'
 import RouteNotice from './RouteNotice'
+import AssistantLauncher from '../../features/assistant/AssistantLauncher'
 
 export default function AppShell() {
   const { account, logout } = useAuth()
@@ -42,6 +43,7 @@ export default function AppShell() {
               <NavLink to="/groups" className={({ isActive }) => isActive && !viewingStudyRoom ? 'active' : undefined}
                 aria-current={viewingStudyRoom ? false : undefined}><PixelIcon kind="groups" /><span>Study groups</span></NavLink>
               <NavLink to="/sessions"><PixelIcon kind="clock" /><span>Study sessions</span></NavLink>
+              <NavLink to="/study-plan"><PixelIcon kind="robot" /><span>Study plans</span></NavLink>
               <Link to="/study-room" className={viewingStudyRoom ? 'active' : undefined}
                 aria-current={viewingStudyRoom ? 'page' : undefined}><PixelIcon kind="brand" /><span>Study Room</span></Link>
               <NavLink to="/achievements"><AchievementNavIcon /><span>Achievements</span></NavLink>
@@ -70,7 +72,8 @@ export default function AppShell() {
           <Outlet />
         </main>
       </div>
-      <footer className="desktop-footer">Study together, at your own pace. <span>Weekly availability uses Singapore time; dated sessions show their timezone.</span></footer>
+      <footer className="desktop-footer">Study together, at your own pace.</footer>
+      {account?.role === 'STUDENT' && <AssistantLauncher />}
     </div>
   )
 }

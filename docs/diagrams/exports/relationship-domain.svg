@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1390" viewBox="0 0 1600 1390" role="img" aria-labelledby="title description">
 <title id="title">UML classes — relationships and group authority</title>
-<desc id="description">Source-checked Study Buddy Matcher design. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
@@ -44,7 +44,6 @@
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
 <text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML classes — relationships and group authority</text>
 <text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Requests hold decision history; active connections and accepted memberships are distinct domain objects.</text>
-<text x="46" y="1363" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Checked against 9592fd2 · 18 October 2026 · baseline + E2</text>
 <text x="1554" y="1363" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/relationship-domain.svg</text>
 <text x="265.0" y="233" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">MatchRequest</text>
 <text x="76" y="278" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- sender, receiver: Student</text>

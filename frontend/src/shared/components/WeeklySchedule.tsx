@@ -4,7 +4,6 @@ import { label, WEEK_DAYS } from '../api/types'
 export default function WeeklySchedule({ slots }: { slots: WeeklySlot[] }) {
   return (
     <div className="weekly-schedule">
-      <p className="field-hint">Weekly times in Asia/Singapore (SGT)</p>
       {!slots.length
         ? (
           <p className="muted">No weekly availability saved.</p>

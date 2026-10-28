@@ -12,6 +12,7 @@ import com.studybuddy.matchrequest.MatchRequestRepository;
 import com.studybuddy.matchrequest.MatchRequestStatus;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
+import com.studybuddy.student.ProfileProperties;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentRepository;
 import com.studybuddy.studygroup.*;
@@ -73,7 +74,7 @@ class AdminUserServiceTest {
         var closure = new GroupClosure(applications, memberships, notifications, roomLifecycle, sessionLifecycle);
         var deactivation = new StudentDeactivation(connections, requests, applications, groups, memberships, closure, notifications, roomLifecycle, sessionLifecycle);
         var counter = new UserUsageCounter(connections, requests, groups, memberships);
-        service = new AdminUserService(users,students,studentNames,new AdminUserAssembler(),counter,deactivation,deletion,creation,access);
+        service = new AdminUserService(users,students,studentNames,new AdminUserAssembler(),counter,deactivation,deletion,creation,access,new ProfileProperties(5, 8, 6));
     }
 
     @Test

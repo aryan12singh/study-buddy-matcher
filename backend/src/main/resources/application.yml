@@ -67,6 +67,7 @@ app:
   profile:
     group-size-max: ${PROFILE_GROUP_SIZE_MAX:5}
     max-courses: ${PROFILE_MAX_COURSES:8}
+    year-of-study-max: ${PROFILE_YEAR_OF_STUDY_MAX:6}
   achievements:
     # Weeks start on Monday in this zone when counting the study streak.
     week-zone: Asia/Singapore
@@ -143,8 +144,9 @@ app:
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
       model: gemini-3.5-flash
-      # Reading a PDF and writing a whole roadmap takes far longer than E1's one sentence.
-      timeout: 30s
+      # Reading a PDF and writing a whole roadmap or a ten-question quiz takes far longer than E1's
+      # one sentence: a quiz from a lecture PDF can take Gemini well over 30 seconds.
+      timeout: 90s
       max-output-tokens: 4000
       # Google's free tier allows 20 generate requests per day per project and model.
       daily-call-limit: 18
@@ -171,6 +173,29 @@ app:
         max-hours-per-week: 40
         # "Today", for a plan's first week, follows the students' calendar, not the server's.
         time-zone: Asia/Singapore
+      quiz:
+        # Stated in the prompt and checked again on Gemini's reply.
+        question-count: 10
+        # An open quiz past this reads as closed, so no scheduler is needed.
+        open-duration: 15m
+        # The optional "what to focus on" text, which also titles the quiz, so at most 255.
+        max-focus-characters: 200
+      chat:
+        max-message-characters: 500
+        # Buddy matches shown in a reply; the rest are on the Find buddies page.
+        matches-shown: 3
+        # "Today", for dates such as "exam on 20 Nov", follows the students' calendar.
+        time-zone: Asia/Singapore
+        # Reading a message is a small job, so the chat uses a lighter model with its own allowance:
+        # chatting never spends what students need for quizzes and study plans. The clearest
+        # messages (the suggested questions, "what do I need to do?") need no AI call at all.
+        # Google's free tier limits each model separately; check the lite model's daily limit in
+        # Google AI Studio and keep daily-call-limit just under it.
+        model: gemini-3.5-flash-lite
+        max-output-tokens: 400
+        timeout: 20s
+        daily-call-limit: 200
+        daily-call-limit-per-student: 30
   ambient:
     # Sounds are unavailable until application-local.yml sets api-key. Never put the key here.
     base-url: https://freesound.org/apiv2

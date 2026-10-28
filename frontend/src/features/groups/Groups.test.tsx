@@ -85,7 +85,6 @@ describe('group fields and saved state', () => {
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveTextContent('Problem solving')
     expect(dialog).toHaveTextContent('18:00–20:00')
-    expect(dialog).toHaveTextContent('Asia/Singapore')
     expect(screen.getByText(/Being in the same group does not share contact numbers/)).toBeInTheDocument()
   })
   it.each([

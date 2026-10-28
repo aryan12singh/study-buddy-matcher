@@ -1,45 +1,55 @@
 # AI usage
 
-GPT models and Claude assisted with:
+This page covers two separate things: AI assistance used while developing the project, and the
+AI features built into the application.
 
-- **Planning:** comparing the project brief and issues, defining scope and evaluating design choices.
-- **Implementation:** backend services, DTOs, validation and migrations; frontend screens and shared components, including matching integration.
-- **Review and fixes:** checking privacy, permissions, state transitions, concurrency and form behaviour; reproducing and fixing defects.
-- **Testing:** unit, HTTP/database and frontend regression tests, plus browser workflow verification.
-- **Documentation:** README, API contracts, requirement coverage, design decisions and diagrams.
-- **Interface and assets:** retro UI polish, accessibility checks and the original pixel-book favicon.
-- **Matching engine review (`fix/team-a/matching-engine`):** Claude, at a Team C member's request, proposed and implemented the matching fixes, tests and decision report in [MATCHING_ENGINE_CHANGES.md](MATCHING_ENGINE_CHANGES.md), and a follow-up review's fixes. Team A owns the engine and must review and be able to explain it before merging.
-- **E2 study experience:** private rooms, timers, presence, original layered audio, sessions/calendar, weather themes and related integration in PR #52; this is outside the compulsory baseline. Claude, at a Team C member's request, also reviewed PR #52 and made its room-polling, presence-locking, weather-cache, merge and README fixes.
-- **Study Room entry:** Codex added the separate room tab and, following the user's visual reference, a personal Pomodoro with a groups sidebar and original CSS scenery, plus a gentle running-state progress-icon animation that respects reduced motion. It reused the existing group-room APIs, timer calculations and UI components, with navigation, loading/error and personal-timer regression checks. Human review remains pending.
+## Development assistance
 
-Team members remain responsible for verifying retained work and explaining it in the viva.
-Development assistance is separate from the application's E1 AI match-explanation feature.
+GPT models (through Codex) and Claude assisted the team with:
 
-## E1 AI match explanation (updated 18 October 2026)
+| Area | What the assistance covered |
+| --- | --- |
+| Planning | Comparing the brief and issues, defining scope and evaluating design choices |
+| Implementation | Backend services, DTOs, validation and migrations; frontend screens and shared components |
+| Review and fixes | Privacy, permissions, state transitions, concurrency and form behaviour; reproducing and fixing defects |
+| Testing | Unit, HTTP/database and frontend regression tests, and browser workflow checks |
+| Documentation | README, API contract, requirement coverage, design decisions and diagrams |
+| Interface and assets | Retro UI polish, accessibility checks and the original pixel-book favicon |
 
-The application's E1 feature, separate from development assistance above.
+Specific pieces of work:
 
-- **Provider:** Google Gemini API, free tier, model `gemini-3.5-flash` (`app.ai.explanation.model`). `gemini-2.5-flash` was used until 18 October; Google now returns 404 for it on new projects. Called only when a student clicks **Explain this match** and the answer is not already cached.
-- **Free-tier limits (observed 18 October):** 20 generate requests per day per project per model (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`), plus a per-minute limit. The app stops at `daily-call-limit` (18), allows each student at most `daily-call-limit-per-student` (5) of those, and pauses for `rate-limit-cooldown` (60s) after any 429. Usage: https://ai.dev/rate-limit.
-- **Sent:** only `ExplanationEvidence`, written in plain words by `ExplanationVocabulary`: quality, total score, each criterion's rounded score, weight, enabled flag and whether both students shared that preference (`known`), shared hours (nearest half hour), scoring and shared course codes and names, the searched goal, shared goals, both study modes and both group-size preferences. The admin's strategy name is not sent.
-- **Never sent:** names, student or account IDs, emails, contact numbers, school, programme, year, messages, availability slots, connections, group memberships or the card's `evaluationId`. `ExplanationEvidenceFactoryTest`, `ExplanationPromptBuilderTest` and `ExplanationVocabularyTest` check this.
-- **Request settings:** JSON reply, `maxOutputTokens: 200`, thinking turned off (`thinkingBudget: 0`). Without it a reply stopped after 189 thinking tokens. Timeout 5s for connect and for read.
-- **Output checks:** JSON shape and length; no success, likelihood, chance, probability, guarantee or percentage wording; no leftover code names (`ONE_TO_ONE`, `STRONG`); course codes only from the evidence (hyphenated codes such as COR-STAT1202 included); numbers, as digits or words, only for the weekly hours in the evidence. Cached text is re-checked on every hit. Anything else falls back to the matching engine's own explanation, labelled "Standard explanation".
-- **Limitations:** free-tier prompts may be used by Google and read by human reviewers, and users must be 18 or over; the daily limit is in memory and resets on restart; the prompt is English-only; checks cannot catch every inaccurate sentence, so the panel says the text may be inaccurate; wording can change when the model changes.
-- **Development assistance:** Claude helped design, plan, implement, review and test E1: the backend `matchexplanation` package, Team A's `MatchService.evaluate`, the frontend panel, and the planning documents under `docs/superpowers/`. Charlize reviewed the design, the plan and the review findings; authors remain responsible for explaining every line.
+- **Matching engine fixes (Team A's engine).** Claude proposed and implemented fixes and tests
+  at a Team C member's request; the decisions are recorded in
+  [design decisions](DESIGN_DECISIONS.md#matching-decisions-team-a). Team A reviewed them.
+- **E1 AI match explanations.** Claude helped design, plan, implement, review and test the
+  backend `matchexplanation` package, `MatchService.evaluate` and the frontend panel. Charlize
+  reviewed the design, plan and review findings.
+- **E2 collaborative study.** Assistance with rooms, timers, presence, sessions and calendar,
+  weather themes and their integration, and a review that fixed room polling, presence locking
+  and the weather cache.
+- **Study Room tab.** Codex added the separate tab with a personal Pomodoro, groups sidebar,
+  original CSS scenery and a reduced-motion-aware progress animation, reusing the existing
+  group-room APIs and components.
 
-### Live examples from the running application (18 October)
+Every member reviewed the work they retained and explained it to the team in physical meetings
+and demos.
 
-Recorded through `GET /api/matches/{id}/explanation` on a disposable database with the demo seed,
-signed in as the presenter account, prompt v5 before the zero-hours wording rule was added.
+## AI in the application
 
-| Card | Score breakdown | Result | Accuracy note |
+The application calls Google Gemini (free tier) in two places, on separate Google projects so
+they do not share a quota. Both work without AI: with it off, over the daily allowance or
+failing, the screen falls back to a standard answer or the manual path.
+
+| Feature | Model key | What is sent | Never sent |
 | --- | --- | --- | --- |
-| GOOD, IS442 search, total 0.6, 0 shared hours | course 1.0, availability 0.0, meeting mode 1.0, study goals 0.0, group preference 1.0 | **AI:** "You and this student match best on course focus for IS442 Object Oriented Programming, meeting mode, and group preference, which carry the most weight for this match. Your weakest shared area is availability, with about 0 hours per week in common. You do not share study goals." | Correct strengths and weakness. "About 0 hours" read awkwardly; the prompt now says to describe zero hours as no shared free time |
-| FAIR, concept-review search, total 0.4, 0 shared hours | course 0.0, availability 0.0, meeting mode 1.0, study goals 1.0, group preference 1.0 | **AI:** "Meeting mode is your strongest area among the heavily weighted criteria, and you also match well on study goals and group preference. In contrast, course alignment for IS442 Object Oriented Programming and availability are your weakest areas, with about 0 hours per week in common." | Correct. IS442 is the presenter's saved target course, which a goal-only search scores against |
-| STRONG, IS442 search, total 0.95, 4 shared hours | course 1.0, availability 1.0, meeting mode 1.0, study goals 0.5, group preference 1.0 | **Standard** (first attempt timed out at the then 3s timeout; the timeout is back to 5s) | Still to be recorded after the daily quota resets |
-| STRONG, COR-STAT1202 search, total 0.85, 2 shared hours | course 1.0, availability 0.5, meeting mode 1.0, study goals 1.0, group preference 1.0 | **Standard** (HTTP 429; the cooldown then skipped further calls and answered in 0.4s) | Still to be recorded. Two direct v5 replies for this course passed the checks and are pinned in `ExplanationOutputValidatorTest` |
+| E1 match explanation | `app.ai.explanation.model` | Anonymous `ExplanationEvidence` only: quality, rounded criterion scores and weights, shared hours, shared courses and goals, study modes and group-size preferences | Names, IDs, emails, contact numbers, school, programme, year, messages, timetables, connections, memberships |
+| Quizzes and study plans | `app.ai.assistant.model` | The student's uploaded files (and their names) or pasted notes, the course code and name, and the quiz focus or plan settings | Contact numbers, emails, other students' data |
+| Pixel assistant | `app.ai.assistant.chat.model` | The student's own message only, to classify it | Everything else: answers come from the app's services and templates |
 
-The current prompt is `backend/src/main/resources/prompts/match-explanation-v5.txt`. Earlier versions
-(v1 to v4) are in the git history; each change of wording bumped the version, which retires
-every explanation cached under the old one.
+All Gemini output is checked before it is shown (shape, length and banned wording for E1;
+question count, plan weeks and minutes for quizzes and plans) and rejected otherwise. On the
+free tier Google may use submitted content to improve its products and human reviewers may read
+it, and users must be 18 or over. Checks bound the output's shape; they cannot prove every
+sentence is accurate, so explanations and quiz questions are labelled as possibly inaccurate. Prompts live in
+`backend/src/main/resources/prompts/`; changing E1's wording bumps its prompt version, which
+retires cached explanations.

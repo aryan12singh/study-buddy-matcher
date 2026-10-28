@@ -9,6 +9,7 @@ import RoomWeatherPanel from './RoomWeatherPanel'
 import MusicPlayer from '../music/MusicPlayer'
 import NowPlayingMini from '../music/NowPlayingMini'
 import MusicProvider from '../music/MusicProvider'
+import QuizBotLauncher from '../quiz/QuizBotLauncher'
 import { DEFAULT_ATMOSPHERE } from './weatherTheme'
 import type { Atmosphere } from './weatherTheme'
 import { usePanelVisibility } from './usePanelVisibility'
@@ -39,7 +40,7 @@ export default function StudyRoomsPage() {
           <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
           <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
           <div className={`study-corner-layout${groupsCollapsed ? ' groups-collapsed' : ''}`}>
-            {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen} corner={<NowPlayingMini />}
+            {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen} corner={<div className="room-corner-tools"><NowPlayingMini /><QuizBotLauncher home={{ scope: 'PERSONAL' }} canStart /></div>}
               extraTabs={[{ id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
                 content: <RoomWeatherPanel liveEnabled store="personal-room" onChange={setAtmosphere} /> },
               { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> }]} />}

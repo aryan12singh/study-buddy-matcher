@@ -61,11 +61,10 @@ export default function AdminUserDetailPage() {
               <dt>Email</dt>
               <dd>{user.email}</dd>
               <dt>Created</dt>
-              <dd>{formatTimestamp(user.createdAt)} (SGT)</dd>
+              <dd>{formatTimestamp(user.createdAt)}</dd>
               <dt>Last successful login</dt>
               <dd>
                 {formatTimestamp(user.lastLoginAt)}
-                {user.lastLoginAt && ' (SGT)'}
               </dd>
               {profile && (
                 <>
