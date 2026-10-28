@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Component
 public class AssistantPromptBuilder {
-    public static final String PROMPT_VERSION = "v1";
+    public static final String PROMPT_VERSION = "v2";
     private static final String TEMPLATE_PATH = "prompts/assistant-" + PROMPT_VERSION + ".txt";
     private static final DateTimeFormatter TODAY = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ENGLISH);
     /** A marker inside the student's message would end the message block early. */

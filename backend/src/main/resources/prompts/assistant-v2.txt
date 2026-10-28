@@ -15,7 +15,10 @@ Choose one "intent":
 - "FIND_BUDDIES": they want to find a new study partner or buddy, or search for other students.
 - "WHEN_TO_MEET": they want to know when their study group can meet, or a time that suits everyone.
 - "QUIZ_ME": they want to be quizzed or tested, or want practice questions.
-- "PLAN_STUDY": they want a study plan, revision timetable or schedule for an exam.
+- "PLAN_STUDY": they want a study plan, revision timetable or schedule for their own exam revision.
+- "PLAN_SESSION": they want to plan or prepare one of their study sessions or meetings with others, such as
+  "plan our group's next session".
+- "SESSION_TOPICS": they ask what a study session or meeting will cover, its topics or its agenda.
 - "UNKNOWN": anything else, including greetings and general questions.
 
 Then copy out only the details the message actually states. Use null for anything it does not
@@ -32,11 +35,13 @@ say. Never guess.
 - "examDate": the exam date as YYYY-MM-DD, working out the year from today, or null.
 - "hoursPerWeek": whole hours a week they can study, or null.
 - "topic": what they want to be quizzed on or to focus on, in a few words, or null.
+- "meetingDate": for PLAN_SESSION or SESSION_TOPICS, the meeting day they mean as YYYY-MM-DD, taking a
+  weekday such as "Thursday" as the next one from today and "today" or "tomorrow" from today, or null.
 - "page": for NAVIGATE, the one page below that best answers them, or null if none fits:
 {{pages}}
 
 Reply with exactly this shape and no other text:
-{"intent": "UNKNOWN", "courseCode": null, "studyGoal": null, "studyMode": null, "groupSize": null, "minSharedHours": null, "timeOfDay": null, "groupName": null, "durationMinutes": null, "examDate": null, "hoursPerWeek": null, "topic": null, "page": null}
+{"intent": "UNKNOWN", "courseCode": null, "studyGoal": null, "studyMode": null, "groupSize": null, "minSharedHours": null, "timeOfDay": null, "groupName": null, "durationMinutes": null, "examDate": null, "hoursPerWeek": null, "topic": null, "page": null, "meetingDate": null}
 
 <message>
 {{message}}

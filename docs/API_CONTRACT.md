@@ -1190,7 +1190,7 @@ handled on its own, with no memory of earlier ones.
 
 ```text
 AssistantReplyDto
-  { intent: FIND_BUDDIES/WHEN_TO_MEET/QUIZ_ME/PLAN_STUDY/MY_TO_DO/NAVIGATE/UNKNOWN, text, filters[],
+  { intent: FIND_BUDDIES/WHEN_TO_MEET/QUIZ_ME/PLAN_STUDY/PLAN_SESSION/SESSION_TOPICS/MY_TO_DO/NAVIGATE/UNKNOWN, text, filters[],
     matches: MatchResultDto[], slots: SharedSlotDto[], todos: [{ text, label, link }],
     action: { kind: OPEN_PAGE/OPEN_QUIZ_BUDDY, label, link|null, prefill: { name: value } } | null }
 ```
@@ -1201,6 +1201,8 @@ AssistantReplyDto
 | `WHEN_TO_MEET` | The student's open group named (or their only one), then `StudySessionService.groupAvailability`, keeping slots at least as long as the meeting |
 | `QUIZ_ME` | Opens Quiz Buddy; `prefill` carries `topic` and `courseId` |
 | `PLAN_STUDY` | Links to the Study plans page (see below) |
+| `PLAN_SESSION` | The student's soonest upcoming session (`StudySessionService.mine`), narrowed to the group named or the course code stated, and to the meeting day (`meetingDate`) if one was given. Links to that session's page, whose roadmap panel plans it. Someone who may not manage it is told the group leader can |
+| `SESSION_TOPICS` | The same session lookup, then that meeting's entries from `StudyPlanService.getForSession` (the next meeting when no day was given), each as a `todos` item with its planned time, linking to the session. Says so when no session meets that day, the session has no roadmap yet, or the roadmap no longer covers that meeting |
 | `MY_TO_DO` | Pending incoming buddy requests, pending applications to groups the student leads, open quizzes they have not taken in their groups, sessions starting within 7 days and unread notifications, each as a `todos` item linking to the page that handles it |
 | `NAVIGATE` | One page from the assistant's fixed list (`AppPage`: home, find buddies, buddy requests, connections, study groups, create group, sessions, study room, achievements, notifications, profile, edit profile, help) with what it is for and a link. Gemini only picks the page name |
 | `UNKNOWN` | A short message listing what the assistant can do |
@@ -1214,7 +1216,8 @@ example `/study-plan?courseId=4&examDate=2026-11-20&hoursPerWeek=6`. The Study p
 should read these to fill in its form.
 
 **AI use.** Clear messages, including every suggested question, greetings, "what do I need to
-do?", "how do I …?" and plain buddy searches, are read by rules (`QuickIntentReader`) with no AI
+do?", "how do I …?", plain buddy searches and session questions without a day ("what are we
+covering next session?"), are read by rules (`QuickIntentReader`) with no AI
 call. Anything else goes to the chat's own lighter model (`chat.model`) with its own daily
 allowance (`chat.daily-call-limit`, `chat.daily-call-limit-per-student`), so chatting never spends
 the quiz and study plan allowance.

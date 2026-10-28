@@ -37,6 +37,15 @@ class AssistantOutputValidatorTest {
         assertEquals("polymorphism", request.topic());
         assertNull(request.studyGoal());
         assertEquals(AppPage.EDIT_PROFILE, request.page());
+        assertNull(request.meetingDate());
+    }
+
+    @Test
+    void readsTheMeetingDayOfASessionQuestionAndDropsAnUnreadableOne() {
+        assertEquals(LocalDate.of(2026, 11, 5),
+                valid("{\"intent\": \"SESSION_TOPICS\", \"meetingDate\": \"2026-11-05\"}").meetingDate());
+        assertNull(valid("{\"intent\": \"SESSION_TOPICS\", \"meetingDate\": \"Thursday\"}").meetingDate());
+        assertEquals(AssistantIntentType.PLAN_SESSION, valid("{\"intent\": \"PLAN_SESSION\"}").intent());
     }
 
     @Test

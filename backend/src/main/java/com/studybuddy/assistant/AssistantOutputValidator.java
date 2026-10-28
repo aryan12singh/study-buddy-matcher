@@ -55,7 +55,8 @@ public class AssistantOutputValidator {
                 dateOf(reply.path("examDate")),
                 wholeNumberOf(reply.path("hoursPerWeek"), 1, MAX_WEEKLY_HOURS),
                 textOf(reply.path("topic")),
-                enumOf(reply.path("page"), AppPage.class).orElse(null)));
+                enumOf(reply.path("page"), AppPage.class).orElse(null),
+                dateOf(reply.path("meetingDate"))));
     }
 
     private static <E extends Enum<E>> Optional<E> enumOf(JsonNode node, Class<E> type) {

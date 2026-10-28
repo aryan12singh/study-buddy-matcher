@@ -27,6 +27,27 @@ class QuickIntentReaderTest {
     }
 
     @Test
+    void readsPlainQuestionsAboutStudySessionsWithoutTheAi() {
+        AssistantRequest plan = read("Plan our IS442 group's next session");
+        AssistantRequest topics = read("What are we covering next session?");
+        AssistantRequest named = read("what are we covering in our design patterns group?");
+
+        assertEquals(AssistantIntentType.PLAN_SESSION, plan.intent());
+        assertEquals("IS442", plan.courseCode());
+        assertEquals(AssistantIntentType.SESSION_TOPICS, topics.intent());
+        assertNull(topics.meetingDate());
+        assertEquals(AssistantIntentType.SESSION_TOPICS, named.intent());
+        assertEquals("design patterns", named.groupName());
+        assertEquals(AssistantIntentType.PLAN_STUDY, read("Plan my revision for IS442").intent(), "Personal revision is not a session");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"What are we covering on Thursday?", "Plan our session tomorrow"})
+    void leavesASessionQuestionWithADayForTheAi(String message) {
+        assertTrue(READER.read(message).isEmpty(), message);
+    }
+
+    @Test
     void readsTheDetailsOfABuddySearch() {
         AssistantRequest request = read("find me an is 442 study partner, in person, one-to-one");
 

@@ -38,7 +38,7 @@ class NavigateAndToDoIntentsTest {
     private static final Instant NOW = Instant.parse("2026-10-27T04:00:00Z");
 
     private static AssistantRequest navigateTo(AppPage page) {
-        return new AssistantRequest(AssistantIntentType.NAVIGATE, null, null, null, null, null, null, null, null, null, null, null, page);
+        return new AssistantRequest(AssistantIntentType.NAVIGATE, null, null, null, null, null, null, null, null, null, null, null, page, null);
     }
 
     @Test
