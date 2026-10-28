@@ -29,4 +29,12 @@ public class StudyPlanCreationService {
         RoadmapDraft draft = roadmaps.write(actorId, request.course(), request.goal(), request.frame(), material);
         return plans.savePersonal(actorId, request, material, draft);
     }
+
+    /** Replaces the session's roadmap; the meetings and their length come from the session. */
+    public StudyPlanDto createForSession(Long actorId, Long sessionId, SessionPlanInput input, List<MultipartFile> files) {
+        SessionPlanRequest request = plans.prepareSession(actorId, sessionId, input);
+        StudyMaterial material = materials.read(files, input.topicsText());
+        RoadmapDraft draft = roadmaps.write(actorId, request.course(), request.goal(), request.frame(), material);
+        return plans.saveSession(actorId, request, material, draft);
+    }
 }

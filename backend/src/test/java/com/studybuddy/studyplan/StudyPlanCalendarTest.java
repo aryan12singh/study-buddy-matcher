@@ -19,7 +19,7 @@ class StudyPlanCalendarTest {
     private static final LocalDate FRIDAY = LocalDate.of(2026, 10, 23);
     /** At most 4 weeks and 10 hours a week. */
     private static final StudyPlanCalendar CALENDAR = new StudyPlanCalendar(
-            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5, 4, 10, "Asia/Singapore"),
+            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5, 4, 10, 12, "Asia/Singapore"),
             LATE_THURSDAY_UTC);
 
     @Test

@@ -25,7 +25,7 @@ class StudyMaterialReaderTest {
      * of text-file content, counting each file's "File:" heading.
      */
     private final StudyMaterialReader reader =
-            new StudyMaterialReader(new StudyPlanProperties(DataSize.ofBytes(100), 3, 20, 80, 40, 5, 5, 16, 40, "Asia/Singapore"));
+            new StudyMaterialReader(new StudyPlanProperties(DataSize.ofBytes(100), 3, 20, 80, 40, 5, 5, 16, 40, 12, "Asia/Singapore"));
 
     private static MockMultipartFile upload(String filename, byte[] content) {
         return new MockMultipartFile("files", filename, "application/octet-stream", content);

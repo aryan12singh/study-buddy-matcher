@@ -462,6 +462,7 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.study-plan.max-tasks-per-entry` | `5` | Most tasks in one roadmap entry |
 | `app.ai.assistant.study-plan.max-weeks` | `16` | Most weeks a personal plan covers, so the exam can be at most this far away |
 | `app.ai.assistant.study-plan.max-hours-per-week` | `40` | Most study hours per week a student can plan |
+| `app.ai.assistant.study-plan.max-session-meetings` | `12` | Most upcoming meetings of a weekly study session that one session plan covers |
 | `app.ai.assistant.study-plan.time-zone` | `Asia/Singapore` | Calendar that decides "today", the first day of a personal plan |
 | `app.ai.assistant.quiz.question-count` | `10` | Exactly how many questions every group quiz has; stated in the prompt, and a reply with any other number is rejected |
 | `app.ai.assistant.quiz.open-duration` | `15m` | How long a group quiz stays open before it reads as closed; the host can close it sooner |
@@ -478,7 +479,9 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
 slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the
 exam. When the material is shorter than the plan, the later weeks revise and practise earlier
-topics. A student may keep several plans; a new one never replaces an old one.
+topics. A student may keep several personal plans; a new one never replaces an old one. A study
+session keeps one plan, covering its upcoming meetings, which whoever manages the session (the
+group leader, or either buddy) creates and every participant reads; a new one replaces it.
 
 Study material is one or more PDF, `.txt` or `.md` files, or pasted topics, never both. Each
 file's type is checked from its contents as well as its extension: a `.pdf` must start with the
