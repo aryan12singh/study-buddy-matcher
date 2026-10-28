@@ -56,11 +56,11 @@
 <text x="1554" y="1103" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/architecture.svg</text>
 <text x="477" y="201" font-size="18" fill="#254e73" font-weight="700" text-anchor="start">SPRING BOOT BACKEND</text>
 <text x="63" y="295" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">React + Vite</text>
-<text x="63" y="329" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Feature screens and route guards</text>
+<text x="63" y="329" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Screens and route guards</text>
 <text x="63" y="356" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Shared authenticated API client</text>
 <text x="63" y="383" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Local drafts and music player</text>
 <text x="63" y="410" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Calendar snapshot download</text>
-<text x="63" y="437" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">No database client / browser grant</text>
+<text x="63" y="437" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">No database access</text>
 <text x="63" y="595" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Spotify Web Playback</text>
 <text x="63" y="629" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">SDK script from sdk.scdn.co</text>
 <text x="63" y="656" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Premium: token from the API</text>
@@ -70,20 +70,20 @@
 <text x="523" y="425" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Controllers</text>
 <text x="523" y="459" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Validate typed input</text>
 <text x="523" y="486" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Delegate one service call</text>
-<text x="863" y="425" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Application services</text>
+<text x="863" y="425" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Services</text>
 <text x="863" y="459" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Authorize current actor</text>
 <text x="863" y="486" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Coordinate domain rules</text>
 <text x="523" y="615" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">Domain and values</text>
 <text x="523" y="649" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Entities retain state rules</text>
 <text x="523" y="676" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Scorers / strategies</text>
-<text x="523" y="703" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Immutable time / score values</text>
+<text x="523" y="703" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Immutable value objects</text>
 <text x="863" y="615" font-size="23" fill="#254e73" font-weight="700" text-anchor="start">JPA repositories</text>
 <text x="863" y="649" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Read and persist entities</text>
 <text x="863" y="676" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Ordered transition locks</text>
 <text x="863" y="703" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">Database constraints</text>
 <text x="523" y="835" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">DTO assemblers</text>
-<text x="523" y="869" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">ProfileViewAssembler chooses the permitted response shape.</text>
-<text x="523" y="896" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">PublicProfileDto has no contact number; ConnectedProfileDto does.</text>
+<text x="523" y="869" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">ProfileViewAssembler picks the permitted response shape.</text>
+<text x="523" y="896" font-size="19" fill="#172d3b" font-weight="400" text-anchor="start">PublicProfileDto omits the contact; ConnectedProfileDto has it.</text>
 <text x="1258" y="210" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Google Gemini</text>
 <text x="1258" y="244" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Explanations, quizzes, study</text>
 <text x="1258" y="271" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">plans and the Pixel assistant</text>

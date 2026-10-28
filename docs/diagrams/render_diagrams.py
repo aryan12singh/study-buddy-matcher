@@ -155,15 +155,15 @@ def architecture():
     c = Canvas("architecture", "Architecture and privacy boundaries", "The browser reaches application data only through the authenticated Spring API.", height=1130)
     c.panel(455,170,720,795,"SPRING BOOT BACKEND",fill="#eff4f7")
     c.box(45,260,330,205,"React + Vite",[
-        "Feature screens and route guards", "Shared authenticated API client", "Local drafts and music player", "Calendar snapshot download", "No database client / browser grant"
+        "Screens and route guards", "Shared authenticated API client", "Local drafts and music player", "Calendar snapshot download", "No database access"
     ])
     c.box(45,560,330,150,"Spotify Web Playback",["SDK script from sdk.scdn.co", "Premium: token from the API", "Free: embedded playlist player"],color=AMBER,fill=WARM,size=17)
     c.box(505,230,620,105,"Spring Security",["JWT signature · active account · role · token version"])
     c.box(505,390,280,110,"Controllers",["Validate typed input", "Delegate one service call"])
-    c.box(845,390,280,110,"Application services",["Authorize current actor", "Coordinate domain rules"])
-    c.box(505,580,280,140,"Domain and values",["Entities retain state rules", "Scorers / strategies", "Immutable time / score values"])
+    c.box(845,390,280,110,"Services",["Authorize current actor", "Coordinate domain rules"])
+    c.box(505,580,280,140,"Domain and values",["Entities retain state rules", "Scorers / strategies", "Immutable value objects"])
     c.box(845,580,280,140,"JPA repositories",["Read and persist entities", "Ordered transition locks", "Database constraints"])
-    c.box(505,800,620,126,"DTO assemblers",["ProfileViewAssembler chooses the permitted response shape.", "PublicProfileDto has no contact number; ConnectedProfileDto does."],color=TEAL)
+    c.box(505,800,620,126,"DTO assemblers",["ProfileViewAssembler picks the permitted response shape.", "PublicProfileDto omits the contact; ConnectedProfileDto has it."],color=TEAL)
     externals=[
         ("Google Gemini",["Explanations, quizzes, study", "plans and the Pixel assistant"]),
         ("Spotify Web API",["Sign-in, token refresh,", "playlist search and playback"]),
@@ -225,7 +225,7 @@ def use_cases():
         c.usecase(1090,y,435,rows)
         c.line([(1447,545),(1307,y)])
     c.note(835,990,470,["Leader operations require group.leader.id", "to equal the current student. No leader", "subclass or global leader role exists."],title="Group-scoped authority",fill=GREEN)
-    c.note(275,1130,1015,["Profile reads enforce contact privacy. Registration and sign-in are public entry points; other actions require an active account."],fill="#edf3f6")
+    c.note(275,1130,1015,["Profile reads enforce contact privacy.", "Registration and sign-in are public; other actions need an active account."],fill="#edf3f6")
     c.note(45,1240,1510,["Notation: actor association = solid line; ellipse = use case; rectangle = application boundary. E2 use cases are a separate panel."],fill="#edf3f6")
     return c
 
@@ -390,7 +390,7 @@ def matching_sequence():
     msg(2,4,785,"score(searcher, candidate, search, weights, enabled)")
     msg(4,2,842,"MatchScore: total, quality, unknown criteria, shared hours",True)
     c.rect(565,900,605,118,PALE,BLUE,5)
-    c.lines(585,930,["Keep total ≥ admin minScore and quality ≥ minQuality.", "Apply selected sort → strategy ranking → shared hours → name → ID.", "Record totalMatches, then apply the result limit."],17,gap=29)
+    c.lines(585,930,["Keep total ≥ admin minScore and quality ≥ minQuality.", "Sort: chosen order → strategy → shared hours → name → ID.", "Record totalMatches, then apply the result limit."],17,gap=29)
     msg(2,5,1060,"toDto(public profile, score, shared time, request state)")
     msg(5,2,1110,"MatchResultDto list; template explanation added",True)
     msg(2,1,1160,"MatchSearchResultDto + configurationVersion",True)
@@ -419,7 +419,7 @@ def values_privacy():
     c.line([(1128,720),(1128,660),(1220,660),(1220,581)],dashed=True,end="triangle")
     c.line([(1543,720),(1543,660),(1440,660),(1440,581)],dashed=True,end="triangle")
     c.label(1050,636,"otherwise",17)
-    c.label(1605,636,"SELF / CONNECTED",17)
+    c.label(1600,636,["SELF /","CONNECTED"],17)
     c.note(45,1060,1710,["WeeklyAvailability canonicalizes duplicate/overlapping/adjacent blocks, then intersects unique time. Half-open intervals that only touch share no minutes.", "PublicProfileDto has no contactNumber field. ConnectedProfileDto includes it only for the owner or an active accepted buddy; groups/admin status do not qualify.", "Selected members are shown. Both profile records implement ProfileDto independently; ConnectedProfileDto does not inherit PublicProfileDto."],fill="#edf3f6")
     return c
 
