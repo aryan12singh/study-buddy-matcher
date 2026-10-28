@@ -1,7 +1,8 @@
 # API contract
 
-This contract covers the integrated compulsory Team A/B/C application and the DTO/input
-shapes used by the React frontend. Selected E1/E2 extensions are separate work.
+This contract covers every endpoint of the application: the compulsory Team A/B/C features,
+the selected E1/E2 extensions and the AI study assistant features, with the DTO/input shapes
+used by the React frontend.
 
 Base path `/api`; JSON requests/responses. Protected requests use
 `Authorization: Bearer <token>`. Actor, student and administrator identity always comes from
@@ -43,7 +44,7 @@ omitted admin contact preserves the stored value. Existing values are not bulk r
 and administrator responses still omit contacts. This is format, not reachability, validation.
 
 The team interprets learning style through the existing defined preferences; no separate
-field is part of this baseline contract. This records the team decision, not professor confirmation.
+field is part of this baseline contract. This is a team decision.
 
 JWTs include account ID, role, expiry and account token version. Every protected request checks
 that the account still exists, is active, and matches the token role/version. Mutation services
@@ -353,7 +354,7 @@ has no authority. Repeated decisions are 409. Editing, approving, removing and r
 blocked on closed groups. Closure rejects every pending application once and notifies current
 members other than the leader. The leader cannot be removed.
 
-## Private study room (E2 #16)
+## Private study room (E2)
 
 Accepted active student members of an open group can read its room. Pending
 applicants, non-members and admins cannot enter. A GET returns default state
@@ -427,10 +428,10 @@ members [{studentId, name}] (active accepted members for role selectors)
 The browser renders elapsed time from each server snapshot and reconciles on the
 server-provided poll interval (default two seconds). Rooms have no shared audio: music
 and ambient sounds come from each study room's Music settings tab, play only in each student's
-own browser and are not sent to the room API. The former shared audio endpoint was
-removed on 24 October; its `study_rooms` columns remain, unused, until a later migration.
+own browser and are not sent to the room API. The former shared audio endpoint has
+been removed; its `study_rooms` columns remain, unused, until a later migration.
 
-## Dated study sessions and calendar (E2 #16)
+## Dated study sessions and calendar (E2)
 
 Session permissions are checked against the current parent relationship on every
 list, detail, change, availability and export. Group sessions require an active
@@ -532,9 +533,9 @@ The file is a snapshot, with no OAuth, subscription or two-way sync. Clients may
 duplicate events or ignore changes/cancellations when re-imported; reducing a
 series count does not delete previously imported extra occurrences. Ending the
 parent relationship blocks further export and never removes an offline calendar
-copy. Client-side whole-series editing is not promised. Real Google Calendar,
-Apple Calendar and Outlook import acceptance is recorded separately in
-[E2_TESTING.md](E2_TESTING.md), never inferred from parser tests alone.
+copy. Client-side whole-series editing is not promised. Parser tests check the file format;
+import into Google Calendar, Apple Calendar and Outlook is a manual check listed in
+[TESTING.md](TESTING.md).
 
 ## Optional campus weather and local themes
 
@@ -1017,13 +1018,12 @@ retain their normal error behavior. The provider wait holds no matching database
 
 Quota is a per-process daily budget, reset on restart; it is not a durable multi-instance
 billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
-duplicate cache rows only. See [E1 testing](E1_TESTING.md) for evidence and remaining acceptance.
+duplicate cache rows only. Tests are listed in [TESTING.md](TESTING.md).
 
 ## Study plans (AI study assistant)
 
-Proposed bonus extension on `feat/team-b/study-roadmap`; not part of the agreed selected extras
-until the team accepts it. Student only. This section covers personal plans; session plans for
-a group or buddy session are added with their own endpoints.
+Student only. These endpoints create and manage personal plans. `StudyPlanScope` also defines
+`SESSION` plans for a group or buddy session, which have no endpoint yet.
 
 | Method | Path | Request | Response | Who |
 | --- | --- | --- | --- | --- |
@@ -1074,8 +1074,7 @@ account lock is held while Gemini answers.
 
 ## Quizzes (AI study assistant)
 
-Proposed bonus extension on `feat/team-b/group-quiz`; not part of the agreed selected extras until
-the team accepts it. Student only. A quiz is either for a group (`scope: GROUP`) or one student's
+Student only. A quiz is either for a group (`scope: GROUP`) or one student's
 own practice (`scope: PERSONAL`). Accepted members of an open group see and take its quizzes; the
 group leader and the study room's host and co-host also start and close them. A personal quiz is
 seen, taken and closed by its owner alone, and closes as soon as they submit it.
@@ -1145,7 +1144,7 @@ is held while Gemini answers.
 
 ## Study assistant (AI study assistant)
 
-Proposed bonus extension on `feat/team-b/ai-chat-assistant`. Student only. Shown to students as
+Student only. Shown to students as
 **Pixel**: one message box, opened from a button fixed to the bottom-right corner of every student
 page. Gemini only reads what
 a message asks for; the answer comes from the app's existing services, read-only. Each message is
@@ -1178,7 +1177,7 @@ buddies, with no email or contact number, and only the student's own message goe
 **Study plans page link.** `PLAN_STUDY` links to `/study-plan` with the details the student stated
 as optional query parameters: `courseId`, `examDate` (`yyyy-MM-dd`) and `hoursPerWeek`, for
 example `/study-plan?courseId=4&examDate=2026-11-20&hoursPerWeek=6`. The Study plans screen
-should read these to fill in its form.
+reads these and opens its create form with them filled in.
 
 **AI use.** Clear messages, including every suggested question, greetings, "what do I need to
 do?", "how do I …?" and plain buddy searches, are read by rules (`QuickIntentReader`) with no AI
