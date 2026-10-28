@@ -459,7 +459,51 @@ def collaborative_study():
     return c
 
 
-BUILDERS = [architecture,use_cases,e2_use_cases,identity_profile,relationships,matching_design,values_privacy,matching_sequence,collaborative_study]
+def ai_study_tools():
+    c=Canvas("ai-study-tools", "UML collaborators — quizzes, study plans and Pixel", "Three student features share one Gemini client; each checks the model's reply before anything is saved or shown.",width=1800,height=1560)
+    c.panel(45,170,560,1010,"QUIZZES (GROUP / PERSONAL)",color=AMBER,fill=WARM)
+    c.panel(625,170,560,1010,"STUDY PLANS (PERSONAL / SESSION)",color=AMBER,fill=WARM)
+    c.panel(1205,170,550,1010,"PIXEL STUDY ASSISTANT",color=AMBER,fill=WARM)
+    c.cls(85,230,480,"QuizCreationService",[],["+ startForGroup(groupId, actorId,", "  input, files): QuizDto", "+ startPersonal(actorId, input,", "  files): QuizDto"],size=17)
+    c.cls(85,470,480,"QuizWriter",[],["+ write(studentId, course, focus,", "  material): QuizDraft"],size=17)
+    c.cls(85,650,480,"QuizOutputValidator",[],["+ validate(raw): Optional<QuizDraft>"],size=17)
+    c.cls(85,800,480,"Quiz",["- scope: QuizScope", "- group: StudyGroup [0..1]", "- session: StudySession [0..1]"],["+ statusAt(now): QuizStatus", "+ close(now): void"],size=17)
+    c.line([(325,413),(325,470)],end="arrow")
+    c.line([(325,589),(325,650)],end="arrow")
+    c.label(325,628,"checks reply",15)
+    c.cls(665,230,480,"StudyPlanCreationService",[],["+ createPersonal(actorId, input,", "  files): StudyPlanDto", "+ createForSession(actorId,", "  sessionId, input, files)"],size=17)
+    c.cls(665,470,480,"RoadmapWriter",[],["+ write(studentId, course, goal,", "  frame, material): RoadmapDraft"],size=17)
+    c.cls(665,650,480,"StudyPlanOutputValidator",[],["+ validate(raw, frame):", "  Optional<RoadmapDraft>"],size=17)
+    c.cls(665,800,480,"StudyPlan",["- scope: StudyPlanScope", "- student: Student [0..1]", "- session: StudySession [0..1]"],["+ markEntry(entryId, completed,", "  now): boolean"],size=17)
+    c.line([(905,413),(905,470)],end="arrow")
+    c.line([(905,589),(905,650)],end="arrow")
+    c.label(905,628,"checks reply",15)
+    c.cls(1245,230,470,"AssistantService",[],["+ reply(actorId, input):", "  AssistantReplyDto"],size=17)
+    c.cls(1245,410,470,"QuickIntentReader",[],["+ read(message):", "  Optional<AssistantRequest>"],size=17)
+    c.cls(1245,590,470,"IntentParser",[],["+ parse(studentId, message):", "  AssistantRequest"],size=17)
+    c.cls(1245,770,470,"AssistantIntent",[],["+ type(): AssistantIntentType", "+ reply(actorId, request)"],stereotype="interface",size=17)
+    c.line([(1480,365),(1480,410)],end="arrow")
+    c.label(1480,393,"rules first",15)
+    c.line([(1715,300),(1735,300),(1735,650),(1715,650)],end="arrow",dashed=True)
+    c.label(1700,520,["else","AI"],15)
+    c.line([(1260,365),(1260,385),(1225,385),(1225,830),(1245,830)],end="arrow")
+    c.label(1225,700,"answers",15)
+    c.note(1235,985,490,["Nine intents (find buddies, meet times,", "to-dos, plan a session, ...) answer from", "existing services; Gemini only classifies."],fill="white")
+    c.note(75,1030,500,["QuizMarker scores; QuizLeaderboard ranks.", "Group answers stay on the server until", "the quiz closes."],fill="white")
+    c.note(655,1030,500,["StudyMaterialReader checks file types.", "StudyPlanCalendar / SessionMeetingFrames", "build the frame the reply must fill."],fill="white")
+    c.cls(85,1225,520,"AiClient",[],["+ generateJson(studentId, prompt,", "  attachments): String"],stereotype="interface",color=BLUE,size=17)
+    c.cls(665,1225,420,"GeminiClient",[],["+ generateJson(...): String"],color=BLUE,size=17)
+    c.cls(1145,1225,420,"AiQuota",[],["+ tryAcquire(studentId): boolean", "+ pauseAfterRateLimit(): void"],color=BLUE,size=17)
+    c.line([(665,1275),(605,1275)],end="triangle",dashed=True)
+    c.line([(1085,1275),(1145,1275)],end="arrow")
+    c.line([(325,1180),(325,1225)],end="arrow")
+    c.line([(905,1180),(905,1205),(345,1205),(345,1225)],end="arrow")
+    c.line([(1480,1180),(1480,1195),(365,1195),(365,1225)],end="arrow")
+    c.note(45,1400,1710,["QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.", "Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts."],fill="#edf3f6")
+    return c
+
+
+BUILDERS = [architecture,use_cases,e2_use_cases,identity_profile,relationships,matching_design,values_privacy,matching_sequence,collaborative_study,ai_study_tools]
 
 
 def verify_classes(svg):
