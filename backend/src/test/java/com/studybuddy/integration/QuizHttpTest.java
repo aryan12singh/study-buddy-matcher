@@ -19,6 +19,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -289,6 +291,23 @@ class QuizHttpTest extends PostgresHttpTest {
         expect(call("POST", "/quizzes/" + quizId + "/attempts", member, Map.of()), 400);
         conflict(submit(quizId, latecomer, answers(questions, QUESTIONS)), "QUIZ_NOT_STARTED");
         expect(submit(quizId, member, answers(questions, QUESTIONS)), 201);
+    }
+
+    @Test
+    void aGroupQuizCanBeForOneOfTheGroupsScheduledSessions() {
+        reply = TEN_QUESTIONS;
+        LocalDateTime start = LocalDateTime.now(ZoneOffset.UTC).plusDays(2).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        Map<String, Object> details = Map.of("title", "Week 4 revision", "startLocal", start.toString(),
+                "endLocal", start.plusHours(1).toString(), "timeZone", "Asia/Singapore", "occurrenceCount", 1);
+        JsonNode session = expect(call("POST", "/groups/" + groupId + "/sessions", leader, details), 201);
+        long sessionId = session.path("id").asLong();
+
+        JsonNode created = expect(createGroupQuiz(leader, Map.of("notesText", "OOP", "sessionId", sessionId)), 201);
+        assertEquals(sessionId, created.path("sessionId").asLong());
+        assertEquals(sessionId, expect(call("GET", "/quizzes/" + created.path("id").asLong(), member, null), 200).path("sessionId").asLong());
+
+        expect(call("POST", "/sessions/" + sessionId + "/cancel", leader, Map.of("expectedVersion", session.path("version").asLong())), 200);
+        expect(createGroupQuiz(leader, Map.of("notesText", "OOP", "sessionId", sessionId)), 400);
     }
 
     @Test
