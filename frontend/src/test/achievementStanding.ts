@@ -1,7 +1,7 @@
 import type { Achievements, Badge, BadgeKey } from '../features/achievements/api'
 
 const badge = (key: BadgeKey, title: string, overrides: Partial<Badge> = {}): Badge => ({
-  key, title, description: `${title} metric explanation.`, tier: null, nextTier: 'BRONZE', current: 0, target: 1,
+  key, title, description: `${title} metric explanation.`, tier: null, currentTier: overrides.tier ?? null, nextTier: 'BRONZE', current: 0, target: 1,
   earned: false, earnedHint: '1 more to reach Bronze.', ...overrides
 })
 

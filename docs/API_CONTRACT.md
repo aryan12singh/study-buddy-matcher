@@ -1237,8 +1237,11 @@ session management or calendar access.
 
 ### AchievementsDto
 
-`GET /api/achievements/me` returns the authenticated student's private current standing. It is
-read-only and recomputed from existing records; there is no award table or permanent badge history.
+`GET /api/achievements/me` returns the authenticated student's private standing. Counts are
+recomputed from existing records on every request. The highest tier each badge has reached is kept in
+`earned_badges` (one row per student and badge): when a live tier is above the saved one, this GET
+raises it in the same transaction, and a tier is never lowered. Rows are deleted with the student's
+account; deactivation keeps them.
 Anonymous requests receive 401 and administrators receive 403. There is no achievement endpoint
 for another student, and public, connected and administrator profile payloads never embed this data.
 
@@ -1246,8 +1249,8 @@ for another student, and public, connected and administrator profile payloads ne
 AchievementsDto { level, maxLevel, points, maxPoints, pointsToNextLevel, pointsPerLevel, earnedCount, totalCount,
                   streak: StreakDto, badges: BadgeDto[] }
 StreakDto       { currentWeeks, bestWeeks, currentRunWeeks: LocalDate[], weekZone }   // Mondays, oldest first
-BadgeDto        { key, title, description, tier: BRONZE|SILVER|GOLD|null, nextTier: BRONZE|SILVER|GOLD|null,
-                  current, target, earned, earnedHint }
+BadgeDto        { key, title, description, tier: BRONZE|SILVER|GOLD|null, currentTier: BRONZE|SILVER|GOLD|null,
+                  nextTier: BRONZE|SILVER|GOLD|null, current, target, earned, earnedHint }
 ```
 
 | Badge key | Count and lifecycle |
@@ -1273,13 +1276,16 @@ schedule can change both streak values. Neither scheduling nor the room timer re
 completed focus time or study quality.
 
 Thresholds are positive and nondecreasing bronze/silver/gold values from `app.achievements.*`;
-`points-per-level` must be positive. `earned` means a badge currently has a tier. Only the highest tier
-contributes points (Bronze 1, Silver 2, Gold 3); tiers are not added together. `target` is the next
-tier's threshold, or the Gold threshold with `nextTier=null` at Gold. Counts may exceed a Gold target.
+`points-per-level` must be positive. `tier` is the highest tier ever reached and `currentTier` is what
+`current` alone reaches; `currentTier` can be lower than `tier` after a count falls. `earned` means
+`tier` is not null. Only the highest tier contributes points (Bronze 1, Silver 2, Gold 3); tiers are
+not added together. `target` is the threshold of the next tier above `tier`, or the Gold threshold with
+`nextTier=null` once Gold is earned. Counts may exceed a Gold target.
 Six Gold badges yield `maxPoints=18`; the default maximum is level 7. The last level step is shortened
 when needed so every configured maximum is reachable. At maximum standing `pointsToNextLevel=0`.
-Tiers, points and level can fall when eligible records decrease; retained request/group history only
-disappears when its underlying records do.
+Counts can fall when eligible records decrease, but `tier`, points and level do not. A tier is saved
+only when the student requests this endpoint, so a tier reached and lost between two requests is
+never recorded. Concurrent requests are safe: the save is one upsert whose condition keeps the higher tier.
 
 Badge actions are a frontend allowlist keyed by the fixed badge catalogue; the API never supplies
 arbitrary navigation URLs. The own-profile summary fetches `/me` only after the signed-in student's

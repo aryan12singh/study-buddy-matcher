@@ -19,7 +19,7 @@ class AchievementAssemblerTest {
 
     private List<BadgeDto> badges(long count) {
         return Arrays.stream(BadgeDefinition.values())
-                .map(definition -> new BadgeEvaluator().evaluate(definition, count, thresholds)).toList();
+                .map(definition -> new BadgeEvaluator().evaluate(definition, count, thresholds, null)).toList();
     }
 
     @Test
@@ -37,7 +37,7 @@ class AchievementAssemblerTest {
         assertThat(result.pointsToNextLevel()).isZero();
 
         var almost = new java.util.ArrayList<>(badges(10));
-        almost.set(0, new BadgeEvaluator().evaluate(BadgeDefinition.CONNECTOR, 3, thresholds));
+        almost.set(0, new BadgeEvaluator().evaluate(BadgeDefinition.CONNECTOR, 3, thresholds, null));
         AchievementsDto before = assembler(4).toDto(almost, streak);
         assertThat(before.level()).isEqualTo(5);
         assertThat(before.pointsToNextLevel()).isEqualTo(1);

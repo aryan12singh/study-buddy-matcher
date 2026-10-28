@@ -37,7 +37,7 @@ class AchievementHttpTest extends PostgresHttpTest {
     }
 
     @Test
-    void connectionsAndOpenMembershipsDowngradeWhileRetainedHistoryStillCounts() {
+    void earnedTiersStayWhenConnectionsAndOpenMembershipsEnd() {
         var people = people();
         long group = group(people.leaderToken(), 3);
         expect(approve(group, apply(group, people.memberToken()), people.leaderToken()), 200);
@@ -52,9 +52,34 @@ class AchievementHttpTest extends PostgresHttpTest {
         JsonNode member = standing(people.memberToken());
         JsonNode leader = standing(people.leaderToken());
         assertEquals(0, badge(member, "TEAM_PLAYER").path("current").asInt());
-        assertTrue(badge(leader, "CONNECTOR").path("tier").isNull());
+        assertEquals("BRONZE", badge(member, "TEAM_PLAYER").path("tier").asString());
+        assertTrue(badge(member, "TEAM_PLAYER").path("currentTier").isNull());
+        assertEquals(0, badge(leader, "CONNECTOR").path("current").asInt());
+        assertEquals("BRONZE", badge(leader, "CONNECTOR").path("tier").asString());
+        assertTrue(badge(leader, "CONNECTOR").path("currentTier").isNull());
         assertEquals(1, badge(leader, "FIRST_MOVE").path("current").asInt());
         assertEquals(1, badge(leader, "FOUNDER").path("current").asInt());
+    }
+
+    @Test
+    void savedTiersAreOnlyRaisedEvenWhenRequestsRaceAndAreRemovedWithTheStudent() throws Exception {
+        var people = people();
+        connect(people);
+        statuses(race(() -> call("GET", "/achievements/me", people.leaderToken(), null),
+                () -> call("GET", "/achievements/me", people.leaderToken(), null)), 200, 200);
+        assertEquals(1, count("select count(*) from earned_badges where student_id=? and badge='CONNECTOR'", people.leader()));
+        database.update("update earned_badges set best_tier='GOLD' where student_id=? and badge='CONNECTOR'", people.leader());
+
+        // A live Bronze must not overwrite the saved Gold.
+        JsonNode leader = standing(people.leaderToken());
+        assertEquals("GOLD", badge(leader, "CONNECTOR").path("tier").asString());
+        assertEquals("BRONZE", badge(leader, "CONNECTOR").path("currentTier").asString());
+        assertEquals("GOLD", database.queryForObject(
+                "select best_tier from earned_badges where student_id=? and badge='CONNECTOR'", String.class, people.leader()));
+
+        account("admin@example.test", "ADMIN");
+        expect(call("DELETE", "/admin/users/" + people.leader(), login("admin@example.test"), null), 204);
+        assertEquals(0, count("select count(*) from earned_badges where student_id=?", people.leader()));
     }
 
     @Test

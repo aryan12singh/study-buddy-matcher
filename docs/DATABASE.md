@@ -87,6 +87,7 @@ Never edit a migration that has been applied to a shared database; add a new one
 | `20261024010000_study_room_started_notification.sql` | Adds `GROUP_STUDY_ROOM_STARTED` to the notification types |
 | `20261025090000_quizzes.sql` | Creates `quizzes`, `quiz_questions`, `quiz_question_options`, `quiz_attempts` and `quiz_attempt_answers` |
 | `20261025233000_untimed_personal_quizzes.sql` | Makes `quizzes.closes_at` nullable for personal quizzes, keeps it required for group quizzes, clears it on existing personal quizzes |
+| `20261028090000_earned_badge_tiers.sql` | Creates `earned_badges`: the highest tier per student and badge, unique per pair, cascading on student deletion; RLS on and browser grants revoked |
 
 **Shared prefix.** `20261023090000_study_plans.sql` and `20261023090000_withdraw_and_leave.sql`
 have the same timestamp. Because the glob sorts by full filename, `study_plans` always runs
@@ -100,7 +101,7 @@ every row.
 
 ## Schema overview
 
-The migrations create 31 tables in `public`.
+The migrations create 32 tables in `public`.
 
 | Area | Tables |
 | --- | --- |
@@ -108,6 +109,7 @@ The migrations create 31 tables in `public`.
 | Buddies | `match_requests`, `connections` |
 | Groups | `study_groups`, `study_group_goals`, `group_availability_slots`, `group_memberships`, `group_join_requests` |
 | Notifications | `notifications` |
+| Achievements | `earned_badges` |
 | Matching configuration | `matching_configs`, `matching_strategy_settings`, `matching_enabled_criteria` |
 | Collaborative study | `study_rooms`, `room_presences`, `study_sessions` |
 | AI features | `match_explanations`; `study_plans`, `study_plan_source_files`, `study_plan_source_topics`, `study_plan_entries`, `study_plan_entry_tasks`; `quizzes`, `quiz_questions`, `quiz_question_options`, `quiz_attempts`, `quiz_attempt_answers` |

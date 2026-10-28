@@ -351,8 +351,11 @@ summary on the student's own profile.
 
 | Decision | Choice and reason |
 | --- | --- |
-| Derived, not stored | `AchievementService` recomputes everything from connections, requests, groups and sessions on each read, so a badge always matches the records and needs no new tables |
-| Current versus history | Some badges count current standing (connections, memberships) and fall; others count retained history (sent requests, created groups). Each badge states which |
+| Derived counts | `AchievementService` recomputes every count from connections, requests, groups and sessions on each read, so progress always matches the records |
+| Current versus history | Some badges count current standing (connections, memberships) and their counts fall; others count retained history (sent requests, created groups). Each badge states which |
+| Earned tiers are kept | `EarnedBadgeRecorder` saves the highest tier each badge reaches in `earned_badges`, so losing a connection or leaving a group never takes away a medal, points or level. Students expect an earned achievement to stay earned; letting tiers fall felt like a penalty for other people's actions. A badge whose count has fallen shows what its current count alone reaches (`currentTier`) |
+| When a tier is saved | When the student opens their achievements (page or own-profile summary), in the same request. Hooking every connection, group and session service instead would cross team boundaries, so a tier reached and lost between two visits is not recorded |
+| Never lower | The save is one upsert whose condition keeps the higher tier, so concurrent requests cannot lower a tier. Rows cascade on permanent deletion and stay through deactivation |
 | Streak rule | `WeeklyStreakCalculator` counts weeks starting Monday in `app.achievements.week-zone`; a session later this week counts now, future weeks are ignored, and a run ending last week is still current |
 | Tiers and level | `BadgeEvaluator` maps counts onto configured thresholds; points come from the highest tiers and `points-per-level` sets the level. Zero or unsorted thresholds are rejected at startup |
 | Batched query | `AchievementSessionRepository` loads schedule projections in one query rather than one per schedule |
@@ -361,8 +364,8 @@ summary on the student's own profile.
 achievement fields appear in profile DTOs. The profile summary is fetched only for the signed-in
 owner.
 
-**Limits.** No permanent awards, attendance or completed-focus tracking: a planned session counts
-whether or not it was attended.
+**Limits.** No attendance or completed-focus tracking: a planned session counts whether or not it
+was attended. Tiers are saved only on a visit, as above.
 
 ## Baseline requirement contract
 

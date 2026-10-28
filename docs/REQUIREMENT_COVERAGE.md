@@ -228,6 +228,7 @@ and deletion) are recorded in the
 | --- | --- | --- |
 | Private badges derived from existing records | `AchievementController`, `AchievementService`, `BadgeDefinition`, `AchievementAssembler` | `AchievementServiceTest`, `AchievementAssemblerTest`, `AchievementHttpTest` |
 | Tiers, points and level | `BadgeEvaluator`, `AchievementProperties` | `BadgeEvaluatorTest`, `AchievementPropertiesTest` |
+| Earned tiers are kept when counts fall | `EarnedBadgeRecorder`, `EarnedBadge`, `EarnedBadgeRepository` | `EarnedBadgeRecorderTest`, `AchievementServiceTest`, `AchievementHttpTest` |
 | Planned-session weekly streak | `WeeklyStreakCalculator`, `AchievementSessionRepository` | `WeeklyStreakCalculatorTest`, `AchievementHttpTest` |
 | Achievements page and own-profile summary | `AchievementsPage`, `StudyGrove`, `OwnAchievementSummary` | `AchievementsPage.test.tsx`, `StudentProfilePage.test.tsx` |
 

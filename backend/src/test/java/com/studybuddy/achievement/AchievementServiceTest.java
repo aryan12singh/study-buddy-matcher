@@ -2,6 +2,8 @@ package com.studybuddy.achievement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -19,7 +21,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class AchievementServiceTest {
@@ -33,9 +37,22 @@ class AchievementServiceTest {
     private final AchievementProperties properties = new AchievementProperties(ZoneId.of("Asia/Singapore"), 3,
             new TierThresholds(1, 3, 5), new TierThresholds(1, 5, 10), new TierThresholds(1, 2, 3),
             new TierThresholds(1, 2, 3), new TierThresholds(1, 5, 10), new TierThresholds(2, 4, 8));
+    /** Stands in for the saved earned_badges rows; the recorder's own rules are tested in EarnedBadgeRecorderTest. */
+    private final Map<BadgeDefinition, BadgeTier> saved = new EnumMap<>(BadgeDefinition.class);
+    private final EarnedBadgeRecorder recorder = mock(EarnedBadgeRecorder.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-22T04:00:00Z"), ZoneOffset.UTC);
     private final AchievementService service = new AchievementService(access, connections, requests, memberships,
-            groups, sessions, properties, new AchievementAssembler(properties), clock);
+            groups, sessions, properties, recorder, new AchievementAssembler(properties), clock);
+
+    {
+        when(recorder.keepHighest(eq(STUDENT), any())).thenAnswer(call -> {
+            Map<BadgeDefinition, BadgeTier> live = call.getArgument(1);
+            live.forEach((badge, tier) -> {
+                if (tier != null) saved.put(badge, BadgeTier.higher(tier, saved.get(badge)));
+            });
+            return new EnumMap<>(saved);
+        });
+    }
 
     private static PlannedSchedule weeklySession(String startLocal, int weeks) {
         PlannedSchedule session = mock(PlannedSchedule.class);
@@ -101,7 +118,7 @@ class AchievementServiceTest {
     }
 
     @Test
-    void recomputesTiersAndPointsWhenConnectionsAndSchedulesDisappear() {
+    void keepsEarnedTiersAndPointsWhenConnectionsAndSchedulesDisappear() {
         when(connections.countActiveByStudentId(STUDENT)).thenReturn(5L, 0L);
         when(requests.countBySenderId(STUDENT)).thenReturn(1L);
         when(groups.countByLeaderId(STUDENT)).thenReturn(1L);
@@ -111,12 +128,16 @@ class AchievementServiceTest {
         AchievementsDto before = service.forStudent(STUDENT);
         AchievementsDto after = service.forStudent(STUDENT);
 
+        BadgeDto connector = after.badges().getFirst();
         assertThat(before.badges().getFirst().tier()).isEqualTo(BadgeTier.GOLD);
-        assertThat(after.badges().getFirst().tier()).isNull();
+        assertThat(connector.tier()).isEqualTo(BadgeTier.GOLD);
+        assertThat(connector.currentTier()).isNull();
+        assertThat(connector.current()).isZero();
+        assertThat(after.badges().get(4).tier()).isEqualTo(BadgeTier.BRONZE);
+        assertThat(after.badges().get(4).current()).isZero();
         assertThat(after.streak().bestWeeks()).isZero();
-        assertThat(after.points()).isLessThan(before.points());
-        assertThat(after.badges().get(1).tier()).isEqualTo(BadgeTier.BRONZE);
-        assertThat(after.badges().get(3).tier()).isEqualTo(BadgeTier.BRONZE);
+        assertThat(after.points()).isEqualTo(before.points());
+        assertThat(after.level()).isEqualTo(before.level());
     }
 
     @Test
@@ -124,6 +145,6 @@ class AchievementServiceTest {
         when(access.requireStudent(STUDENT)).thenThrow(new ForbiddenActionException("A student account is required"));
 
         assertThatThrownBy(() -> service.forStudent(STUDENT)).isInstanceOf(ForbiddenActionException.class);
-        verifyNoInteractions(sessions, connections, requests, memberships, groups);
+        verifyNoInteractions(sessions, connections, requests, memberships, groups, recorder);
     }
 }

@@ -7,7 +7,10 @@ export interface Badge {
   key: BadgeKey
   title: string
   description: string
+  /** Highest tier ever reached; never lowered. */
   tier: BadgeTier | null
+  /** The tier today's count reaches on its own; can be lower than tier. */
+  currentTier: BadgeTier | null
   nextTier: BadgeTier | null
   current: number
   target: number
