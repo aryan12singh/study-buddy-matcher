@@ -91,4 +91,5 @@
   .grove-plot, .badge-earned .medallion-shine { animation: none; }
   .achievements .retro-button, .own-achievements .retro-button { transition: none; }
 }
-.forest-callout { margin: -.75rem 0 0; font-size: .9rem; }
+.grove-forest { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-top: .75rem; padding-top: .75rem; border-top: 1px dashed #9fb39a; }
+.grove-forest p { margin: 0; font-size: .9rem; color: #3f474b; }

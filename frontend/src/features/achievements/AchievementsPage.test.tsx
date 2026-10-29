@@ -140,6 +140,7 @@ describe('achievements page', () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ ...achievementStanding, badges: [...achievementStanding.badges, forester] }))
     renderPage(<AchievementsPage />)
     expect(await screen.findByRole('link', { name: 'Grow a tree in a study room' })).toHaveAttribute('href', '/study-room')
-    expect(screen.getByRole('link', { name: 'Visit my forest' })).toHaveAttribute('href', '/forest')
+    expect(within(screen.getByRole('region', { name: 'Planned-session grove' })).getByRole('link', { name: 'View my forest' }))
+      .toHaveAttribute('href', '/forest')
   })
 })
