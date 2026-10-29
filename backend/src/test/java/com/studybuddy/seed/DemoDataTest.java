@@ -18,7 +18,7 @@ class DemoDataTest {
 
     private final DemoData data = new DemoData("presenter", List.of(),
         Map.of("WED_EVE", new DemoData.TimeBlock(DayOfWeek.WEDNESDAY, LocalTime.of(19, 0), LocalTime.of(21, 0))),
-        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
 
     @Test
     void namedTimeBlocksBecomeStudentAndGroupSlots() {
