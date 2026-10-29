@@ -538,6 +538,10 @@ shape and size of a roadmap; they do not prove its advice is good.
 | `ROOM_MAX_BREAK_MINUTES` / `app.study-room.max-break-minutes` | `60` | Longest break duration |
 | `ROOM_LEASE_LIFETIME` / `app.study-room.lease-lifetime` | `90s` | How long a browser stays present without a heartbeat; above the one-minute timer limit browsers apply to background tabs |
 | `ROOM_POLL_INTERVAL` / `app.study-room.poll-interval` | `2s` | Shared room refresh interval |
+| `ROOM_REACTION_WINDOW` / `app.study-room.reactions.window` | `8s` | How long a reaction stays in room snapshots; longer than the poll interval so every tab sees it |
+| `ROOM_REACTION_BURST_LIMIT` / `ROOM_REACTION_BURST_WINDOW` | `5` / `10s` | Most reactions one student can send in each window; more return 409 |
+| `app.forest.zone` | `Asia/Singapore` | Zone whose local start time picks a tree's dawn, day, dusk or night colours |
+| `app.forest.tree-minutes` | `10/25/50/90/150` | Focused minutes in one room visit for a sprout, sapling, oak, tall pine and ancient blossom; shorter visits plant nothing |
 | `SESSION_MAXIMUM_OCCURRENCES` / `app.study-session.maximum-occurrences` | `52` (1 to 52) | Most weekly occurrences; 1 means one-off |
 | `SESSION_MAXIMUM_DURATION_HOURS` / `app.study-session.maximum-duration-hours` | `24` | Longest single occurrence |
 | `WEATHER_ENABLED` / `app.weather.enabled` | `true` (`false` in tests) | Turns the campus weather provider on |

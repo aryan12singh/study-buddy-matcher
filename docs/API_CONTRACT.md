@@ -369,6 +369,7 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
+| POST | `/api/groups/{groupId}/room/reactions` | `{type: CLAP / HEART / FIRE / LIGHTBULB / COFFEE / SPROUT}`; 202. 409 unless the actor has a live lease in this room, or after the per-student burst limit |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid
@@ -423,13 +424,44 @@ timer {phase: FOCUS/BREAK, status: IDLE/RUNNING/PAUSED,
        remainingMillis (at serverTime), focusMillis, breakMillis}
 participants [{studentId, name, presence, expiresAt, leader, host, coHost}]
 members [{studentId, name}] (active accepted members for role selectors)
+reactions [{id, type, studentId, senderName, sentAt}] (sent within the reaction window, oldest first)
 ```
+
+Reactions are short-lived: they appear in every member's snapshot for the configured window,
+then drop out, and old rows are deleted when someone next reacts. Clients animate each `id`
+once. Only active accepted members' reactions are listed, and they carry no contact data.
 
 The browser renders elapsed time from each server snapshot and reconciles on the
 server-provided poll interval (default two seconds). Rooms have no shared audio: music
 and ambient sounds come from each study room's Music settings tab, play only in each student's
 own browser and are not sent to the room API. The former shared audio endpoint has
 been removed; its `study_rooms` columns remain, unused, until a later migration.
+
+## Focus forest
+
+Each continuous visit to a group study room grows one tree. Join and every heartbeat that is
+not `BREAK` credit the focus time since the student's previous tick, measured on the server
+from the room timer: only time in a running focus phase counts, never pauses, breaks or time
+before a start. A gap longer than the lease lifetime means the student had gone, so the old visit
+is finished and a new one starts. Leaving from the student's last tab ends the visit. Two tabs
+share one visit. Crediting runs after the room change commits, in its own transaction, and a
+failure is logged without failing the poll. Visits shorter than the sprout threshold plant nothing.
+
+| Method | Path | Result |
+| --- | --- | --- |
+| GET | `/api/forest/me` | The actor's planted trees, newest first: `ForestDto`, 200 |
+| GET | `/api/forest/me/rooms/{groupId}` | The tree growing in that room now: `GrowingTreeDto`, 200 (`visiting: false` when not in the room) |
+
+Anonymous requests receive 401 and administrators 403. There is no forest endpoint for another
+student. Trees keep a copy of the group name, so they survive the group closing or being
+deleted; deleting the student deletes their forest, deactivation keeps it.
+
+```
+ForestDto      { trees: TreeDto[], treeCount, focusedMinutes, longestMinutes, stages: [{species, minutes}] }
+TreeDto        { id, species: SPROUT|SAPLING|OAK|PINE|ANCIENT_BLOSSOM, light: DAWN|DAY|DUSK|NIGHT,
+                 focusedMinutes, startedAt, plantedAt, groupName }
+GrowingTreeDto { visiting, focusedMinutes, species|null, next|null, minutesToNext|null, light|null }
+```
 
 ## Dated study sessions and calendar (E2)
 

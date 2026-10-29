@@ -88,6 +88,7 @@ Never edit a migration that has been applied to a shared database; add a new one
 | `20261025090000_quizzes.sql` | Creates `quizzes`, `quiz_questions`, `quiz_question_options`, `quiz_attempts` and `quiz_attempt_answers` |
 | `20261025233000_untimed_personal_quizzes.sql` | Makes `quizzes.closes_at` nullable for personal quizzes, keeps it required for group quizzes, clears it on existing personal quizzes |
 | `20261028090000_earned_badge_tiers.sql` | Creates `earned_badges`: the highest tier per student and badge, unique per pair, cascading on student deletion; RLS on and browser grants revoked |
+| `20261029090000_room_reactions_and_focus_forest.sql` | Creates `room_reactions` (short-lived, pruned on send) and `focus_visits` (one row per room visit, at most one open per student and group, cascading on student deletion, group set null on group deletion); RLS on and browser grants revoked |
 
 **Shared prefix.** `20261023090000_study_plans.sql` and `20261023090000_withdraw_and_leave.sql`
 have the same timestamp. Because the glob sorts by full filename, `study_plans` always runs
@@ -111,7 +112,8 @@ The migrations create 32 tables in `public`.
 | Notifications | `notifications` |
 | Achievements | `earned_badges` |
 | Matching configuration | `matching_configs`, `matching_strategy_settings`, `matching_enabled_criteria` |
-| Collaborative study | `study_rooms`, `room_presences`, `study_sessions` |
+| Collaborative study | `study_rooms`, `room_presences`, `room_reactions`, `study_sessions` |
+| Focus forest | `focus_visits` |
 | AI features | `match_explanations`; `study_plans`, `study_plan_source_files`, `study_plan_source_topics`, `study_plan_entries`, `study_plan_entry_tasks`; `quizzes`, `quiz_questions`, `quiz_question_options`, `quiz_attempts`, `quiz_attempt_answers` |
 
 Points worth knowing:

@@ -1,7 +1,14 @@
 # Study room reactions and the focus forest
 
 Feasibility check and build plan, written 29 Oct 2026. Branch:
-`feat/team-c/room-reactions-and-forest`. Nothing is built yet; this document is the proposal.
+`feat/team-c/room-reactions-and-forest`.
+
+**Status (29 Oct): built.** Decided: one tree per continuous room visit; the solo timer does not
+grow trees. Changes from the proposal below: variety comes from the visit's local start time
+(dawn, day, dusk, night colours) rather than the room atmosphere, because the atmosphere is chosen
+per browser and never reaches the server; the live tree polls its own endpoint instead of riding
+on the room snapshot; the forest has its own page (`/forest`) linked from achievements. Not built
+(stretch): the Forester badge and the group grove.
 
 ## 1. What we want
 
