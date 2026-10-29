@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1560" viewBox="0 0 1800 1560" role="img" aria-labelledby="title description">
+<title id="title">UML collaborators — quizzes, study plans and Pixel</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1800" height="1560" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="45" y="170" width="560" height="1010" rx="12" fill="#fff5e5" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="625" y="170" width="560" height="1010" rx="12" fill="#fff5e5" stroke="#bdccd5" stroke-width="1.5" />
+<rect x="1205" y="170" width="550" height="1010" rx="12" fill="#fff5e5" stroke="#bdccd5" stroke-width="1.5" />
+<polyline points="44,1506 1756,1506" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="325,413 325,470" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="325,589 325,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="905,413 905,470" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="905,589 905,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1480,365 1480,410" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1715,300 1735,300 1735,650 1715,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1260,365 1260,385 1225,385 1225,830 1245,830" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="665,1275 605,1275" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#triangle)"/>
+<polyline points="1085,1275 1145,1275" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="325,1180 325,1225" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="905,1180 905,1205 345,1205 345,1225" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1480,1180 1480,1195 365,1195 365,1225" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="85" y="230" width="480" height="173" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="QuizCreationService"/>
+<rect x="85" y="230" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="85,279 565,279" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="85" y="470" width="480" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="QuizWriter"/>
+<rect x="85" y="470" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="85,519 565,519" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="85" y="650" width="480" height="95" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="QuizOutputValidator"/>
+<rect x="85" y="650" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="85,699 565,699" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="85" y="800" width="480" height="219" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="Quiz"/>
+<rect x="85" y="800" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="85,849 565,849" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="85,947 565,947" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="230" width="480" height="173" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyPlanCreationService"/>
+<rect x="665" y="230" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="665,279 1145,279" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="470" width="480" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="RoadmapWriter"/>
+<rect x="665" y="470" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="665,519 1145,519" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="650" width="480" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyPlanOutputValidator"/>
+<rect x="665" y="650" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="665,699 1145,699" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="800" width="480" height="219" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyPlan"/>
+<rect x="665" y="800" width="480" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="665,849 1145,849" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="665,947 1145,947" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="230" width="470" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AssistantService"/>
+<rect x="1245" y="230" width="470" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1245,279 1715,279" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="410" width="470" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="QuickIntentReader"/>
+<rect x="1245" y="410" width="470" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1245,459 1715,459" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="590" width="470" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="IntentParser"/>
+<rect x="1245" y="590" width="470" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1245,639 1715,639" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1245" y="770" width="470" height="142" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AssistantIntent"/>
+<rect x="1245" y="770" width="470" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1245,840 1715,840" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1235" y="985" width="490" height="99" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="75" y="1030" width="500" height="99" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="655" y="1030" width="500" height="99" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="85" y="1225" width="520" height="142" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AiClient"/>
+<rect x="85" y="1225" width="520" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="85,1295 605,1295" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="1225" width="420" height="95" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GeminiClient"/>
+<rect x="665" y="1225" width="420" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="665,1274 1085,1274" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1145" y="1225" width="420" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AiQuota"/>
+<rect x="1145" y="1225" width="420" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
+<polyline points="1145,1274 1565,1274" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
+<rect x="45" y="1400" width="1710" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML collaborators — quizzes, study plans and Pixel</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Three student features share one Gemini client; each checks the model&#x27;s reply before anything is saved or shown.</text>
+<text x="1754" y="1533" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/ai-study-tools.svg</text>
+<text x="67" y="201" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="start">QUIZZES (GROUP / PERSONAL)</text>
+<text x="647" y="201" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="start">STUDY PLANS (PERSONAL / SESSION)</text>
+<text x="1227" y="201" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="start">PIXEL STUDY ASSISTANT</text>
+<text x="325.0" y="263" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">QuizCreationService</text>
+<text x="101" y="308" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ startForGroup(groupId, actorId,</text>
+<text x="101" y="334" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  input, files): QuizDto</text>
+<text x="101" y="360" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ startPersonal(actorId, input,</text>
+<text x="101" y="386" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  files): QuizDto</text>
+<text x="325.0" y="503" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">QuizWriter</text>
+<text x="101" y="548" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ write(studentId, course, focus,</text>
+<text x="101" y="574" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  material): QuizDraft</text>
+<text x="325.0" y="683" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">QuizOutputValidator</text>
+<text x="101" y="728" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ validate(raw): Optional&lt;QuizDraft&gt;</text>
+<text x="325.0" y="833" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Quiz</text>
+<text x="101" y="878" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- scope: QuizScope</text>
+<text x="101" y="904" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- group: StudyGroup [0..1]</text>
+<text x="101" y="930" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- session: StudySession [0..1]</text>
+<text x="101" y="976" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ statusAt(now): QuizStatus</text>
+<text x="101" y="1002" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ close(now): void</text>
+<rect x="268.4" y="613" width="113.2" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="325" y="628" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">checks reply</text>
+<text x="905.0" y="263" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">StudyPlanCreationService</text>
+<text x="681" y="308" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ createPersonal(actorId, input,</text>
+<text x="681" y="334" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  files): StudyPlanDto</text>
+<text x="681" y="360" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ createForSession(actorId,</text>
+<text x="681" y="386" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  sessionId, input, files)</text>
+<text x="905.0" y="503" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">RoadmapWriter</text>
+<text x="681" y="548" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ write(studentId, course, goal,</text>
+<text x="681" y="574" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  frame, material): RoadmapDraft</text>
+<text x="905.0" y="683" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">StudyPlanOutputValidator</text>
+<text x="681" y="728" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ validate(raw, frame):</text>
+<text x="681" y="754" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  Optional&lt;RoadmapDraft&gt;</text>
+<text x="905.0" y="833" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">StudyPlan</text>
+<text x="681" y="878" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- scope: StudyPlanScope</text>
+<text x="681" y="904" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- student: Student [0..1]</text>
+<text x="681" y="930" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">- session: StudySession [0..1]</text>
+<text x="681" y="976" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ markEntry(entryId, completed,</text>
+<text x="681" y="1002" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  now): boolean</text>
+<rect x="848.4" y="613" width="113.2" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="905" y="628" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">checks reply</text>
+<text x="1480.0" y="263" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AssistantService</text>
+<text x="1261" y="308" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ reply(actorId, input):</text>
+<text x="1261" y="334" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  AssistantReplyDto</text>
+<text x="1480.0" y="443" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">QuickIntentReader</text>
+<text x="1261" y="488" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ read(message):</text>
+<text x="1261" y="514" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  Optional&lt;AssistantRequest&gt;</text>
+<text x="1480.0" y="623" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">IntentParser</text>
+<text x="1261" y="668" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ parse(studentId, message):</text>
+<text x="1261" y="694" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  AssistantRequest</text>
+<text x="1480.0" y="795" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«interface»</text>
+<text x="1480.0" y="824" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AssistantIntent</text>
+<text x="1261" y="869" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ type(): AssistantIntentType</text>
+<text x="1261" y="895" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ reply(actorId, request)</text>
+<rect x="1427.45" y="378" width="105.10000000000001" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1480" y="393" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">rules first</text>
+<rect x="1675.8" y="505" width="48.400000000000006" height="45" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1700" y="520" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">else</text>
+<text x="1700" y="540" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">AI</text>
+<rect x="1188.65" y="685" width="72.7" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1225" y="700" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">answers</text>
+<text x="1252" y="1013" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Nine intents (find buddies, meet times,</text>
+<text x="1252" y="1038" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">to-dos, plan a session, ...) answer from</text>
+<text x="1252" y="1063" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">existing services; Gemini only classifies.</text>
+<text x="92" y="1058" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">QuizMarker scores; QuizLeaderboard ranks.</text>
+<text x="92" y="1083" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Group answers stay on the server until</text>
+<text x="92" y="1108" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">the quiz closes.</text>
+<text x="672" y="1058" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">StudyMaterialReader checks file types.</text>
+<text x="672" y="1083" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">StudyPlanCalendar / SessionMeetingFrames</text>
+<text x="672" y="1108" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">build the frame the reply must fill.</text>
+<text x="345.0" y="1250" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«interface»</text>
+<text x="345.0" y="1279" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AiClient</text>
+<text x="101" y="1324" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ generateJson(studentId, prompt,</text>
+<text x="101" y="1350" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">  attachments): String</text>
+<text x="875.0" y="1258" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">GeminiClient</text>
+<text x="681" y="1303" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ generateJson(...): String</text>
+<text x="1355.0" y="1258" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AiQuota</text>
+<text x="1161" y="1303" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ tryAcquire(studentId): boolean</text>
+<text x="1161" y="1329" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ pauseAfterRateLimit(): void</text>
+<text x="62" y="1428" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.</text>
+<text x="62" y="1453" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts.</text>
+</g></svg>

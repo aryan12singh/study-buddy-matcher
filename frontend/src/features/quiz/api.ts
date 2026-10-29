@@ -2,6 +2,7 @@ import axios from 'axios'
 import { api } from '../../shared/api/client'
 import type { Problem } from '../../shared/api/client'
 import type { Course } from '../../shared/api/types'
+import type { StudySession } from '../sessions/api'
 
 export type QuizScope = 'GROUP' | 'PERSONAL'
 export type QuizStatus = 'OPEN' | 'CLOSED'
@@ -58,8 +59,22 @@ export async function listQuizzes(home: QuizHome, signal?: AbortSignal) {
   return (await api.get<Quiz[]>(path, { signal })).data
 }
 
-export async function startGroupQuiz(groupId: number, material: QuizMaterial, focus: string) {
-  return (await api.post<Quiz>(`/groups/${groupId}/quizzes`, materialForm(material, focus), { timeout: WRITING_TIMEOUT_MS })).data
+/** @param sessionId one of the group's scheduled sessions the quiz is for, or null for none */
+export async function startGroupQuiz(groupId: number, material: QuizMaterial, focus: string, sessionId: number | null = null) {
+  const form = materialForm(material, focus)
+  if (sessionId !== null) form.append('sessionId', String(sessionId))
+  return (await api.post<Quiz>(`/groups/${groupId}/quizzes`, form, { timeout: WRITING_TIMEOUT_MS })).data
+}
+
+/** The group's sessions a quiz can be for: scheduled, with a meeting still to come. */
+export function upcomingSessions(sessions: StudySession[]) {
+  return sessions.filter(session => session.status === 'SCHEDULED' && session.nextOccurrence !== null)
+}
+
+/** "Week 4 revision · Thu 30 Oct", so two sessions with the same title can be told apart. */
+export function sessionLabel(session: StudySession) {
+  const next = session.nextOccurrence
+  return next ? `${session.title} · ${new Date(next.startAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}` : session.title
 }
 
 export async function startPersonalQuiz(courseId: number, material: QuizMaterial, focus: string) {

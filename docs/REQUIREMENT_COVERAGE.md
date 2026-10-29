@@ -192,6 +192,7 @@ and deletion) are recorded in the
 | AI intent reading with its own model and allowance | `IntentParser`, `AssistantAi`, `AssistantConfiguration`, `AssistantPromptBuilder` | `AssistantPromptBuilderTest`, `AssistantServiceTest` |
 | Reply validation | `AssistantOutputValidator` | `AssistantOutputValidatorTest` |
 | To-do, navigation, buddies, meeting times, quiz and plan hand-offs | `MyToDoIntent`, `NavigateIntent`, `FindBuddiesIntent`, `WhenToMeetIntent`, `QuizMeIntent`, `PlanStudyIntent`, `AppPage` | `NavigateAndToDoIntentsTest`, `AssistantIntentsTest` |
+| Plan a session and say what its next meeting covers | `PlanSessionIntent`, `SessionTopicsIntent`, `AssistantSessions` | `SessionIntentsTest` |
 | Shared Gemini client and quota | `AiClient`, `GeminiClient`, `AiQuota`, `AiAttachment` | `GeminiClientTest`, `AiQuotaTest`, `AiAttachmentTest`, `GeminiClientLiveTest` (opt-in) |
 
 ### Quizzes
@@ -199,6 +200,7 @@ and deletion) are recorded in the
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
 | Personal and group quizzes from notes | `QuizController`, `QuizCreationService`, `QuizWriter`, `QuizPromptBuilder`; `QuizBotLauncher`, `QuizBotWindow`, `QuizBotChat` | `QuizCreationServiceTest`, `QuizPromptBuilderTest`, `QuizHttpTest`, `QuizBotWindow.test.tsx` |
+| Quiz for one of the group's upcoming sessions | `QuizService`, `Quiz`; `QuizBotChat`, `QuizBotWindow` | `QuizHttpTest`, `QuizBotWindow.test.tsx` |
 | Reply validation | `QuizOutputValidator` | `QuizOutputValidatorTest` |
 | Who may start, take, close and review | `QuizAccess`, `QuizService` | `QuizAccessTest`, `QuizHttpTest` |
 | Timed attempts and marking | `Quiz`, `QuizAttempt`, `QuizMarker`; `TakeQuizDialog` | `QuizTest`, `QuizAttemptTest`, `QuizMarkerTest` |
@@ -212,7 +214,8 @@ and deletion) are recorded in the
 | Weeks up to the exam | `StudyPlanCalendar`, `RoadmapFrame` | `StudyPlanCalendarTest`, `RoadmapFrameTest` |
 | Upload type and size checks | `StudyMaterialReader` | `StudyMaterialReaderTest` |
 | Prompt, Gemini call and reply validation | `StudyPlanPromptBuilder`, `RoadmapWriter`, `StudyPlanOutputValidator` | `StudyPlanPromptBuilderTest`, `RoadmapWriterTest`, `StudyPlanOutputValidatorTest`, `StudyPlanPromptLiveTest` (opt-in) |
-| Owner-only access | `StudyPlanAccess` | `StudyPlanHttpTest` |
+| Session roadmap for a study session's upcoming meetings | `SessionStudyPlanController`, `SessionMeetingFrames`, `StudyPlanCreationService`; `SessionRoadmapPanel`, `SessionPlanForm` | `SessionMeetingFramesTest`, `SessionStudyPlanHttpTest`, `SessionRoadmapPanel.test.tsx` |
+| Owner-only access; session plans follow session access | `StudyPlanAccess` | `StudyPlanHttpTest`, `SessionStudyPlanHttpTest` |
 
 ### Music
 

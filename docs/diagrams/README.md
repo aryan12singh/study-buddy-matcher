@@ -17,6 +17,7 @@ detailed, editable Mermaid views behind them.
 | [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability` / `TimeSlot` value composition and the sealed `ProfileDto` response shapes chosen by `ProfileViewAssembler` | [TEAM_A.md](TEAM_A.md), [TEAM_C.md](TEAM_C.md) |
 | [matching-sequence.svg](exports/matching-sequence.svg) | UML sequence for `GET /api/matches`: authentication and validation failures, scoring loop, thresholds, ordering, limit and empty result | [TEAM_A.md](TEAM_A.md) |
 | [collaborative-study.svg](exports/collaborative-study.svg) | E2 collaborators: `StudyRoomService`, `StudySessionService`, `WeatherService` and their domain and value classes | [TEAM_C.md](TEAM_C.md) |
+| [ai-study-tools.svg](exports/ai-study-tools.svg) | Quizzes, personal and session study plans, and Pixel: creation services, writers, reply validators, `Quiz` / `StudyPlan`, the rules-first intent reading and the shared `AiClient` / `GeminiClient` / `AiQuota` | [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md#study-assistant-ai-shared) |
 | [e1-explanation.svg](exports/e1-explanation.svg) | E1 match explanation: freshness check, evidence reduction, cache, quota, Gemini call and the AI / STANDARD / problem outcomes | [E1.md](E1.md) |
 
 The architecture panel and the matching sequence carry the main narrative; the class panels
@@ -29,7 +30,7 @@ Python 3 standard library. Each named function in the script defines one panel's
 shapes and coordinates. Edit the script, not the generated SVGs.
 
 ```bash
-# From the repository root: rewrite the nine generated SVGs in docs/diagrams/exports/
+# From the repository root: rewrite the ten generated SVGs in docs/diagrams/exports/
 python3 docs/diagrams/render_diagrams.py
 
 # Check only: fail if any committed SVG differs from the script's output,
@@ -81,13 +82,3 @@ describe storage and complement, rather than replace, the class diagrams.
 - Room state reads and lease renewals recheck access without a group-row lock; admission and
   timer/configuration changes lock accounts before the group. Session changes serialise on
   their parent. Neither room presence nor a calendar snapshot is an attendance promise.
-
-## Not yet drawn
-
-The following features have no diagram in this set yet:
-
-- Quizzes (`com.studybuddy.quiz`)
-- Study plans (`com.studybuddy.studyplan`)
-- Pixel, the study assistant (`com.studybuddy.assistant`)
-
-These belong to Team B. They appear in the architecture panel only as uses of Google Gemini.

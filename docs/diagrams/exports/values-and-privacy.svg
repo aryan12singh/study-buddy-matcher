@@ -85,8 +85,9 @@
 <text x="1366" y="923" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">relationship: ProfileRelationshipDto</text>
 <rect x="1000.69" y="619" width="98.62" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="1050" y="636" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">otherwise</text>
-<rect x="1523.56" y="619" width="162.88" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="1605" y="636" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">SELF / CONNECTED</text>
+<rect x="1550.69" y="619" width="98.62" height="49" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1600" y="636" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">SELF /</text>
+<text x="1600" y="658" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">CONNECTED</text>
 <text x="62" y="1088" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">WeeklyAvailability canonicalizes duplicate/overlapping/adjacent blocks, then intersects unique time. Half-open intervals that only touch share no minutes.</text>
 <text x="62" y="1113" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">PublicProfileDto has no contactNumber field. ConnectedProfileDto includes it only for the owner or an active accepted buddy; groups/admin status do not qualify.</text>
 <text x="62" y="1138" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Selected members are shown. Both profile records implement ProfileDto independently; ConnectedProfileDto does not inherit PublicProfileDto.</text>

@@ -215,7 +215,7 @@ E1's `matchexplanation` package.
 | Long requests | `timeout` 90 s and `max-output-tokens` 4000, because a quiz or roadmap from a lecture PDF can take Gemini well over 30 seconds |
 | No transaction during the call | Creation runs as a short checking read, the AI call, then a short write, so no connection or account lock is held while Gemini answers |
 | Validate before spending | Every check that needs no AI runs first, so a bad request never uses the student's allowance |
-| Versioned prompts | Templates live in `backend/src/main/resources/prompts/` (`assistant-v1.txt`, `quiz-v1.txt`, `study-plan-v2.txt`); a wording change is a new file and version |
+| Versioned prompts | Templates live in `backend/src/main/resources/prompts/` (`assistant-v2.txt`, `quiz-v1.txt`, `study-plan-v2.txt`); a wording change is a new file and version |
 | Prompt injection | Student text and material are marked as data, never instructions; slots are filled in a single pass so student text is never searched for slots |
 | Failure | Any failure is `AiUnavailableException` (503 `AI_UNAVAILABLE`); logs never contain the prompt, file, reply or key |
 
@@ -233,6 +233,8 @@ matching `AssistantIntent` answers it:
 | `WHEN_TO_MEET` | Weekly times every member of the named open group is free, filtered by meeting length, with a link to schedule a session |
 | `QUIZ_ME` | Opens Quiz Buddy with the course and topic filled in |
 | `PLAN_STUDY` | A link to study plans carrying course, exam date and weekly hours |
+| `PLAN_SESSION` | The student's soonest upcoming session (narrowed by group, course or meeting day), linking to its page to plan its roadmap; someone who may not manage it is told the group leader can |
+| `SESSION_TOPICS` | That meeting's roadmap entries with their planned times, or why there are none (no session that day, no roadmap yet, or the roadmap no longer covers it) |
 | `UNKNOWN` | Greetings and anything else |
 
 | Decision | Choice and reason |
@@ -259,8 +261,8 @@ Study plans screen uses to prefill its create form.
 
 **What it does.** Quiz Buddy (`QuizBotLauncher`, `QuizBotWindow`) writes a ten-question
 multiple-choice quiz from uploaded or pasted notes. A personal quiz is the student's own practice,
-from the personal Study Room. A group quiz is started in a group's study room (the API also accepts an
-optional session ID); members take it, see a leaderboard and review answers after it closes.
+from the personal Study Room. A group quiz is started in a group's study room and may be for one of the group's upcoming
+sessions; members take it, see a leaderboard and review answers after it closes.
 
 | Decision | Choice and reason |
 | --- | --- |
@@ -272,6 +274,7 @@ optional session ID); members take it, see a leaderboard and review answers afte
 | Attempts | Starting records the time; asking again returns the same attempt, so a reload does not reset the clock. The member's row is locked so a double click cannot start two |
 | Marking | `QuizMarker` requires every question answered exactly once with a valid option; anything else is invalid input, so skipping cannot save time |
 | Leaderboard | `QuizLeaderboard` ranks by score, then less time, then earlier submission, then student ID, so ranks are distinct and stable between polls. A member who leaves, is removed or is deactivated keeps their attempt but drops off |
+| Quiz for a session | When the group has upcoming scheduled sessions, Quiz Buddy asks which one the quiz is for, with one button per session and "Not for a session"; the quiz list then names it. The question is optional and is skipped when the group has none or the list fails to load, so it never blocks a quiz. The server accepts only a scheduled session of the same group |
 | Session cancelled during the AI call | The quiz is saved without a session rather than failing |
 
 **Privacy.** Material is sent to Gemini for that one request and never stored; the quiz keeps only
@@ -283,10 +286,16 @@ members see open quizzes in the room and in Pixel's to-do list.
 
 ## Study plans
 
-**What it does.** A personal week-by-week study roadmap for a course and study goal, written from
-the student's own material. Without an exam date it covers this week; with one it covers every week
-from today up to the exam (the last possibly a part week), each holding the student's weekly hours.
-The student ticks entries off or deletes the plan.
+**What it does.** A roadmap written from the student's own material, in two kinds:
+
+- **Personal** (`StudyPlanScope.PERSONAL`): week by week for a course and study goal. Without an
+  exam date it covers this week; with one it covers every week from today up to the exam (the last
+  possibly a part week), each holding the student's weekly hours. A student may keep several.
+- **Session** (`StudyPlanScope.SESSION`): one plan per study session, covering its meetings that
+  have not ended yet, up to `max-session-meetings` (12), each block one meeting's length. It is
+  planned from the session page (`SessionRoadmapPanel`).
+
+Entries can be ticked off and the plan deleted.
 
 | Decision | Choice and reason |
 | --- | --- |
@@ -295,14 +304,18 @@ The student ticks entries off or deletes the plan.
 | Output checks | `StudyPlanOutputValidator` accepts a reply only if every block of the frame is covered, no entry names a block outside it, each block has 1 to `max-entries-per-block` (5) entries with at most `max-tasks-per-entry` (5) tasks, minutes fit the block and every text fits its column. It cannot prove the plan is good advice |
 | Upload type checks | `StudyMaterialReader` accepts files or pasted topics, not both: up to `max-files` (6), `max-upload-size` (10 MB) in total. Type is decided by extension and content together: a `.pdf` must start with the PDF signature, a `.txt` or `.md` file must be strict UTF-8 without NUL characters. Anything else is 415; too large is 413 |
 | Size limits | Spring's multipart limit reads the same `max-upload-size`, so they cannot drift apart. Text files together hold at most `max-text-file-characters` (100,000); pasted topics at most `max-topics-characters` (4000) |
-| Immutable plan | A plan is built in one go from a validated draft; afterwards the student can only tick entries |
+| Immutable plan | A plan is built in one go from a validated draft; afterwards it can only be ticked off or deleted |
+| Session plans follow session access | Every current participant reads it (accepted members of an open group, or both buddies); whoever manages the session (the group leader, or either buddy) plans, ticks and deletes it. Reusing the session's rules means no second permission model |
+| One plan per session | A new session plan replaces the old one, and its progress goes with it; if Gemini fails the old plan is kept. Editing the session does not regenerate it, so the screen compares the session's `updatedAt` with the plan's `createdAt` to flag a possibly outdated plan. A session cancelled or rescheduled while Gemini answers saves nothing (409) |
+| Course for a session | A group session studies its group's course; a buddy connection has none, so the buddy planning it chooses one |
 
-**Privacy.** A plan belongs to its student alone; anyone else gets 404. The material is sent to
+**Privacy.** A personal plan belongs to its student alone and a session plan to the session's
+current participants; anyone else gets 404, and session plans are never listed with personal ones. The material is sent to
 Gemini for one request and never stored: the plan keeps the extracted topic titles and file names
 only.
 
-**Limits.** Only personal plans have endpoints and screens. Session plans are modelled (`StudyPlanScope.SESSION`) but readable by nobody until
-their access rules and endpoints are added.
+**Limits.** A session plan is not regenerated when the session changes; it is flagged as possibly
+out of date instead. Plans bound the shape and size of Gemini's advice, not its quality.
 
 ## Music: Spotify and Freesound
 

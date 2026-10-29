@@ -46,7 +46,7 @@
 <ellipse cx="1090" cy="700" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
 <ellipse cx="1090" cy="880" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
 <rect x="835" y="990" width="470" height="129" rx="6" fill="#eaf5f1" stroke="#c5d2da" stroke-width="1.5" />
-<rect x="275" y="1130" width="1015" height="49" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="275" y="1130" width="1015" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
 <rect x="45" y="1240" width="1510" height="49" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
 <text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML use cases — compulsory baseline</text>
@@ -82,6 +82,7 @@
 <text x="852" y="1048" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Leader operations require group.leader.id</text>
 <text x="852" y="1073" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">to equal the current student. No leader</text>
 <text x="852" y="1098" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">subclass or global leader role exists.</text>
-<text x="292" y="1158" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Profile reads enforce contact privacy. Registration and sign-in are public entry points; other actions require an active account.</text>
+<text x="292" y="1158" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Profile reads enforce contact privacy.</text>
+<text x="292" y="1183" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Registration and sign-in are public; other actions need an active account.</text>
 <text x="62" y="1268" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Notation: actor association = solid line; ellipse = use case; rectangle = application boundary. E2 use cases are a separate panel.</text>
 </g></svg>
