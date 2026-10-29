@@ -88,6 +88,8 @@
 .desktop .desktop-navigation a.active { background: #d6eaf3; border-color: #4f779c; box-shadow: inset 1px 1px white, 2px 2px 0 #35526b40; color: #203b70; }
 .desktop .desktop-navigation a:hover { background: #d6eaf3aa; }
 .unread-count { min-width: 24px; border-radius: 0; margin-left: 0; }
+.nav-section { display: flex; flex-direction: column; gap: .3rem; margin-top: .9rem; }
+.nav-section-title { padding: 0 .65rem .3rem; border-bottom: 2px dotted #35526b80; color: #1f3a4d; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 1px #c8e6ed; }
 .pixel-icon { display: inline-grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); width: 28px; height: 28px; flex: 0 0 28px; color: currentColor; }
 .pixel-icon i { display: block; }
 .pixel-icon .pixel-on { background: currentColor; }
@@ -251,6 +253,8 @@
   .session-menu .retro-button { padding: .45rem .65rem; font-size: .78rem; white-space: nowrap; }
   .desktop-layout { display: block; padding: .85rem .7rem 2rem; }
   .desktop-navigation { position: static; display: flex; flex-direction: row; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+  .nav-section { display: contents; }
+  .nav-section-title { flex-basis: 100%; margin-top: .3rem; padding: 0 0 .2rem; }
   .desktop .desktop-navigation a { display: flex; min-height: 44px; font-size: .76rem; padding: .5rem .6rem; gap: .5rem; background: #d1e7f080; border: 1px solid #8aabba; }
   .desktop-navigation .pixel-icon { width: 21px; height: 21px; flex-basis: 21px; }
   .desktop .desktop-navigation a.active { border-width: 1px; background: #edf5f8; }
@@ -543,3 +547,40 @@
 .home-match-preview { list-style: none; display: grid; gap: .65rem; padding: 0; margin: .85rem 0; }
 .home-match-preview li { padding: .7rem; border: 1px solid #b5c6ce; background: white; }
 .home-match-preview a { font-weight: 700; }
+
+/* Menu bar: brand on the left; tools, then the account, on the right. */
+.desktop-menubar { min-height: 64px; padding: .6rem 1.5rem; gap: 1.25rem; }
+.desktop .desktop-brand { flex-shrink: 0; }
+.desktop-brand > span:not(.pixel-icon) { font-size: 1.08rem; white-space: nowrap; }
+.desktop-brand .pixel-icon { width: 28px; height: 28px; flex-basis: 28px; }
+.session-menu { gap: 1rem; min-width: 0; }
+.menubar-tools, .menubar-account { display: flex; align-items: center; gap: .5rem; }
+.menubar-account { gap: .65rem; min-width: 0; padding-left: 1rem; border-left: 1px solid #c3ccd0; }
+.session-menu .retro-button { min-height: 40px; padding: .35rem .85rem; font-size: .88rem; white-space: nowrap; }
+.session-menu .menubar-icon-button { position: relative; width: 40px; padding: 0; }
+.session-menu .retro-button .pixel-icon { width: 20px; height: 20px; flex-basis: 20px; }
+.menubar-notifications.active, .menubar-help.active { background: #d6eaf3; border-color: #4f779c; }
+.menubar-notifications .unread-count { position: absolute; top: -.5rem; right: -.5rem; }
+.session-menu .menubar-menu { display: none; }
+
+@media (max-width: 1100px) {
+  .desktop-menubar { padding: .6rem 1rem; }
+}
+@media (max-width: 700px) {
+  .desktop-menubar { min-height: 56px; padding: .5rem .75rem; gap: .5rem; }
+  .desktop-brand { max-width: none; }
+  .desktop-brand > span:not(.pixel-icon) { font-size: .92rem; }
+  .desktop-brand .pixel-icon { width: 24px; height: 24px; flex-basis: 24px; }
+  .session-menu { gap: .4rem; }
+  .menubar-tools { gap: .4rem; }
+  .menubar-account { gap: .4rem; padding-left: 0; border-left: 0; }
+  .menubar-account .initials-avatar, .menubar-account .session-identity { display: none; }
+  .session-menu .retro-button { padding: .35rem .65rem; font-size: .8rem; }
+  .session-menu .menubar-menu { display: inline-flex; }
+  .menubar-menu[aria-expanded="true"] { background: #d6eaf3; border-color: #4f779c; }
+  .desktop-navigation:not(.is-open) { display: none; }
+  .desktop-navigation.is-open { padding: .75rem; background: #e4f1f6; border: 1px solid #8aabba; box-shadow: 2px 2px 0 #35526b40; }
+}
+@media (max-width: 430px) {
+  .desktop-brand > span:not(.pixel-icon) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+}
