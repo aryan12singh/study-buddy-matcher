@@ -5,7 +5,9 @@ ALTER TABLE public.group_join_requests ADD CONSTRAINT group_join_requests_status
     'PENDING','ACCEPTED','REJECTED','WITHDRAWN'));
 
 -- Leaders are told when an applicant withdraws or a member leaves of their own accord.
--- This is the current list and is validated against every row; earlier files add theirs NOT VALID.
+-- NOT VALID: every run replays all files, and rows saved with a newer type (such as
+-- GROUP_STUDY_ROOM_STARTED) must not fail here. 20261024010000_study_room_started_notification.sql
+-- replaces this list with the validated current one.
 ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
 ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK(type IN (
     'MATCH_REQUEST_RECEIVED','MATCH_REQUEST_ACCEPTED','MATCH_REQUEST_DECLINED','MATCH_REQUEST_CANCELLED',
@@ -13,7 +15,7 @@ ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK(t
     'GROUP_JOIN_REQUEST_REJECTED','GROUP_JOIN_REQUEST_WITHDRAWN','GROUP_MEMBER_REMOVED',
     'GROUP_MEMBER_LEFT','GROUP_CLOSED',
     'GROUP_SESSION_CREATED','GROUP_SESSION_UPDATED','GROUP_SESSION_CANCELLED',
-    'BUDDY_SESSION_CREATED','BUDDY_SESSION_UPDATED','BUDDY_SESSION_CANCELLED'));
+    'BUDDY_SESSION_CREATED','BUDDY_SESSION_UPDATED','BUDDY_SESSION_CANCELLED')) NOT VALID;
 
 -- Earlier deactivations recorded withdrawn applications as REJECTED. Their notification event
 -- key ends in ':withdrawn', which identifies them exactly; re-running changes nothing further.

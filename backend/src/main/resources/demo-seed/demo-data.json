@@ -204,5 +204,62 @@
       "course": "IS212", "maxSize": 4, "goals": ["PROJECT_DISCUSSION"], "studyMode": "ONLINE", "meets": ["THU_EVE"],
       "members": ["kenneth"], "applicants": [], "closed": true }
   ],
-  "deactivated": ["ryan"]
+  "deactivated": ["ryan"],
+  "sessions": [
+    {"organiser": "priya", "group": "IS442 Design Patterns Clinic", "buddy": null, "title": "Design Patterns Clinic", "block": "WED_EVE", "weeks": 8, "timeZone": "Asia/Singapore", "agenda": "Bring one past-year question each. We go through creational patterns first, then behavioural ones.", "location": "SCIS 1 Seminar Room 3-4"},
+    {"organiser": "priya", "group": null, "buddy": "jamie", "title": "IS442 revision with Jamie", "block": "MON_EVE", "weeks": 1, "timeZone": "Asia/Singapore", "agenda": "Go through the interfaces and abstract classes quiz together.", "location": "Li Ka Shing Library, group study room"}
+  ],
+  "quizzes": [
+    {"by": "priya", "group": "IS442 Design Patterns Clinic", "course": null, "focus": "Design patterns", "notes": "Strategy, Observer, Factory Method, Decorator, Singleton, Adapter, Composite, Builder, Template Method and Facade.",
+      "questions": [
+        {"prompt": "The matching engine swaps its ranking rule at runtime behind one interface. Which pattern is this?", "options": ["Strategy", "Singleton", "Adapter", "Template Method"], "correctOption": 0, "explanation": "Strategy puts interchangeable algorithms behind a common interface so the caller can switch between them."},
+        {"prompt": "Which pattern notifies every registered subscriber when a subject's state changes?", "options": ["Decorator", "Builder", "Observer", "Facade"], "correctOption": 2, "explanation": "Observer lets subjects publish changes to any number of subscribers without knowing their concrete classes."},
+        {"prompt": "Which pattern lets a subclass decide which concrete class an overridable creation method returns?", "options": ["Prototype", "Factory Method", "Composite", "Proxy"], "correctOption": 1, "explanation": "Factory Method defers instantiation to a method subclasses can override."},
+        {"prompt": "Which pattern adds behaviour by wrapping an object in another object with the same interface?", "options": ["Bridge", "Memento", "Visitor", "Decorator"], "correctOption": 3, "explanation": "A decorator implements the same interface as the object it wraps and adds behaviour around each call."},
+        {"prompt": "What is a common criticism of the Singleton pattern?", "options": ["It hides a global dependency and makes testing harder", "It needs multiple inheritance", "It cannot be written in Java", "It always leaks memory"], "correctOption": 0, "explanation": "A singleton is reached from anywhere, so the dependency is hidden and hard to replace in tests."},
+        {"prompt": "A third-party class has the right behaviour but the wrong method names for your interface. Which pattern fits?", "options": ["Observer", "Strategy", "Adapter", "Command"], "correctOption": 2, "explanation": "An adapter converts one interface into the one its clients expect."},
+        {"prompt": "Which pattern lets clients treat a single object and a group of objects in the same way?", "options": ["Iterator", "Composite", "Mediator", "Flyweight"], "correctOption": 1, "explanation": "Composite arranges objects into trees where leaves and containers share one interface."},
+        {"prompt": "An object with many optional fields is easiest to construct step by step with which pattern?", "options": ["Singleton", "Proxy", "Chain of Responsibility", "Builder"], "correctOption": 3, "explanation": "A builder collects the parts one at a time and creates the object at the end."},
+        {"prompt": "Which pattern fixes an algorithm's steps in a superclass method and lets subclasses fill in some of them?", "options": ["Template Method", "Abstract Factory", "State", "Facade"], "correctOption": 0, "explanation": "Template Method keeps the overall order in the superclass and leaves individual steps to subclasses."},
+        {"prompt": "Which pattern gives one simple entry point to a complicated subsystem?", "options": ["Visitor", "Memento", "Facade", "Prototype"], "correctOption": 2, "explanation": "A facade offers a small interface that hides how the subsystem's classes work together."}
+      ],
+      "takers": [
+        {"handle": "priya", "answers": [0, 2, 1, 3, 1, 2, 1, 3, 0, 2]},
+        {"handle": "jamie", "answers": [0, 3, 1, 3, 0, 2, 2, 3, 1, 2]},
+        {"handle": "weiming", "answers": [0, 2, 1, 0, 0, 2, 1, 3, 0, 3]}
+      ],
+      "close": true },
+    {"by": "priya", "group": null, "course": "IS442", "focus": "Interfaces and abstract classes", "notes": "Interfaces, abstract classes, default methods, sealed types and the SOLID principles.",
+      "questions": [
+        {"prompt": "How many interfaces can one Java class implement?", "options": ["Any number", "Only one", "At most two", "Only functional interfaces"], "correctOption": 0, "explanation": "A class extends one superclass but may implement any number of interfaces."},
+        {"prompt": "What can an abstract class have that an interface cannot?", "options": ["Static methods", "Instance fields that hold state", "Default methods", "Constants"], "correctOption": 1, "explanation": "Interfaces hold only constants; an abstract class can keep per-object state in instance fields."},
+        {"prompt": "Which keyword gives an interface method a body that implementing classes inherit?", "options": ["final", "synchronized", "native", "default"], "correctOption": 3, "explanation": "A default method supplies an implementation that classes may keep or override."},
+        {"prompt": "Can an abstract class be instantiated directly with new?", "options": ["No, only a concrete subclass can be", "Yes, if it has a constructor", "Yes, if every method has a body", "Only inside its own package"], "correctOption": 0, "explanation": "An abstract class can have constructors, but they run only when a concrete subclass is created."},
+        {"prompt": "A class implements an interface but leaves some of its abstract methods unimplemented. What must it be?", "options": ["Final", "Static", "Abstract", "Private"], "correctOption": 2, "explanation": "A class that does not implement every abstract method must itself be declared abstract."},
+        {"prompt": "Without a modifier, what access does an abstract method declared in an interface have?", "options": ["Package-private", "Public", "Protected", "Private"], "correctOption": 1, "explanation": "Abstract interface methods are implicitly public."},
+        {"prompt": "Which principle says high-level code should depend on abstractions rather than concrete classes?", "options": ["Single responsibility", "Open-closed", "Liskov substitution", "Dependency inversion"], "correctOption": 3, "explanation": "Dependency inversion makes both high- and low-level modules depend on abstractions."},
+        {"prompt": "What does the Liskov substitution principle require of a subclass?", "options": ["It must be usable wherever its superclass is expected without breaking correctness", "It must override every method", "It must be declared final", "It must not add new methods"], "correctOption": 0, "explanation": "Code written against the superclass should keep working when given any subclass."},
+        {"prompt": "How are fields declared in an interface treated?", "options": ["As private instance fields", "As protected fields", "As public static final constants", "As transient fields"], "correctOption": 2, "explanation": "Interface fields are implicitly public, static and final."},
+        {"prompt": "What does declaring an interface sealed do?", "options": ["Stops it from having methods", "Limits which classes may implement it", "Makes it a functional interface", "Prevents it from being generic"], "correctOption": 1, "explanation": "A sealed interface lists the classes or interfaces permitted to implement or extend it."}
+      ],
+      "takers": [
+        {"handle": "priya", "answers": [0, 2, 3, 0, 2, 1, 3, 1, 2, 1]}
+      ],
+      "close": false }
+  ],
+  "plans": [
+    {"student": "priya", "course": "IS442", "goal": "EXAM_PREPARATION", "hoursPerWeek": 6, "examInDays": 20, "topics": "SOLID principles; interfaces and abstract classes; design patterns; exceptions and generics; collections and streams",
+      "roadmap": {
+        "sourceTopics": ["SOLID principles", "Interfaces and abstract classes", "Design patterns", "Exceptions and generics", "Collections and streams"],
+        "entries": [
+          {"sequence": 1, "title": "Review the SOLID principles", "plannedMinutes": 150, "tasks": ["Summarise each principle in one sentence", "Find one violation in last term's project"]},
+          {"sequence": 1, "title": "Interfaces versus abstract classes", "plannedMinutes": 150, "tasks": ["Take the practice quiz", "Redo the questions you got wrong"]},
+          {"sequence": 2, "title": "Creational and structural patterns", "plannedMinutes": 180, "tasks": ["Draw the class diagrams for Factory Method, Builder and Adapter", "Explain when to choose Decorator over inheritance"]},
+          {"sequence": 2, "title": "Behavioural patterns", "plannedMinutes": 150, "tasks": ["Implement Strategy and Observer in a small example", "Bring questions to the clinic"]},
+          {"sequence": 3, "title": "Exceptions, generics and collections", "plannedMinutes": 150, "tasks": ["Checked versus unchecked exceptions", "Write a generic method with a bounded type"]},
+          {"sequence": 3, "title": "Timed past-paper practice", "plannedMinutes": 180, "tasks": ["Do one past paper under exam conditions", "Mark it and list weak topics"]}
+        ]
+      },
+      "completed": ["Review the SOLID principles", "Interfaces versus abstract classes"] }
+  ]
 }

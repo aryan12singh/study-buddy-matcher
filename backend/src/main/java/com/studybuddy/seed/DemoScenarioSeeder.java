@@ -15,6 +15,7 @@ import com.studybuddy.studygroup.StudyGroupService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.studybuddy.seed.DemoStudentSeeder.courseIdOf;
@@ -45,16 +46,19 @@ public class DemoScenarioSeeder {
         this.admin = admin;
     }
 
-    public void seed(DemoData data, DemoRoster roster, Map<String, Long> courseIds, Long adminId) {
+    /** Replays the history and returns the new groups' ids by name, for the sessions and quizzes that follow. */
+    public Map<String, Long> seed(DemoData data, DemoRoster roster, Map<String, Long> courseIds, Long adminId) {
         for (RequestEntry request : data.requests()) {
             replay(request, roster, courseIds);
         }
+        Map<String, Long> groupIds = new LinkedHashMap<>();
         for (GroupEntry group : data.groups()) {
-            form(group, data, roster, courseIds);
+            groupIds.put(group.name(), form(group, data, roster, courseIds));
         }
         for (String handle : data.deactivated()) {
             admin.deactivate(roster.id(handle), adminId);
         }
+        return groupIds;
     }
 
     private void replay(RequestEntry entry, DemoRoster roster, Map<String, Long> courseIds) {
@@ -79,7 +83,7 @@ public class DemoScenarioSeeder {
                 .orElseThrow(() -> new IllegalStateException("Demo connection was not created"));
     }
 
-    private void form(GroupEntry entry, DemoData data, DemoRoster roster, Map<String, Long> courseIds) {
+    private Long form(GroupEntry entry, DemoData data, DemoRoster roster, Map<String, Long> courseIds) {
         Long leader = roster.id(entry.leader());
         StudyGroupDetails details = new StudyGroupDetails(entry.name(), entry.description(),
                 courseIdOf(entry.course(), courseIds), entry.goals(), entry.studyMode(), entry.maxSize(),
@@ -95,5 +99,6 @@ public class DemoScenarioSeeder {
         if (entry.closed()) {
             groups.close(groupId, leader);
         }
+        return groupId;
     }
 }

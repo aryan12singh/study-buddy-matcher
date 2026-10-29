@@ -21,13 +21,13 @@ export default function AchievementsPage() {
         <div className="achievements">
           <section aria-labelledby="standing-title">
             <h2 id="standing-title" className="achievements-heading">Current standing</h2>
-            <p className="achievement-policy">Badge tiers and levels are recalculated from your records. Connections, open group memberships and eligible schedules can decrease. Sent requests and created groups count while their records are retained.</p>
+            <p className="achievement-policy">Badge tiers you reach are kept, so your level never goes down. Progress uses your current records: connections, open group memberships and eligible schedules can fall, while sent requests and created groups count while their records are retained.</p>
             <AchievementSummary data={data} />
           </section>
           <StudyGrove streak={data.streak} />
           <details className="achievement-help">
             <summary>How these numbers work</summary>
-            <p>Each badge contributes only its current highest tier: Bronze 1 point, Silver 2, Gold 3. Points determine your level, up to {data.maxPoints} points and level {data.maxLevel}. Losing an eligible record can lower a tier or level; badges are not stored as permanent awards.</p>
+            <p>Each badge contributes the highest tier you have reached: Bronze 1 point, Silver 2, Gold 3. Points determine your level, up to {data.maxPoints} points and level {data.maxLevel}. A tier is saved when you open your achievements, so losing a record later lowers only the count, not the tier or level.</p>
             <p>Planner counts individual occurrences, including each week of a recurring session. Only non-cancelled sessions in an active buddy connection or an open group you currently belong to count, from your current connection or membership start date onward. Anyone may have scheduled these sessions.</p>
             <p>Current planned streak is the consecutive run ending this week, or last week while this week is still open. Best eligible run is the longest run in those currently eligible schedules. Editing, cancelling or losing access to a schedule can change either number.</p>
             <p>Planning a session or opening a study-room timer does not record attendance, completed focus time or study quality. These badges make no claim about those activities.</p>

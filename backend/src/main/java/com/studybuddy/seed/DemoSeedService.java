@@ -17,7 +17,8 @@ import java.util.Map;
 
 /**
  * Populates an opt-in demo dataset in one transaction: courses, an administrator, 50 students
- * with varied preferences and, on a fresh database, the history the live demo starts from.
+ * with varied preferences and, on a fresh database, the history the live demo starts from:
+ * requests, connections, groups, upcoming sessions, quizzes and a study plan.
  * Anything that already exists is left untouched, so running it again changes nothing.
  */
 @Service
@@ -30,18 +31,24 @@ public class DemoSeedService {
     private final DemoDataLoader loader;
     private final DemoStudentSeeder students;
     private final DemoScenarioSeeder scenario;
+    private final DemoSessionSeeder sessions;
+    private final DemoQuizSeeder quizzes;
+    private final DemoPlanSeeder plans;
     private final AccountCreation creation;
     private final UserRepository users;
     private final CourseRepository courses;
     private final DatabaseMutationLock mutationLock;
 
     public DemoSeedService(DemoSeedProperties properties, DemoDataLoader loader, DemoStudentSeeder students,
-            DemoScenarioSeeder scenario, AccountCreation creation, UserRepository users, CourseRepository courses,
-            DatabaseMutationLock mutationLock) {
+            DemoScenarioSeeder scenario, DemoSessionSeeder sessions, DemoQuizSeeder quizzes, DemoPlanSeeder plans,
+            AccountCreation creation, UserRepository users, CourseRepository courses, DatabaseMutationLock mutationLock) {
         this.properties = properties;
         this.loader = loader;
         this.students = students;
         this.scenario = scenario;
+        this.sessions = sessions;
+        this.quizzes = quizzes;
+        this.plans = plans;
         this.creation = creation;
         this.users = users;
         this.courses = courses;
@@ -59,7 +66,10 @@ public class DemoSeedService {
         DemoRoster roster = students.seed(data, courseIds, properties.studentPassword());
         // History is replayed only onto a fresh roster; replaying it over existing accounts could clash.
         if (roster.isFresh()) {
-            scenario.seed(data, roster, courseIds, adminId);
+            Map<String, Long> groupIds = scenario.seed(data, roster, courseIds, adminId);
+            sessions.seed(data, roster, groupIds);
+            quizzes.seed(data, roster, courseIds, groupIds);
+            plans.seed(data, roster, courseIds);
         }
     }
 

@@ -12,6 +12,7 @@ import java.util.List;
  * read that checks the request, the AI call, and a short database write. Deliberately not
  * transactional: Gemini can take many seconds, and a transaction held open that long would tie up a
  * database connection. The material is sent to Gemini for this one request and never stored.
+ * Questions written in advance, such as the demo seed's, skip the AI call but pass the same checks.
  */
 @Service
 public class QuizCreationService {
@@ -20,11 +21,14 @@ public class QuizCreationService {
     private final QuizService quizzes;
     private final StudyMaterialReader materials;
     private final QuizWriter writer;
+    private final QuizOutputValidator validator;
 
-    public QuizCreationService(QuizService quizzes, StudyMaterialReader materials, QuizWriter writer) {
+    public QuizCreationService(QuizService quizzes, StudyMaterialReader materials, QuizWriter writer,
+            QuizOutputValidator validator) {
         this.quizzes = quizzes;
         this.materials = materials;
         this.writer = writer;
+        this.validator = validator;
     }
 
     public QuizDto startForGroup(Long groupId, Long actorId, StartQuizInput input, List<MultipartFile> files) {
@@ -39,6 +43,25 @@ public class QuizCreationService {
         StudyMaterial material = materials.read(files, input.notesText());
         QuizDraft draft = writer.write(actorId, request.course(), request.focus(), material);
         return quizzes.savePersonalStarted(actorId, request, titleOf(request.focus(), material), draft);
+    }
+
+    /** Starts a group quiz from questions written in advance, in the shape of Gemini's reply. */
+    public QuizDto startForGroupPrewritten(Long groupId, Long actorId, StartQuizInput input, String questions) {
+        QuizStartRequest request = quizzes.prepareGroupStart(groupId, actorId, input);
+        StudyMaterial material = materials.read(List.of(), input.notesText());
+        return quizzes.saveGroupStarted(actorId, request, titleOf(request.focus(), material), checked(questions));
+    }
+
+    /** Starts a practice quiz from questions written in advance, in the shape of Gemini's reply. */
+    public QuizDto startPersonalPrewritten(Long actorId, PersonalQuizInput input, String questions) {
+        QuizStartRequest request = quizzes.preparePersonalStart(actorId, input);
+        StudyMaterial material = materials.read(List.of(), input.notesText());
+        return quizzes.savePersonalStarted(actorId, request, titleOf(request.focus(), material), checked(questions));
+    }
+
+    private QuizDraft checked(String questions) {
+        return validator.validate(questions)
+                .orElseThrow(() -> new IllegalArgumentException("The prewritten questions do not pass the quiz checks"));
     }
 
     /** What quiz lists show: the focus if given, otherwise the files' names, cut to fit the column. */

@@ -1,263 +1,395 @@
 # Design decisions
 
-The Team C decisions below were agreed on 7 October 2026. Sources: the IS442 brief, the `oop.pdf`
-discussion and issues #10-14. The brief requires admin deletion without saying hard or soft;
-issue #14 asks for separate Delete and Deactivate actions. These are our design choices,
-not rules from the brief.
+The team's choices where the IS442 brief is silent or open to interpretation, with the reason for
+each and the alternative it replaced. Where a row records an interpretation rather than a rule from
+the brief, it says "Team decision". API details are in [API_CONTRACT.md](API_CONTRACT.md) and
+configuration keys in the README.
 
-| Decision | Choice and reason | Alternative / affected work |
+## Contents
+
+- [Accounts, relationships and groups (Team C)](#accounts-relationships-and-groups-team-c)
+- [Transaction and database guarantees](#transaction-and-database-guarantees)
+- [Platform and own profile (Team B)](#platform-and-own-profile-team-b)
+- [Interface behaviour](#interface-behaviour)
+- [Matching decisions (Team A)](#matching-decisions-team-a)
+- [AI match explanation decisions (E1)](#ai-match-explanation-decisions-e1)
+- [Collaborative study experience (E2)](#collaborative-study-experience-e2)
+- [Study assistant AI (shared)](#study-assistant-ai-shared)
+- [Pixel study assistant](#pixel-study-assistant)
+- [Quizzes](#quizzes)
+- [Study plans](#study-plans)
+- [Music: Spotify and Freesound](#music-spotify-and-freesound)
+- [Achievements](#achievements)
+- [Baseline requirement contract](#baseline-requirement-contract)
+
+## Accounts, relationships and groups (Team C)
+
+The brief requires admin deletion without saying hard or soft. Team decision: separate Delete and
+Deactivate actions.
+
+| Decision | Choice and reason | Alternative rejected |
 | --- | --- | --- |
-| Leader model | Creating student + leader FK + accepted membership; STUDENT/ADMIN are the only roles | A subclass or GROUP_LEADER JWT role would misrepresent per-group permissions; #12 |
-| Deactivate | Retain identity/profile/history, revoke access, end active buddies, cancel pending buddy requests, close led groups/reject applicants, withdraw own pending applications, leave open groups atomically; closed groups keep the leader and members | Merely flipping active leaves usable relations; #10/#12/#14 |
-| Reactivate | Fresh sign-in, no relation restoration, old JWT versions remain invalid | Restoring ended resources or old JWTs changes consent; #14 |
-| Permanent delete | Remove user/student and all dependencies; remove led groups and dependent records, preserve other groups, notify surviving participants generically and purge deleted-resource links | Delete-as-deactivate fails distinct operation; orphan leaders/implicit transfer unsupported; #14 |
-| Administrative safeguards | Self removal blocked, and the actor must be an active admin, so one always remains; the exclusive lifecycle guard serializes admins removing each other and rejects revoked actors | Check-then-write count races; #14 |
-| Role changes | Select at create; fixed on normal edit, no implicit Student/Admin conversion | Conversion needs separate profile/data policy; #14 |
-| Email identity | Strip + lowercase; unique DB expression index; inactive email reserved, deletion releases it | Case-sensitive app-only check permits duplicates; #6/#14 |
-| Contact reads | Separate public/connected profile DTOs; self or current buddy only, never group peers or admin payloads | Entity serialization/CSS hiding discloses private values; #11/#14 |
-| Admin contact writes | Required on student creation; optional replacement on edit, omission preserves stored number | Prefilling a private contact in admin payload bypasses the agreed read policy; #14 |
-| Usage | Last successful sign-in, unended connections, current accepted membership in open groups including leader; separately labelled history metrics | Online status and guessed scores are not usage evidence; #14 |
-| Request context | PROFILE or MATCHING with optional known course/goal; retain and validate supplied context | Do not invent a search course from profile preferences; #10/#3 |
-| Group capacity | Accepted members including leader count; pending requests do not. Group row serializes approval, edit, remove and close | Separate pre-counts allow over-capacity commits; #12 |
-| Group closure | One-way closed record; pending applicants rejected, other accepted members notified; no new requests/approval/edit. E2 also revokes room leases and cancels scheduled sessions | Leader transfer and reopen remain separate proposals; #12/#16 |
-| Taking back an action | Sender withdraws a pending buddy request (`CANCELLED`); applicant withdraws a pending application (`WITHDRAWN`); member leaves an open group, which also ends their study-room presence. Each confirms first and notifies the other party. The leader cannot leave and closes the group instead | Without these a pending request blocked a pair indefinitely, and deactivation had to record withdrawals as leader rejections |
-| Optional group data | Preserve existing acceptance of absent goals/mode/weekly slots; always require name/course/capacity >=2 | Inventing compulsory choices changes a graded field requirement; #12 |
-| Weekly times | Whole minutes, same-day start before end, Asia/Singapore. Group schedules may be empty or overlap; a student's own schedule rejects same-day overlap | Group meeting slots and personal availability have distinct validation contracts; E2 dated sessions use their own service; automatic overnight splitting remains outside the weekly contract; #8/#12/#16 |
-| Event times | Java Instant + PostgreSQL timestamptz + Z API timestamps; legacy local values explicitly converted from Asia/Singapore | Relabelling timestamp without conversion shifts recorded moments; matching-owned timestamps untouched |
-| Notifications | One service, safe summary/resource metadata, recipient scope, persistent read state and transaction/event-key deduplication; E2 adds actual session change events | Email/SMS/push and scheduled reminder delivery remain separate proposals; #13/#16 |
-| Database access | Backend JDBC owner writes; browser table/sequence grants revoked, RLS enabled with no browser policies | Supabase Auth/RLS browser access is a different architecture from application JWTs; #11 |
-| Cross-instance write order | Shared transaction advisory guard for relationship/profile/room/session transitions; exclusive for account lifecycle/seed; sorted user rows before parent/request rows; actor version rechecked. Room reads and existing-lease renewals avoid the group lock | Process mutex alone fails multiple instances; serializing every poll unnecessarily blocks independent work |
-| Windows | Decorative title bars and conventional routes; shared retro components are the implemented baseline | Movable stacking manager adds no OO value. The existence of an implemented screen does not certify latest-Figma acceptance; #9/#41 |
-| Data freshness | Refetch on mutations/focus/visibility plus bounded poll; a background refresh keeps the last response visible until replaced and clears it if the refresh fails; purge sensitive view state on disconnect/logout/401; forms preserve inputs | A saved/displayed number cannot be erased from someone else's memory; #11/#13 |
-| Sign-in throttling | Count attempts per normalized email, known or unknown, reserving each before the password check; a success clears the count. After the limit, refuse that email (429) for the lockout, even with the right password. In memory | Anyone who knows an email can lock it for one lockout (15 minutes by default); accepted for a coursework deployment. Per-IP counting needs the client address through the controller and is unreliable behind a proxy. A restart clears all counts; multiple instances would each keep their own |
-| Seed | Explicit opt-in, runtime passwords, missing identities/courses only, no resets | Shared destructive reseeds and committed/default passwords unsafe; #5/#44 |
-| Shared foundation | Minimum auth/client/shell/course/seed/counts for C to run independently, documented interfaces for B/A reuse | Duplicate full B product implementation would create integration conflict |
+| Leader model | The creating student is the leader: leader foreign key plus an accepted membership. STUDENT and ADMIN are the only roles | A subclass or GROUP_LEADER JWT role would misrepresent per-group permissions |
+| Deactivate | Keep identity, profile and history; revoke access; end active buddies; cancel pending buddy requests; close led groups and reject their applicants; withdraw own pending applications; leave open groups, all atomically. Closed groups keep the leader and members | Flipping an active flag alone leaves usable relations behind |
+| Reactivate | Fresh sign-in; no relation is restored; old JWT versions stay invalid | Restoring ended relations or old tokens would change what the other students consented to |
+| Permanent delete | Remove the user, student and all dependent records, including led groups; preserve other groups; notify surviving participants generically and purge links to deleted resources | Delete-as-deactivate is not a distinct operation; orphaned leaders or implicit transfer are unsupported |
+| Admin safeguards | Self-removal is blocked and the actor must be an active admin, so one always remains. The exclusive lifecycle guard serialises admins removing each other and rejects revoked actors | A check-then-write count races |
+| Role changes | Chosen at creation and fixed on edit; no Student/Admin conversion | Conversion needs its own profile and data policy |
+| Email identity | Trim and lower-case; unique database expression index; an inactive account keeps its email reserved, deletion releases it | A case-sensitive application-only check permits duplicates |
+| Contact reads | Separate public and connected profile DTOs; contact visible to self or a current buddy only, never to group peers or in admin payloads | Entity serialisation or CSS hiding leaks the value |
+| Admin contact writes | Required when an admin creates a student; optional replacement on edit, where omission keeps the stored number | Prefilling a private contact in an admin payload bypasses the read policy |
+| Usage | Last successful sign-in, unended connections, current accepted membership of open groups (including led ones); history metrics are labelled separately | Online status and guessed scores are not usage evidence |
+| Request context | PROFILE or MATCHING, with optional known course or goal, validated and kept | Inventing a search course from profile preferences |
+| Group capacity | Accepted members including the leader count; pending requests do not. The group row serialises approval, edit, removal and close | Separate pre-counts allow over-capacity commits |
+| Group closure | One-way; pending applicants rejected; other members notified; no new requests, approvals or edits. Also revokes room leases and cancels scheduled sessions | Leader transfer and reopening are not implemented |
+| Taking back an action | The sender withdraws a pending buddy request (`CANCELLED`); the applicant withdraws a pending application (`WITHDRAWN`); a member leaves an open group, which also ends their study-room presence. Each confirms first and notifies the other party. The leader cannot leave and closes the group instead | Without these, a pending request blocked a pair indefinitely and deactivation had to record withdrawals as leader rejections |
+| Optional group data | Goals, mode and weekly slots may be empty; name, course and capacity of at least 2 are required | Inventing compulsory choices would change a graded field requirement |
+| Weekly times | Whole minutes, same-day start before end, Asia/Singapore. Group schedules may be empty or overlap; a student's own schedule rejects same-day overlap | Group meeting slots and personal availability are different contracts; overnight splitting is not supported |
+| Event times | Java `Instant`, PostgreSQL `timestamptz`, `Z` timestamps in the API; legacy local values converted from Asia/Singapore | Relabelling a timestamp without conversion shifts recorded moments |
+| Notifications | One service; safe summary and resource metadata; recipient scope; persistent read state; transaction and event-key deduplication | Email, SMS, push and scheduled reminders are not implemented |
+| Database access | The backend's JDBC owner writes; browser table and sequence grants revoked; RLS enabled with no browser policies | Supabase Auth/RLS browser access is a different architecture from application JWTs |
+| Cross-instance write order | A shared transaction advisory guard for relationship, profile, room and session transitions; exclusive for account lifecycle and seed; user rows locked in ID order before parent and request rows; actor version rechecked. Room reads and existing-lease renewals avoid the group lock | A process mutex fails with several instances; serialising every poll blocks independent work |
+| Data freshness | Refetch on mutations, focus and visibility plus a bounded poll; a background refresh keeps the last response until replaced and clears it if the refresh fails; sensitive view state is purged on disconnect, logout and 401; forms keep their input | A displayed number cannot be erased from someone else's memory |
+| Sign-in throttling | Attempts counted per normalised email, known or unknown, reserved before the password check; success clears the count. Past the limit, that email is refused (429) for the lockout, even with the right password. Kept in memory | Anyone who knows an email can lock it for one lockout (15 minutes by default), accepted for coursework. Per-IP counting is unreliable behind a proxy. A restart clears counts; several instances would each keep their own |
+| Seed | Explicit opt-in, passwords supplied at runtime, adds missing identities and courses only, never resets | Destructive reseeds and committed default passwords are unsafe |
 
 ## Transaction and database guarantees
 
-Relationship/profile and room/session transition writes acquire shared advisory transaction
-lock `4422026`; account lifecycle and seed acquire it exclusively. Affected user rows are
-locked in ID order before parent/request rows and state/counts are rechecked. An actor
-revoked while waiting fails authorization after locking. Group approval and capacity edits
-take the same group lock. Polled room reads recheck active membership without row locks;
-heartbeats update only an existing unexpired tab lease without locking the group. Deletion
-or expiry cannot be reversed by a heartbeat: a new capacity-checked join is required.
-Partial unique indexes protect unordered pending buddy pairs, active connection pairs,
-pending group/applicant pairs and recipient/event identities.
+Relationship, profile, room and session transition writes take shared advisory transaction lock
+`4422026`; account lifecycle and seed take it exclusively. Affected user rows are locked in ID order
+before parent and request rows, and state and counts are rechecked. An actor revoked while waiting
+fails authorisation after locking. Group approval and capacity edits take the same group lock.
+Polled room reads recheck active membership without row locks; heartbeats update only an existing,
+unexpired tab lease without locking the group. A heartbeat cannot reverse deletion or expiry: a new
+capacity-checked join is required. Partial unique indexes protect unordered pending buddy pairs,
+active connection pairs, pending group/applicant pairs and recipient/event identities.
 
-Application exceptions are mapped to safe RFC 9457 problems; SQL details remain internal.
-Notifications commit in the same transaction as the transition. Real HTTP tests inject a
-notification failure and verify rollback, and run simultaneous decisions against PostgreSQL.
-The advisory protocol is for this backend's writes; arbitrary privileged SQL outside the
-protocol can still break cross-row capacity rules. Operators must not bypass it.
+Application exceptions map to safe RFC 9457 problems; SQL details stay internal. Notifications
+commit in the same transaction as the transition that caused them. HTTP tests inject a notification
+failure and verify rollback, and run simultaneous decisions against PostgreSQL. The advisory
+protocol covers this backend's writes; privileged SQL run outside it can still break cross-row
+capacity rules, so operators must not bypass it.
 
-## Platform and own-profile decisions (Team B boundary)
+## Platform and own profile (Team B)
 
-This describes the implemented platform and the 13 October compulsory completion work.
-Team ownership describes responsibility; it does not establish unrecorded individual authorship
-or human acceptance.
-
-| Decision | Choice and reason | Alternative / affected work |
+| Decision | Choice and reason | Alternative rejected |
 | --- | --- | --- |
-| Identity/profile model | `Student` composes `User` with a shared `@MapsId` identity; administrators need no student profile | User inheritance would mix account/security concerns with student-only preferences; #5/#6/#7 |
-| Authentication | Existing Spring Security/JJWT/BCrypt; server validates role, active account and token version on each request | Browser route guards alone cannot enforce authorization; Supabase browser auth is a different model; #6 |
-| Own profile boundary | `MyProfileAssembler` returns self-only profile/contact fields; other-student reads use the public/connected privacy assembler | Reusing the own-profile DTO for discovery would expose contact/email; #7/#11 |
-| Saved buddy target | Independent of course enrolments; Home uses it for a matching preview. Find buddies requires a current course or goal | Claiming it always becomes the finder's default disagrees with current UI behavior; #7/#9 |
-| Preference representation | Categorical mode/group-size controls; group size becomes the agreed inclusive min/max interval; optional goal set | Storing another competing preference representation complicates Team A integration; #7 |
-| Whole-week replacement | Serialize per-student profile/availability writes before collection read/delete/insert; return a complete replacement | Individually valid concurrent weeks must never become a combined invalid week; #7/#8 |
-| Recoverable owner-editor refresh | Keep the other unsaved profile/week draft mounted after a successful save followed by a transient read failure; preserve retry/discard controls. Logout, identity changes and lost authorization clear it | Relaxing privacy purge globally would retain other students' private responses; #6/#7/#8 |
-| Time draft ownership | Shared editor reports incomplete/invalid raw text and dirty state to profile/group forms; save is blocked until valid, and exit protection includes that text | Keeping an old valid payload while showing a new invalid value silently saves the wrong input; #8/#12 |
-| Overlap policy | Personal availability rejects overlapping same-day blocks; groups permit overlap and the shared editor explains the applicable policy | A generic overlap warning must not imply a group API rejection; #8/#12 |
-| Setup and schema | Development packaging skips tests; the isolated harness provisions/migrates PostgreSQL for context/HTTP tests. Ordered SQL is required on runtime databases | Local application YAML does not provision the test profile; Hibernate update cannot replace custom migration/adoption/RLS work; #5/#17 |
-| Responsive/font baseline | Shared decorative chrome, Tahoma/Verdana/system body fonts, original CSS pixels and wrapping narrow layouts | A pixel font/window manager is not needed to implement the current design. Latest-Figma, contrast/projector and full browser checks remain acceptance gates; #9/#41/#42 |
+| Identity and profile model | `Student` composes `User` through a shared `@MapsId` identity; administrators have no student profile | User inheritance would mix account and security concerns with student-only preferences |
+| Authentication | Spring Security, JJWT and BCrypt; the server checks role, active account and token version on every request | Browser route guards alone cannot enforce authorisation |
+| Own profile boundary | `MyProfileAssembler` returns self-only profile and contact fields; other students' profiles go through the privacy assembler | Reusing the own-profile DTO for discovery would expose contact and email |
+| Saved buddy target | Independent of course enrolments; Home uses it for the matching preview. Find buddies still needs a current course or goal | Treating it as the finder's default would contradict the screen |
+| Preference representation | Categorical mode and group-size controls; group size stored as the inclusive min/max interval; optional goal set | A second competing representation would complicate matching |
+| Whole-week replacement | Per-student profile and availability writes are serialised before the collection is read, deleted and reinserted; the response is the complete replacement | Two individually valid concurrent weeks could otherwise combine into an invalid one |
+| Owner-editor recovery | After a successful save followed by a failed refresh, the other unsaved profile or week draft stays mounted with retry and discard. Logout, identity change and lost authorisation clear it | Relaxing the privacy purge globally would retain other students' private responses |
+| Time drafts | The shared editor reports incomplete or invalid text and dirty state to profile and group forms; save is blocked until valid, and exit protection includes that text | Keeping an old valid value while showing a new invalid one silently saves the wrong input |
+| Overlap policy | Personal availability rejects overlapping same-day blocks; groups permit overlap, and the editor explains which policy applies | A generic overlap warning would imply a group API rejection |
+| Setup and schema | Development packaging skips tests; the test harness provisions and migrates PostgreSQL. Ordered SQL migrations are required on runtime databases | Hibernate `update` cannot replace the migration, adoption and RLS work |
+| Windows and fonts | Decorative title bars and conventional routes; shared retro components; Tahoma/Verdana/system body fonts; original CSS pixel art; narrow layouts wrap | A movable window manager or pixel font adds no object-oriented value |
 
 The whole-system boundary and platform use cases are in [diagrams/PLATFORM.md](diagrams/PLATFORM.md).
 
-## Cross-team decisions still owned elsewhere
+## Interface behaviour
 
-Team A retains group-size preference interpretation, scoring/thresholds/search and matching
-configuration. Current shared fields store a numeric min/max interval; C displays that
-existing representation without deciding its scoring semantics. The team has recorded the
-learning-style interpretation in the baseline contract below. Team B retains the
-own-profile/preferences/availability editor and dashboard. Team A's
-matching preview is a narrow integration in that dashboard, described below; Team C does
-not own those profile editors.
-
-Global online status, group-score recommendations and richer notes/task boards remain proposals.
-E2 merged through [PR #52](https://github.com/aryan12singh/study-buddy-matcher/pull/52),
-including dated group/buddy sessions, calendar export, agenda/dashboard events and the
-subsequently approved weather enhancement. The [16 October database rollout record](DATABASE_OPERATIONS.md#e2-rollout--16-october-2026)
-records its schema application; it is not evidence of a persistent hosted application.
-The baseline/E2 implementation described here was checked against `9592fd2` on 18 October.
-E1 AI explanations have their own contract and evidence on
-[PR #61](https://github.com/aryan12singh/study-buddy-matcher/pull/61). Historical verification records
-retain their original dates and scope. See the
-[selected-extra map](REQUIREMENT_COVERAGE.md#selected-extras-and-delivery).
-
-## Schedule and submission record
-
-The formal brief states Week 13, a 12-minute demo and 8-minute Q&A. Team planning records
-11 October for the compulsory core, 24 October for the internal feature freeze, 25 October
-for extras/integration delivery, 8 November for materials/rehearsal, and 15 November 2026
-23:59 SGT for final handoff. Internal freeze and delivery are distinct milestones.
-
-These are team targets. The exact LMS deadline, final submitted version/receipt and private
-peer-evaluation completion still need direct confirmation; neither the repository date nor
-a local build/export proves submission. No LMS confirmation is claimed here.
-
-## UI polish
-
-| Choice | Behaviour and integration consequence |
+| Choice | Behaviour |
 | --- | --- |
-| Existing APIs | Group forms, membership, privacy and admin flows use the current authenticated contracts; no new backend endpoint, schema, configuration or dependency was required |
-| One data router | `routes.tsx` contains the unchanged guarded route paths; `main.tsx` creates the browser router once and `App` supplies auth and `RouterProvider`. This enables the supported router blocker without custom history interception |
-| Transient drafts | Group/account edits and buddy/application dialogs prompt on dirty SPA exits, Cancel/X/Escape where applicable, and native reload. Successful saves leave normally; choosing to leave a pending write does not cancel its backend transaction. Late completion cannot redirect or invoke an abandoned dialog callback |
-| Destination feedback | Generic create/update/delete messages are displayed at the destination, consumed from the history state and dismissible. Back/reload does not replay them; no account/contact/password/draft values enter these messages |
-| URL views | Groups use `view`, `courseId`, `studyGoal`, `studyMode`; notifications use `view`. Tabs push history; group filter edits replace the current entry. Invalid enum/numeric values default safely and unrelated query keys are preserved |
-| Weekly editing | Duplicate creates an independent block; copy adds it to selected other days without adding an identical existing block. The live preview sorts for display without reordering the input. Existing whole-minute, same-day validation remains authoritative |
-| Schedule draft validation | Invalid/incomplete text participates in save blocking and unsaved-change protection; clearing/changing a time cannot silently submit an older valid slot. Own-profile overlap validation and group overlap permission remain distinct |
-| Copy convenience | An explicit click copies the canonical group URL without query/hash, or an already-authorised contact. Denied/unavailable clipboard gives manual guidance. Contacts are never duplicated into the fallback or persisted by the component |
-| Honest decoration | Original CSS pixel patterns and deterministic name initials carry no inferred identity/presence; capacity uses server member/max counts; loading remains indeterminate. No made-up percentage or online indicator |
-| Responsive interaction | Admin data keeps table semantics with explicit row/cell roles when rendered as narrow cards; visible labels/actions, wrapping, keyboard focus and reduced motion are retained |
-| Nested dialogs | Scroll remains locked until the last modal closes, even when a route exit removes dialogs out of order; each dialog retains its keyboard focus/Escape handling |
-
-## Collaborative study experience (E2 #16)
-
-The project owner expanded PR #52 from a room foundation to the complete selected
-E2 scope. Original retro components and built-in audio were already approved;
-weather visuals and an optional live campus-weather provider were approved during
-completion. E1 AI explanations and other discussion proposals remain separate.
-
-| Question | Accepted choice and reason | Limits / alternative |
-| --- | --- | --- |
-| Room access | Active accepted members of an open group only; server rechecks on every request | Pending applicants/admins/public visitors gain no access; group membership never reveals private contact |
-| Study Room entry (22 October) | User-supplied visual reference: a large personal Pomodoro with one groups sidebar, cream panels and original CSS pixel scenery; narrow screens stack the panels | Reuse existing components and group endpoints; no to-do/subject panels or third-party picture/audio integrations |
-| Personal Pomodoro | Default 25-minute focus/5-minute break with whole-minute user edits (focus 1–180, break 1–60), start/pause/resume and confirmed reset; reuse timer projection and elapsed timestamps to recover after inactive tabs | Session storage holds only validated per-account timer state in the current browser tab; storage failure falls back to an in-memory timer. It does not join/control a group room or synchronize across devices |
-| Shared transport | Existing authenticated HTTP with configured polling, server timestamps and local countdown rendering | No Socket.IO/new dependency; this is small-dataset synchronization, not sample-synchronized streaming |
-| Presence lease | 90 seconds by default. Browsers can slow timers in long-hidden tabs to one run a minute, so a shorter lease dropped students who switched tabs | A tab that crashes without leaving holds its place for up to 90 seconds. The earlier 30-second lease expired during ordinary background-tab use and forced a rejoin |
-| Host disconnect | Timer continues from durable state; co-host or leader can recover. Delegated control requires current presence; leader control remains available without a lease. Since 24 October a departing host hands over to the present co-host or the most recently active person still there, and the last person leaving ends the session | Disconnection is not a timer pause; leadership never transfers, only the host role. Without a background job, an expired tab counts as leaving only when the next person joins |
-| Roles/settings | Leader alone assigns host/co-host. Present assigned hosts/co-hosts may change durations/capacity while preserving roles; durations change only from IDLE | Role reassignment by a delegated host is rejected; capacity cannot drop below present students or exceed the group |
-| Revocation/readmission | `RoomLifecycle` deletes leases and revokes roles in the membership/deactivation/closure transaction | A restored membership/account does not restore an old lease or role; fresh join must satisfy capacity |
-| Audio (superseded 24 October) | Shared room audio and its `/room/audio` endpoint were removed. Both study rooms instead have a personal Music tab in their settings menu: Spotify (free embedded playlist or a Premium account) and Freesound ambient sounds with a one-time remix. The personal room adds a corner mini player (track, next, music and ambient volume) and a prompt that opens the tab | Nothing a student plays reaches the room or other members. The unused `study_rooms` audio columns stay until a later migration so `main` keeps working against the shared database |
-| Local mixer preferences (removed 24 October) | Removed with room audio. The Music tab remembers only which Spotify player a student chose | No private session/account data is stored in the browser |
-| Phase cue | Announce a continuously observed automatic focus/break transition once through a polite atomic status; the changing countdown has live announcements off | Initial entry, reset, discontinuous snapshots, hidden-tab gaps and reconnect do not replay historical cues; this is not a background alarm |
-| Session model | Separate `studysession` feature, with exactly one open-group or active-connection parent, DTO assembler and parent-row locking | Weekly preference schedules remain unchanged; room presence is independent of a dated booking |
-| Session authority | Group leader manages group series; both participants manage their connection's buddy series; accepted group members/connected buddies can read/export | Every read rechecks current eligibility; old relationship IDs never confer renewed access |
-| Local time/recurrence | Whole-minute local start/end plus IANA zone; one or up to configured 52 weekly occurrences; each occurrence preserves local wall time | Reject every missing/ambiguous DST endpoint and invalid duration; no silent timezone fallback or unlimited recurrence |
-| Availability | Reuse Team A's canonical weekly intersections across current accepted members or the two buddies; return campus-local suggestions | Empty availability stays empty; no guessed attendance, reservations or enforced mutual-time booking |
-| Suggested duration | Default to 60 positive whole minutes; fit the chosen duration at the beginning of each sufficiently long returned campus-local overlap | Only selecting a suggestion changes dated fields; invalid/no-fit suggestions do not block a manually entered plan or alter Team A's intersection logic |
-| Session presentation | Derive current/next occurrence and Ongoing/Upcoming/Past labels from authorized occurrence timestamps, with one clock per view and focus/visibility recovery | Relative group room paths and validated HTTPS links are shortcuts only for scheduled current/future plans; joining and backend authorization remain explicit |
-| JDBC civil-time mapping | Use direct local-time/local-date-time JDBC mappings for personal/group weekly slots and dated session civil fields | The E2 availability check reproduced a Singapore-JVM time shift; four narrow Team B slot-field annotations correct round trips without changing Team A maths or schema |
-| Series mutation | Whole-series PUT and cancellation require observed version; notification writes share the transaction | No individual occurrence editor or invitations/RSVP workflow; cancelled series cannot be edited |
-| Parent lifecycle | Ended buddy connection/closed group/deactivated account invalidates access and cancels affected scheduled series; parent deletion cascades records | Reactivation/reconnection does not resurrect schedules; surviving participants receive safe cancellation notices |
-| Calendar representation | Expand the bounded series to independent UTC events with stable series UID/occurrence index and revision | No RRULE/VTIMEZONE/client-side series-edit promise; explicit dates preserve intended wall time across DST |
-| Calendar privacy/import | Export title, agenda, location and validated room link; omit attendee email/contact/token payloads. Download through authenticated API | Snapshot imports can duplicate/ignore changes; shorter/cancelled series never removes offline copies automatically; no OAuth/two-way sync |
-| Weather themes | Original CSS pixel scenes, selectable clear/cloudy/rain/storm/snow/fog and automatic day/night; reduced motion stops animation | Manual theme selection is decorative, never a weather observation or forecast |
-| Live weather | Approved Open-Meteo current campus conditions through the backend: configured coordinates, no student data/device location/key; bounded timeout/cache with silent selectable fallback | External outage does not affect room access/timer/audio; stale/unavailable state and source attribution remain visible |
-
-Open-Meteo is a service addition, with no new Java/npm library. The project's
-non-commercial use and data attribution follow the provider's
-[documentation](https://open-meteo.com/en/docs) and
-[terms](https://open-meteo.com/en/terms); its weather data is attributed under
-CC BY 4.0. Original room art remains the team's own work. The fixed campus
-weather request contains no account identity, contact, schedule, token or room data.
-The test profile disables outbound weather requests. Provider/API and configuration
-details belong in the README and [API contract](API_CONTRACT.md).
-
-Implementation, local automated results, two-browser evidence, real calendar-client
-imports, hosted checks, cross-team review and deployment are separate gates in
-[E2_TESTING.md](E2_TESTING.md). A passing export-format test does not claim Google,
-Apple or Outlook import acceptance. E2 does not fulfill E1's AI-integration work.
+| One data router | `routes.tsx` holds the guarded route paths; `main.tsx` creates the browser router once, which enables the router's navigation blocker without custom history handling |
+| Unsaved drafts | Group and account edits and buddy/application dialogs prompt on dirty in-app exits, Cancel/X/Escape and reload. Leaving during a pending write does not cancel it; a late completion cannot redirect or call back into an abandoned dialog |
+| Destination feedback | Create/update/delete messages show at the destination, read once from history state, dismissible; Back and reload do not replay them; no account, contact, password or draft values appear in them |
+| URL views | Groups use `view`, `courseId`, `studyGoal`, `studyMode`; notifications use `view`. Tabs push history; filter edits replace it. Invalid values fall back safely; unrelated query keys are kept |
+| Weekly editing | Duplicate creates an independent block; copy adds it to other selected days without duplicating an identical block. The preview sorts for display without reordering the input |
+| Copy buttons | An explicit click copies the canonical group URL, or an already-authorised contact. A refused clipboard gives manual guidance; the contact is never duplicated into the fallback or stored |
+| Honest decoration | Pixel patterns and name initials imply no identity or presence; capacity uses server counts; loading stays indeterminate. No made-up percentages or online indicators |
+| Narrow layouts | Admin tables keep row/cell roles when shown as cards; labels, actions, wrapping, keyboard focus and reduced motion are retained |
+| Nested dialogs | Scroll stays locked until the last modal closes, even when closed out of order; each dialog keeps its own focus and Escape handling |
 
 ## Matching decisions (Team A)
 
-Implementation choices for [#1](https://github.com/aryan12singh/study-buddy-matcher/issues/1),
-[#2](https://github.com/aryan12singh/study-buddy-matcher/issues/2),
-[#3](https://github.com/aryan12singh/study-buddy-matcher/issues/3) and
-[#4](https://github.com/aryan12singh/study-buddy-matcher/issues/4), recorded 13 October 2026.
-The brief's Appendix A permits each group to choose formulas and weights. These choices
-complete the current issue scope; this entry does not assert professor or product acceptance.
+Appendix A lets each group choose its formulas and weights. These are the team's choices.
 
-| Question | Implemented choice and reason | Alternative / affected work |
+| Question | Choice and reason | Alternative rejected |
 | --- | --- | --- |
-| Which criteria? | Five independent `CriterionScorer` implementations: course, availability, meeting mode, goals and group size; reuse a common 0-1 contract | Monolithic conditional scoring makes strategies harder to explain; #1 |
-| Missing preferences | An enabled preference either student left empty is unknown: it scores `app.matching.scoring.unknown-score` (0) and the card shows "Not shared"; explicit filters exclude unconfirmed preferences | A fixed 0.5 was not neutral on a ratio scale: it let empty profiles reach Good and let "no timetable" tie with real overlap. Zero plus an honest label means missing data never outranks real compatibility; dropping unknown criteria and averaging the rest was rejected because a one-criterion profile would score 100% |
-| Course in focus | Explicit search course, otherwise caller's saved target. Candidate target gives 1, enrolment-only gives `takes-course-score` (0.5), no alignment 0; with no focus, shared courses divided by the smaller course list | Saved target cannot silently replace the user's current course selection. Enrolment and buddy target remain separate concepts. The brief matches on shared courses, so with no focus the overlap of course lists ranks candidates instead of a flat 0.5; #1/#2/#7 |
-| Goals | A searched goal is added to the caller's saved goals; score is shared goals / the smaller goal set (overlap coefficient). Candidate must also satisfy a selected goal filter | The filter already guarantees the searched goal, so the other saved goals are what separate candidates. Dividing by the smaller set makes saved-goal scores the same from either side and does not penalise a student open to several goals; Jaccard (shared / union) would. Students listing every goal score well against most others: accepted, see the report; #1/#2 |
-| Group preference | Categorical UI maps to inclusive numeric intervals (2-2, 3-maximum, 2-maximum); scorer/filter use overlap | Brief repeats the label "preferred study mode" for group size, while Appendix A gives intervals; this reconciles both examples; #1/#2/#7 |
-| Availability | Merge per-day duplicate/overlapping/adjacent slots, then intersect unions. Count only shared blocks of at least `min-session-minutes` (60), divided by the smaller of the two timetables. Same-day half-open intervals | Pairwise summation alone double-counts duplicate legacy inputs. The smaller timetable makes the score the same from either side and does not penalise listing lots of free time; a 15-minute overlap cannot hold a session; #1/#8 |
-| Weekly timezone | Recurring schedules mean Asia/Singapore campus-local day/time; no conversion by browser timezone or DST | UTC is used for event timestamps, not weekly preference slots; #1/#8 |
-| Disabled criteria | Global enable flags remove scoring and priority influence. Every strategy stores all five weights, disabled weights 0 and enabled sum 1; at least one enabled | Weight 0 alone cannot disable a lexicographic priority; #1/#4 |
-| Strategy priority | Balanced uses total; Availability-first ranks by configured shared-hour bands and Course-first by bands at 1 and `takes-course-score`, then total; an unknown priority criterion is always in the lowest band; disabling that priority falls back to total. Defaults give the priority criterion the largest weight | Appendix A asks these strategies to prioritise their criterion before others. Sorting by its exact value let 15 extra minutes outrank everything, and a zero default weight let a card show 1.00 Strong below 0.65 Good. Bands keep the priority while the total stays meaningful. Course bands are derived from the scoring rule rather than configured separately, so changing `takes-course-score` cannot drop "takes it" into "neither" |
-| Score symmetry | Availability and saved goals score the same from either side (see their rows). Course scoring and a searched goal follow the searcher's current course or goal, so they can differ by direction | A match is between two people, so shared measures should agree. Course and searched goal express what this searcher is looking for now, which is one-sided by nature |
-| Stable ordering | Strategy order, then more shared hours, then case-insensitive name, then ID. Alternative sorts start with shared hours or caller-year equality, then reuse that chain | Database/insertion order and quality grouping are not deterministic ranking rules; #2/#3 |
-| Search entry | Require a current course or goal. Additional filters combine with AND; personal filters/sorts remain usable when the corresponding scoring criterion is disabled and never mutate admin config | Returning all profiles for an unqualified search contradicts the current issue requirement; #2/#3 |
-| Candidate eligibility | Exclude self, inactive/deleted accounts and active connections; retain pending candidates with incoming/outgoing state | Existing buddies belong on Connections; a pending request is still visible but cannot be resent; #2/#10 |
-| Results bound | Default 20, maximum 50, configured in YAML. Count eligible filtered results before limiting, sort before truncation | Full pagination is unnecessary for the bounded demonstration dataset; #2 |
-| Quality and threshold | Quality cut-offs remain YAML defaults; admin minimum total score and student minimum quality both apply | A user filter can narrow, never override a global threshold; #1/#2/#4 |
-| Explainability | Immutable `MatchScore` holds bounded total, criterion breakdown, unique shared hours, unknown criteria and quality. `MatchResultAssembler` adds deterministic text from `MatchExplainer`, enabled metadata, relevant course and public profile data. At `9592fd2`, the card shows scores/bars/shared time; it does not render that text | Percent compatibility is not a success probability; wording does not determine ranking. E1's provider path and evidence are recorded separately on PR #61; #1/#2/#15 |
-| Default/override precedence | External startup defaults apply until saved overrides exist. Explicit restore clears overrides and reuses current external defaults; overrides persist across restarts | Silent reset on each startup loses admin settings; #4 |
-| Configuration version | Persisted monotonically increasing revision; expected revision required for save/restore, stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp-only or memory-only versions cannot protect concurrent writes or future explanation caches across restart; #1/#2/#4/#15 |
-| Home integration | Small matching preview reads the same search/configuration response; uses saved target or goal only to form a valid current request, with a clear first-use link when neither exists | Separate dashboard heuristics can disagree with Find buddies; changes to Team B Home are limited integration work; #2/#3/#9 |
+| Which criteria? | Five independent `CriterionScorer` implementations (course, availability, meeting mode, goals, group size), each returning a `CriterionResult` from 0 to 1 or unknown | Monolithic conditional scoring makes strategies hard to explain |
+| Missing preferences | An enabled preference either student left empty is unknown: it scores `app.matching.scoring.unknown-score` (0) and the card shows "Not shared". Explicit filters exclude unconfirmed preferences | A fixed 0.5 is not neutral on a ratio scale: it let empty profiles reach Good and "no timetable" tie with real overlap. Dropping unknown criteria and averaging the rest would let a one-criterion profile score 100% |
+| Course in focus | The search course, otherwise the caller's saved target. Candidate's target matches: 1; enrolled only: `takes-course-score` (0.5); neither: 0. With no focus, shared courses divided by the smaller course list | The brief matches on shared courses, plural; with no focus, a flat 0.5 for everyone ranks nothing. Enrolment and buddy target stay separate concepts |
+| Goals | A searched goal is added to the caller's saved goals; score is shared goals divided by the smaller goal set (overlap coefficient). The candidate must also satisfy a selected goal filter | The filter already guarantees the searched goal, so the other saved goals separate candidates. Jaccard (shared / union) would penalise a student open to several goals |
+| Group size | Categorical UI maps to inclusive intervals (2-2, 3-maximum, 2-maximum); scorer and filter use interval overlap | The brief labels group size as "preferred study mode" while Appendix A gives intervals; this reconciles both |
+| Availability | Merge each day's duplicate, overlapping and adjacent slots, then intersect. Count only shared blocks of at least `min-session-minutes` (60), divided by the smaller timetable. Same-day half-open intervals | Pairwise summation double-counts duplicates; a 15-minute overlap cannot hold a session; dividing by the searcher's timetable punished students who list more free time |
+| Weekly timezone | Recurring schedules are Asia/Singapore campus-local day and time; no browser-timezone or DST conversion | UTC is for event timestamps, not weekly preference slots |
+| Disabled criteria | Global enable flags remove a criterion from scoring and priority. Every strategy stores all five weights; disabled weights are 0 and enabled weights sum to 1; at least one is enabled | Weight 0 alone cannot disable a priority ordering |
+| Strategy priority | Balanced ranks by total. Availability-first ranks by shared-hour bands (`priority-tiers.availability-hours`, 3 h and 1 h), Course-first by bands at 1 and `takes-course-score`, then by total within a band. Unknown priority data is always in the lowest band; disabling the priority criterion falls back to total. Defaults give the priority criterion the largest weight | Sorting by the exact value let 15 extra minutes outrank everything, and a zero default weight let "1.00 Strong" rank below "0.65 Good". Weight presets alone would not prioritise the criterion as Appendix A asks. Course bands are derived from the scoring rule, so changing `takes-course-score` cannot misplace students |
+| Band values | One hour is the shortest useful session; three hours is more than one session a week. Appendix A's 2-hour overlap falls in the middle band | Within the top band a lower total can appear above a higher one from a lower band; that is the strategy's purpose, and the results header explains the grouping |
+| Score symmetry | Availability and saved goals score the same from either side. Course and a searched goal follow the searcher's current intent, so they can differ by direction | A match is mutual, so shared measures agree; what a searcher is looking for now is one-sided by nature |
+| Openness | Dividing by the smaller set means a student listing every goal or a very open timetable scores well against most others | Accepted: openness is not penalised, matching how "either" is treated for mode. Jaccard would penalise it instead |
+| Stable ordering | Sort option, then strategy, then more shared hours, then case-insensitive name, then ID. Each `MatchSort` value supplies its own comparator | A switch on the sort type; alphabetical ties are not something a student cares about |
+| Search entry | A current course or goal is required. Filters combine with AND; personal filters and sorts work even when the matching scoring criterion is disabled, and never change admin settings | Returning every profile for an unqualified search |
+| Candidate eligibility | Exclude self, inactive or deleted accounts and active connections; keep pending candidates with their incoming/outgoing state | Existing buddies belong on Connections; a pending request is visible but cannot be resent |
+| Results bound | Default 20, maximum 50, from YAML. Count filtered results before limiting; sort before truncating | Full pagination is unnecessary for the bounded dataset |
+| Quality and threshold | Quality cut-offs are YAML defaults; the admin minimum total and the student's minimum quality both apply | A user filter can narrow but never override a global threshold |
+| Explainability | Immutable `MatchScore` holds the bounded total, breakdown, shared hours, unknown criteria and quality. `MatchExplainer` (`TemplateMatchExplainer`) writes deterministic text from the score alone; `MatchResultAssembler` adds it with public profile data. The card shows scores, bars and shared time, and offers the E1 explanation on request | Scoring and wording change for different reasons. Because the explainer sees only the score, never a `Student`, it cannot leak a private field |
+| Query count | `StudentRepository.findWithMatchingDetailsByIdIn` loads candidates with an `@EntityGraph`; `AvailabilitySlotRepository.findByStudentIdIn` loads slots for eligible students only. Statement count stays constant as the pool grows (`MatchingQueryCountTest`) | A global `default_batch_fetch_size` still grows with the pool, loads inactive students' slots and changes how every entity loads |
+| Defaults and overrides | YAML defaults apply until an admin saves overrides; overrides persist across restarts; Restore clears them and reuses current YAML defaults | Resetting on every startup loses admin settings. Saved overrides keep their own weights until restored |
+| Configuration version | A persisted, monotonically increasing revision; save and restore require the expected revision and stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp or memory-only versions cannot protect concurrent writes across restarts |
+| Home preview | Reads the same search and configuration response, using the saved target or goal only to form a valid request, with a first-use link when neither exists | Separate dashboard heuristics could disagree with Find buddies |
+
+Not implemented, by choice: related or equivalent courses; a separate matching profile apart from
+the `Student` entity; admin-screen fields for unknown score, bands and session length (they are in
+`application.yml`); learning style as a sixth criterion (see the
+[baseline contract](#baseline-requirement-contract); adding one would be a new `CriterionScorer`,
+enum value and weight row). Team decision: exact shared time blocks are visible in match results;
+only the contact number is withheld until a request is accepted.
 
 ## AI match explanation decisions (E1)
 
-Choices for [#15](https://github.com/aryan12singh/study-buddy-matcher/issues/15), recorded
-16 October and corrected after the 18 October evaluation/lifecycle audit. Team A agreed the
-`MatchService.evaluate` addition and `MatchCard` button. The current
-[API contract](API_CONTRACT.md#match-explanation-e1) and [test guide](E1_TESTING.md) supersede
-the historical planning documents.
-
-| Question | Implemented choice and reason | Alternative / affected work |
+| Question | Choice and reason | Alternative rejected |
 | --- | --- | --- |
-| When is AI called? | Only after **Explain this match**, a current evaluation check, a cache miss and an available per-process quota slot | Automatic explanations multiply requests and delay search; #3 |
-| Which score is explained? | The server recomputes matching and compares the card's fingerprint over exact scoring inputs/output and settings. Stale cards return 409 and refresh before another request | Matching filters alone cannot reproduce an earlier evaluation; no trusted client scores or search-session table; #1/#2 |
-| What is cached? | Anonymous wording keyed by rounded evidence, prompt v5 and model. This semantic key is distinct from exact card identity; equivalent wording may be shared after freshness verification | Per-student cache keys add unnecessary personal data and deletion work; #14/#4 |
-| What happens during a card refresh? | Completed/in-flight answers belong to candidate and evaluation ID; changed IDs remount the panel and abort/ignore old responses. Relationship-only changes preserve matching text | Request-send refreshes retain mounted cards, so filter/unmount handling alone is insufficient |
-| Which facts reach Gemini? | Explicit scoring-course versus shared-course provenance and effective goal intent; `StudyGoalIntent` is shared with the scorer. All fields are allowlisted anonymous evidence | A search goal need not be a saved profile goal; a shared course may not be the scored target |
-| What happens on failure? | Off/quota/provider/validation/cache-read failures use standard text. Cache-write failure retains validated text. Core auth/matching errors propagate | Optional caching must not make an available explanation fail; no broad exception suppression |
-| How is output checked? | Fresh and cached answers pass current length and bounded evidence-reference checks; UI cautions that text may be inaccurate | This is not a complete factual validator or a guarantee against hallucination |
-| How is cost bounded? | Configured daily quota is local to one process, resets on restart; after a provider 429 no calls are made for `rate-limit-cooldown` (60s). Concurrent misses may still make separate provider calls | No durable multi-instance quota or single-flight guarantee; no new infrastructure for this scope |
-| Is the quota per student? | Yes, within a shared cap. Each student may trigger `daily-call-limit-per-student` (5) provider calls a day, inside the process-wide `daily-call-limit` (18). Cache hits are free. Both counts are in memory and reset at Singapore midnight | A shared allowance alone let one student clicking many uncached cards use it up for everyone; a per-student counter alone could exceed the free tier |
-| How is evidence worded for the model? | `ExplanationVocabulary` sends plain words ("exam preparation", "meeting mode") and each criterion's weight; the admin strategy name is not sent. The validator rejects leftover code names (`ONE_TO_ONE`, `STRONG`) | Raw enum names were copied into student-facing text; without weights the model could lead with a criterion that barely counts |
-| Why are there two hashes? | The card `evaluationId` proves the clicked card is still current; the evidence hash lets identical anonymous facts reuse wording without storing who the students are | One hash cannot do both: exact identity would stop reuse, rounded evidence cannot detect a changed card |
-| What do status codes reveal? | Evaluation runs before the ID comparison, so an unknown or ineligible candidate gets 404 while an eligible one with a wrong ID gets 409. Low risk: any student can already see eligible candidates in search | Reordering is impossible: the current ID only exists after evaluation |
-| Is `evaluationId` sensitive? | It is an unsalted SHA-256 of scoring inputs (including IDs and availability). Only the digest reaches the browser and the input space is large, so it is treated as low risk | An HMAC with a server secret would remove even guessing attacks; not needed at this scope |
+| When is AI called? | Only after **Explain this match**, a current-evaluation check, a cache miss and an available quota slot | Automatic explanations multiply requests and slow search |
+| Which score is explained? | The server recomputes matching and compares the card's fingerprint (`MatchEvaluationFingerprint`) over the exact scoring inputs, output and settings. A stale card returns 409 and refreshes | Trusting client scores, or a search-session table |
+| What is cached? | Anonymous wording keyed by rounded evidence, prompt version and model; distinct from exact card identity, so equivalent wording is shared after the freshness check | Per-student cache keys add personal data and deletion work |
+| Card refreshes | Answers belong to the candidate and evaluation ID; a changed ID remounts the panel and aborts or ignores old responses. Relationship-only changes keep the text | Filter or unmount handling alone misses refreshes after a request is sent |
+| Which facts reach Gemini? | Allowlisted anonymous evidence only, with scoring course distinguished from shared course and the effective goal intent (`StudyGoalIntent`, shared with the scorer) | A search goal need not be a saved goal; a shared course may not be the scored one |
+| Failure | Off, quota, provider, validation and cache-read failures return the standard template text. A cache-write failure keeps the validated text. Core auth and matching errors propagate | Optional caching must not make an available explanation fail |
+| Output checks | Fresh and cached answers pass length and bounded evidence-reference checks; the UI cautions that text may be inaccurate | Not a complete factual validator |
+| Cost | A daily quota per process, reset at Singapore midnight: `daily-call-limit` (18) shared, `daily-call-limit-per-student` (5) each; cache hits are free. After a provider 429, no calls for `rate-limit-cooldown` (60 s). Concurrent misses may each call | A shared allowance alone lets one student use it up; a per-student counter alone could exceed the free tier |
+| Evidence wording | `ExplanationVocabulary` sends plain words and each criterion's weight; the strategy name is not sent. The validator rejects leftover code names such as `ONE_TO_ONE` | Raw enum names were copied into student-facing text; without weights the model could lead with a criterion that barely counts |
+| Two hashes | The `evaluationId` proves the clicked card is current; the evidence hash lets identical anonymous facts reuse wording | One hash cannot do both |
+| Status codes | Evaluation runs before the ID comparison, so an ineligible candidate gets 404 and an eligible one with a wrong ID gets 409. Low risk: eligible candidates are already visible in search | The current ID only exists after evaluation |
+| `evaluationId` sensitivity | An unsalted SHA-256 of scoring inputs; only the digest reaches the browser and the input space is large | An HMAC with a server secret, not needed at this scope |
+
+## Collaborative study experience (E2)
+
+### What E2 delivers
+
+| Component | Behaviour |
+| --- | --- |
+| Private group room | Accepted active members only; join/leave, participant list, focus/break state, distinct-student capacity and expiring tab leases |
+| Shared Pomodoro | Configurable durations; server-time start, pause, resume and reset; observed-version conflict checks; survives refresh and reconnect |
+| Leader and delegated control | The leader assigns host and co-host; present hosts control the timer and configure durations and capacity; the leader keeps recovery control |
+| Personal Pomodoro | A personal Study Room with its own timer, independent of any group room |
+| Music | Each student's own Spotify and Freesound player in the room's Music tab (see [Music](#music-spotify-and-freesound)); nothing reaches the room or other members |
+| Dated sessions | Group leaders and both connected buddies manage dated series with timezone, title, optional agenda, location and room link, and whole-series update or cancel |
+| Mutual availability | Team A's interval intersections across current participants; suggestions never confirm attendance |
+| Calendar export | Single or bounded weekly series expanded to stable individual UTC events; authenticated download |
+| Product integration | Sessions on Home and group/buddy agendas; recipient-scoped change notifications; closure and lifecycle revoke access |
+| Weather | Original pixel themes, day/night, and optional backend-cached Open-Meteo campus conditions with a selectable fallback |
+
+Not part of E2: public rooms, chat, task boards, shared notes, global online status, group-score
+recommendations, calendar OAuth or two-way sync, and scheduled reminders.
+
+### Decisions
+
+| Question | Choice and reason | Limits / alternative |
+| --- | --- | --- |
+| Room access | Active accepted members of an open group only; rechecked on every request | Pending applicants, admins and visitors have no access; membership never reveals contacts |
+| Personal Pomodoro | Default 25-minute focus and 5-minute break, whole-minute edits (focus 1-180, break 1-60), start/pause/resume and confirmed reset; recovers after inactive tabs from elapsed timestamps | Session storage holds only validated per-account timer state in the current tab, falling back to memory. It does not control a group room or synchronise across devices |
+| Shared transport | Authenticated HTTP with configured polling, server timestamps and local countdown rendering | No new socket dependency; this is small-dataset synchronisation |
+| Timer model | An immutable server-time anchor plus remaining duration, not ticks | Ticks drift and cannot survive reconnect |
+| Presence lease | 90 seconds by default, longer than the one-minute timer floor browsers apply to hidden tabs. Several tabs count once; leaving removes only that tab's lease | A crashed tab holds its place for up to 90 seconds; a shorter lease dropped students who switched tabs |
+| Host disconnect | The timer continues. A departing or expired host hands over to the present co-host, else the most recently active person still there; the last person leaving ends the session and resets the timer. Leadership never transfers | Without a background job, an expired tab counts as leaving only when someone next joins |
+| Roles and settings | The leader alone assigns host and co-host. Present hosts may change durations (only from IDLE) and capacity, without changing roles | Capacity cannot drop below the students present or exceed the group |
+| Revocation | `RoomLifecycle` deletes leases and revokes roles in the membership, deactivation and closure transaction | A restored membership never restores an old lease or role |
+| Phase cue | A continuously observed automatic focus/break change is announced once through a polite status; the countdown itself is not announced | Entry, reset, hidden-tab gaps and reconnect do not replay cues; not a background alarm |
+| Room audio | Rooms hold no audio state | The unused `study_rooms` audio columns remain until a later migration |
+| Session model | A separate `studysession` feature with exactly one parent (open group or active connection), its own assembler and parent-row locking | Weekly preference schedules unchanged; room presence is independent of a booking |
+| Session authority | The group leader manages group series; both buddies manage their connection's series; members and buddies can read and export | Every read rechecks current eligibility; old relationship IDs confer nothing |
+| Local time and recurrence | Whole-minute local start and end plus an IANA zone; one occurrence or up to `maximum-occurrences` (52) weekly ones, each keeping its local wall time | Missing or ambiguous DST endpoints are rejected; no silent timezone fallback |
+| Suggested times | Reuse campus-local weekly intersections; default 60-minute duration placed at the start of each long-enough overlap | Selecting a suggestion only fills the form; manual times still work |
+| Session labels | Current/next occurrence and Ongoing/Upcoming/Past from authorised timestamps, one clock per view | Room links are shortcuts only for current or future plans |
+| JDBC civil time | Local-time JDBC mappings for weekly slots and dated session civil fields | A Singapore-timezone JVM otherwise shifted times on round trip |
+| Series changes | Whole-series PUT and cancel require the observed version; notifications share the transaction | No per-occurrence editing, invitations or RSVP; cancelled series cannot be edited |
+| Parent lifecycle | An ended connection, closed group or deactivated account cancels affected scheduled series; deletion cascades | Reconnection does not resurrect schedules |
+| Calendar export | Independent UTC events with a stable series UID, occurrence index and revision; title, agenda, location and validated room link only, no emails, contacts or tokens | Snapshot imports can duplicate or miss edits; shortening or cancelling a series never removes an already imported copy |
+| Weather themes | Original CSS pixel scenes (clear, cloudy, rain, storm, snow, fog) and automatic day/night; reduced motion stops animation | A manually chosen theme is decoration, never a forecast |
+| Live weather | Open-Meteo current conditions for configured campus coordinates through the backend, with timeout, cache, stale display and silent fallback. No student data, device location or key is sent | An outage never affects room access or the timer. Weather data is attributed under CC BY 4.0 per the provider's [terms](https://open-meteo.com/en/terms); the test profile disables outbound requests |
+
+## Study assistant AI (shared)
+
+Pixel, quizzes and study plans share one Gemini integration in `com.studybuddy.ai`, separate from
+E1's `matchexplanation` package.
+
+| Decision | Choice and reason |
+| --- | --- |
+| Separate project and quota | `app.ai.assistant.*` has its own API key (from a different Google project than E1) and its own `AiQuota`, so assistant use never spends E1's allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
+| Provider behind an interface | Features depend on `AiClient`; `GeminiClient` is the implementation, so tests supply a fake |
+| Quota | Per process, in memory, reset at Singapore midnight: `daily-call-limit` (18) shared and `daily-call-limit-per-student` (5). After a provider 429, calls pause for `rate-limit-cooldown`. A disabled assistant is checked before the quota, so it never spends allowance |
+| JSON replies | Requests ask for `application/json`; a reply that did not finish normally (token limit, safety block) is rejected rather than parsed |
+| Long requests | `timeout` 90 s and `max-output-tokens` 4000, because a quiz or roadmap from a lecture PDF can take Gemini well over 30 seconds |
+| No transaction during the call | Creation runs as a short checking read, the AI call, then a short write, so no connection or account lock is held while Gemini answers |
+| Validate before spending | Every check that needs no AI runs first, so a bad request never uses the student's allowance |
+| Versioned prompts | Templates live in `backend/src/main/resources/prompts/` (`assistant-v1.txt`, `quiz-v1.txt`, `study-plan-v2.txt`); a wording change is a new file and version |
+| Prompt injection | Student text and material are marked as data, never instructions; slots are filled in a single pass so student text is never searched for slots |
+| Failure | Any failure is `AiUnavailableException` (503 `AI_UNAVAILABLE`); logs never contain the prompt, file, reply or key |
+
+## Pixel study assistant
+
+**What it does.** A floating chat window for students (`AssistantLauncher`, in `AppShell`) that
+answers from the app's own data. `AssistantService` works out what a message asks for, then the
+matching `AssistantIntent` answers it:
+
+| Intent | Answer |
+| --- | --- |
+| `MY_TO_DO` | Buddy requests to answer, applications to groups the student leads, open group quizzes not yet taken, sessions in the next seven days and unread notifications, each linked |
+| `NAVIGATE` | A link to one page from the fixed `AppPage` list |
+| `FIND_BUDDIES` | The real match search with the stated filters, showing `matches-shown` (3) results; asks for a course when none is given |
+| `WHEN_TO_MEET` | Weekly times every member of the named open group is free, filtered by meeting length, with a link to schedule a session |
+| `QUIZ_ME` | Opens Quiz Buddy with the course and topic filled in |
+| `PLAN_STUDY` | A link to study plans carrying course, exam date and weekly hours |
+| `UNKNOWN` | Greetings and anything else |
+
+| Decision | Choice and reason |
+| --- | --- |
+| AI reads, the app answers | The only AI call classifies the message and extracts details (`IntentParser`); every fact in the reply comes from existing services, so the model cannot invent a buddy, time or task |
+| Deterministic fast path | `QuickIntentReader` answers the suggested questions, greetings, "what do I need to do?", navigation questions and simple buddy, meeting and quiz requests with rules and no AI call. It never guesses: a message with a time of day, date, goal or other detail only the AI can read goes to the AI |
+| Lighter model, own allowance | `app.ai.assistant.chat.*` uses `gemini-3.5-flash-lite` with its own limits (200 shared, 30 per student, 20 s timeout), so chatting never spends the allowance needed for quizzes and plans. It shares the key, switch and rate-limit pause |
+| Reply validation | `AssistantOutputValidator` requires a JSON object with a known intent; each detail is kept only if valid (known enum, whole number in range, readable date), otherwise dropped rather than guessed |
+| Intents as classes | Intents are looked up by type, not chosen in a `switch`; the service refuses to start if any type lacks a handler |
+| Page allowlist | Navigation targets come from the `AppPage` enum, so the model cannot produce an arbitrary link |
+| Stateless | Each message is handled on its own, with no stored history |
+
+**Privacy.** Only the message text and today's date reach Gemini, never a name, email or other
+student's data. `<message>` markers are stripped from the text. Buddy results use the same
+privacy-safe match DTOs as Find buddies.
+
+**Limits.** Students only; messages up to `max-message-characters` (500). Time of day is not a
+search filter, so a request mentioning free time sorts by most shared hours instead. When the AI is
+unavailable, messages that need it return 503 and the fast path still works. The study plan link
+targets `/study-plan` with the stated course, exam date and hours as query parameters, which the
+Study plans screen uses to prefill its create form.
+
+## Quizzes
+
+**What it does.** Quiz Buddy (`QuizBotLauncher`, `QuizBotWindow`) writes a ten-question
+multiple-choice quiz from uploaded or pasted notes. A personal quiz is the student's own practice,
+from the personal Study Room. A group quiz is started in a group's study room (the API also accepts an
+optional session ID); members take it, see a leaderboard and review answers after it closes.
+
+| Decision | Choice and reason |
+| --- | --- |
+| Who may start | Personal: the student. Group: the leader and the room's host and co-host (`QuizAccess`), reusing the room rules |
+| Who may see | Personal: the owner alone. Group: accepted members of an open group. An invisible quiz is 404 so its ID reveals nothing; a group's quiz list is 403, like its room and sessions |
+| Output checks | `QuizOutputValidator` accepts exactly `question-count` (10) questions, each with a prompt, four distinct options, one correct option from 0 to 3 and an explanation, all fitting their columns. These are shape checks; they cannot prove a question is right |
+| Answers stay on the server | `QuizQuestionsDto` carries no correct option or explanation; review is available only once nobody can submit |
+| Timing | A group quiz is open for `open-duration` (15 min) and reads as closed afterwards, so no scheduler is needed; hosts can close it early. A personal quiz has no time limit and closes when submitted, so the owner sees answers straight away |
+| Attempts | Starting records the time; asking again returns the same attempt, so a reload does not reset the clock. The member's row is locked so a double click cannot start two |
+| Marking | `QuizMarker` requires every question answered exactly once with a valid option; anything else is invalid input, so skipping cannot save time |
+| Leaderboard | `QuizLeaderboard` ranks by score, then less time, then earlier submission, then student ID, so ranks are distinct and stable between polls. A member who leaves, is removed or is deactivated keeps their attempt but drops off |
+| Session cancelled during the AI call | The quiz is saved without a session rather than failing |
+
+**Privacy.** Material is sent to Gemini for that one request and never stored; the quiz keeps only
+its questions and a title (the focus, or the file names). The prompt forbids questions about the
+students or the group.
+
+**Limits.** Same upload rules as study plans. Group quizzes are not announced by notification;
+members see open quizzes in the room and in Pixel's to-do list.
+
+## Study plans
+
+**What it does.** A personal week-by-week study roadmap for a course and study goal, written from
+the student's own material. Without an exam date it covers this week; with one it covers every week
+from today up to the exam (the last possibly a part week), each holding the student's weekly hours.
+The student ticks entries off or deletes the plan.
+
+| Decision | Choice and reason |
+| --- | --- |
+| Material, not model knowledge | Gemini first lists the topics the material covers, in order, at most `max-source-topics` (40), then plans only those, revising earlier topics in spare weeks |
+| Frame from the server | `StudyPlanCalendar` decides the weeks in Asia/Singapore, within `max-weeks` (16) and `max-hours-per-week` (40); `RoadmapFrame` gives Gemini each block and its minute limit |
+| Output checks | `StudyPlanOutputValidator` accepts a reply only if every block of the frame is covered, no entry names a block outside it, each block has 1 to `max-entries-per-block` (5) entries with at most `max-tasks-per-entry` (5) tasks, minutes fit the block and every text fits its column. It cannot prove the plan is good advice |
+| Upload type checks | `StudyMaterialReader` accepts files or pasted topics, not both: up to `max-files` (6), `max-upload-size` (10 MB) in total. Type is decided by extension and content together: a `.pdf` must start with the PDF signature, a `.txt` or `.md` file must be strict UTF-8 without NUL characters. Anything else is 415; too large is 413 |
+| Size limits | Spring's multipart limit reads the same `max-upload-size`, so they cannot drift apart. Text files together hold at most `max-text-file-characters` (100,000); pasted topics at most `max-topics-characters` (4000) |
+| Immutable plan | A plan is built in one go from a validated draft; afterwards the student can only tick entries |
+
+**Privacy.** A plan belongs to its student alone; anyone else gets 404. The material is sent to
+Gemini for one request and never stored: the plan keeps the extracted topic titles and file names
+only.
+
+**Limits.** Only personal plans have endpoints and screens. Session plans are modelled (`StudyPlanScope.SESSION`) but readable by nobody until
+their access rules and endpoints are added.
+
+## Music: Spotify and Freesound
+
+**What it does.** Both study rooms have a personal Music tab (`MusicPlayer` in the room settings
+menu) and a corner mini player (`NowPlayingMini`: track, next, music and ambient volume).
+
+- **Spotify.** Without an account link, a team-chosen playlist plays through Spotify's free embed.
+  A student can connect their Spotify account and search playlists; with Premium they play in the
+  browser through the Web Playback SDK.
+- **Ambient sounds.** Six Freesound categories (rain, cafe, forest, ocean, fireplace, wind), each
+  playing a random suitable sound, with "try another sound" and a one-time remix that layers two
+  or three categories at random volumes (`remixPlan.ts`).
+
+| Decision | Choice and reason |
+| --- | --- |
+| Personal, not shared | Music plays only in the student's own browser and never enters the room API |
+| Tokens in memory only | `SpotifyTokenStore` keeps tokens in server memory, never in the database; a restart asks students to connect again. Only a short-lived access token reaches the browser; the refresh token and client secret never leave the server |
+| Sign-in callback | Spotify's redirect carries no app token, so a random, single-use, expiring `state` (`SpotifyAuthorizationStore`) ties the callback to the student and stops another site completing a sign-in |
+| CC0 licence | Only Creative Commons 0 sounds are requested, so no per-author credit is needed on screen |
+| Sound length | `min-duration-seconds` (30) to `max-duration-seconds` (600): shorter clips loop audibly, longer ones start slowly on campus wifi |
+| Freesound key | Sent in the `Authorization` header, never the URL, so it stays out of request logs |
+| Provider behind an interface | `AmbientSoundService` depends on `SoundSearchClient`; `FreesoundClient` is the implementation |
+| Browser storage | `localStorage` remembers only which Spotify player the student chose |
+
+**Privacy.** No account data is sent to Freesound. Spotify receives only what the student's own
+Spotify sign-in authorises.
+
+**Limits.** Spotify is off until `app.spotify.client-id` and `client-secret` are set; sounds are
+unavailable until `app.ambient.api-key` is set (503). In-browser playback needs Spotify Premium; the
+embed works without it.
+
+## Achievements
+
+**What it does.** A private page of six badges with bronze, silver and gold tiers, points, a capped
+level and a planned-session weekly streak shown as a growing grove (`AchievementsPage`), plus a
+summary on the student's own profile.
+
+| Badge | Counts |
+| --- | --- |
+| Connector | Active buddy connections (falls when disconnecting) |
+| First Move | Sent match requests in any status |
+| Team Player | Open groups the student belongs to without leading |
+| Founder | Groups created, including closed ones |
+| Planner | Planned occurrences on active buddy and group schedules from the student's current join or connection date, excluding cancelled sessions |
+| Grove Keeper | Longest run of consecutive weeks with a planned session |
+
+| Decision | Choice and reason |
+| --- | --- |
+| Derived counts | `AchievementService` recomputes every count from connections, requests, groups and sessions on each read, so progress always matches the records |
+| Current versus history | Some badges count current standing (connections, memberships) and their counts fall; others count retained history (sent requests, created groups). Each badge states which |
+| Earned tiers are kept | `EarnedBadgeRecorder` saves the highest tier each badge reaches in `earned_badges`, so losing a connection or leaving a group never takes away a medal, points or level. Students expect an earned achievement to stay earned; letting tiers fall felt like a penalty for other people's actions. A badge whose count has fallen shows what its current count alone reaches (`currentTier`) |
+| When a tier is saved | When the student opens their achievements (page or own-profile summary), in the same request. Hooking every connection, group and session service instead would cross team boundaries, so a tier reached and lost between two visits is not recorded |
+| Never lower | The save is one upsert whose condition keeps the higher tier, so concurrent requests cannot lower a tier. Rows cascade on permanent deletion and stay through deactivation |
+| Streak rule | `WeeklyStreakCalculator` counts weeks starting Monday in `app.achievements.week-zone`; a session later this week counts now, future weeks are ignored, and a run ending last week is still current |
+| Tiers and level | `BadgeEvaluator` maps counts onto configured thresholds; points come from the highest tiers and `points-per-level` sets the level. Zero or unsorted thresholds are rejected at startup |
+| Batched query | `AchievementSessionRepository` loads schedule projections in one query rather than one per schedule |
+
+**Privacy.** Students only, for themselves: no endpoint reads another student's achievements and no
+achievement fields appear in profile DTOs. The profile summary is fetched only for the signed-in
+owner.
+
+**Limits.** No attendance or completed-focus tracking: a planned session counts whether or not it
+was attended. Tiers are saved only on a visit, as above.
 
 ## Baseline requirement contract
 
-The following choices were accepted by the project owner for compulsory delivery on
-14 October 2026. They settle the implementation contract for #7/#41; they do not assert a
-professor response or grading acceptance.
+### Contact-number format
 
-### Contact-number format (#7/#41)
+Team decision: accept 8 ASCII digits starting with 6, 8 or 9 for a local Singapore number, or `+`
+followed by 7-15 ASCII digits whose first digit is 1-9 for an international number. ASCII
+whitespace, hyphens, parentheses and dots are removed. Local input is stored as `+65` plus the
+digits; international input keeps its leading `+`. Letters, extensions, repeated or misplaced `+`,
+other punctuation and out-of-range lengths are rejected. This checks representation only, not
+whether the number exists.
 
-Accept 8 ASCII digits starting with 6, 8 or 9 for a local Singapore number, or `+` followed by
-7–15 ASCII digits whose first digit is 1–9 for international input. Remove ASCII whitespace,
-hyphens, parentheses and dots. Store local Singapore input as `+65` plus the digits; retain
-the normalized leading `+` for international input. Reject letters, extensions, repeated or
-misplaced `+`, other punctuation and out-of-bound lengths. This checks representation only;
-country/carrier assignment and reachability are not verified.
+`InputRules.contactNumber` governs registration, admin creation, own-profile replacement and
+optional admin replacement; the frontend uses the same grammar. Admin omission keeps the stored
+contact and never exposes it. Legacy contacts are not rewritten, but any replacement must use the
+accepted format. Seed records use accepted formats.
 
-`InputRules.contactNumber` governs registration/admin creation, own-profile replacement and
-optional admin contact replacement. Frontend validation uses the same grammar and examples.
-Admin omission preserves the stored contact and never exposes it in a response. Legacy
-contacts are not rewritten automatically; replacements/full profile writes require the
-accepted format. New synthetic seed records use accepted formats, while repeat seeding
-continues to preserve existing profiles and passwords.
+Accepting any non-blank text would leave format validation undone; Singapore-only would exclude
+international students; a phone-lookup library is unnecessary for a format check.
 
-Keeping arbitrary nonblank text would leave #7's format validation incomplete. Limiting
-all students to Singapore numbers would exclude international contacts; a phone-provider
-lookup or new library is unnecessary for this scoped format contract.
+### Learning style
 
-### Undefined learning-style wording (#41/#7)
-
-The objective names “preferred learning style”, but the functional field list and Appendix A
-supply no separate taxonomy or scorer. The team interprets it through the defined study
-preferences: meeting mode, study goals and group preference, alongside course and availability.
-No additional field, guessed categories or sixth criterion is added.
-
-This accepted team interpretation completes the baseline implementation scope for #1/#7/#41.
-It is not presented as professor confirmation. Any later professor instruction requiring a
-separate field is a coordinated A/B change request, with its categories, API, scoring and
-validation agreed before implementation. Presentation and grading acceptance remain human gates.
+The objective names "preferred learning style", but the field list and Appendix A define no
+separate taxonomy or scorer. Team decision: learning style is expressed through the defined study
+preferences (meeting mode, study goals and group size, alongside course and availability). No extra
+field, invented categories or sixth criterion is added. A separate field would need its categories,
+API, scoring and validation agreed by Teams A and B first.
