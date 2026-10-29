@@ -28,7 +28,7 @@
 
 /* 3D meadow: a tilted pixel diorama. --spin and --tilt are set from script as the view turns. */
 .meadow3d { display: grid; gap: .6rem; }
-.meadow-stage { --spin: -35deg; --tilt: 58deg; position: relative; height: 470px; perspective: 1150px; perspective-origin: 50% 30%; overflow: hidden; cursor: grab; touch-action: none; user-select: none;
+.meadow-stage { --spin: -35deg; --tilt: 58deg; position: relative; height: 470px; perspective: 1150px; perspective-origin: 50% 30%; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none;
   border: 2px solid; border-color: #808080 #fff #fff #808080; background: linear-gradient(180deg, #9fd3ea 0%, #cfeaf5 55%, #e8f5dc 100%); }
 .meadow-stage:active { cursor: grabbing; }
 .meadow-stage:focus-visible { outline: 2px dotted #000; outline-offset: 3px; }

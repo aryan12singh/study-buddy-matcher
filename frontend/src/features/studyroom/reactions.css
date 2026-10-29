@@ -30,6 +30,7 @@
 .growing-tree h3 { font-size: .95rem; margin: 0 0 .15rem; }
 .growing-tree p { margin: 0 0 .2rem; font-size: .85rem; }
 .growing-tree .retro-button { margin-top: .25rem; font-size: .8rem; }
+.growing-tree-error { color: #9b1c1c; }
 
 @media (prefers-reduced-motion: reduce) {
   .reaction-float { animation: reaction-fade 3.6s ease-out forwards; }

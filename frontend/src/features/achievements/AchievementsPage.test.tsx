@@ -37,7 +37,8 @@ describe('achievements page', () => {
     expect(screen.getByText(/weeks starting on Monday/)).toHaveTextContent('A session later this week counts now; future weeks wait until they begin.')
     fireEvent.click(screen.getByText('How these numbers work'))
     expect(screen.getByText(/from your current connection or membership start date onward/)).toBeVisible()
-    expect(screen.getByText(/does not record attendance, completed focus time or study quality/)).toBeVisible()
+    expect(screen.getByText(/Planning a session does not record attendance or study quality/)).toBeVisible()
+    expect(screen.getByText(/Forester is the one badge that counts focus/)).toBeVisible()
   })
 
   it('keeps an earned tier and says what the current count reaches when it has fallen', async () => {
