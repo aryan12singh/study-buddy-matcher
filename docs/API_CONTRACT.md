@@ -444,7 +444,9 @@ not `BREAK` credit the focus time since the student's previous tick, measured on
 from the room timer: only time in a running focus phase counts, never pauses, breaks or time
 before a start. A gap longer than the lease lifetime means the student had gone, so the old visit
 is finished and a new one starts. Leaving from the student's last tab ends the visit. Two tabs
-share one visit. Crediting runs after the room change commits, in its own transaction, and a
+share one visit. A tick that predates the visit's end is ignored, so a late heartbeat cannot reopen
+it. After the room change commits, each update goes to a single forest worker and runs there in its
+own transaction, in commit order; the room request never holds a second database connection, and a
 failure is logged without failing the poll. Visits shorter than the sprout threshold plant nothing.
 
 | Method | Path | Result |

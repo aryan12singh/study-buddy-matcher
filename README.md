@@ -542,6 +542,8 @@ shape and size of a roadmap; they do not prove its advice is good.
 | `ROOM_REACTION_WINDOW` / `app.study-room.reactions.window` | `8s` | How long a reaction stays in room snapshots; longer than the poll interval so every tab sees it |
 | `ROOM_REACTION_BURST_LIMIT` / `ROOM_REACTION_BURST_WINDOW` | `5` / `10s` | Most reactions one student can send in each window; more return 409 |
 | `app.forest.zone` | `Asia/Singapore` | Zone whose local start time picks a tree's dawn, day, dusk or night colours |
+| `app.forest.light-starts` | `5/11/17/21` | Local hour dawn, daytime, dusk and night begin; a visit's start time picks its tree colours |
+| `app.forest.update-queue-capacity` | `1000` | Forest updates the single forest worker may hold; beyond this one is dropped and logged |
 | `app.forest.variants-per-species` | `3` | Kinds of tree the server draws from at random within each size tier; the frontend draws three per tier |
 | `app.forest.tree-minutes` | `10/25/50/90/150` | Focused minutes in one room visit for a sprout, sapling, oak, tall pine and ancient blossom; shorter visits plant nothing |
 | `SESSION_MAXIMUM_OCCURRENCES` / `app.study-session.maximum-occurrences` | `52` (1 to 52) | Most weekly occurrences; 1 means one-off |
