@@ -29,18 +29,21 @@ public class StudyRoomService {
     private final RoomAccess access;
     private final RoomAssembler assembler;
     private final RoomSettings settings;
+    private final RoomReactionService reactions;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public StudyRoomService(StudyRoomRepository rooms, RoomPresenceRepository presences,
         GroupMembershipRepository memberships, RoomAccess access, RoomAssembler assembler,
-        RoomSettings settings, ApplicationEventPublisher events, @Qualifier("studyRoomClock") Clock clock) {
+        RoomSettings settings, RoomReactionService reactions, ApplicationEventPublisher events,
+        @Qualifier("studyRoomClock") Clock clock) {
         this.rooms = rooms;
         this.presences = presences;
         this.memberships = memberships;
         this.access = access;
         this.assembler = assembler;
         this.settings = settings;
+        this.reactions = reactions;
         this.events = events;
         this.clock = clock;
     }
@@ -74,6 +77,7 @@ public class StudyRoomService {
             .orElseGet(() -> new RoomPresence(room, student, input.clientId(), now, now.plus(settings.leaseLifetime())));
         lease.renew(PresenceState.PRESENT, now, now.plus(settings.leaseLifetime()));
         presences.saveAndFlush(lease);
+        events.publishEvent(new RoomVisitTicked(actorId, groupId, group.getName(), room.timer(), now));
         return detail(room, actorId);
     }
 
@@ -82,7 +86,7 @@ public class StudyRoomService {
      * A removal that deletes the lease first makes the renewal match no row, reported as expired.
      */
     public StudyRoomDto heartbeat(Long groupId, Long actorId, RoomHeartbeatInput input) {
-        access.readMember(groupId, actorId);
+        StudyGroup group = access.readMember(groupId, actorId);
         Instant now = clock.instant();
         StudyRoom room = rooms.findByStudyGroupId(groupId).orElseThrow(this::expiredPresence);
         var lease = presences.findByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, input.clientId())
@@ -93,6 +97,9 @@ public class StudyRoomService {
             presences.flush();
         } catch (ObjectOptimisticLockingFailureException removedMeanwhile) {
             throw expiredPresence();
+        }
+        if (input.presence() != PresenceState.BREAK) {
+            events.publishEvent(new RoomVisitTicked(actorId, groupId, group.getName(), room.timer(), now));
         }
         return detail(room, actorId);
     }
@@ -106,7 +113,12 @@ public class StudyRoomService {
         rooms.findByStudyGroupId(groupId).ifPresent(room -> {
             presences.deleteByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId);
             presences.flush();
-            afterDeparture(room, group, Set.of(actorId), clock.instant());
+            Instant now = clock.instant();
+            // A student studying in two tabs is still here after closing one of them.
+            if (presences.findEligible(room.getId(), now).stream().noneMatch(p -> p.getStudent().getId().equals(actorId))) {
+                events.publishEvent(new RoomVisitEnded(actorId, groupId, now));
+            }
+            afterDeparture(room, group, Set.of(actorId), now);
         });
     }
 
@@ -213,6 +225,7 @@ public class StudyRoomService {
     private StudyRoomDto detail(StudyRoom room, Long actorId) {
         Instant now = clock.instant();
         return assembler.toDto(room, room.getId() == null ? List.of() : presences.findEligible(room.getId(), now),
-            memberships.findByStudyGroupIdOrderByJoinedAtAsc(room.getStudyGroup().getId()), actorId, now);
+            memberships.findByStudyGroupIdOrderByJoinedAtAsc(room.getStudyGroup().getId()),
+            reactions.recent(room, now), actorId, now);
     }
 }

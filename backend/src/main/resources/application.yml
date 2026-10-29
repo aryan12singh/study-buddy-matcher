@@ -56,6 +56,17 @@ app:
     # reading in another tab keeps their place. Closing the tab still leaves immediately.
     lease-lifetime: ${ROOM_LEASE_LIFETIME:90s}
     poll-interval: ${ROOM_POLL_INTERVAL:2s}
+    reactions:
+      # How long a reaction stays in room snapshots. Longer than the poll interval so every tab sees it.
+      window: ${ROOM_REACTION_WINDOW:8s}
+      # At most this many reactions per student in each burst window.
+      burst-limit: ${ROOM_REACTION_BURST_LIMIT:5}
+      burst-window: ${ROOM_REACTION_BURST_WINDOW:10s}
+  forest:
+    # A visit's local start time in this zone picks its tree's dawn/day/dusk/night colours.
+    zone: Asia/Singapore
+    # Focused minutes in one room visit for each tree. Shorter visits plant nothing.
+    tree-minutes: { sprout: 10, sapling: 25, oak: 50, pine: 90, ancient-blossom: 150 }
   auth:
     secret: ${jwt.secret}
     token-lifetime: ${jwt.expiration-ms}ms

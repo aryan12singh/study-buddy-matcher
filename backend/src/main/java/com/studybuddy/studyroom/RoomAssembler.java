@@ -15,7 +15,7 @@ public class RoomAssembler {
     public RoomAssembler(RoomSettings settings) { this.settings = settings; }
 
     public StudyRoomDto toDto(StudyRoom room, List<RoomPresence> leases, List<GroupMembership> memberships,
-        Long actorId, Instant now) {
+        List<RoomReaction> reactions, Long actorId, Instant now) {
         var group = room.getStudyGroup();
         var members = memberships.stream().filter(m -> m.getStudent().getUser().isActive()).toList();
         var memberIds = members.stream().map(m -> m.getStudent().getId()).collect(Collectors.toSet());
@@ -38,6 +38,9 @@ public class RoomAssembler {
             latest.values().stream().map(p -> new RoomParticipantDto(p.getStudent().getId(), p.getStudent().getName(),
                 p.getPresence(), p.getExpiresAt(), group.isLeader(p.getStudent().getId()),
                 p.getStudent().getId().equals(hostId), Objects.equals(p.getStudent().getId(), coHostId))).toList(),
-            members.stream().map(m -> new RoomMemberDto(m.getStudent().getId(), m.getStudent().getName())).toList());
+            members.stream().map(m -> new RoomMemberDto(m.getStudent().getId(), m.getStudent().getName())).toList(),
+            reactions.stream().filter(r -> memberIds.contains(r.getStudent().getId()))
+                .map(r -> new RoomReactionDto(r.getId(), r.getType(), r.getStudent().getId(), r.getStudent().getName(), r.getSentAt()))
+                .toList());
     }
 }

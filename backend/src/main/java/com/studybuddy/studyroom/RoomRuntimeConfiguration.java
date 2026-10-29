@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(RoomSettings.class)
+@EnableConfigurationProperties({RoomSettings.class, RoomReactionSettings.class})
 public class RoomRuntimeConfiguration {
     @Bean
     public Clock studyRoomClock() {
