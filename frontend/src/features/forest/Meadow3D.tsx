@@ -82,7 +82,8 @@ export default function Meadow3D({ trees }: { trees: Tree[] }) {
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if ((event.target as HTMLElement).closest('button')) return
     drag.current = { x: event.clientX, y: event.clientY }
-    event.currentTarget.setPointerCapture(event.pointerId)
+    // Keeps the drag going when the pointer leaves the meadow; not every environment supports it.
+    event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   function onPointerMove(event: PointerEvent<HTMLDivElement>) {
     if (!drag.current) return
