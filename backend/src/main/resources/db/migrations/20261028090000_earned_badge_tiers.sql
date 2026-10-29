@@ -14,9 +14,11 @@ ALTER TABLE public.earned_badges ADD CONSTRAINT earned_badges_student_fk
     FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
 ALTER TABLE public.earned_badges DROP CONSTRAINT IF EXISTS earned_badges_student_badge_key;
 ALTER TABLE public.earned_badges ADD CONSTRAINT earned_badges_student_badge_key UNIQUE (student_id, badge);
+-- NOT VALID: every run replays all files, and 20261029090000_room_reactions_and_focus_forest.sql
+-- replaces this list with the validated current one. Validating here would fail on any badge added later.
 ALTER TABLE public.earned_badges DROP CONSTRAINT IF EXISTS earned_badges_badge_check;
 ALTER TABLE public.earned_badges ADD CONSTRAINT earned_badges_badge_check CHECK (badge IN (
-    'CONNECTOR','FIRST_MOVE','TEAM_PLAYER','FOUNDER','PLANNER','GROVE_KEEPER'));
+    'CONNECTOR','FIRST_MOVE','TEAM_PLAYER','FOUNDER','PLANNER','GROVE_KEEPER')) NOT VALID;
 ALTER TABLE public.earned_badges DROP CONSTRAINT IF EXISTS earned_badges_tier_check;
 ALTER TABLE public.earned_badges ADD CONSTRAINT earned_badges_tier_check CHECK (best_tier IN ('BRONZE','SILVER','GOLD'));
 ALTER TABLE public.earned_badges ENABLE ROW LEVEL SECURITY;
