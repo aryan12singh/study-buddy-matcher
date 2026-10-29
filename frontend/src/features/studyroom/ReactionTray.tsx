@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { errorMessage } from '../../shared/api/client'
 import { sendReaction } from './api'
-import type { RoomReactionType } from './api'
+import type { RoomReaction, RoomReactionType } from './api'
 import ReactionSprite from './ReactionSprite'
 import { REACTIONS, REACTION_TYPES } from './reactionSprites'
 
-/** A row of reaction buttons; a sent reaction appears for everyone on the next room refresh. */
-export default function ReactionTray({ groupId, joined, onSent }: { groupId: number; joined: boolean; onSent: () => void }) {
+/** A row of reaction buttons. The sender sees their reaction at once; others see it on their next room refresh. */
+export default function ReactionTray({ groupId, joined, onSent }: { groupId: number; joined: boolean; onSent: (reaction: RoomReaction) => void }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string>()
 
@@ -14,8 +14,7 @@ export default function ReactionTray({ groupId, joined, onSent }: { groupId: num
     setPending(true)
     setError(undefined)
     try {
-      await sendReaction(groupId, type)
-      onSent()
+      onSent(await sendReaction(groupId, type))
     } catch (failure) {
       setError(errorMessage(failure))
     } finally {

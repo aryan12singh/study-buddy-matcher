@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import type { RoomReaction } from './api'
 import ReactionSprite from './ReactionSprite'
 import { REACTIONS } from './reactionSprites'
 
-const FLOAT_MILLIS = 4000
+const FLOAT_MILLIS = 3600
 /** Reactions already this old when first seen (such as on opening the room) are not replayed. */
 const REPLAY_LIMIT_MILLIS = 3000
+/** Each float drifts sideways a little differently, so a burst of reactions does not move in lockstep. */
+const SWAYS = ['-14px', '10px', '-6px', '16px', '-18px', '6px']
 
 /**
  * Floats each new reaction up over the room scene once. Snapshots repeat a reaction for a few
@@ -45,7 +48,8 @@ export default function ReactionLayer({ reactions, serverTime }: { reactions: Ro
   return (
     <div className="reaction-layer" aria-live="polite">
       {floating.map(reaction => (
-        <span key={reaction.id} className="reaction-float" style={{ left: `${8 + (reaction.id * 37) % 80}%` }}>
+        <span key={reaction.id} className="reaction-float"
+          style={{ left: `${8 + (reaction.id * 37) % 80}%`, '--sway': SWAYS[reaction.id % SWAYS.length] } as CSSProperties}>
           <ReactionSprite type={reaction.type} />
           <span className="reaction-name">{reaction.senderName}</span>
           <span className="visually-hidden">sent {REACTIONS[reaction.type].label.toLowerCase()}</span>

@@ -12,24 +12,27 @@
 .reaction-error { color: #9b1c1c; }
 
 .reaction-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
-.reaction-float { position: absolute; bottom: 8%; display: grid; justify-items: center; gap: .15rem; animation: reaction-rise 4s steps(16, end) forwards; }
-.reaction-float svg { width: 44px; height: 44px; image-rendering: pixelated; filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, .35)); }
-.reaction-name { font-size: .7rem; padding: 0 .3rem; background: #fffbe8; border: 1px solid #5a3a2a; color: #2b3134; white-space: nowrap; }
+.reaction-float { position: absolute; bottom: 8%; display: grid; justify-items: center; gap: .15rem; will-change: transform, opacity; animation: reaction-rise 3.6s cubic-bezier(.22, .61, .36, 1) forwards; }
+/* No filter on the sprite: a drop-shadow over every pixel would be repainted on each frame. */
+.reaction-float svg { width: 44px; height: 44px; image-rendering: pixelated; }
+.reaction-name { font-size: .7rem; padding: 0 .3rem; background: #fffbe8; border: 1px solid #5a3a2a; box-shadow: 2px 2px 0 rgba(0, 0, 0, .25); color: #2b3134; white-space: nowrap; }
 @keyframes reaction-rise {
-  0% { transform: translateY(0) scale(.6); opacity: 0; }
-  10% { transform: translateY(-12px) scale(1); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translateY(-260px); opacity: 0; }
+  0% { transform: translate3d(0, 0, 0) scale(.5); opacity: 0; }
+  8% { transform: translate3d(0, -18px, 0) scale(1.15); opacity: 1; }
+  14% { transform: translate3d(0, -30px, 0) scale(1); }
+  45% { transform: translate3d(var(--sway, 0), -120px, 0); }
+  75% { opacity: 1; }
+  100% { transform: translate3d(0, -240px, 0); opacity: 0; }
 }
 
 .growing-tree { display: flex; align-items: flex-end; gap: .75rem; padding: .5rem .75rem; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: linear-gradient(180deg, #dff0f6, #f4f9ec 80%); color: #2b3134; }
 .growing-tree-sprite { width: 48px; height: 81px; flex: none; image-rendering: pixelated; }
 .growing-tree h3 { font-size: .95rem; margin: 0 0 .15rem; }
 .growing-tree p { margin: 0 0 .2rem; font-size: .85rem; }
-.growing-tree a { font-size: .85rem; }
+.growing-tree .retro-button { margin-top: .25rem; font-size: .8rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  .reaction-float { animation: reaction-fade 4s steps(4, end) forwards; }
+  .reaction-float { animation: reaction-fade 3.6s ease-out forwards; }
 }
 @keyframes reaction-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 .group-room-social { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }

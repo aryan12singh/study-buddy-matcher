@@ -49,9 +49,9 @@ public class StudyRoomController {
         @Valid @RequestBody RoomTimerInput input) { return service.controlTimer(groupId, actor.id(), input); }
 
     @PostMapping("/reactions")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void react(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
-        @Valid @RequestBody RoomReactionInput input) { reactions.send(groupId, actor.id(), input.type()); }
+    @ResponseStatus(HttpStatus.CREATED)
+    public RoomReactionDto react(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
+        @Valid @RequestBody RoomReactionInput input) { return reactions.send(groupId, actor.id(), input.type()); }
 
     @PutMapping("/settings")
     public StudyRoomDto configure(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,

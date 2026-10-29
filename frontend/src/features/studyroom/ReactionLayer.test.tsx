@@ -19,7 +19,7 @@ describe('room reactions', () => {
     rerender(<ReactionLayer reactions={[clap]} serverTime="2026-10-29T02:00:12Z" />)
     act(() => { vi.advanceTimersByTime(1) })
     expect(screen.getAllByText('Jamie')).toHaveLength(1)
-    act(() => { vi.advanceTimersByTime(4000) })
+    act(() => { vi.advanceTimersByTime(3600) })
     expect(screen.queryByText('Jamie')).not.toBeInTheDocument()
   })
 
@@ -31,7 +31,8 @@ describe('room reactions', () => {
   })
 
   it('sends a reaction from the tray only after joining and reports a refusal', async () => {
-    const post = vi.spyOn(api, 'post').mockResolvedValueOnce({ data: undefined })
+    const sent: RoomReaction = { id: 9, type: 'HEART', studentId: 1, senderName: 'Priya', sentAt: NOW }
+    const post = vi.spyOn(api, 'post').mockResolvedValueOnce({ data: sent })
       .mockRejectedValueOnce(new Error('You are reacting too quickly'))
     const onSent = vi.fn()
     const { rerender } = render(<ReactionTray groupId={5} joined={false} onSent={onSent} />)
@@ -40,9 +41,20 @@ describe('room reactions', () => {
     rerender(<ReactionTray groupId={5} joined onSent={onSent} />)
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send heart reaction' })) })
     expect(post).toHaveBeenCalledWith('/groups/5/room/reactions', { type: 'HEART' })
-    expect(onSent).toHaveBeenCalledTimes(1)
+    expect(onSent).toHaveBeenCalledWith(sent)
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send growing reaction' })) })
     expect(screen.getByRole('alert')).toHaveTextContent('You are reacting too quickly')
     expect(onSent).toHaveBeenCalledTimes(1)
+  })
+
+  it('floats the sender\'s own reaction at once and does not repeat it when the snapshot catches up', () => {
+    vi.useFakeTimers()
+    const own: RoomReaction = { ...clap, id: 12, senderName: 'Priya', sentAt: '2026-10-29T02:00:11Z' }
+    const { rerender } = render(<ReactionLayer reactions={[own]} serverTime={NOW} />)
+    act(() => { vi.advanceTimersByTime(1) })
+    expect(screen.getAllByText('Priya')).toHaveLength(1)
+    rerender(<ReactionLayer reactions={[own, own]} serverTime="2026-10-29T02:00:12Z" />)
+    act(() => { vi.advanceTimersByTime(1) })
+    expect(screen.getAllByText('Priya')).toHaveLength(1)
   })
 })

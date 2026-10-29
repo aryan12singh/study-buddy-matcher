@@ -30,7 +30,8 @@ public class RoomReactionService {
         this.clock = clock;
     }
 
-    public void send(Long groupId, Long actorId, RoomReactionType type) {
+    /** Returns the saved reaction, so the sender can show it at once instead of waiting for a poll. */
+    public RoomReactionDto send(Long groupId, Long actorId, RoomReactionType type) {
         access.readMember(groupId, actorId);
         Instant now = clock.instant();
         StudyRoom room = rooms.findByStudyGroupId(groupId).orElseThrow(this::notInRoom);
@@ -41,7 +42,8 @@ public class RoomReactionService {
             now.minus(settings.burstWindow())) >= settings.burstLimit()) {
             throw new ConflictException("You are reacting too quickly; wait a moment and try again");
         }
-        reactions.save(new RoomReaction(room, lease.getStudent(), type, now));
+        RoomReaction saved = reactions.save(new RoomReaction(room, lease.getStudent(), type, now));
+        return new RoomReactionDto(saved.getId(), type, actorId, lease.getStudent().getName(), now);
     }
 
     @Transactional(readOnly = true)

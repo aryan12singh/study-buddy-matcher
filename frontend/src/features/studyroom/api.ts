@@ -44,5 +44,5 @@ export function configureRoom(groupId: number, configuration: RoomConfiguration)
   return snapshot(() => api.put(`${path(groupId)}/settings`, configuration))
 }
 export async function sendReaction(groupId: number, type: RoomReactionType) {
-  await api.post(`${path(groupId)}/reactions`, { type })
+  return (await api.post<RoomReaction>(`${path(groupId)}/reactions`, { type })).data
 }
