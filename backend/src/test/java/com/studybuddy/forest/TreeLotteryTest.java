@@ -11,7 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TreeLotteryTest {
     private final ForestProperties properties = new ForestProperties(ZoneId.of("Asia/Singapore"),
-        new ForestProperties.TreeThresholds(10, 25, 50, 90, 150), 3);
+        new ForestProperties.TreeThresholds(10, 25, 50, 90, 150), 3,
+        new ForestProperties.LightHours(5, 11, 17, 21), 100);
 
     @Test
     void drawsEveryVariantAndPlotsWithinRange() {

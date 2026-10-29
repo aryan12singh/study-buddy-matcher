@@ -2,8 +2,11 @@ package com.studybuddy.integration;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import tools.jackson.databind.JsonNode;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,6 +18,7 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
     private String leader;
     private String member;
     private String outsider;
+    @Autowired private ThreadPoolTaskExecutor forestUpdates;
 
     @BeforeEach
     void members() {
@@ -81,7 +85,7 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
         assertEquals("SAPLING", expect(call("GET", "/forest/me/rooms/" + groupId, member, null), 200).path("species").asString());
         assertEquals(0, forest(member).path("treeCount").asInt(), "A growing tree is not planted yet");
 
-        expect(call("DELETE", path() + "/presence/" + tab, member, null), 204);
+        leave(member, tab);
         var forest = forest(member);
         assertEquals(1, forest.path("treeCount").asInt());
         assertEquals("SAPLING", forest.path("trees").get(0).path("species").asString());
@@ -120,16 +124,47 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
         join(member, first);
         join(member, second);
         assertEquals(1, count("select count(*) from focus_visits where student_id=?", memberId));
-        expect(call("DELETE", path() + "/presence/" + first, member, null), 204);
+        leave(member, first);
         assertEquals(1, count("select count(*) from focus_visits where student_id=? and ended_at is null", memberId));
-        expect(call("DELETE", path() + "/presence/" + second, member, null), 204);
+        leave(member, second);
         assertEquals(0, count("select count(*) from focus_visits where student_id=? and ended_at is null", memberId));
     }
 
     @Test
-    void forestNeedsAStudentAccount() {
+    void forestIsOnlyForTheSignedInStudent() {
         expect(call("GET", "/forest/me", null, null), 401);
+        expect(call("GET", "/forest/me/rooms/" + groupId, null, null), 401);
+        account("admin@example.test", "ADMIN");
+        String admin = login("admin@example.test");
+        expect(call("GET", "/forest/me", admin, null), 403);
+        expect(call("GET", "/forest/me/rooms/" + groupId, admin, null), 403);
         assertEquals(0, forest(member).path("treeCount").asInt());
+    }
+
+    @Test
+    void twoTabsRenewingAtOnceCreditTheSameStretchOnlyOnce() throws Exception {
+        UUID first = UUID.randomUUID(), second = UUID.randomUUID();
+        join(member, first);
+        join(member, second);
+        startTimer();
+        database.update("update study_rooms set timer_anchor=timer_anchor-interval '60 seconds' where study_group_id=?", groupId);
+        database.update("update focus_visits set last_seen_at=last_seen_at-interval '60 seconds', started_at=started_at-interval '60 seconds'");
+        statuses(race(() -> renew(member, first), () -> renew(member, second)), 200, 200);
+        awaitForest();
+        long credited = count("select focused_millis from focus_visits where student_id=?", memberId);
+        assertTrue(credited >= 59_000 && credited <= 63_000, "One minute credited once, not twice: " + credited);
+        assertEquals(1, count("select count(*) from focus_visits where student_id=?", memberId));
+    }
+
+    @Test
+    void aTickFromBeforeLeavingDoesNotReopenTheVisit() {
+        UUID tab = UUID.randomUUID();
+        join(member, tab);
+        leave(member, tab);
+        database.update("update focus_visits set ended_at=now()+interval '1 minute'");
+        join(member, tab);
+        assertEquals(0, count("select count(*) from focus_visits where student_id=? and ended_at is null", memberId),
+            "A tick older than the visit's end is ignored");
     }
 
     private void startTimer() {
@@ -140,10 +175,30 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
     private String reactions() { return path() + "/reactions"; }
     private JsonNode state(String token) { return expect(call("GET", path(), token, null), 200); }
     private JsonNode forest(String token) { return expect(call("GET", "/forest/me", token, null), 200); }
+    /** Room calls hand forest updates to a worker; these helpers wait for it so checks see the result. */
     private JsonNode join(String token, UUID tab) {
-        return expect(call("POST", path() + "/join", token, Map.of("clientId", tab)), 200);
+        var room = expect(call("POST", path() + "/join", token, Map.of("clientId", tab)), 200);
+        awaitForest();
+        return room;
     }
     private JsonNode heartbeat(String token, UUID tab) {
-        return expect(call("PUT", path() + "/presence", token, Map.of("clientId", tab, "presence", "PRESENT")), 200);
+        var room = expect(renew(token, tab), 200);
+        awaitForest();
+        return room;
+    }
+    private Reply renew(String token, UUID tab) {
+        return call("PUT", path() + "/presence", token, Map.of("clientId", tab, "presence", "PRESENT"));
+    }
+    private void leave(String token, UUID tab) {
+        expect(call("DELETE", path() + "/presence/" + tab, token, null), 204);
+        awaitForest();
+    }
+    private void awaitForest() {
+        var pool = forestUpdates.getThreadPoolExecutor();
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (pool.getCompletedTaskCount() < pool.getTaskCount()) {
+            if (System.nanoTime() > deadline) fail("Forest updates did not finish");
+            Thread.onSpinWait();
+        }
     }
 }

@@ -69,6 +69,10 @@ app:
     tree-minutes: { sprout: 10, sapling: 25, oak: 50, pine: 90, ancient-blossom: 150 }
     # Kinds of tree drawn at random within each species (the frontend draws this many per species).
     variants-per-species: 3
+    # Local hour each tree light begins: dawn, daytime, dusk, then night until the next dawn.
+    light-starts: { dawn: 5, day: 11, dusk: 17, night: 21 }
+    # Pending forest updates the worker may hold; beyond this one is dropped and logged.
+    update-queue-capacity: 1000
   auth:
     secret: ${jwt.secret}
     token-lifetime: ${jwt.expiration-ms}ms

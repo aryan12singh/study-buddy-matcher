@@ -41,6 +41,8 @@ public class ForestService {
     }
 
     public void recordTick(RoomVisitTicked tick) {
+        // A tick from before the student left must not reopen the visit their leaving just ended.
+        if (visits.existsByStudentIdAndStudyGroupIdAndEndedAtGreaterThan(tick.studentId(), tick.groupId(), tick.at())) return;
         var open = visits.findByStudentIdAndStudyGroupIdAndEndedAtIsNull(tick.studentId(), tick.groupId());
         if (open.isPresent() && open.get().isOver(tick.at(), rooms.leaseLifetime())) {
             visits.end(open.get().getId(), open.get().getLastSeenAt());

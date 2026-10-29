@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 public interface FocusVisitRepository extends JpaRepository<FocusVisit, Long> {
     Optional<FocusVisit> findByStudentIdAndStudyGroupIdAndEndedAtIsNull(Long studentId, Long groupId);
 
+    boolean existsByStudentIdAndStudyGroupIdAndEndedAtGreaterThan(Long studentId, Long groupId, Instant at);
+
     List<FocusVisit> findByStudentIdAndFocusedMillisGreaterThanEqualOrderByStartedAtDesc(Long studentId, long minimumMillis);
 
     /** Two tabs may open the same visit at once; the partial unique index lets only one row in. */

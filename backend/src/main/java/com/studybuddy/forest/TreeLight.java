@@ -6,11 +6,11 @@ import java.time.LocalTime;
 public enum TreeLight {
     DAWN, DAY, DUSK, NIGHT;
 
-    public static TreeLight at(LocalTime time) {
+    public static TreeLight at(LocalTime time, ForestProperties.LightHours starts) {
         int hour = time.getHour();
-        if (hour >= 5 && hour < 11) return DAWN;
-        if (hour >= 11 && hour < 17) return DAY;
-        if (hour >= 17 && hour < 21) return DUSK;
+        if (hour >= starts.dawn() && hour < starts.day()) return DAWN;
+        if (hour >= starts.day() && hour < starts.dusk()) return DAY;
+        if (hour >= starts.dusk() && hour < starts.night()) return DUSK;
         return NIGHT;
     }
 }

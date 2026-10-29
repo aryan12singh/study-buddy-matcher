@@ -41,7 +41,7 @@ public class ForestAssembler {
     }
 
     private TreeLight lightOf(FocusVisit visit) {
-        return TreeLight.at(visit.getStartedAt().atZone(properties.zone()).toLocalTime());
+        return TreeLight.at(visit.getStartedAt().atZone(properties.zone()).toLocalTime(), properties.lightStarts());
     }
 
     private static long minutes(Duration focused) {

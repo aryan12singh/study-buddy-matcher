@@ -98,9 +98,8 @@ public class StudyRoomService {
         } catch (ObjectOptimisticLockingFailureException removedMeanwhile) {
             throw expiredPresence();
         }
-        if (input.presence() != PresenceState.BREAK) {
-            events.publishEvent(new RoomVisitTicked(actorId, groupId, group.getName(), room.timer(), now));
-        }
+        // Focus is measured from the shared timer, not from what a tab reports, so every renewal ticks.
+        events.publishEvent(new RoomVisitTicked(actorId, groupId, group.getName(), room.timer(), now));
         return detail(room, actorId);
     }
 
