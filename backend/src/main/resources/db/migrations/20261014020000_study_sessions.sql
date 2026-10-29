@@ -31,8 +31,8 @@ ALTER TABLE study_sessions ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE study_sessions FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON SEQUENCE study_sessions_id_seq FROM PUBLIC, anon, authenticated;
 
--- NOT VALID: every run replays all files, and 20261023090000_withdraw_and_leave.sql replaces
--- this list with the validated final one.
+-- NOT VALID: every run replays all files, and 20261024010000_study_room_started_notification.sql
+-- replaces this list with the validated current one.
 ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
 ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK(type IN (
     'MATCH_REQUEST_RECEIVED','MATCH_REQUEST_ACCEPTED','MATCH_REQUEST_DECLINED','MATCH_REQUEST_CANCELLED',
