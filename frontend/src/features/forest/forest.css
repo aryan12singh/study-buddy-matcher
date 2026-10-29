@@ -1,0 +1,27 @@
+.forest { display: grid; gap: 1.25rem; }
+.forest-stats { display: flex; flex-wrap: wrap; gap: .75rem; margin: 0; }
+.forest-stats > div { flex: 1 1 140px; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: #f4f9ec; padding: .5rem .75rem; }
+.forest-stats dt { font-size: .8rem; color: #3f474b; }
+.forest-stats dd { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.forest-meadow, .forest-legend { border: 2px solid; border-color: #fff #808080 #808080 #fff; padding: 1rem; }
+.forest-meadow { background: linear-gradient(180deg, #cfe9f5, #eaf6dc 70%, #d8eec2); }
+.forest-meadow h2, .forest-legend h2 { font-size: 1.1rem; margin-bottom: .5rem; }
+.forest-more { margin: 0 0 .5rem; font-size: .9rem; color: #3f474b; }
+.forest-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 1rem .5rem; align-items: end; }
+.forest-tree { display: grid; justify-items: center; gap: .3rem; animation: forest-rise .5s steps(5, end) both; }
+.forest-tree svg { width: 64px; height: 108px; display: block; image-rendering: pixelated; }
+.forest-tree.species-sprout svg, .forest-tree.species-sapling svg { width: 56px; height: 94px; }
+.forest-tree.species-ancient_blossom svg { width: 80px; height: 135px; }
+.forest-label { display: grid; text-align: center; font-size: .75rem; line-height: 1.25; color: #2b3134; }
+.forest-group { color: #50595e; overflow-wrap: anywhere; }
+.forest-legend { background: #f7f7f2; }
+.forest-legend p { margin: 0 0 .75rem; color: #3f474b; }
+.forest-legend ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: end; }
+.forest-legend li { display: grid; justify-items: center; gap: .25rem; font-size: .8rem; text-align: center; }
+.forest-legend svg { width: 40px; height: 68px; image-rendering: pixelated; }
+.tree-sparkle { animation: tree-twinkle 1.6s steps(2, end) infinite; }
+@keyframes forest-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes tree-twinkle { 50% { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) {
+  .forest-tree, .tree-sparkle { animation: none; }
+}

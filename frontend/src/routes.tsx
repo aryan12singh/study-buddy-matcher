@@ -26,7 +26,7 @@ import StudyPlanPage from './features/studyplan/StudyPlanPage'
 import CreateStudyPlanPage from './features/studyplan/CreateStudyPlanPage'
 import StudyPlanDetailPage from './features/studyplan/StudyPlanDetailPage'
 import StatePanel from './shared/components/StatePanel'
-import { AchievementsPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
+import { AchievementsPage, ForestPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
 
 export const appRoutes = createRoutesFromElements(
     <>
@@ -57,6 +57,7 @@ export const appRoutes = createRoutesFromElements(
               <Route path="/groups/:id/room" element={<StudyRoomPage />} />
               <Route path="/sessions" element={<SessionsPage />} />
               <Route path="/achievements" element={<AchievementsPage />} />
+              <Route path="/forest" element={<ForestPage />} />
               <Route path="/sessions/:id" element={<SessionDetailPage />} />
               <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
               <Route path="/groups/:id/sessions" element={<SessionsPage kind="GROUP" />} />

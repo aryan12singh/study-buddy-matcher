@@ -25,6 +25,7 @@ export default function AchievementsPage() {
             <AchievementSummary data={data} />
           </section>
           <StudyGrove streak={data.streak} />
+          <p className="forest-callout">Every study room visit also plants a tree. <Link to="/forest">Visit my forest</Link></p>
           <details className="achievement-help">
             <summary>How these numbers work</summary>
             <p>Each badge contributes the highest tier you have reached: Bronze 1 point, Silver 2, Gold 3. Points determine your level, up to {data.maxPoints} points and level {data.maxLevel}. A tier is saved when you open your achievements, so losing a record later lowers only the count, not the tier or level.</p>

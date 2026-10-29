@@ -91,3 +91,4 @@
   .grove-plot, .badge-earned .medallion-shine { animation: none; }
   .achievements .retro-button, .own-achievements .retro-button { transition: none; }
 }
+.forest-callout { margin: -.75rem 0 0; font-size: .9rem; }

@@ -24,10 +24,14 @@ import RoomTimerSettingsPanel from './RoomTimerSettingsPanel'
 import QuizBotLauncher from '../quiz/QuizBotLauncher'
 import { useRoomFullscreen } from './useRoomFullscreen'
 import { usePanelVisibility } from './usePanelVisibility'
+import ReactionLayer from './ReactionLayer'
+import ReactionTray from './ReactionTray'
+import GrowingTree from './GrowingTree'
 import { DEFAULT_ATMOSPHERE } from './weatherTheme'
 import type { Atmosphere } from './weatherTheme'
 import './studyCorner.css'
 import './studyroom.css'
+import './reactions.css'
 
 export default function StudyRoomPage() {
   const { id } = useParams()
@@ -143,6 +147,7 @@ function RoomPage({ groupId }: { groupId: number }) {
         <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
           <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
           <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
+          <ReactionLayer reactions={room.reactions ?? []} serverTime={room.serverTime} />
           <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
             <header className="group-room-header">
               <div className="room-corner-tools">
@@ -167,6 +172,10 @@ function RoomPage({ groupId }: { groupId: number }) {
             <RoomParticipants room={room} accountId={account?.id} joinedHere={resource.joinedHere} />
             <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
               pending={action.pending} onControl={control} />
+            <div className="group-room-social">
+              <ReactionTray groupId={groupId} joined={resource.joinedHere} onSent={() => void resource.refresh()} />
+              {resource.joinedHere && <GrowingTree groupId={groupId} accountId={account?.id} />}
+            </div>
             <footer className="group-room-footer">
               {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
               {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
