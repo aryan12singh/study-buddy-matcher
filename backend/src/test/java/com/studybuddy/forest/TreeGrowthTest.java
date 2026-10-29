@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TreeGrowthTest {
     private final TreeGrowth growth = new TreeGrowth(new ForestProperties(ZoneId.of("Asia/Singapore"),
-        new ForestProperties.TreeThresholds(10, 25, 50, 90, 150)));
+        new ForestProperties.TreeThresholds(10, 25, 50, 90, 150), 3));
 
     @Test
     void longerVisitsGrowGranderTrees() {

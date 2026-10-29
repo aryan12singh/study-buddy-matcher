@@ -1,6 +1,7 @@
 package com.studybuddy.forest;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.ZoneId;
 import java.util.Objects;
@@ -10,10 +11,12 @@ import org.springframework.validation.annotation.Validated;
 /** Focus forest settings, bound from {@code app.forest.*}. */
 @Validated
 @ConfigurationProperties("app.forest")
-public record ForestProperties(@NotNull ZoneId zone, @Valid @NotNull TreeThresholds treeMinutes) {
+public record ForestProperties(@NotNull ZoneId zone, @Valid @NotNull TreeThresholds treeMinutes,
+    @Min(1) int variantsPerSpecies) {
     public ForestProperties {
         Objects.requireNonNull(zone, "Forest zone is required");
         Objects.requireNonNull(treeMinutes, "Tree thresholds are required");
+        if (variantsPerSpecies < 1) throw new IllegalArgumentException("Each species needs at least one variant");
     }
 
     /** Focused minutes at which a visit's tree reaches each species, in increasing order. */

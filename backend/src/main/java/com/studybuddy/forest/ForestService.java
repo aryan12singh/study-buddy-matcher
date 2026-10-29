@@ -26,15 +26,17 @@ public class ForestService {
     private final TreeGrowth growth;
     private final RoomSettings rooms;
     private final AccountAccess accounts;
+    private final TreeLottery lottery;
     private final Clock clock;
 
     public ForestService(FocusVisitRepository visits, ForestAssembler assembler, TreeGrowth growth,
-        RoomSettings rooms, AccountAccess accounts, @Qualifier("studyRoomClock") Clock clock) {
+        RoomSettings rooms, AccountAccess accounts, TreeLottery lottery, @Qualifier("studyRoomClock") Clock clock) {
         this.visits = visits;
         this.assembler = assembler;
         this.growth = growth;
         this.rooms = rooms;
         this.accounts = accounts;
+        this.lottery = lottery;
         this.clock = clock;
     }
 
@@ -45,7 +47,8 @@ public class ForestService {
             open = Optional.empty();
         }
         if (open.isEmpty()) {
-            visits.open(tick.studentId(), tick.groupId(), tick.groupName(), tick.at());
+            TreeDraw draw = lottery.draw();
+            visits.open(tick.studentId(), tick.groupId(), tick.groupName(), tick.at(), draw.variant(), draw.plot());
             return;
         }
         FocusVisit visit = open.get();
@@ -61,7 +64,9 @@ public class ForestService {
 
     /** Records a visit that already happened; used to seed the demo forest. */
     public void recordFinishedVisit(Long studentId, Long groupId, String groupName, Instant startedAt, Duration focused) {
-        visits.insertFinished(studentId, groupId, groupName, startedAt, startedAt.plus(focused), focused.toMillis());
+        TreeDraw draw = lottery.draw();
+        visits.insertFinished(studentId, groupId, groupName, startedAt, startedAt.plus(focused), focused.toMillis(),
+            draw.variant(), draw.plot());
     }
 
     @Transactional(readOnly = true)

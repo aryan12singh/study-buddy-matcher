@@ -36,10 +36,13 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
         join(member, UUID.randomUUID());
         expect(call("POST", reactions(), member, Map.of("type", "WAVE")), 400);
         expect(call("POST", reactions(), member, Map.of()), 400);
-        expect(call("POST", reactions(), member, Map.of("type", "HEART")), 202);
+        JsonNode sent = expect(call("POST", reactions(), member, Map.of("type", "HEART")), 201);
+        assertEquals("HEART", sent.path("type").asString());
+        assertEquals("Member", sent.path("senderName").asString());
 
         JsonNode seen = state(leader).path("reactions");
         assertEquals(1, seen.size());
+        assertEquals(sent.path("id").asLong(), seen.get(0).path("id").asLong(), "The sender's copy has the id everyone else sees");
         assertEquals("HEART", seen.get(0).path("type").asString());
         assertEquals("Member", seen.get(0).path("senderName").asString());
         assertEquals(memberId, seen.get(0).path("studentId").asLong());
@@ -50,11 +53,11 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
     @Test
     void reactionsAreRateLimitedAndOldOnesDropOut() {
         join(member, UUID.randomUUID());
-        for (int i = 0; i < 5; i++) expect(call("POST", reactions(), member, Map.of("type", "FIRE")), 202);
+        for (int i = 0; i < 5; i++) expect(call("POST", reactions(), member, Map.of("type", "FIRE")), 201);
         expect(call("POST", reactions(), member, Map.of("type", "FIRE")), 409);
         database.update("update room_reactions set sent_at=now()-interval '1 minute'");
         assertEquals(0, state(member).path("reactions").size());
-        expect(call("POST", reactions(), member, Map.of("type", "SPROUT")), 202);
+        expect(call("POST", reactions(), member, Map.of("type", "SPROUT")), 201);
         assertEquals(1, count("select count(*) from room_reactions"), "Old reactions are pruned when someone reacts");
     }
 
@@ -84,6 +87,10 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
         assertEquals("SAPLING", forest.path("trees").get(0).path("species").asString());
         assertEquals(30, forest.path("trees").get(0).path("focusedMinutes").asLong());
         assertFalse(forest.path("trees").get(0).path("light").isMissingNode());
+        int variant = forest.path("trees").get(0).path("variant").asInt(-1);
+        assertTrue(variant >= 0 && variant < forest.path("variantsPerSpecies").asInt(), "Variant " + variant);
+        assertEquals(count("select plot from focus_visits where student_id=?", memberId), forest.path("trees").get(0).path("plot").asLong(),
+            "The plot drawn when the visit opened is kept");
         assertEquals(5, forest.path("stages").size());
         assertEquals(0, forest(leader).path("treeCount").asInt(), "Each student sees only their own forest");
         JsonNode forester = null;

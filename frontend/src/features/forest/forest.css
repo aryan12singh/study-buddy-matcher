@@ -25,3 +25,45 @@
 @media (prefers-reduced-motion: reduce) {
   .forest-tree, .tree-sparkle { animation: none; }
 }
+
+/* 3D meadow: a tilted pixel diorama. --spin and --tilt are set from script as the view turns. */
+.meadow3d { display: grid; gap: .6rem; }
+.meadow-stage { --spin: -35deg; --tilt: 58deg; position: relative; height: 470px; perspective: 1150px; perspective-origin: 50% 30%; overflow: hidden; cursor: grab; touch-action: none; user-select: none;
+  border: 2px solid; border-color: #808080 #fff #fff #808080; background: linear-gradient(180deg, #9fd3ea 0%, #cfeaf5 55%, #e8f5dc 100%); }
+.meadow-stage:active { cursor: grabbing; }
+.meadow-stage:focus-visible { outline: 2px dotted #000; outline-offset: 3px; }
+.meadow-world { position: absolute; left: 50%; top: 54%; transform-style: preserve-3d; transform: translate(-50%, -50%) rotateX(var(--tilt)) rotateZ(var(--spin)); }
+.meadow-ground { position: absolute; inset: 0; background:
+  repeating-conic-gradient(#74bd4d 0 25%, #68b044 0 50%) 0 0 / 42px 42px; box-shadow: inset 0 0 0 4px #4f9a3a; image-rendering: pixelated; }
+.meadow-side { position: absolute; background: repeating-linear-gradient(90deg, #8a5a32 0 12px, #7a4c2a 12px 24px); }
+.meadow-side::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: #5e3b22; }
+.side-south, .side-north { left: 0; width: 100%; height: 26px; }
+.side-south { top: 100%; transform-origin: top; transform: rotateX(-90deg); }
+.side-north { bottom: 100%; transform-origin: bottom; transform: rotateX(90deg); }
+.side-east, .side-west { top: 0; height: 100%; width: 26px; }
+.side-east { left: 100%; transform-origin: left; transform: rotateY(90deg); background: repeating-linear-gradient(0deg, #8a5a32 0 12px, #7a4c2a 12px 24px); }
+.side-west { right: 100%; transform-origin: right; transform: rotateY(-90deg); background: repeating-linear-gradient(0deg, #8a5a32 0 12px, #7a4c2a 12px 24px); }
+.side-east::after, .side-west::after { top: 0; bottom: 0; height: auto; width: 40%; left: auto; right: 0; }
+.side-west::after { left: 0; right: auto; }
+/* Flat pixel details lying on the grass. */
+.meadow-decoration { position: absolute; width: 8px; height: 8px; transform: translate(-50%, -50%); image-rendering: pixelated; }
+.meadow-decoration.is-tuft { background: linear-gradient(90deg, transparent 0 2px, #4e9a35 2px 4px, transparent 4px 6px, #4e9a35 6px 8px); height: 6px; }
+.meadow-decoration.is-flower { width: 6px; height: 6px; background: #ffe066; box-shadow: 0 -3px 0 #f5f0e6, 3px 0 0 #f5f0e6, 0 3px 0 #f5f0e6, -3px 0 0 #f5f0e6; }
+.meadow-decoration.is-pebble { width: 7px; height: 5px; background: #a9a59a; box-shadow: inset -2px -1px 0 #7d796f; }
+.meadow-spot { position: absolute; width: 0; height: 0; transform-style: preserve-3d; }
+.meadow-shadow { position: absolute; left: 0; top: 0; height: 10px; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(30, 60, 20, .35); }
+/* Undo the world's rotation so every tree stands upright and faces the viewer. */
+.meadow-billboard { position: absolute; left: 0; top: 0; transform-style: preserve-3d; transform: rotateZ(calc(var(--spin) * -1)) rotateX(calc(var(--tilt) * -1)); }
+.meadow-tree { position: absolute; left: 0; bottom: 0; transform: translateX(-50%); padding: 0; border: 0; background: none; cursor: pointer; }
+.meadow-tree svg { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.meadow-tree:hover svg, .meadow-tree:focus-visible svg { filter: drop-shadow(0 0 3px #fff8b0) drop-shadow(0 0 1px #fff); }
+.meadow-tree:focus-visible { outline: 2px dotted #000; }
+.meadow-tree.is-selected::after { content: ''; position: absolute; left: 50%; top: -12px; width: 8px; height: 8px; transform: translateX(-50%); background: #ffd84a; box-shadow: 0 0 0 2px #5a3a2a; }
+.meadow-controls { display: flex; flex-wrap: wrap; gap: .4rem; }
+.meadow-detail { margin: 0; min-height: 1.4em; font-size: .9rem; color: #2b3134; }
+.forest-list summary { cursor: pointer; font-size: .9rem; margin-top: .25rem; }
+.forest-list .forest-grid { margin-top: .75rem; }
+@media (max-width: 520px) {
+  .meadow-stage { height: 340px; }
+  .meadow-world { scale: .72; }
+}

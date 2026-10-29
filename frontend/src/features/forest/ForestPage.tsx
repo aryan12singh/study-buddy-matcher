@@ -3,7 +3,9 @@ import { useResource } from '../../shared/api/useResource'
 import { useAuth } from '../../shared/auth/useAuth'
 import StatePanel from '../../shared/components/StatePanel'
 import WindowPage from '../../shared/components/WindowPage'
+import Meadow3D from './Meadow3D'
 import TreeSprite from './TreeSprite'
+import { treeName } from './treeSprites'
 import { LIGHT_NAMES, SPECIES_NAMES, formatMinutes, getMyForest } from './api'
 import './forest.css'
 
@@ -34,25 +36,29 @@ export default function ForestPage() {
           ) : (
             <section className="forest-meadow" aria-labelledby="meadow-title">
               <h2 id="meadow-title">Meadow</h2>
+              <Meadow3D trees={data.trees} />
+              <details className="forest-list">
+                <summary>List every tree</summary>
               {data.trees.length > shown.length && <p className="forest-more">Showing your latest {shown.length} of {data.trees.length} trees.</p>}
               <ul className="forest-grid">
                 {shown.map((tree, index) => (
                   <li key={tree.id} className={`forest-tree species-${tree.species.toLowerCase()}`}
                     style={{ animationDelay: `${Math.min(index, 20) * 40}ms` }}>
-                    <TreeSprite species={tree.species} light={tree.light} />
+                    <TreeSprite species={tree.species} variant={tree.variant} light={tree.light} />
                     <span className="forest-label">
-                      <strong>{SPECIES_NAMES[tree.species]}</strong>
+                      <strong>{treeName(tree.species, tree.variant)}</strong>
                       <span>{dates.format(new Date(tree.plantedAt))} · {formatMinutes(tree.focusedMinutes)}</span>
                       <span className="forest-group">{tree.groupName}, {LIGHT_NAMES[tree.light]}</span>
                     </span>
                   </li>
                 ))}
               </ul>
+              </details>
             </section>
           )}
           <section className="forest-legend" aria-labelledby="legend-title">
             <h2 id="legend-title">How trees grow</h2>
-            <p>Time counts only while you are in the room and the shared timer is running a focus phase. Breaks and pauses do not count. Each visit plants one tree when you leave; the hour you started sets its colours.</p>
+            <p>Time counts only while you are in the room and the shared timer is running a focus phase. Breaks and pauses do not count. Each visit plants one tree when you leave. How long you stayed sets its size; which kind of tree it is and where it stands are drawn at random, and the hour you started sets its colours.</p>
             <ol>
               {data.stages.map(stage => (
                 <li key={stage.species}>

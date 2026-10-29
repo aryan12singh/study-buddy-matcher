@@ -6,11 +6,15 @@ export type TreeLight = 'DAWN' | 'DAY' | 'DUSK' | 'NIGHT'
 export interface Tree {
   id: number
   species: TreeSpecies
+  /** Which kind of tree within its species; drawn at random by the server. */
+  variant: number
   light: TreeLight
   focusedMinutes: number
   startedAt: string
   plantedAt: string
   groupName: string
+  /** Where the tree stands in the meadow; drawn at random by the server. */
+  plot: number
 }
 
 export interface Forest {
@@ -19,6 +23,7 @@ export interface Forest {
   focusedMinutes: number
   longestMinutes: number
   stages: { species: TreeSpecies; minutes: number }[]
+  variantsPerSpecies: number
 }
 
 /** The tree growing in one room now; species is null until the visit is long enough to plant one. */
@@ -26,6 +31,7 @@ export interface GrowingTree {
   visiting: boolean
   focusedMinutes: number
   species: TreeSpecies | null
+  variant: number
   next: TreeSpecies | null
   minutesToNext: number | null
   light: TreeLight | null

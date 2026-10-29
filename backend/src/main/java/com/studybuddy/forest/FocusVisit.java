@@ -28,6 +28,10 @@ public class FocusVisit {
     private long focusedMillis;
     @Column(name = "ended_at")
     private Instant endedAt;
+    @Column(nullable = false)
+    private int variant;
+    @Column(nullable = false)
+    private int plot;
 
     protected FocusVisit() {}
 
@@ -49,4 +53,6 @@ public class FocusVisit {
     public Instant getStartedAt() { return startedAt; }
     public Instant getLastSeenAt() { return lastSeenAt; }
     public Instant getEndedAt() { return endedAt; }
+    public int getVariant() { return variant; }
+    public int getPlot() { return plot; }
 }

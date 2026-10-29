@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { api } from '../../shared/api/client'
 import { adminAccount, renderPage, response } from '../../test/renderApp'
 import ForestPage from './ForestPage'
@@ -10,10 +10,10 @@ const stages: Forest['stages'] = [
   { species: 'PINE', minutes: 90 }, { species: 'ANCIENT_BLOSSOM', minutes: 150 },
 ]
 const forest: Forest = {
-  treeCount: 2, focusedMinutes: 195, longestMinutes: 160, stages,
+  treeCount: 2, focusedMinutes: 195, longestMinutes: 160, stages, variantsPerSpecies: 3,
   trees: [
-    { id: 2, species: 'ANCIENT_BLOSSOM', light: 'NIGHT', focusedMinutes: 160, startedAt: '2026-10-28T14:00:00Z', plantedAt: '2026-10-28T16:40:00Z', groupName: 'Revision crew' },
-    { id: 1, species: 'SAPLING', light: 'DAY', focusedMinutes: 35, startedAt: '2026-10-27T04:00:00Z', plantedAt: '2026-10-27T04:40:00Z', groupName: 'IS442 grinders' },
+    { id: 2, species: 'ANCIENT_BLOSSOM', light: 'NIGHT', focusedMinutes: 160, startedAt: '2026-10-28T14:00:00Z', plantedAt: '2026-10-28T16:40:00Z', groupName: 'Revision crew', variant: 0, plot: 40 },
+    { id: 1, species: 'SAPLING', light: 'DAY', focusedMinutes: 35, startedAt: '2026-10-27T04:00:00Z', plantedAt: '2026-10-27T04:40:00Z', groupName: 'IS442 grinders', variant: 1, plot: 40 },
   ],
 }
 
@@ -29,7 +29,7 @@ describe('forest page', () => {
     expect(trees[0]).toHaveTextContent('Ancient blossom')
     expect(trees[0]).toHaveTextContent('2 h 40 min')
     expect(trees[0]).toHaveTextContent('Revision crew, night')
-    expect(trees[1]).toHaveTextContent('Sapling')
+    expect(trees[1]).toHaveTextContent('Birch sapling')
     expect(screen.getByText('Trees planted').nextSibling).toHaveTextContent('2')
     expect(screen.getByText('Focused time').nextSibling).toHaveTextContent('3 h 15 min')
     expect(within(screen.getByRole('region', { name: 'How trees grow' })).getAllByRole('listitem')).toHaveLength(5)
@@ -52,5 +52,20 @@ describe('forest page', () => {
     get.mockClear()
     renderPage(<ForestPage />, '/', '/', adminAccount)
     expect(get).not.toHaveBeenCalled()
+  })
+
+  it('stands every tree in the 3D meadow as a labelled button and shows its details when chosen', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response(forest))
+    renderPage(<ForestPage />)
+    const stage = await screen.findByRole('group', { name: /3D forest/ })
+    const birch = within(stage).getByRole('button', { name: /^Birch sapling, 35 min focused in IS442 grinders/ })
+    expect(within(stage).getAllByRole('button')).toHaveLength(2)
+    expect(screen.getByText('Select a tree to see when and where it grew.')).toBeInTheDocument()
+    fireEvent.click(birch)
+    expect(screen.getByText('Birch sapling', { selector: '.meadow-detail strong' })).toBeInTheDocument()
+    fireEvent.keyDown(stage, { key: 'ArrowRight' })
+    expect(stage.style.getPropertyValue('--spin')).toBe('-20deg')
+    fireEvent.click(screen.getByRole('button', { name: 'Reset view' }))
+    expect(stage.style.getPropertyValue('--spin')).toBe('-35deg')
   })
 })

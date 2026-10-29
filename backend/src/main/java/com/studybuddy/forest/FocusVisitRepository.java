@@ -15,19 +15,20 @@ public interface FocusVisitRepository extends JpaRepository<FocusVisit, Long> {
 
     /** Two tabs may open the same visit at once; the partial unique index lets only one row in. */
     @Modifying
-    @Query(value = "insert into focus_visits(student_id,study_group_id,group_name,started_at,last_seen_at) "
-        + "values (:studentId,:groupId,:groupName,:at,:at) "
+    @Query(value = "insert into focus_visits(student_id,study_group_id,group_name,started_at,last_seen_at,variant,plot) "
+        + "values (:studentId,:groupId,:groupName,:at,:at,:variant,:plot) "
         + "on conflict (student_id,study_group_id) where ended_at is null do nothing", nativeQuery = true)
     void open(@Param("studentId") Long studentId, @Param("groupId") Long groupId,
-        @Param("groupName") String groupName, @Param("at") Instant at);
+        @Param("groupName") String groupName, @Param("at") Instant at,
+        @Param("variant") int variant, @Param("plot") int plot);
 
     /** Records a visit that has already finished, for the demo data. */
     @Modifying
-    @Query(value = "insert into focus_visits(student_id,study_group_id,group_name,started_at,last_seen_at,focused_millis,ended_at) "
-        + "values (:studentId,:groupId,:groupName,:startedAt,:endedAt,:millis,:endedAt)", nativeQuery = true)
+    @Query(value = "insert into focus_visits(student_id,study_group_id,group_name,started_at,last_seen_at,focused_millis,ended_at,variant,plot) "
+        + "values (:studentId,:groupId,:groupName,:startedAt,:endedAt,:millis,:endedAt,:variant,:plot)", nativeQuery = true)
     void insertFinished(@Param("studentId") Long studentId, @Param("groupId") Long groupId,
         @Param("groupName") String groupName, @Param("startedAt") Instant startedAt, @Param("endedAt") Instant endedAt,
-        @Param("millis") long millis);
+        @Param("millis") long millis, @Param("variant") int variant, @Param("plot") int plot);
 
     /** Adds focus time only if no other tab has moved the visit on since {@code previous}. */
     @Modifying(clearAutomatically = true)

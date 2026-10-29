@@ -33,12 +33,79 @@ const ANCIENT_BLOSSOM = standing([
   '......TTtt......', '......TTtt......', '.....TTTttt.....', '......TTtt......', '......TTtt......', '.....TTTtttt....',
   '....TT..TT.tt...',
 ])
+/** Marks a few cells of a sprite with another colour, such as fruit on a canopy. */
+function dotted(rows: string[], colour: string, cells: [number, number][]) {
+  const offset = TREE_HEIGHT - rows.length
+  return rows.map((row, index) => Array.from(row, (cell, column) =>
+    cells.some(([r, c]) => r + offset === index && c === column) ? colour : cell).join(''))
+}
+const swap = (rows: string[], from: RegExp, to: string) => rows.map(row => row.replace(from, to))
+
+const CLOVER = standing([
+  '......ll........', '.....llll.......', '...ll.mm.ll.....', '..llllmmllll....', '...llm.t.mll....',
+  '.......t........', '.......t........', '......ttt.......',
+])
+const TULIP_BUD = standing([
+  '......aa........', '.....aAAa.......', '.....aAAa.......', '......aa........', '.......m........',
+  '....ll.m.ll.....', '.....lmm.l......', '......mm........', '......ttt.......',
+])
+const BIRCH = standing([
+  '.......ll.......', '......llml......', '.....lllmmd.....', '......lmmd......', '.....llmmmd.....',
+  '....llmmmmdd....', '.....lmmmdd.....', '.......wk.......', '.......kw.......', '.......ww.......',
+  '.......wk.......', '.......ww.......', '......wwww......',
+])
+const ORANGE_SAPLING = standing([
+  '......llll......', '....llmmmoll....', '...lmmommmmdl...', '...mmmmmmomdd...', '...dmommmmmdd...',
+  '....ddmmmddd....', '......dttd......', '.......tt.......', '.......tt.......', '......tttt......',
+])
+const ACACIA = standing([
+  '..llllll.lllll..', '.llmmmmmlmmmmml.', 'lmmmmmmmmmmmmmdd', '.ddmmmmmmmmmddd.', '...dddd..dddd...',
+  '......T..t......', '.......Tt.......', '.......Tt.......', '.......Tt.......', '.......Tt.......',
+  '......TTtt......', '.....TT..tt.....',
+])
+const CYPRESS = standing([
+  '.......n........', '.......nn.......', '......nmmn......', '......nmmd......', '......mmmd......',
+  '.....nmmmdd.....', '.....nmmmmd.....', '.....mmmmdd.....', '.....nmmmmd.....', '....nmmmmmdd....',
+  '....nmmmmmdd....', '....mmmmmmdd....', '....nmmmmddd....', '.....mmmmdd.....', '.....ddmddd.....',
+  '.......Tt.......', '.......Tt.......', '......TTtt......',
+])
+
 /** Shown in the room before a visit has grown anything. */
 export const SEED = standing(['.......ss.......', '......sstt......', '.......tt.......'])
 
-export const TREE_ROWS: Record<TreeSpecies, string[]> = { SPROUT, SAPLING, OAK, PINE, ANCIENT_BLOSSOM }
+/**
+ * Three kinds of tree for each size tier. The server draws which one a visit grows, so the size
+ * always says how long the visit was while the kind makes every forest different.
+ */
+export const TREE_ROWS: Record<TreeSpecies, string[][]> = {
+  SPROUT: [SPROUT, CLOVER, TULIP_BUD],
+  SAPLING: [SAPLING, BIRCH, ORANGE_SAPLING],
+  OAK: [OAK, dotted(OAK, 'a', [[2, 5], [3, 9], [4, 3], [5, 7], [6, 11], [7, 4], [8, 8]]), ACACIA],
+  PINE: [PINE, swap(PINE, /n/g, 'w'), CYPRESS],
+  ANCIENT_BLOSSOM: [ANCIENT_BLOSSOM, swap(swap(ANCIENT_BLOSSOM, /p/g, 'v'), /P/g, 'V'), swap(swap(ANCIENT_BLOSSOM, /p/g, 'y'), /P/g, 'Y')],
+}
 
-const TRUNK = { t: '#7a4b2a', T: '#5a3520', s: '#c9a46a' }
+export const VARIANT_NAMES: Record<TreeSpecies, string[]> = {
+  SPROUT: ['Sprout', 'Clover', 'Tulip bud'],
+  SAPLING: ['Sapling', 'Birch sapling', 'Orange sapling'],
+  OAK: ['Oak', 'Apple tree', 'Acacia'],
+  PINE: ['Tall pine', 'Snowy pine', 'Cypress'],
+  ANCIENT_BLOSSOM: ['Ancient blossom', 'Ancient wisteria', 'Ancient ginkgo'],
+}
+
+/** Variants beyond what is drawn here fall back by wrapping, so a config change never breaks a tree. */
+export function treeRows(species: TreeSpecies, variant: number) {
+  const kinds = TREE_ROWS[species]
+  return kinds[((variant % kinds.length) + kinds.length) % kinds.length]
+}
+export function treeName(species: TreeSpecies, variant: number) {
+  const names = VARIANT_NAMES[species]
+  return names[((variant % names.length) + names.length) % names.length]
+}
+
+/** Colours that stay the same in every light: bark, birch, snow, fruit and the rarer blossoms. */
+const TRUNK = { t: '#7a4b2a', T: '#5a3520', s: '#c9a46a', w: '#f4f4ee', k: '#3a3a3a', a: '#d8433a', A: '#a82b2b',
+  o: '#f29a2e', v: '#a787e0', V: '#d4c2f5', y: '#f2c641', Y: '#ffe48a' }
 /** The light a visit started in recolours its leaves, so trees of one species still differ. */
 export const LEAF_PALETTES: Record<TreeLight, Record<string, string>> = {
   DAWN: { ...TRUNK, l: '#d8e889', m: '#8cbf4f', d: '#557f3a', n: '#6fa04a', p: '#ffc4d2', P: '#ffe1e8' },
