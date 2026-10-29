@@ -57,6 +57,7 @@ INSERT INTO notifications(created_at,message,read,type,recipient_id,resource_typ
  ('2026-10-01 01:15+00','Retained session event',false,'GROUP_SESSION_CREATED',11,'SESSION',91,'fixture:session'),
  ('2026-10-01 01:15+00','Retained member left',false,'GROUP_MEMBER_LEFT',10,'GROUP',20,'fixture:left'),
  ('2026-10-01 01:15+00','Retained withdrawal',false,'GROUP_JOIN_REQUEST_WITHDRAWN',10,'GROUP',20,'fixture:withdrawn'),
+ ('2026-10-01 01:15+00','Retained room start',false,'GROUP_STUDY_ROOM_STARTED',11,'GROUP',20,'fixture:room-started'),
  ('2026-10-01 01:15+00','Legacy withdrawal recorded as rejected',false,'GROUP_JOIN_REQUEST_REJECTED',10,'GROUP',20,'group-request:93:withdrawn');
 -- A withdrawal recorded as REJECTED before WITHDRAWN existed is converted once; a real WITHDRAWN row is kept.
 INSERT INTO group_join_requests(id,created_at,responded_at,status,student_id,study_group_id) VALUES
@@ -74,7 +75,8 @@ DO $$ BEGIN
    AND NOT music_playing AND ambient_preset='RAIN' AND ambient_playing)
   OR NOT EXISTS(SELECT 1 FROM study_sessions WHERE id=91 AND title='Retained weekly session'
    AND occurrence_count=2 AND calendar_uid IS NOT NULL)
-  OR (SELECT count(*) FROM notifications WHERE event_key IN ('fixture:cancelled','fixture:session','fixture:left','fixture:withdrawn')) <> 4
+  OR (SELECT count(*) FROM notifications WHERE event_key IN ('fixture:cancelled','fixture:session','fixture:left','fixture:withdrawn',
+   'fixture:room-started')) <> 5
   OR (SELECT status FROM group_join_requests WHERE id=93) <> 'WITHDRAWN'
   OR (SELECT status FROM group_join_requests WHERE id=94) <> 'WITHDRAWN'
   OR (SELECT type FROM notifications WHERE event_key='group-request:93:withdrawn') <> 'GROUP_JOIN_REQUEST_WITHDRAWN'
