@@ -48,7 +48,7 @@ class AssistantIntentsTest {
     private static AssistantRequest request(AssistantIntentType intent, String courseCode, StudyMode mode,
             GroupSizePreference size, Integer minHours, TimeOfDay time, String groupName, Integer minutes,
             LocalDate exam, Integer hoursPerWeek, String topic) {
-        return new AssistantRequest(intent, courseCode, null, mode, size, minHours, time, groupName, minutes, exam, hoursPerWeek, topic, null);
+        return new AssistantRequest(intent, courseCode, null, mode, size, minHours, time, groupName, minutes, exam, hoursPerWeek, topic, null, null);
     }
 
     private void knows(Course course) {

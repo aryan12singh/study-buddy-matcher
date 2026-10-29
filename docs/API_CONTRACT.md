@@ -1022,20 +1022,24 @@ duplicate cache rows only. Tests are listed in [TESTING.md](TESTING.md).
 
 ## Study plans (AI study assistant)
 
-Student only. These endpoints create and manage personal plans. `StudyPlanScope` also defines
-`SESSION` plans for a group or buddy session, which have no endpoint yet.
+Student only. A plan is either personal (`scope: PERSONAL`), one student's weeks up to an exam,
+or for a study session (`scope: SESSION`), the session's upcoming meetings.
 
 | Method | Path | Request | Response | Who |
 | --- | --- | --- | --- | --- |
 | POST | `/api/study-plans` | `multipart/form-data`: `PersonalPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto` | Student |
 | GET | `/api/study-plans` | none | 200 `StudyPlanSummaryDto[]`, own personal plans newest first | Student |
-| GET | `/api/study-plans/{planId}` | none | 200 `StudyPlanDto` | Owner |
-| PUT | `/api/study-plans/{planId}/entries/{entryId}/progress` | `{ "completed": true }` | 200 `StudyPlanDto` | Owner |
-| DELETE | `/api/study-plans/{planId}` | none | 204 | Owner |
+| POST | `/api/sessions/{sessionId}/study-plan` | `multipart/form-data`: `SessionPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto`, replacing the session's old plan | Session manager |
+| GET | `/api/sessions/{sessionId}/study-plan` | none | 200 `StudyPlanDto`; 404 when the session has none yet | Session participant |
+| GET | `/api/study-plans/{planId}` | none | 200 `StudyPlanDto` | Owner, or session participant |
+| PUT | `/api/study-plans/{planId}/entries/{entryId}/progress` | `{ "completed": true }` | 200 `StudyPlanDto` | Owner, or session manager |
+| DELETE | `/api/study-plans/{planId}` | none | 204 | Owner, or session manager |
 
 ```text
 PersonalPlanInput   (multipart form fields)
   courseId, hoursPerWeek (1 to max-hours-per-week), examDate? (yyyy-MM-dd), studyGoal?, topicsText?
+SessionPlanInput    (multipart form fields)
+  courseId? (required for a buddy session; ignored for a group session), studyGoal?, topicsText?
 StudyPlanDto
   { id, scope: PERSONAL/SESSION, course: CourseDto, sessionId|null, firstBlockDate, blockCount,
     minutesPerBlock, examDate|null, studyGoal|null, sourceKind: UPLOAD/PASTE, sourceFilenames[],
@@ -1071,6 +1075,35 @@ Errors, in the order they are checked, so a bad request never spends the student
 The plan is created in three steps: a short read that checks the request, the Gemini call, and
 a short write that checks the student is still active before saving. No database transaction or
 account lock is held while Gemini answers.
+
+### Session plans
+
+A session plan follows the session's own access rules. Every current participant reads it: the
+accepted members of an open group, or both buddies of an active connection. Whoever may manage the
+session plans, ticks and deletes it: the group's leader, or either buddy. A participant who may not
+manage it gets 403 on those; anyone else gets 404 for the session and the plan alike. A session plan
+is never listed in `GET /api/study-plans`.
+
+The plan covers the session's meetings that have not yet ended, from the one under way or the next,
+up to `max-session-meetings`. Each meeting is a block (`sequence` is the meeting number from that
+first meeting, `scheduledDate` its day in the session's time zone), and every block holds one
+meeting's length in `minutesPerBlock`. A one-off session's single block is a timed agenda. A group
+session studies its group's course; a buddy connection has none, so the buddy planning it chooses
+`courseId`. A session keeps one plan: a new one replaces it, and the old plan's progress goes with
+it. If Gemini fails, the old plan is kept. Editing the session does not change its plan; compare the
+session's `updatedAt` with the plan's `createdAt` to tell the plan may be out of date.
+
+Errors, in the order they are checked, so a bad request never spends an AI call:
+
+| Status | Code | When |
+| --- | --- | --- |
+| 404 | `NOT_FOUND` | The session does not exist, or the student is not a current participant; on `GET`, also when the session has no plan yet |
+| 403 | `FORBIDDEN` | A group member who is not the leader tries to plan, tick or delete |
+| 400 | `INVALID_INPUT` | A buddy session without a `courseId`, or an unknown one; then the material checks above |
+| 409 | `NO_UPCOMING_MEETINGS` | The session is cancelled, or all its meetings have ended |
+| 413 / 415 | as above | The material checks above |
+| 503 | `AI_UNAVAILABLE` | As above. The session's old plan is kept |
+| 409 | `STATE_CONFLICT` | The session was cancelled or rescheduled while Gemini answered; nothing is saved |
 
 ## Quizzes (AI study assistant)
 
@@ -1156,7 +1189,7 @@ handled on its own, with no memory of earlier ones.
 
 ```text
 AssistantReplyDto
-  { intent: FIND_BUDDIES/WHEN_TO_MEET/QUIZ_ME/PLAN_STUDY/MY_TO_DO/NAVIGATE/UNKNOWN, text, filters[],
+  { intent: FIND_BUDDIES/WHEN_TO_MEET/QUIZ_ME/PLAN_STUDY/PLAN_SESSION/SESSION_TOPICS/MY_TO_DO/NAVIGATE/UNKNOWN, text, filters[],
     matches: MatchResultDto[], slots: SharedSlotDto[], todos: [{ text, label, link }],
     action: { kind: OPEN_PAGE/OPEN_QUIZ_BUDDY, label, link|null, prefill: { name: value } } | null }
 ```
@@ -1167,6 +1200,8 @@ AssistantReplyDto
 | `WHEN_TO_MEET` | The student's open group named (or their only one), then `StudySessionService.groupAvailability`, keeping slots at least as long as the meeting |
 | `QUIZ_ME` | Opens Quiz Buddy; `prefill` carries `topic` and `courseId` |
 | `PLAN_STUDY` | Links to the Study plans page (see below) |
+| `PLAN_SESSION` | The student's soonest upcoming session (`StudySessionService.mine`), narrowed to the group named or the course code stated, and to the meeting day (`meetingDate`) if one was given. Links to that session's page, whose roadmap panel plans it. Someone who may not manage it is told the group leader can |
+| `SESSION_TOPICS` | The same session lookup, then that meeting's entries from `StudyPlanService.getForSession` (the next meeting when no day was given), each as a `todos` item with its planned time, linking to the session. Says so when no session meets that day, the session has no roadmap yet, or the roadmap no longer covers that meeting |
 | `MY_TO_DO` | Pending incoming buddy requests, pending applications to groups the student leads, open quizzes they have not taken in their groups, sessions starting within 7 days and unread notifications, each as a `todos` item linking to the page that handles it |
 | `NAVIGATE` | One page from the assistant's fixed list (`AppPage`: home, find buddies, buddy requests, connections, study groups, create group, sessions, study room, achievements, notifications, profile, edit profile, help) with what it is for and a link. Gemini only picks the page name |
 | `UNKNOWN` | A short message listing what the assistant can do |
@@ -1180,7 +1215,8 @@ example `/study-plan?courseId=4&examDate=2026-11-20&hoursPerWeek=6`. The Study p
 reads these and opens its create form with them filled in.
 
 **AI use.** Clear messages, including every suggested question, greetings, "what do I need to
-do?", "how do I …?" and plain buddy searches, are read by rules (`QuickIntentReader`) with no AI
+do?", "how do I …?", plain buddy searches and session questions without a day ("what are we
+covering next session?"), are read by rules (`QuickIntentReader`) with no AI
 call. Anything else goes to the chat's own lighter model (`chat.model`) with its own daily
 allowance (`chat.daily-call-limit`, `chat.daily-call-limit-per-student`), so chatting never spends
 the quiz and study plan allowance.

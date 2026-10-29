@@ -139,9 +139,9 @@ Backend paths are relative to `backend/src/test/java/com/studybuddy/`; frontend 
 | Help | Next-step priority, unknown vs failed sources and retry, cancelled/expired sessions, active-membership shortcuts, account changes and late responses, FAQ search | `features/help/HelpPage.test.tsx`, `helpNextStep.test.ts`. Help reads existing endpoints, so it has no backend tests of its own |
 | Achievements | Tiers and hints, level cap, configuration validation, weekly streak rules, metric sources; earned tiers kept when counts fall, only higher tiers saved, racing first saves; students only, own standing only, live counts recompute downwards while retained history counts | `achievement/BadgeEvaluatorTest`, `EarnedBadgeRecorderTest`, `AchievementAssemblerTest`, `AchievementPropertiesTest`, `WeeklyStreakCalculatorTest`, `AchievementServiceTest`; `integration/AchievementHttpTest`; `features/achievements/AchievementsPage.test.tsx`, `features/students/StudentProfilePage.test.tsx` |
 | Quizzes | Creation, access, attempts, marking, leaderboard, prompt and output validation; hosts/co-hosts start group quizzes; answers revealed only after closure; open window expiry; unusable AI reply saves nothing | `quiz/QuizTest`, `QuizAccessTest`, `QuizAttemptTest`, `QuizCreationServiceTest`, `QuizMarkerTest`, `QuizLeaderboardTest`, `QuizOutputValidatorTest`, `QuizPromptBuilderTest`; `integration/QuizHttpTest`; `features/quiz/QuizBotWindow.test.tsx` |
-| Study plans | Material upload rules (types, sizes, counts, UTF-8), roadmap frame, calendar weeks in the student's time zone, prompt and output validation; owner-only access; nothing saved when the AI is unavailable | `studyplan/StudyMaterialReaderTest`, `RoadmapFrameTest`, `RoadmapWriterTest`, `StudyPlanCalendarTest`, `StudyPlanOutputValidatorTest`, `StudyPlanPromptBuilderTest`, `StudyPlanTest`; `integration/StudyPlanHttpTest`; `features/studyplan/StudyPlan.test.tsx` |
+| Study plans | Material upload rules (types, sizes, counts, UTF-8), roadmap frame, calendar weeks in the student's time zone, prompt and output validation; owner-only access; session roadmaps (meeting frames, participant reads, manager-only writes, replacement, cancelled or rescheduled sessions); nothing saved when the AI is unavailable | `studyplan/StudyMaterialReaderTest`, `SessionMeetingFramesTest`, `RoadmapFrameTest`, `RoadmapWriterTest`, `StudyPlanCalendarTest`, `StudyPlanOutputValidatorTest`, `StudyPlanPromptBuilderTest`, `StudyPlanTest`; `integration/StudyPlanHttpTest`, `SessionStudyPlanHttpTest`; `features/studyplan/StudyPlan.test.tsx`, `SessionRoadmapPanel.test.tsx` |
 | Shared AI client | Gemini request/attachment handling and the daily quota | `ai/GeminiClientTest`, `AiAttachmentTest`, `AiQuotaTest` |
-| Pixel assistant | Intent parsing without an AI call for clear messages; buddy search, group meeting times, to-dos and navigation; hand-over to Quiz Buddy and study plans; prompt keeps student text inside its block; replies carry no contact details | `assistant/AssistantIntentsTest`, `NavigateAndToDoIntentsTest`, `QuickIntentReaderTest`, `AssistantOutputValidatorTest`, `AssistantPromptBuilderTest`, `AssistantServiceTest`; `integration/AssistantHttpTest`; `features/assistant/AssistantLauncher.test.tsx` |
+| Pixel assistant | Intent parsing without an AI call for clear messages; buddy search, group meeting times, to-dos and navigation; planning a session and its next meeting's topics; hand-over to Quiz Buddy and study plans; prompt keeps student text inside its block; replies carry no contact details | `assistant/AssistantIntentsTest`, `SessionIntentsTest`, `NavigateAndToDoIntentsTest`, `QuickIntentReaderTest`, `AssistantOutputValidatorTest`, `AssistantPromptBuilderTest`, `AssistantServiceTest`; `integration/AssistantHttpTest`; `features/assistant/AssistantLauncher.test.tsx` |
 | Music (Spotify and Freesound) | Spotify OAuth state, token renewal and disconnect, search and playback, tokens never in text; Freesound parsing and CC0/length filter, unavailable provider; ambient mixer volumes and remix | `music/SpotifyAuthorizationStoreTest`, `SpotifyConnectionServiceTest`, `SpotifyPlaybackServiceTest`, `SpotifyResponseParsingTest`, `FreesoundClientTest`, `AmbientSoundServiceTest`; `features/music/remixPlan.test.ts`, `useAmbientMixer.test.ts`. No HTTP integration tests |
 | Shared frontend primitives | Resource polling, purge and abort; dialogs; notices; copy button; safe return links | `shared/api/useResource.test.ts`, `shared/components/Dialog.test.tsx`, `ActionNotice.test.tsx`, `CopyButton.test.tsx`, `shared/navigation/returnTo.test.ts` |
 
@@ -327,7 +327,8 @@ before a demo.
 
 ### Quizzes, study plans and the assistant
 
-1. In a group room, the host opens Quiz Buddy with notes or a file, a course and a focus.
+1. In a group room, the host opens Quiz Buddy with notes or a file, a course and a focus, and,
+   when the group has an upcoming session, picks the session it is for; the quiz list names it.
    Members take the quiz; answers stay hidden until the host closes it or its open window
    ends. The leaderboard ranks by score and highlights the signed-in member.
 2. A personal quiz shows answers as soon as it is submitted. An unreadable file is refused
@@ -337,7 +338,10 @@ before a demo.
 4. Ask Pixel to plan your study for a course and exam date: the Study plans form opens with
    them filled in. Create the plan, tick off a topic, reload and check it stays ticked, then
    delete the plan after confirming.
-5. The suggested questions are answered without an AI call. With Gemini unavailable, Pixel and
+5. As a group leader, open an upcoming weekly session and plan its roadmap from notes: one block per
+   remaining meeting. A member sees it but cannot plan, tick or delete it. Ask Pixel "what are we
+   covering next session?" to see that meeting's entries.
+6. The suggested questions are answered without an AI call. With Gemini unavailable, Pixel and
    Quiz Buddy say so plainly, and no quiz or study plan is saved.
 
 ## 7. Known limits

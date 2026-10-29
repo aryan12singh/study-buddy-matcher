@@ -2,7 +2,8 @@ import { api } from '../../shared/api/client'
 import type { WeeklySlot } from '../../shared/api/types'
 import type { MatchResult } from '../matching/api'
 
-export type AssistantIntent = 'FIND_BUDDIES' | 'WHEN_TO_MEET' | 'QUIZ_ME' | 'PLAN_STUDY' | 'MY_TO_DO' | 'NAVIGATE' | 'UNKNOWN'
+export type AssistantIntent = 'FIND_BUDDIES' | 'WHEN_TO_MEET' | 'QUIZ_ME' | 'PLAN_STUDY' | 'PLAN_SESSION' | 'SESSION_TOPICS'
+  | 'MY_TO_DO' | 'NAVIGATE' | 'UNKNOWN'
 /** Something waiting for the student, with a button to where they can deal with it. */
 export type AssistantTodo = { text: string; label: string; link: string }
 export type AssistantAction = { kind: 'OPEN_PAGE' | 'OPEN_QUIZ_BUDDY'; label: string; link: string | null; prefill: Record<string, string> }

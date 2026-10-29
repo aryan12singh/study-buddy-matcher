@@ -6,6 +6,8 @@ public enum AssistantIntentType {
     WHEN_TO_MEET,
     QUIZ_ME,
     PLAN_STUDY,
+    PLAN_SESSION,
+    SESSION_TOPICS,
     MY_TO_DO,
     NAVIGATE,
     UNKNOWN

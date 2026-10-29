@@ -7,6 +7,8 @@ import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import { useAction } from '../../shared/api/useAction'
 import { useResource } from '../../shared/api/useResource'
+import { getSessions } from '../sessions/api'
+import type { StudySession } from '../sessions/api'
 import { closeQuiz, listQuizzes } from './api'
 import type { Quiz, QuizHome } from './api'
 import QuizBotChat from './QuizBotChat'
@@ -24,6 +26,9 @@ type OpenDialog = { kind: 'take' | 'leaderboard' | 'review' | 'close'; quiz: Qui
 export default function QuizBotWindow({ home, canStart, onClose }: { home: QuizHome; canStart: boolean; onClose: () => void }) {
   const key = home.scope === 'GROUP' ? `group-quizzes-${home.groupId}` : 'personal-quizzes'
   const quizzes = useResource(key, signal => listQuizzes(home, signal))
+  const groupId = home.scope === 'GROUP' ? home.groupId : 0
+  // Only names the session a quiz is for; a failed load just leaves the name out.
+  const sessions = useResource(`quiz-sessions-${groupId}`, signal => getSessions({ kind: 'GROUP', id: groupId }, signal), home.scope === 'GROUP', false)
   const [dialog, setDialog] = useState<OpenDialog>()
   const action = useAction()
   const group = home.scope === 'GROUP'
@@ -46,7 +51,8 @@ export default function QuizBotWindow({ home, canStart, onClose }: { home: QuizH
           empty={!!quizzes.data && !quizzes.data.length} emptyTitle="No quizzes yet"
           emptyMessage={group ? 'Quizzes written for this group appear here.' : 'Quizzes written from your notes appear here.'} />
         {!!quizzes.data?.length && <ul className="quiz-list">
-          {quizzes.data.map(quiz => <QuizRow key={quiz.id} quiz={quiz} onOpen={kind => setDialog({ kind, quiz })} />)}
+          {quizzes.data.map(quiz => <QuizRow key={quiz.id} quiz={quiz}
+            session={sessions.data?.find(session => session.id === quiz.sessionId)} onOpen={kind => setDialog({ kind, quiz })} />)}
         </ul>}
       </section>
     </div>
@@ -62,7 +68,7 @@ export default function QuizBotWindow({ home, canStart, onClose }: { home: QuizH
   </Dialog>
 }
 
-function QuizRow({ quiz, onOpen }: { quiz: Quiz; onOpen: (kind: OpenDialog['kind']) => void }) {
+function QuizRow({ quiz, session, onOpen }: { quiz: Quiz; session?: StudySession; onOpen: (kind: OpenDialog['kind']) => void }) {
   const open = quiz.status === 'OPEN'
   const group = quiz.scope === 'GROUP'
   const submitted = quiz.myAttempt === 'SUBMITTED'
@@ -73,6 +79,7 @@ function QuizRow({ quiz, onOpen }: { quiz: Quiz; onOpen: (kind: OpenDialog['kind
     </div>
     <p className="quiz-row-meta">
       {quiz.course.code} · {quiz.questionCount} questions
+      {session && <> · for {session.title}</>}
       {group && <> · {quiz.submittedCount} submitted</>}
       {submitted && <> · you submitted</>}
       {open && !submitted && quiz.closesAt && <> · closes {new Date(quiz.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</>}

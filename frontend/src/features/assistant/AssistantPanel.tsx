@@ -12,7 +12,7 @@ type Message = { id: number; from: 'me' | 'assistant'; text: string; reply?: Ass
 
 const GREETING = "Hi! I'm Pixel, your study assistant. I can tell you what's waiting for you, help you find your way around, find you a study buddy, find a time your group can meet, quiz you on your notes, or plan your revision."
 const SUGGESTIONS = ['What do I need to do?', 'Find me an IS442 buddy who prefers small groups', 'When can my group meet for 2 hours?',
-  'How do I change my availability?', 'Quiz me on my notes']
+  'How do I change my availability?', 'Quiz me on my notes', 'What are we covering next session?']
 const UNAVAILABLE = "I can't reach Gemini right now, so I couldn't read that. Give it a minute, or use the menu on the left in the meantime."
 
 /**

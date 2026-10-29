@@ -171,6 +171,8 @@ app:
         # at most this far away. Each week holds the student's hours, up to max-hours-per-week.
         max-weeks: 16
         max-hours-per-week: 40
+        # A weekly session plan covers at most this many of the session's upcoming meetings.
+        max-session-meetings: 12
         # "Today", for a plan's first week, follows the students' calendar, not the server's.
         time-zone: Asia/Singapore
       quiz:

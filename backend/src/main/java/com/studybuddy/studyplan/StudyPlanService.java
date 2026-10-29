@@ -1,11 +1,14 @@
 package com.studybuddy.studyplan;
 
 import com.studybuddy.common.AccountAccess;
+import com.studybuddy.common.error.ConflictException;
+import com.studybuddy.common.error.ForbiddenActionException;
 import com.studybuddy.common.error.InvalidInputException;
 import com.studybuddy.course.Course;
 import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.course.CourseRepository;
 import com.studybuddy.student.Student;
+import com.studybuddy.studysession.StudySession;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +28,19 @@ public class StudyPlanService {
     private final AccountAccess accounts;
     private final StudyPlanAccess access;
     private final StudyPlanCalendar calendar;
+    private final SessionMeetingFrames meetings;
     private final StudyPlanAssembler assembler;
     private final Clock clock;
 
     public StudyPlanService(StudyPlanRepository plans, CourseRepository courses, AccountAccess accounts,
-            StudyPlanAccess access, StudyPlanCalendar calendar, StudyPlanAssembler assembler, Clock clock) {
+            StudyPlanAccess access, StudyPlanCalendar calendar, SessionMeetingFrames meetings,
+            StudyPlanAssembler assembler, Clock clock) {
         this.plans = plans;
         this.courses = courses;
         this.accounts = accounts;
         this.access = access;
         this.calendar = calendar;
+        this.meetings = meetings;
         this.assembler = assembler;
         this.clock = clock;
     }
@@ -58,6 +64,56 @@ public class StudyPlanService {
         StudyPlan plan = plans.save(StudyPlan.personal(student, course, request.goal(), request.examDate(),
                 request.frame(), material, draft, clock.instant()));
         return assembler.toDto(plan, true);
+    }
+
+    /**
+     * Checks everything about a session plan that needs no AI: the actor may manage the session, it
+     * has meetings left to plan, and it has a course (the group's, or the one a buddy chose).
+     */
+    @Transactional(readOnly = true)
+    public SessionPlanRequest prepareSession(Long actorId, Long sessionId, SessionPlanInput input) {
+        accounts.requireStudent(actorId);
+        StudyPlanAccess.SessionRole role = access.sessionRole(sessionId, actorId);
+        if (!role.manager()) throw new ForbiddenActionException("Only the group leader can plan this session");
+        StudySession session = role.session();
+        Course course = session.getGroup() != null ? session.getGroup().getCourse() : chosenCourse(input.courseId());
+        return new SessionPlanRequest(sessionId, course, input.studyGoal(), meetings.upcoming(session));
+    }
+
+    /**
+     * Saves a validated session roadmap in place of the session's old one, holding the same locks
+     * as a change to the session. Refuses if the session's meetings changed while Gemini answered,
+     * since the roadmap's dates would no longer match them.
+     */
+    public StudyPlanDto saveSession(Long actorId, SessionPlanRequest request, StudyMaterial material, RoadmapDraft draft) {
+        accounts.beginWrite();
+        StudySession session = access.lockForManaging(request.sessionId(), actorId);
+        if (!meetings.upcoming(session).equals(request.frame())) {
+            throw new ConflictException("This session's meetings changed while the roadmap was written; try again");
+        }
+        Long courseId = request.course().getId();
+        Course course = courses.findById(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
+        plans.deleteAll(plans.findBySessionIdOrderByFirstBlockDateAscIdAsc(session.getId()));
+        plans.flush();
+        StudyPlan plan = plans.save(StudyPlan.forSession(session, course, request.goal(), request.frame(),
+                material, draft, actorId, clock.instant()));
+        return assembler.toDto(plan, true);
+    }
+
+    /** The session's roadmap, for any current participant; managers may also change it. */
+    @Transactional(readOnly = true)
+    public StudyPlanDto getForSession(Long sessionId, Long actorId) {
+        accounts.requireStudent(actorId);
+        StudyPlanAccess.SessionRole role = access.sessionRole(sessionId, actorId);
+        StudyPlan plan = plans.findFirstBySessionIdOrderByCreatedAtDescIdDesc(sessionId)
+                .orElseThrow(() -> new SessionPlanNotFoundException(sessionId));
+        return assembler.toDto(plan, role.manager());
+    }
+
+    /** A buddy session has no course of its own, so the buddy planning it chooses one. */
+    private Course chosenCourse(Long courseId) {
+        if (courseId == null) throw new InvalidInputException("courseId", "Choose the course this session is for");
+        return courses.findById(courseId).orElseThrow(() -> new InvalidInputException("courseId", "Choose one of the listed courses"));
     }
 
     /** The student's own plans, newest first. */

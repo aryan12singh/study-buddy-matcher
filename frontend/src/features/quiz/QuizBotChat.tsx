@@ -6,23 +6,26 @@ import { errorMessage } from '../../shared/api/client'
 import { getCourses } from '../../shared/api/courses'
 import { useResource } from '../../shared/api/useResource'
 import type { Course } from '../../shared/api/types'
+import { getSessions } from '../sessions/api'
 import { COURSE_CODE, findCourse } from './findCourse'
 import {
   ACCEPTED_EXTENSIONS, checkFiles, isAiUnavailable, MAX_FILES, MAX_FOCUS_CHARACTERS, MAX_NOTES_CHARACTERS,
-  startGroupQuiz, startPersonalQuiz,
+  sessionLabel, startGroupQuiz, startPersonalQuiz, upcomingSessions,
 } from './api'
 import type { Quiz, QuizHome, QuizMaterial } from './api'
 
 /** What the bot is waiting for next. */
-type Stage = 'material' | 'course' | 'focus' | 'writing' | 'done' | 'failed'
+type Stage = 'material' | 'course' | 'focus' | 'session' | 'writing' | 'done' | 'failed'
 type Message = { id: number; from: 'bot' | 'me'; text: string; files?: string[]; error?: boolean }
 
 const AI_UNAVAILABLE = "I couldn't reach Gemini just now. Give it a minute and say \"try again\", or quiz each other from your notes."
 const SKIP_WORDS = ['skip', 'no', 'nope', 'none', 'nothing', 'everything', 'all', 'cover everything', 'anything']
+const NO_SESSION_WORDS = ['skip', 'no', 'nope', 'none', 'not for a session']
 /**
  * The quiz bot as a chat. The student types or pastes into the message box and attaches files with
  * the paperclip; the bot asks for whatever it still needs (notes, a course for a personal quiz, an
- * optional focus) and then has Gemini write the quiz. A message with files can say everything at
+ * optional focus and, in a group with upcoming sessions, which session it is for) and then has
+ * Gemini write the quiz. A message with files can say everything at
  * once, such as "IS442, focus on interfaces", and the bot skips the questions it no longer needs.
  * Gemini only writes the questions: understanding the replies is plain code, so the chat never
  * spends the student's AI allowance.
@@ -32,6 +35,10 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
 }) {
   const personal = home.scope === 'PERSONAL'
   const courses = useResource('quiz-bot-courses', signal => getCourses(signal), personal, false)
+  const groupId = home.scope === 'GROUP' ? home.groupId : 0
+  // A failed or slow load only skips the optional session question; it never blocks a quiz.
+  const sessions = useResource(`quiz-bot-sessions-${groupId}`, signal => getSessions({ kind: 'GROUP', id: groupId }, signal), !personal, false)
+  const upcoming = upcomingSessions(sessions.data ?? [])
   const nextId = useRef(1)
   const log = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -47,6 +54,7 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
   const [material, setMaterial] = useState<QuizMaterial>()
   const [course, setCourse] = useState<Course>()
   const [focus, setFocus] = useState('')
+  const [sessionId, setSessionId] = useState<number | null>(null)
   const [quiz, setQuiz] = useState<Quiz>()
 
   // Keep the newest message in view, like any chat.
@@ -66,15 +74,17 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
     composer.current?.focus()
   }
 
-  async function write(chosenMaterial: QuizMaterial, chosenCourse: Course | undefined, chosenFocus: string) {
+  async function write(chosenMaterial: QuizMaterial, chosenCourse: Course | undefined, chosenFocus: string, chosenSession: number | null = null) {
     setStage('writing')
     try {
       const written = home.scope === 'GROUP'
-        ? await startGroupQuiz(home.groupId, chosenMaterial, chosenFocus)
+        ? await startGroupQuiz(home.groupId, chosenMaterial, chosenFocus, chosenSession)
         : await startPersonalQuiz(chosenCourse!.id, chosenMaterial, chosenFocus)
+      const forSession = upcoming.find(session => session.id === written.sessionId)
       setQuiz(written)
       setStage('done')
-      add('bot', `Your quiz on “${written.title}” is ready: ${written.questionCount} questions.`
+      add('bot', `Your quiz on “${written.title}” is ready: ${written.questionCount} questions`
+        + (forSession ? `, for ${forSession.title}.` : '.')
         + (written.scope === 'GROUP' ? ' Everyone in the group can take it now; the leaderboard is below.' : ' Good luck!')
         + ' Send me more notes any time for another one.')
       onStarted(written)
@@ -92,6 +102,9 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
     } else if (chosenFocus === undefined) {
       setStage('focus')
       add('bot', 'Anything I should focus on? Tell me a topic, or say "skip" and I\'ll cover everything.')
+    } else if (!personal && upcoming.length) {
+      setStage('session')
+      add('bot', 'Is this quiz for one of the group\'s upcoming sessions? Pick one below, or say "no".')
     } else {
       void write(chosenMaterial, chosenCourse, chosenFocus)
     }
@@ -133,7 +146,7 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
     setDraft('')
     setAttached([])
     if (stage === 'material' || stage === 'done') {
-      setCourse(undefined); setFocus(''); setQuiz(undefined)
+      setCourse(undefined); setFocus(''); setSessionId(null); setQuiz(undefined)
       receiveMaterial(message, files)
     } else if (stage === 'course') {
       const named = findCourse(message, courses.data ?? [])
@@ -144,9 +157,17 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
       const chosenFocus = SKIP_WORDS.includes(message.toLowerCase()) ? '' : message
       if (chosenFocus.length > MAX_FOCUS_CHARACTERS) { add('bot', `Can you say that in under ${MAX_FOCUS_CHARACTERS} characters?`); return }
       setFocus(chosenFocus)
-      void write(material!, course, chosenFocus)
+      continueWith(material!, course, chosenFocus)
+    } else if (stage === 'session') {
+      const answer = message.toLowerCase()
+      const chosen = NO_SESSION_WORDS.includes(answer) ? null
+        : upcoming.find(session => sessionLabel(session).toLowerCase() === answer)
+          ?? upcoming.find(session => session.title.toLowerCase().includes(answer))
+      if (chosen === undefined) { add('bot', `I couldn't find an upcoming session called “${message}”. Pick one below, or say "no".`); return }
+      setSessionId(chosen?.id ?? null)
+      void write(material!, course, focus, chosen?.id ?? null)
     } else if (stage === 'failed') {
-      if (/try again|retry|again/i.test(message) && material) { void write(material, course, focus); return }
+      if (/try again|retry|again/i.test(message) && material) { void write(material, course, focus, sessionId); return }
       receiveMaterial(message, files)
     }
   }
@@ -189,6 +210,10 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
       {stage === 'course' && courseChoices.map(option =>
         <Button key={option.id} onClick={() => send(`${option.code} ${option.name}`, [])}>{option.code}</Button>)}
       {stage === 'focus' && <Button onClick={() => send('Cover everything', [])}>Cover everything</Button>}
+      {stage === 'session' && <>
+        {upcoming.map(session => <Button key={session.id} onClick={() => send(sessionLabel(session), [])}>{sessionLabel(session)}</Button>)}
+        <Button onClick={() => send('Not for a session', [])}>Not for a session</Button>
+      </>}
       {stage === 'done' && quiz && <Button variant="primary" onClick={() => onTake(quiz)}>{personal ? 'Start quiz' : 'Take it now'}</Button>}
       {stage === 'failed' && material && <Button variant="primary" onClick={() => send('Try again', [])}>Try again</Button>}
     </div>
@@ -218,6 +243,7 @@ function placeholderFor(stage: Stage) {
   switch (stage) {
     case 'course': return 'Type a course code, like IS442'
     case 'focus': return 'A topic to focus on, or "skip"'
+    case 'session': return 'A session name, or "no"'
     case 'writing': return 'Writing your quiz…'
     default: return 'Paste notes, or attach files and add a message'
   }

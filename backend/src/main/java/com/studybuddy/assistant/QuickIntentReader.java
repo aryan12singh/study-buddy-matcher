@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 /**
  * Recognises the clearest messages with plain rules, so they are answered without an AI call: the
  * suggested questions, greetings, "what do I need to do?", "how do I change my availability?",
- * "find me an IS442 buddy who prefers small groups", "when can my group meet for 2 hours?". It never
+ * "find me an IS442 buddy who prefers small groups", "when can my group meet for 2 hours?", "plan our
+ * IS442 group's next session", "what are we covering next session?". It never
  * guesses: a message with anything it cannot turn into a detail, such as "evenings" or a date, is
  * left for the AI.
  */
@@ -31,6 +32,9 @@ public class QuickIntentReader {
     private static final Pattern MEETING_GROUP = Pattern.compile("\\b(?:my|our|the)\\s+(.+?)\\s+group\\b");
     private static final Pattern HOURS = Pattern.compile("\\b(\\d+(?:\\.5)?)\\s*(?:hours?|hrs?|h)\\b");
     private static final Pattern MINUTES = Pattern.compile("\\b(\\d+)\\s*(?:minutes?|mins?)\\b");
+    private static final Pattern PLAN_SESSION = Pattern.compile("\\b(plan|prepare|roadmap for)\\b.*\\b(sessions?|meetings?)\\b");
+    private static final Pattern SESSION_TOPICS = Pattern.compile("\\bwhat (are|will|do|should) (we|i) (be )?(covering|cover|studying|study|going over)\\b"
+            + "|\\bwhat'?s (on )?the (agenda|roadmap) for\\b|\\btopics? for (our|my|the|this|next)\\b.*\\b(sessions?|meetings?)\\b");
     private static final Pattern PLAN = Pattern.compile("\\b(study plan|revision plan|plan my (revision|studying|study|exam)|revision timetable)\\b");
     /** Details only the AI can read: times of day, goals, dates and the like. */
     private static final Pattern NEEDS_AI = Pattern.compile("\\b(morning|afternoon|evening|night|weekend|weekday|free|goal|exam|concept|problem|project"
@@ -80,6 +84,13 @@ public class QuickIntentReader {
         if (FIND.matcher(text).find() && plain && !text.contains("request")) {
             return Optional.of(request(AssistantIntentType.FIND_BUDDIES).courseCode(courseCodeIn(text))
                     .studyMode(studyModeIn(text)).groupSize(groupSizeIn(text)).build());
+        }
+        // A named day, such as "Thursday", is a date only the AI can work out.
+        if (SESSION_TOPICS.matcher(text).find() && plain) {
+            return Optional.of(request(AssistantIntentType.SESSION_TOPICS).courseCode(courseCodeIn(text)).groupName(groupNameIn(text)).build());
+        }
+        if (PLAN_SESSION.matcher(text).find() && plain) {
+            return Optional.of(request(AssistantIntentType.PLAN_SESSION).courseCode(courseCodeIn(text)).groupName(groupNameIn(text)).build());
         }
         if (PLAN.matcher(text).find() && plain) {
             return Optional.of(request(AssistantIntentType.PLAN_STUDY).courseCode(courseCodeIn(text)).build());
@@ -158,7 +169,7 @@ public class QuickIntentReader {
 
         AssistantRequest build() {
             return new AssistantRequest(intent, courseCode, null, studyMode, groupSize, null, null, groupName,
-                    durationMinutes, null, null, topic, page);
+                    durationMinutes, null, null, topic, page, null);
         }
     }
 }

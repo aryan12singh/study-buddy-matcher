@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RoadmapWriterTest {
     private static final Course IS442 = new Course("IS442", "Object Oriented Programming");
     private static final StudyPlanProperties LIMITS =
-            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5, 16, 40, "Asia/Singapore");
+            new StudyPlanProperties(DataSize.ofMegabytes(10), 6, 4000, 100000, 40, 5, 5, 16, 40, 12, "Asia/Singapore");
     private static final RoadmapFrame ONE_WEEK = RoadmapFrame.weeks(LocalDate.of(2026, 10, 23), 1, 120);
     private static final String GOOD_REPLY = """
             {"sourceTopics": ["Polymorphism"],

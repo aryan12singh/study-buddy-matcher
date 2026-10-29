@@ -31,7 +31,7 @@ class AssistantServiceTest {
     }
 
     private static AssistantRequest asking(AssistantIntentType type) {
-        return new AssistantRequest(type, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new AssistantRequest(type, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test

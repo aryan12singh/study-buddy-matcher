@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
  * @param maxUploadSize the most all of one plan's files may add up to
  * @param maxTextFileCharacters the most text all of one plan's text files may hold together
  * @param maxWeeks the most weeks a personal plan may cover, which bounds how far away the exam can be
+ * @param maxSessionMeetings the most upcoming meetings of a weekly session that one session plan covers
  * @param timeZone the zone whose calendar decides "today" for a plan's first week
  */
 @Validated
@@ -29,5 +30,6 @@ public record StudyPlanProperties(
         @Positive int maxTasksPerEntry,
         @Positive int maxWeeks,
         @Positive int maxHoursPerWeek,
+        @Positive int maxSessionMeetings,
         @NotBlank String timeZone) {
 }

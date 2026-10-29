@@ -81,7 +81,7 @@
 <rect x="800.78" y="812" width="548.44" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="1075.0" y="829" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchScore: total, quality, unknown criteria, shared hours</text>
 <text x="585" y="930" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Keep total ≥ admin minScore and quality ≥ minQuality.</text>
-<text x="585" y="959" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Apply selected sort → strategy ranking → shared hours → name → ID.</text>
+<text x="585" y="959" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Sort: chosen order → strategy → shared hours → name → ID.</text>
 <text x="585" y="988" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Record totalMatches, then apply the result limit.</text>
 <rect x="944.96" y="1030" width="530.08" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="1210.0" y="1047" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">toDto(public profile, score, shared time, request state)</text>

@@ -21,9 +21,10 @@
 | | | |
 | --- | --- | --- |
 | <img src="docs/assets/icons/match.svg" width="20" height="20" alt="" /> [Features](#features) | <img src="docs/assets/icons/setup.svg" width="20" height="20" alt="" /> [Getting started](#getting-started) | <img src="docs/assets/icons/layers.svg" width="20" height="20" alt="" /> [Architecture](#architecture) |
-| <img src="docs/assets/icons/group.svg" width="20" height="20" alt="" /> [Matching engine](#matching-engine) | <img src="docs/assets/icons/room.svg" width="20" height="20" alt="" /> [Collaborative study](#collaborative-study) | <img src="docs/assets/icons/connection.svg" width="20" height="20" alt="" /> [Privacy and relationships](#privacy-and-relationships) |
-| <img src="docs/assets/icons/sliders.svg" width="20" height="20" alt="" /> [Configuration](#configuration) | <img src="docs/assets/icons/check.svg" width="20" height="20" alt="" /> [Testing](#testing) | <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Documentation](#documentation) |
-| <img src="docs/assets/icons/package.svg" width="20" height="20" alt="" /> [Libraries and assets](#libraries-and-assets) | <img src="docs/assets/icons/team.svg" width="20" height="20" alt="" /> [Team and workflow](#team-and-workflow) | <img src="docs/assets/icons/calendar.svg" width="20" height="20" alt="" /> [Known limitations and future work](#known-limitations-and-future-work) |
+| <img src="docs/assets/icons/group.svg" width="20" height="20" alt="" /> [Matching engine](#matching-engine) | <img src="docs/assets/icons/room.svg" width="20" height="20" alt="" /> [Collaborative study](#collaborative-study) | <img src="docs/assets/icons/layers.svg" width="20" height="20" alt="" /> [AI study tools](#ai-study-tools) |
+| <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Help and getting started](#help-and-getting-started) | <img src="docs/assets/icons/connection.svg" width="20" height="20" alt="" /> [Privacy and relationships](#privacy-and-relationships) | <img src="docs/assets/icons/sliders.svg" width="20" height="20" alt="" /> [Configuration](#configuration) |
+| <img src="docs/assets/icons/check.svg" width="20" height="20" alt="" /> [Testing](#testing) | <img src="docs/assets/icons/calendar.svg" width="20" height="20" alt="" /> [Known limitations and future work](#known-limitations-and-future-work) | <img src="docs/assets/icons/docs.svg" width="20" height="20" alt="" /> [Documentation](#documentation) |
+| <img src="docs/assets/icons/package.svg" width="20" height="20" alt="" /> [Libraries and assets](#libraries-and-assets) | <img src="docs/assets/icons/team.svg" width="20" height="20" alt="" /> [Team and workflow](#team-and-workflow) |   |
 
 ---
 
@@ -315,18 +316,21 @@ separate Google project and daily allowance from E1's match explanations. With A
 or the allowance spent, each returns 503 `AI_UNAVAILABLE` and the screen offers the manual path.
 
 **Quizzes.** A group quiz is started by the leader or the room's host or co-host from uploaded
-PDF, `.txt` or `.md` material or pasted notes; accepted members take it while it is open and
-see a leaderboard. A personal quiz is one student's own practice. Every quiz has exactly
+PDF, `.txt` or `.md` material or pasted notes, optionally for one of the group's upcoming
+sessions; accepted members take it while it is open and see a leaderboard. A personal quiz is one student's own practice. Every quiz has exactly
 `quiz.question-count` questions, and Gemini's reply is rejected unless it has that shape.
 
 **Study plans.** A student gives a course, weekly hours, an optional exam date and their
 material, and gets a week-by-week roadmap to the exam (or for this week alone without a date),
-with topics they can tick off. A student may keep several plans. Replies are checked against the
+with topics they can tick off. A student may keep several plans. A study session can also have one
+shared roadmap for its upcoming meetings, planned by the group leader or either buddy from the
+session page and read by every participant. Replies are checked against the
 plan's weeks, minutes and column lengths. Pixel's "plan my study" opens the form with the course,
 exam date and hours it read from the message already filled in.
 
 **Pixel.** A message box on every student page answers "find me a buddy", "when can my group
-meet?", "what do I need to do?", "quiz me" and "plan my study", or opens the right page. Gemini
+meet?", "what do I need to do?", "quiz me", "plan my study" and "what are we covering next
+session?", or opens the right page. Gemini
 only classifies the message; the answer comes from the existing services and templates, read
 only, with the same privacy-safe match cards as Find buddies. Common questions are read by
 rules with no AI call, and the rest use a lighter model with its own allowance.
@@ -491,6 +495,7 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 | `app.ai.assistant.study-plan.max-tasks-per-entry` | `5` | Most tasks in one roadmap entry |
 | `app.ai.assistant.study-plan.max-weeks` | `16` | Most weeks a personal plan covers, so the exam can be at most this far away |
 | `app.ai.assistant.study-plan.max-hours-per-week` | `40` | Most study hours per week a student can plan |
+| `app.ai.assistant.study-plan.max-session-meetings` | `12` | Most upcoming meetings of a weekly study session that one session plan covers |
 | `app.ai.assistant.study-plan.time-zone` | `Asia/Singapore` | Calendar that decides "today", the first day of a personal plan |
 | `app.ai.assistant.quiz.question-count` | `10` | Exactly how many questions every group quiz has; stated in the prompt, and a reply with any other number is rejected |
 | `app.ai.assistant.quiz.open-duration` | `15m` | How long a group quiz stays open before it reads as closed; the host can close it sooner |
@@ -507,7 +512,9 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 A roadmap covers one or more weeks (personal) or upcoming meetings (session), so one week's
 slides can give a plan for that week or that meeting, and several weeks' slides a roadmap to the
 exam. When the material is shorter than the plan, the later weeks revise and practise earlier
-topics. A student may keep several plans; a new one never replaces an old one.
+topics. A student may keep several personal plans; a new one never replaces an old one. A study
+session keeps one plan, covering its upcoming meetings, which whoever manages the session (the
+group leader, or either buddy) creates and every participant reads; a new one replaces it.
 
 Study material is one or more PDF, `.txt` or `.md` files, or pasted topics, never both. Each
 file's type is checked from its contents as well as its extension: a `.pdf` must start with the
@@ -730,13 +737,14 @@ CSS pixel drawings rather than emoji or a third-party icon set.
 
 | Team | Members | Responsibility |
 | --- | --- | --- |
-| A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration |
-| B | Angel, Averyl, Guang Hao | Platform, authentication, own profile, availability, seed, dashboard and shell |
-| C | Aryan, Charlize | Requests and connections, contact privacy, study groups, notifications, admin accounts and collaborative study |
+| A | Natthida, Chong Yee, Joanne | Matching engine, discovery and matching configuration; the Study Room tab (personal Pomodoro and groups panel) and its music (Spotify and Freesound) |
+| B | Angel, Averyl, Guang Hao | Platform, authentication, own profile, availability, seed, dashboard and shell; the AI study tools (shared Gemini client, quizzes, personal and session study plans, Pixel) |
+| C | Aryan, Charlize | Requests and connections, contact privacy, study groups, notifications and admin accounts; E1 match explanations, E2 collaborative study, help and achievements |
 
-Within Team C, Charlize built the group and join-request rules, queries, DTOs and services.
-Aryan built requests, connections, profile privacy, notifications, admin accounts and their
-controllers, screens, migrations and tests, and the E2 collaborative study extension. Each
+Within Team C, Charlize built the group and join-request rules, queries, DTOs and services, E1
+match explanations, the help guide and achievements. Aryan built requests, connections, profile
+privacy, notifications, admin accounts and their controllers, screens, migrations and tests, and
+the E2 collaborative study extension. Each
 member can explain the implementation of their part.
 
 **Contributing.** Read [AGENTS.md](AGENTS.md), branch from an up-to-date `main` and keep commits

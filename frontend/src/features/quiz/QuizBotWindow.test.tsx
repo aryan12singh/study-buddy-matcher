@@ -125,6 +125,54 @@ describe('Quiz Buddy', () => {
     expect(post).toHaveBeenCalledTimes(2)
   })
 
+  it('asks which upcoming session a group quiz is for, sends it and names it on the quiz', async () => {
+    const next = { startAt: '2026-10-30T02:00:00Z', endAt: '2026-10-30T03:00:00Z' }
+    const session = (id: number, title: string, extra: object = {}) => ({
+      id, version: 0, scope: 'GROUP', groupId: 3, connectionId: null, title, startLocal: '2026-10-30T10:00',
+      endLocal: '2026-10-30T11:00', startAt: next.startAt, endAt: next.endAt, timeZone: 'Asia/Singapore', occurrenceCount: 1,
+      agenda: null, location: null, roomLink: null, status: 'SCHEDULED', canManage: true, occurrences: [next],
+      nextOccurrence: next, updatedAt: '2026-10-20T00:00:00Z', cancelledAt: null, ...extra,
+    })
+    const sessions = [session(21, 'Week 4 revision'), session(22, 'Cancelled catch-up', { status: 'CANCELLED' }), session(23, 'Last week', { nextOccurrence: null })]
+    let quizzes: Quiz[] = []
+    const get = vi.spyOn(api, 'get').mockImplementation(async (url: string) => response(url === '/groups/3/sessions' ? sessions : quizzes))
+    const post = vi.spyOn(api, 'post').mockImplementation(async () => {
+      quizzes = [quiz({ title: 'Pasted notes', sessionId: 21, canHost: true })]
+      return response(quizzes[0])
+    })
+    openBot({ scope: 'GROUP', groupId: 3 }, true)
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/groups/3/sessions', expect.anything()))
+    await act(async () => {})
+
+    type('Polymorphism lets a subclass override a method of its parent class.')
+    send()
+    fireEvent.click(screen.getByRole('button', { name: 'Cover everything' }))
+    expect(await screen.findByText(/Is this quiz for one of the group's upcoming sessions/)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Cancelled catch-up|Last week/ })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Not for a session' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /^Week 4 revision · / }))
+
+    expect(await screen.findByText(/ready: 2 questions, for Week 4 revision\./)).toBeTruthy()
+    const [, form] = post.mock.calls[0] as [string, FormData]
+    expect(form.get('sessionId')).toBe('21')
+    expect(await screen.findByText(/for Week 4 revision · 1 submitted/)).toBeTruthy()
+  })
+
+  it('skips the session question when the group has no upcoming session', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(response([]))
+    const post = vi.spyOn(api, 'post').mockResolvedValue(response(quiz({ title: 'Pasted notes' })))
+    openBot({ scope: 'GROUP', groupId: 3 }, true)
+
+    type('Polymorphism lets a subclass override a method of its parent class.')
+    send()
+    fireEvent.click(screen.getByRole('button', { name: 'Cover everything' }))
+
+    expect(await screen.findByText(/Your quiz on “Pasted notes” is ready: 2 questions\./)).toBeTruthy()
+    expect(screen.queryByText(/upcoming sessions/)).toBeNull()
+    const [, form] = post.mock.calls[0] as [string, FormData]
+    expect(form.get('sessionId')).toBeNull()
+  })
+
   it('matches a course by code or by name', () => {
     expect(findCourse('is 442 please', [course])).toBe(course)
     expect(findCourse('object oriented programming', [course])).toBe(course)

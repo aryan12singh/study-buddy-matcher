@@ -6,7 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class UnknownIntent implements AssistantIntent {
     static final String HELP = "I can tell you what's waiting for you, help you find your way around, find you a study buddy, "
-            + "find a time your group can meet, quiz you on your notes, or plan your revision. "
+            + "find a time your group can meet, quiz you on your notes, plan your revision or a study session, "
+            + "or tell you what your next session covers. "
             + "Try “what do I need to do?” or “how do I change my availability?”";
 
     @Override

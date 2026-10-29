@@ -246,7 +246,7 @@ describe('dated study session workflows', () => {
   it('confirms whole-plan cancellation and exports the cancelled snapshot', async () => {
     const get = serve()
     const post = vi.spyOn(api, 'post').mockImplementation(async () => {
-      get.mockImplementation(async () => response({ ...session, status: 'CANCELLED', version: 4, canManage: false }))
+      get.mockImplementation(async path => response(path.endsWith('/study-plan') ? null : { ...session, status: 'CANCELLED', version: 4, canManage: false }))
       return response({ ...session, status: 'CANCELLED', version: 4 })
     })
     renderPage(<SessionDetailPage />, '/sessions/11', '/sessions/:id')
@@ -265,7 +265,8 @@ describe('dated study session workflows', () => {
     Object.defineProperty(URL, 'revokeObjectURL', { value: revoke, configurable: true })
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     const get = serve()
-    get.mockImplementation(async path => response(path.endsWith('/calendar') ? new Blob(['BEGIN:VCALENDAR']) : session))
+    get.mockImplementation(async path => response(path.endsWith('/calendar') ? new Blob(['BEGIN:VCALENDAR'])
+      : path.endsWith('/study-plan') ? null : session))
     renderPage(<SessionDetailPage />, '/sessions/11', '/sessions/:id')
     fireEvent.click(await screen.findByRole('button', { name: 'Download calendar (.ics)' }))
     await waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:session-calendar'))
