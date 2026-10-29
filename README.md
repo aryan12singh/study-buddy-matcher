@@ -397,6 +397,7 @@ or the property in `application-local.yml`.
 | `app.achievements.points-per-level` | `3` | Positive badge points per level; only the highest tier counts (bronze 1, silver 2, gold 3); the attainable final step caps at all Gold |
 | `app.achievements.connections` / `requests-sent` / `groups-joined` / `groups-led` | `1/3/5`, `1/5/10`, `1/2/3`, `1/2/3` | Bronze/silver/gold counts for the Connector, First Move, Team Player and Founder badges |
 | `app.achievements.sessions-planned` / `streak-weeks` | `1/5/10`, `2/4/8` | Bronze/silver/gold counts for the Planner and Grove Keeper badges |
+| `app.achievements.trees-planted` | `1/5/15` | Bronze/silver/gold tree counts for the Forester badge |
 
 </details>
 
@@ -541,6 +542,7 @@ shape and size of a roadmap; they do not prove its advice is good.
 | `ROOM_REACTION_WINDOW` / `app.study-room.reactions.window` | `8s` | How long a reaction stays in room snapshots; longer than the poll interval so every tab sees it |
 | `ROOM_REACTION_BURST_LIMIT` / `ROOM_REACTION_BURST_WINDOW` | `5` / `10s` | Most reactions one student can send in each window; more return 409 |
 | `app.forest.zone` | `Asia/Singapore` | Zone whose local start time picks a tree's dawn, day, dusk or night colours |
+| `app.forest.variants-per-species` | `3` | Kinds of tree the server draws from at random within each size tier; the frontend draws three per tier |
 | `app.forest.tree-minutes` | `10/25/50/90/150` | Focused minutes in one room visit for a sprout, sapling, oak, tall pine and ancient blossom; shorter visits plant nothing |
 | `SESSION_MAXIMUM_OCCURRENCES` / `app.study-session.maximum-occurrences` | `52` (1 to 52) | Most weekly occurrences; 1 means one-off |
 | `SESSION_MAXIMUM_DURATION_HOURS` / `app.study-session.maximum-duration-hours` | `24` | Longest single occurrence |

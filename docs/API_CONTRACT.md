@@ -369,7 +369,7 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
-| POST | `/api/groups/{groupId}/room/reactions` | `{type: CLAP / HEART / FIRE / LIGHTBULB / COFFEE / SPROUT}`; 202. 409 unless the actor has a live lease in this room, or after the per-student burst limit |
+| POST | `/api/groups/{groupId}/room/reactions` | `{type: CLAP / HEART / FIRE / LIGHTBULB / COFFEE / SPROUT}`; the saved `{id, type, studentId, senderName, sentAt}`, 201, so the sender can show it at once. 409 unless the actor has a live lease in this room, or after the per-student burst limit |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid
@@ -457,11 +457,17 @@ student. Trees keep a copy of the group name, so they survive the group closing 
 deleted; deleting the student deletes their forest, deactivation keeps it.
 
 ```
-ForestDto      { trees: TreeDto[], treeCount, focusedMinutes, longestMinutes, stages: [{species, minutes}] }
-TreeDto        { id, species: SPROUT|SAPLING|OAK|PINE|ANCIENT_BLOSSOM, light: DAWN|DAY|DUSK|NIGHT,
-                 focusedMinutes, startedAt, plantedAt, groupName }
-GrowingTreeDto { visiting, focusedMinutes, species|null, next|null, minutesToNext|null, light|null }
+ForestDto      { trees: TreeDto[], treeCount, focusedMinutes, longestMinutes, stages: [{species, minutes}],
+                 variantsPerSpecies }
+TreeDto        { id, species: SPROUT|SAPLING|OAK|PINE|ANCIENT_BLOSSOM, variant, light: DAWN|DAY|DUSK|NIGHT,
+                 focusedMinutes, startedAt, plantedAt, groupName, plot }
+GrowingTreeDto { visiting, focusedMinutes, species|null, variant, next|null, minutesToNext|null, light|null }
 ```
+
+`species` follows focused minutes. `variant` (0 to `variantsPerSpecies` − 1, which kind of tree
+within the species) and `plot` (0 to 999 999, where it stands in the meadow) are drawn at random
+by the server when a visit opens and stored with it, so a tree never changes and a browser cannot
+pick a rarer one. The frontend maps `plot` onto its meadow grid, oldest tree first.
 
 ## Dated study sessions and calendar (E2)
 
