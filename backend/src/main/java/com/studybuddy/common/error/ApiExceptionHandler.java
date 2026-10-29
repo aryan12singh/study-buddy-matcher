@@ -63,22 +63,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiProblem> unexpected(Exception error) {
-        LOG.error("Unexpected failure on {} {}", request.getMethod(), request.getRequestURI(), withoutMessages(error));
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "The action could not be completed; try again later");
-    }
-
-    /**
-     * The stack traces find the fault and the causes say why, so both are kept; every message is left
-     * out because it can carry SQL or user data.
-     */
-    private static RuntimeException withoutMessages(Throwable error) {
+        // The stack trace finds the fault; the message is left out because it can carry SQL or user data.
         var trace = new RuntimeException(error.getClass().getName());
         trace.setStackTrace(error.getStackTrace());
-        Throwable cause = error.getCause();
-        if (cause != null && cause != error) {
-            trace.initCause(withoutMessages(cause));
-        }
-        return trace;
+        LOG.error("Unexpected failure on {} {}", request.getMethod(), request.getRequestURI(), trace);
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "The action could not be completed; try again later");
     }
 
     private ResponseEntity<ApiProblem> problem(HttpStatus status, String code, String message) {
