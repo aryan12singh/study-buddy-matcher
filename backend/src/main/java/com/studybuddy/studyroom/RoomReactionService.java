@@ -37,7 +37,7 @@ public class RoomReactionService {
         StudyRoom room = rooms.findByStudyGroupId(groupId).orElseThrow(this::notInRoom);
         var lease = presences.findEligible(room.getId(), now).stream()
             .filter(p -> p.getStudent().getId().equals(actorId)).findFirst().orElseThrow(this::notInRoom);
-        reactions.deleteByStudyRoomIdAndSentAtBefore(room.getId(), now.minus(settings.retention()));
+        reactions.deleteOlderThan(room.getId(), now.minus(settings.retention()));
         if (reactions.countByStudyRoomIdAndStudentIdAndSentAtAfter(room.getId(), actorId,
             now.minus(settings.burstWindow())) >= settings.burstLimit()) {
             throw new ConflictException("You are reacting too quickly; wait a moment and try again");
