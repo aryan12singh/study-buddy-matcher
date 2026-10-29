@@ -10,6 +10,11 @@ const MEADOW_PIXELS = 400
 const START = { spin: -35, tilt: 58 }
 const TILT_LIMITS = { min: 30, max: 72 }
 const IDLE_DEGREES_PER_SECOND = 6
+/** Degrees per pixel. The plane turns so its near edge follows the pointer, like a turntable. */
+const DRAG_TURN = .45
+const DRAG_TILT = .25
+const SWIPE_TURN = .3
+const KEY_TURN = 15
 const dates = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short', year: 'numeric' })
 
 function describe(tree: Tree) {
@@ -33,9 +38,13 @@ export default function Meadow3D({ trees }: { trees: Tree[] }) {
     scene.current?.style.setProperty('--spin', `${view.current.spin}deg`)
     scene.current?.style.setProperty('--tilt', `${view.current.tilt}deg`)
   }
-  function turn(spin: number, tilt = 0) {
+  /**
+   * Moves the near edge of the meadow sideways: positive goes right. In CSS a positive rotateZ is
+   * clockwise, which carries the near edge left, so the spin angle changes the opposite way.
+   */
+  function turn(rightward: number, tilt = 0) {
     idle.current = false
-    view.current.spin += spin
+    view.current.spin -= rightward
     view.current.tilt = Math.min(TILT_LIMITS.max, Math.max(TILT_LIMITS.min, view.current.tilt + tilt))
     apply()
   }
@@ -56,6 +65,20 @@ export default function Meadow3D({ trees }: { trees: Tree[] }) {
     return () => cancelAnimationFrame(frame)
   }, [])
 
+  // A sideways trackpad swipe turns the meadow like a drag; up and down still scroll the page.
+  // Registered by hand because React's wheel listener is passive and cannot keep the page still.
+  useEffect(() => {
+    const stage = scene.current
+    if (!stage) return
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return
+      event.preventDefault()
+      turn(-event.deltaX * SWIPE_TURN)
+    }
+    stage.addEventListener('wheel', onWheel, { passive: false })
+    return () => stage.removeEventListener('wheel', onWheel)
+  })
+
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if ((event.target as HTMLElement).closest('button')) return
     drag.current = { x: event.clientX, y: event.clientY }
@@ -63,11 +86,11 @@ export default function Meadow3D({ trees }: { trees: Tree[] }) {
   }
   function onPointerMove(event: PointerEvent<HTMLDivElement>) {
     if (!drag.current) return
-    turn((event.clientX - drag.current.x) * .45, (drag.current.y - event.clientY) * .25)
+    turn((event.clientX - drag.current.x) * DRAG_TURN, (drag.current.y - event.clientY) * DRAG_TILT)
     drag.current = { x: event.clientX, y: event.clientY }
   }
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const moves: Record<string, [number, number]> = { ArrowLeft: [-15, 0], ArrowRight: [15, 0], ArrowUp: [0, 6], ArrowDown: [0, -6] }
+    const moves: Record<string, [number, number]> = { ArrowLeft: [-KEY_TURN, 0], ArrowRight: [KEY_TURN, 0], ArrowUp: [0, 6], ArrowDown: [0, -6] }
     const move = moves[event.key]
     if (!move) return
     event.preventDefault()
