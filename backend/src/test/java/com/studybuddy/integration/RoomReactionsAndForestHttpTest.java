@@ -86,6 +86,13 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
         assertFalse(forest.path("trees").get(0).path("light").isMissingNode());
         assertEquals(5, forest.path("stages").size());
         assertEquals(0, forest(leader).path("treeCount").asInt(), "Each student sees only their own forest");
+        JsonNode forester = null;
+        for (JsonNode badge : expect(call("GET", "/achievements/me", member, null), 200).path("badges")) {
+            if ("FORESTER".equals(badge.path("key").asString())) forester = badge;
+        }
+        assertNotNull(forester);
+        assertEquals(1, forester.path("current").asInt());
+        assertEquals("BRONZE", forester.path("tier").asString(), "The first planted tree earns Forester bronze");
         assertFalse(expect(call("GET", "/forest/me/rooms/" + groupId, member, null), 200).path("visiting").asBoolean());
     }
 

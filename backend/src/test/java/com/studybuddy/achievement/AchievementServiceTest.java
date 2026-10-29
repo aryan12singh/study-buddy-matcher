@@ -1,5 +1,6 @@
 package com.studybuddy.achievement;
 
+import com.studybuddy.forest.ForestService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,15 +35,17 @@ class AchievementServiceTest {
     private final GroupMembershipRepository memberships = mock(GroupMembershipRepository.class);
     private final StudyGroupRepository groups = mock(StudyGroupRepository.class);
     private final AchievementSessionRepository sessions = mock(AchievementSessionRepository.class);
+    private final ForestService forest = mock(ForestService.class);
     private final AchievementProperties properties = new AchievementProperties(ZoneId.of("Asia/Singapore"), 3,
             new TierThresholds(1, 3, 5), new TierThresholds(1, 5, 10), new TierThresholds(1, 2, 3),
-            new TierThresholds(1, 2, 3), new TierThresholds(1, 5, 10), new TierThresholds(2, 4, 8));
+            new TierThresholds(1, 2, 3), new TierThresholds(1, 5, 10), new TierThresholds(2, 4, 8),
+            new TierThresholds(1, 5, 15));
     /** Stands in for the saved earned_badges rows; the recorder's own rules are tested in EarnedBadgeRecorderTest. */
     private final Map<BadgeDefinition, BadgeTier> saved = new EnumMap<>(BadgeDefinition.class);
     private final EarnedBadgeRecorder recorder = mock(EarnedBadgeRecorder.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-22T04:00:00Z"), ZoneOffset.UTC);
     private final AchievementService service = new AchievementService(access, connections, requests, memberships,
-            groups, sessions, properties, recorder, new AchievementAssembler(properties), clock);
+            groups, sessions, forest, properties, recorder, new AchievementAssembler(properties), clock);
 
     {
         when(recorder.keepHighest(eq(STUDENT), any())).thenAnswer(call -> {
@@ -80,15 +83,15 @@ class AchievementServiceTest {
         assertThat(result.streak().currentWeeks()).isEqualTo(3);
         assertThat(result.streak().bestWeeks()).isEqualTo(3);
         assertThat(result.badges()).extracting(BadgeDto::key).containsExactly(
-                "CONNECTOR", "FIRST_MOVE", "TEAM_PLAYER", "FOUNDER", "PLANNER", "GROVE_KEEPER");
+                "CONNECTOR", "FIRST_MOVE", "TEAM_PLAYER", "FOUNDER", "PLANNER", "GROVE_KEEPER", "FORESTER");
         assertThat(result.badges()).extracting(BadgeDto::tier).containsExactly(
-                BadgeTier.SILVER, null, BadgeTier.BRONZE, null, BadgeTier.BRONZE, BadgeTier.BRONZE);
+                BadgeTier.SILVER, null, BadgeTier.BRONZE, null, BadgeTier.BRONZE, BadgeTier.BRONZE, null);
         // silver 2 + bronze 1 + bronze 1 + bronze 1 = 5 points, 3 per level.
         assertThat(result.points()).isEqualTo(5);
         assertThat(result.level()).isEqualTo(2);
         assertThat(result.pointsToNextLevel()).isEqualTo(1);
         assertThat(result.earnedCount()).isEqualTo(4);
-        assertThat(result.totalCount()).isEqualTo(6);
+        assertThat(result.totalCount()).isEqualTo(7);
     }
 
     @Test

@@ -13,7 +13,8 @@ public enum BadgeDefinition {
             return "Plan " + target + " consecutive weeks to reach " + tierLabel(next)
                     + ". Your longest eligible run is " + current + ".";
         }
-    };
+    },
+    FORESTER("Forester", "Trees in your focus forest. Each study room visit with enough focused time plants one, and trees are never removed.", "tree", "trees");
 
     private final String title;
     private final String description;

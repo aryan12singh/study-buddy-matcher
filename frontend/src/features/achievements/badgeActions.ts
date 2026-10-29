@@ -11,5 +11,8 @@ export function badgeAction(badge: Badge) {
     case 'FOUNDER': return { to: '/groups/new', label: 'Create a study group' }
     case 'PLANNER': return { to: '/sessions', label: 'Open study sessions' }
     case 'GROVE_KEEPER': return { to: '/sessions', label: 'Plan your next week' }
+    case 'FORESTER': return badge.earned
+      ? { to: '/forest', label: 'Visit my forest' }
+      : { to: '/study-room', label: 'Grow a tree in a study room' }
   }
 }

@@ -38,3 +38,8 @@ CREATE INDEX IF NOT EXISTS focus_visits_student_idx ON public.focus_visits(stude
 ALTER TABLE public.focus_visits ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.focus_visits FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON SEQUENCE public.focus_visits_id_seq FROM PUBLIC,anon,authenticated;
+
+-- The Forester badge counts planted trees; earned tiers are kept like every other badge.
+ALTER TABLE public.earned_badges DROP CONSTRAINT IF EXISTS earned_badges_badge_check;
+ALTER TABLE public.earned_badges ADD CONSTRAINT earned_badges_badge_check CHECK (badge IN (
+    'CONNECTOR','FIRST_MOVE','TEAM_PLAYER','FOUNDER','PLANNER','GROVE_KEEPER','FORESTER'));

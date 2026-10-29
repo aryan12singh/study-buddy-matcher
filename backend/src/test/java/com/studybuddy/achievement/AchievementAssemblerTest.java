@@ -14,7 +14,7 @@ class AchievementAssemblerTest {
 
     private AchievementAssembler assembler(int pointsPerLevel) {
         return new AchievementAssembler(new AchievementProperties(ZoneId.of("Asia/Singapore"), pointsPerLevel,
-                thresholds, thresholds, thresholds, thresholds, thresholds, thresholds));
+                thresholds, thresholds, thresholds, thresholds, thresholds, thresholds, thresholds));
     }
 
     private List<BadgeDto> badges(long count) {
@@ -25,21 +25,21 @@ class AchievementAssemblerTest {
     @Test
     void allGoldCapsTheLevelWithoutPromisingAnotherLevel() {
         AchievementsDto result = assembler(3).toDto(badges(10), streak);
-        assertThat(result.level()).isEqualTo(7).isEqualTo(result.maxLevel());
-        assertThat(result.points()).isEqualTo(18).isEqualTo(result.maxPoints());
+        assertThat(result.level()).isEqualTo(8).isEqualTo(result.maxLevel());
+        assertThat(result.points()).isEqualTo(21).isEqualTo(result.maxPoints());
         assertThat(result.pointsToNextLevel()).isZero();
     }
 
     @Test
     void finalLevelIsReachableWhenPointsPerLevelDoesNotDivideTheCatalogue() {
         AchievementsDto result = assembler(4).toDto(badges(10), streak);
-        assertThat(result.level()).isEqualTo(6).isEqualTo(result.maxLevel());
+        assertThat(result.level()).isEqualTo(7).isEqualTo(result.maxLevel());
         assertThat(result.pointsToNextLevel()).isZero();
 
         var almost = new java.util.ArrayList<>(badges(10));
         almost.set(0, new BadgeEvaluator().evaluate(BadgeDefinition.CONNECTOR, 3, thresholds, null));
         AchievementsDto before = assembler(4).toDto(almost, streak);
-        assertThat(before.level()).isEqualTo(5);
+        assertThat(before.level()).isEqualTo(6);
         assertThat(before.pointsToNextLevel()).isEqualTo(1);
     }
 
@@ -48,6 +48,6 @@ class AchievementAssemblerTest {
         AchievementsDto result = assembler(Integer.MAX_VALUE).toDto(badges(0), streak);
         assertThat(result.level()).isEqualTo(1);
         assertThat(result.maxLevel()).isEqualTo(2);
-        assertThat(result.pointsToNextLevel()).isEqualTo(18);
+        assertThat(result.pointsToNextLevel()).isEqualTo(21);
     }
 }

@@ -89,6 +89,7 @@ app:
     groups-led: { bronze: 1, silver: 2, gold: 3 }
     sessions-planned: { bronze: 1, silver: 5, gold: 10 }
     streak-weeks: { bronze: 2, silver: 4, gold: 8 }
+    trees-planted: { bronze: 1, silver: 5, gold: 15 }
   matching:
     default-strategy: BALANCED
     default-enabled-criteria: [COURSE, AVAILABILITY, STUDY_MODE, STUDY_GOAL, GROUP_SIZE]

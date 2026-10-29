@@ -7,6 +7,7 @@ import com.studybuddy.studyroom.RoomVisitTicked;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -66,11 +67,20 @@ public class ForestService {
     @Transactional(readOnly = true)
     public ForestDto forestOf(Long studentId) {
         accounts.requireStudent(studentId);
+        return assembler.toForest(planted(studentId));
+    }
+
+    /** Trees planted so far; a visit still in progress does not count until it ends. */
+    @Transactional(readOnly = true)
+    public long plantedTreeCount(Long studentId) {
+        return planted(studentId).size();
+    }
+
+    private List<FocusVisit> planted(Long studentId) {
         Instant now = clock.instant();
-        var planted = visits.findByStudentIdAndFocusedMillisGreaterThanEqualOrderByStartedAtDesc(studentId,
+        return visits.findByStudentIdAndFocusedMillisGreaterThanEqualOrderByStartedAtDesc(studentId,
                 growth.minimumMinutes() * 60_000L).stream()
             .filter(visit -> visit.isOver(now, rooms.leaseLifetime())).toList();
-        return assembler.toForest(planted);
     }
 
     @Transactional(readOnly = true)
