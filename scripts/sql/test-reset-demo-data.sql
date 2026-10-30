@@ -76,7 +76,57 @@ INSERT INTO notifications(id,created_at,message,read,type,recipient_id,resource_
     (105,'2026-10-01 01:15+00','Demo group event',false,'GROUP_JOIN_REQUEST_ACCEPTED',10,'GROUP',100,'reset:remove:group'),
     (106,'2026-10-01 01:15+00','Demo request event',false,'MATCH_REQUEST_RECEIVED',11,'MATCH_REQUEST',100,'reset:remove:request');
 
+-- One row in every later table for the demo student, the group they lead and its session: a
+-- study room with presence and a reaction, a planted tree, an earned badge, a group quiz for the
+-- session with a retained member's attempt, an open personal quiz, and a personal and a session
+-- study plan. None may outlive the reset.
+INSERT INTO study_rooms(id,study_group_id,host_id,version,focus_minutes,break_minutes,participant_limit,
+    phase,timer_status,remaining_millis,audio_preset,audio_playing,music_preset,music_playing,ambient_preset,ambient_playing) VALUES
+    (100,100,100,0,25,5,4,'FOCUS','IDLE',1500000,'CALM_MUSIC',false,NULL,false,NULL,false);
+INSERT INTO room_presences(id,study_room_id,student_id,client_id,expires_at,observed_at,presence) VALUES
+    (100,100,100,'00000000-0000-0000-0000-000000000100','2026-10-01 01:16+00','2026-10-01 01:15+00','FOCUS');
+INSERT INTO room_reactions(id,study_room_id,student_id,type,sent_at) VALUES (100,100,100,'CLAP','2026-10-01 01:15+00');
+INSERT INTO focus_visits(id,student_id,study_group_id,group_name,started_at,last_seen_at,focused_millis,variant,plot,ended_at) VALUES
+    (100,100,100,'Demo revision','2026-10-01 01:00+00','2026-10-01 02:00+00',3600000,1,100,'2026-10-01 02:00+00');
+INSERT INTO earned_badges(id,student_id,badge,best_tier) VALUES (100,100,'FOUNDER','BRONZE');
+INSERT INTO quizzes(id,scope,group_id,student_id,session_id,created_by,course_id,title,status,created_at,closes_at,closed_at) VALUES
+    (100,'GROUP',100,NULL,20,100,30,'Demo group quiz','CLOSED','2026-10-01 01:00+00','2026-10-01 01:15+00',NULL),
+    (101,'PERSONAL',NULL,100,NULL,100,30,'Demo practice quiz','OPEN','2026-10-01 01:00+00',NULL,NULL);
+INSERT INTO quiz_questions(id,quiz_id,position,prompt,correct_option,explanation) VALUES
+    (100,100,0,'Demo group question',0,'Demo explanation'),
+    (101,101,0,'Demo practice question',1,'Demo explanation');
+INSERT INTO quiz_question_options(question_id,position,text) VALUES
+    (100,0,'A'),(100,1,'B'),(100,2,'C'),(100,3,'D'),(101,0,'A'),(101,1,'B'),(101,2,'C'),(101,3,'D');
+INSERT INTO quiz_attempts(id,quiz_id,student_id,started_at,submitted_at,score,total) VALUES
+    (100,100,100,'2026-10-01 01:01+00','2026-10-01 01:05+00',1,1),
+    (101,100,10,'2026-10-01 01:01+00','2026-10-01 01:06+00',0,1);
+INSERT INTO quiz_attempt_answers(attempt_id,question_id,chosen_option) VALUES (100,100,0),(101,100,2);
+INSERT INTO study_plans(id,scope,student_id,session_id,created_by,course_id,first_block_date,block_count,minutes_per_block,
+    exam_date,study_goal,source_kind,created_at,updated_at) VALUES
+    (100,'PERSONAL',100,NULL,100,30,'2026-10-01',1,120,NULL,'CONCEPT_REVIEW','PASTE','2026-10-01 01:15+00','2026-10-01 01:15+00'),
+    (101,'SESSION',NULL,20,100,30,'2026-10-20',1,60,NULL,NULL,'PASTE','2026-10-01 01:15+00','2026-10-01 01:15+00');
+INSERT INTO study_plan_source_topics(plan_id,position,title) VALUES (100,0,'Demo topic'),(101,0,'Demo topic');
+INSERT INTO study_plan_entries(id,plan_id,sequence,scheduled_date,position,title,planned_minutes,completed) VALUES
+    (100,100,1,'2026-10-01',0,'Demo personal entry',60,true),
+    (101,101,1,'2026-10-20',0,'Demo meeting entry',60,false);
+INSERT INTO study_plan_entry_tasks(entry_id,position,description) VALUES (100,0,'Demo task'),(101,0,'Demo task');
+
 \ir reset-demo-data.sql
+DO $$ BEGIN
+    IF EXISTS(SELECT 1 FROM study_rooms WHERE id=100) OR EXISTS(SELECT 1 FROM room_presences WHERE id=100)
+       OR EXISTS(SELECT 1 FROM room_reactions WHERE id=100) OR EXISTS(SELECT 1 FROM focus_visits WHERE id=100)
+       OR EXISTS(SELECT 1 FROM earned_badges WHERE id=100)
+       OR EXISTS(SELECT 1 FROM quizzes WHERE id IN (100,101)) OR EXISTS(SELECT 1 FROM quiz_questions WHERE id IN (100,101))
+       OR EXISTS(SELECT 1 FROM quiz_question_options WHERE question_id IN (100,101))
+       OR EXISTS(SELECT 1 FROM quiz_attempts WHERE id IN (100,101))
+       OR EXISTS(SELECT 1 FROM quiz_attempt_answers WHERE attempt_id IN (100,101))
+       OR EXISTS(SELECT 1 FROM study_plans WHERE id IN (100,101))
+       OR EXISTS(SELECT 1 FROM study_plan_source_topics WHERE plan_id IN (100,101))
+       OR EXISTS(SELECT 1 FROM study_plan_entries WHERE id IN (100,101))
+       OR EXISTS(SELECT 1 FROM study_plan_entry_tasks WHERE entry_id IN (100,101)) THEN
+        RAISE EXCEPTION 'Demo reset left study room, forest, badge, quiz or study plan rows';
+    END IF;
+END $$;
 DO $$ BEGIN
     IF EXISTS(SELECT 1 FROM notifications WHERE resource_type='SESSION' AND resource_id IN (20,100,101)) THEN
         RAISE EXCEPTION 'Demo reset left group or buddy session notifications for non-demo recipients';

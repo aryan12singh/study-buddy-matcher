@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Populates an opt-in demo dataset in one transaction: courses, an administrator, 50 students
  * with varied preferences and, on a fresh database, the history the live demo starts from:
- * requests, connections, groups, upcoming sessions, quizzes and a study plan.
+ * requests, connections, groups, sessions, quizzes, study plans and a forest.
  * Anything that already exists is left untouched, so running it again changes nothing.
  */
 @Service
@@ -70,9 +70,9 @@ public class DemoSeedService {
         // History is replayed only onto a fresh roster; replaying it over existing accounts could clash.
         if (roster.isFresh()) {
             Map<String, Long> groupIds = scenario.seed(data, roster, courseIds, adminId);
-            sessions.seed(data, roster, groupIds);
-            quizzes.seed(data, roster, courseIds, groupIds);
-            plans.seed(data, roster, courseIds);
+            Map<String, Long> sessionIds = sessions.seed(data, roster, groupIds);
+            quizzes.seed(data, roster, courseIds, groupIds, sessionIds);
+            plans.seed(data, roster, courseIds, sessionIds);
             forest.seed(data, roster, groupIds);
         }
     }
