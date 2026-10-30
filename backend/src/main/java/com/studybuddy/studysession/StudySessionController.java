@@ -19,6 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Study session endpoints: list the signed-in student's upcoming sessions, list, create and suggest
+ * times for a group's or connection's sessions, and read, edit, cancel or download one as an
+ * iCalendar file. Each handler delegates to {@link StudySessionService}.
+ */
 @RestController
 @RequestMapping("/api")
 public class StudySessionController {

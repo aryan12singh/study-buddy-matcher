@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
+/**
+ * Reads, creates and locks the single row that holds the active strategy, the minimum score and the
+ * settings version used to detect a stale save.
+ */
 public interface MatchingStrategySettingRepository extends JpaRepository<MatchingStrategySetting, Long> {
     Optional<MatchingStrategySetting> findFirstByOrderByIdAsc();
 

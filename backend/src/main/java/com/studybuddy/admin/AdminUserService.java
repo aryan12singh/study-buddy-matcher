@@ -19,6 +19,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Account management use cases for administrators. Every method first checks or locks the acting
+ * administrator; deactivation, reactivation and deletion lock every administrator account first, so
+ * two administrators' lifecycle changes run one at a time. Deactivation is reversible and keeps
+ * history; deletion removes the account and its dependent records.
+ */
 @Service
 @Transactional
 public class AdminUserService {
@@ -83,6 +89,10 @@ public class AdminUserService {
             request.programme(), request.yearOfStudy(), request.contactNumber()));
     }
 
+    /**
+     * Edits an account's email and, for a student, their profile. A null contact number keeps the
+     * saved one.
+     */
     public AdminUserDetailDto update(Long id, AdminUserUpdateRequest request, Long actorId) {
         User user = access.lockAdminTarget(actorId, id);
         if (request == null) {

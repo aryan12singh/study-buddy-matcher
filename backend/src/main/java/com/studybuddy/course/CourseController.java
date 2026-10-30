@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code GET /api/courses}, the course catalogue in code order. It only delegates to
+ * {@link CourseService}.
+ */
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {

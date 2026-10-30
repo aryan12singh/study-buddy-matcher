@@ -20,6 +20,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+/**
+ * Turns exceptions thrown below the controllers into {@code application/problem+json} responses.
+ * Expected {@link ApiException}s keep their status and code, validation failures list the wrong
+ * fields, and anything unexpected is logged without its message and answered with a generic 500.
+ */
 @RestControllerAdvice
 public class ApiExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);

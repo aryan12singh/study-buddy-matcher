@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Administrator endpoints under {@code /api/admin/matching-config}: read the matching settings,
+ * save new weights and strategy, and restore the defaults. Each handler delegates to
+ * {@link MatchingConfigService}.
+ */
 @RestController
 @RequestMapping("/api/admin/matching-config")
 public class AdminMatchingConfigController {

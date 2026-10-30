@@ -10,6 +10,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Study session use cases for groups and buddy connections: list, create, view, edit, cancel,
+ * suggest shared times and export to a calendar. Only participants can see a session, and a session
+ * they cannot see is reported as not found. Changes lock the group or connection and check the
+ * session version, then notify the other participants.
+ */
 @Service
 @Transactional
 public class StudySessionService {
@@ -25,9 +31,20 @@ public class StudySessionService {
     public StudySessionService(StudySessionRepository sessions, SessionAccess access, AccountAccess accounts,
         SessionSettings settings, SessionAssembler assembler, SessionAvailability availability, SessionEvents events,
         SessionCalendar calendar, Clock clock) {
-        this.sessions = sessions; this.access = access; this.accounts = accounts; this.settings = settings;
-        this.assembler = assembler; this.availability = availability; this.events = events; this.calendar = calendar; this.clock = clock;
+        this.sessions = sessions;
+        this.access = access;
+        this.accounts = accounts;
+        this.settings = settings;
+        this.assembler = assembler;
+        this.availability = availability;
+        this.events = events;
+        this.calendar = calendar;
+        this.clock = clock;
     }
+    /**
+     * The student's scheduled sessions across their open groups and active connections, soonest
+     * first. A session with no occurrence still to come is left out.
+     */
     @Transactional(readOnly = true)
     public List<SessionDto> mine(Long actorId) {
         accounts.requireStudent(actorId);
@@ -100,9 +117,17 @@ public class StudySessionService {
         var parent = sessions.findParent(id).orElseThrow(() -> missing(id));
         if (!access.isRelated(parent.getGroupId(), parent.getConnectionId(), actorId)) throw missing(id);
         if (parent.getGroupId() != null) {
-            if (write) access.lockGroup(parent.getGroupId(), actorId); else access.readGroup(parent.getGroupId(), actorId);
+            if (write) {
+                access.lockGroup(parent.getGroupId(), actorId);
+            } else {
+                access.readGroup(parent.getGroupId(), actorId);
+            }
         } else {
-            if (write) access.lockConnection(parent.getConnectionId(), actorId); else access.readConnection(parent.getConnectionId(), actorId);
+            if (write) {
+                access.lockConnection(parent.getConnectionId(), actorId);
+            } else {
+                access.readConnection(parent.getConnectionId(), actorId);
+            }
         }
     }
     private StudySession found(Long id) { return sessions.findById(id).orElseThrow(() -> missing(id)); }

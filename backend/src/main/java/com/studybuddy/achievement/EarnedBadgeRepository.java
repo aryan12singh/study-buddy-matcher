@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** Stores the best tier each student has reached for each badge. */
 public interface EarnedBadgeRepository extends JpaRepository<EarnedBadge, Long> {
     List<EarnedBadge> findByStudentId(Long studentId);
 

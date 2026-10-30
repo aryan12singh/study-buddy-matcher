@@ -20,6 +20,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Personal study plan endpoints under {@code /api/study-plans}: create one from notes and files,
+ * list, read, mark an entry done or not done, and delete. Creating delegates to
+ * {@link StudyPlanCreationService}, which calls the AI provider outside any transaction; everything
+ * else delegates to {@link StudyPlanService}.
+ */
 @RestController
 @RequestMapping("/api/study-plans")
 public class StudyPlanController {

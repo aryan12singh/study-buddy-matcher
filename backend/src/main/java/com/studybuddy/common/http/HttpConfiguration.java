@@ -6,6 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tools.jackson.databind.module.SimpleModule;
 
+/**
+ * HTTP-level configuration: registers {@link HttpProperties} ({@code app.http}) and makes every
+ * JSON string pass through {@link TextWithoutNulDeserializer}.
+ */
 @Configuration
 @EnableConfigurationProperties(HttpProperties.class)
 public class HttpConfiguration {

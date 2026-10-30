@@ -5,6 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Details a student submits to register. Every profile field, including the contact number, is
+ * required; the service normalises and validates them further.
+ */
 public record RegisterRequest(
         @NotBlank @Size(max = 255) String email,
         @NotBlank @Size(min = 8, max = 72) String password,

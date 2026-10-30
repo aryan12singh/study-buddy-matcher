@@ -16,6 +16,11 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Study group use cases: create, browse, view, edit, close, leave and remove a member. Changes lock
+ * the students involved and then the group, so membership and capacity stay consistent; leaving or
+ * removal also ends the student's place in the group room and notifies the other side.
+ */
 @Service
 @Transactional
 public class StudyGroupService {
@@ -196,7 +201,7 @@ public class StudyGroupService {
         InputRules.required(details.name(), "Name", InputRules.TEXT_LIMIT);
         InputRules.optional(details.description(), "Description", InputRules.DESCRIPTION_LIMIT);
         InputRules.positiveId(details.courseId(), "Course");
-        if (details.maxGroupSize() == null || details.maxGroupSize()<StudyGroupDetails.MIN_GROUP_SIZE) {
+        if (details.maxGroupSize() == null || details.maxGroupSize() < StudyGroupDetails.MIN_GROUP_SIZE) {
             throw new InvalidStudyGroupException("maxGroupSize", "Maximum group size must be at least 2");
         }
         if (details.maxGroupSize() > properties.maxCapacity()) {

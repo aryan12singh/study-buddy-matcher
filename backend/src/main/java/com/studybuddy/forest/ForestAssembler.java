@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds the forest views: every tree a student has planted with totals, and the tree growing in
+ * the room they are visiting now. Tree species follow the configured focus minutes.
+ */
 @Component
 public class ForestAssembler {
     private final TreeGrowth growth;

@@ -6,6 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Queries group memberships: a group's members in joining order, the groups a student belongs to,
+ * and member counts for one group, many groups or the badge rules. The leader is stored as a
+ * member.
+ */
 public interface GroupMembershipRepository extends JpaRepository<GroupMembership, Long> {
     List<GroupMembership> findByStudyGroupId(Long studyGroupId);
     List<GroupMembership> findByStudentId(Long studentId);

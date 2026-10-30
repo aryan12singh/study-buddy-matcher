@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Lists the course catalogue for a signed-in student, read-only and sorted by course code. */
 @Service
 @Transactional(readOnly = true)
 public class CourseService {

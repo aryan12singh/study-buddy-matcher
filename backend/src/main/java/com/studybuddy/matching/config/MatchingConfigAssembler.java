@@ -8,6 +8,10 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Builds the {@link MatchingConfigDto} the administrator screen edits, copying the weights per
+ * strategy so the DTO shares no mutable state with the domain objects.
+ */
 @Component
 public class MatchingConfigAssembler {
     public MatchingConfigDto toDto(MatchingStrategyType strategy, Map<MatchingStrategyType, MatchingWeights> weights,

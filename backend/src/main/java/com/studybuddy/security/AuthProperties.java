@@ -9,6 +9,11 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * Sign-in settings bound from {@code app.auth}: the JWT signing secret (at least 32 characters),
+ * the token lifetime and the origins allowed by CORS. The secret comes from the environment or
+ * {@code application-local.yml}, never from a tracked file.
+ */
 @Validated
 @ConfigurationProperties("app.auth")
 public record AuthProperties(

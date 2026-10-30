@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Group room endpoints under {@code /api/groups/{groupId}/room}: read the room, join and keep a tab
+ * present, leave, control the shared timer, send a reaction and change the room settings. Reactions
+ * delegate to {@link RoomReactionService}; everything else to {@link StudyRoomService}.
+ */
 @RestController
 @RequestMapping("/api/groups/{groupId}/room")
 public class StudyRoomController {
