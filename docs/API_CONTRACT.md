@@ -32,6 +32,8 @@ as a wrong password before BCrypt comparison. Malformed/over-character-limit fie
 return 400. After `app.auth.login-throttle.max-failures` wrong passwords in a row for one
 normalized email, known or unknown, login for it returns 429 `TOO_MANY_LOGIN_ATTEMPTS` for
 `app.auth.login-throttle.lockout` after the last attempt; a successful login clears the count.
+The 429 carries a `Retry-After` header with the seconds left, rounded up, and CORS exposes that
+header to the frontend; the message gives the same wait in whole minutes.
 Each attempt is counted before its password is checked, so parallel guesses cannot exceed it. Exact text and existing shorter-password compatibility are retained. Secrets, hashes, token versions and stored contact data are absent from admin,
 request, connection, group and notification responses.
 
@@ -71,22 +73,39 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | HTTP | Code | Meaning |
 | --- | --- | --- |
 | 400 | `VALIDATION_FAILED` | Annotated body validation; errors keyed by the field path |
-| 400 | `INVALID_INPUT` | Invalid enum/JSON/query value or service field/size/time validation |
+| 400 | `INVALID_INPUT` | Invalid enum/JSON/query value, a fraction in a whole-number field, text containing NUL (U+0000), a missing parameter, or service field/size/time validation |
 | 401 | `UNAUTHENTICATED` | Missing, invalid, expired, revoked token; missing/inactive current account |
 | 401 | `INVALID_CREDENTIALS` | Login email/password does not match an account (checked before account state) |
 | 403 | `ACCOUNT_DEACTIVATED` | Login with the correct password for a deactivated account |
-| 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes |
+| 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes; `Retry-After` gives the seconds left |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
-| 404 | `NOT_FOUND` | Missing resource or unavailable/inactive student subject/target |
+| 404 | `NOT_FOUND` | Missing resource, unavailable/inactive student subject/target, or an address no endpoint serves |
+| 405 | `METHOD_NOT_ALLOWED` | The address exists but not for this method; the `Allow` header lists the methods it takes |
+| 406 | none | The `Accept` header allows no format the API writes; the response has no body |
 | 409 | `STATE_CONFLICT` | Duplicate pending relation, connected pair, repeated or stale decision, closed/full group, self-removal, leader leaving |
 | 409 | `DUPLICATE_EMAIL` | Normalized email already belongs to an account |
 | 409 | `STALE_MATCHING_CONFIG` | Expected configuration revision no longer matches; reload before saving/restoring |
 | 409 | `DATA_CONFLICT` | Database uniqueness/integrity protection rejected a conflicting write |
-| 500 | `INTERNAL_ERROR` | Safe generic failure; no SQL, internal exception, credential or private data is returned |
+| 413 | `REQUEST_TOO_LARGE` | A JSON body over `app.http.max-json-body-size` (default 1 MB), refused before it is parsed |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | A request body in a format the address does not accept |
+| 500 | `INTERNAL_ERROR` | Safe generic failure, including a broken internal rule; no SQL, internal exception, credential or private data is returned |
 
 Body and service field validation errors have `fieldErrors`; other errors use an empty object. Authentication
 and permission errors share the same shape. All security responses include `Cache-Control:
 no-store`; the profile controller sets no-store explicitly as well.
+
+Spring MVC's own refusals (unknown address, unsupported method or media type, unacceptable
+`Accept`, missing parameter) keep their 4xx status with a neutral message and are logged at debug
+level only, not as failures. A domain state rule that fails is 409 `STATE_CONFLICT`; a programming
+fault inside the application (`InternalInvariantException`, such as missing wiring or a prompt
+template slot without a value) is 500 `INTERNAL_ERROR`, never a 409.
+
+Request bounds apply to every endpoint. A JSON body larger than `app.http.max-json-body-size`
+is refused with 413 whether or not it declares its length; multipart uploads keep their own
+`spring.servlet.multipart` limits (see study plans and quizzes). A number with a fraction, such
+as `8.7`, is 400 for a whole-number field rather than being truncated. Text containing the NUL
+character is 400, in any JSON text field and in form or query text checked by the shared input
+rules, because PostgreSQL cannot store it.
 
 ## Auth and course foundation
 
@@ -159,7 +178,8 @@ AvailabilitySlot { dayOfWeek: "MONDAY".."SUNDAY", startTime: "HH:mm", endTime: "
 
 Group size is stored on `students` as a minimum and maximum: one-to-one = 2-2, small group =
 3-max, either = 2-max. Availability blocks must start before they end, use whole minutes and not
-overlap on the same day; there is no limit on how many. Invalid input returns 400
+overlap on the same day; a week holds at most `app.availability.max-weekly-slots` (default 50)
+blocks. Invalid input returns 400
 `INVALID_INPUT` with `fieldErrors` keyed by the request field (`courseIds`, `availability`, ...).
 
 The shared editor keeps raw time drafts separate from this complete-slot payload. Invalid or
@@ -323,10 +343,12 @@ the group's sessions remain available to its remaining members.
 ```
 
 Name is required and <=255 characters. Course ID must be positive/existing. Maximum size is
-required and >=2; reduction below current accepted membership is 400. Description is optional
-and <=4000 characters; blank becomes null. Mode is optional. Missing/null goals and availability
-mean empty collections. Null collection entries, missing slot values and reversed/equal times
-are invalid. Valid group slots may overlap on the same day, unlike own student availability.
+required, >=2 and at most `app.study-group.max-capacity` (default 10, the leader included);
+reduction below current accepted membership is 400. Both size errors are keyed `maxGroupSize`.
+Description is optional and <=4000 characters; blank becomes null. Mode is optional. Missing/null
+goals and availability mean empty collections. Availability holds at most
+`app.availability.max-weekly-slots` (default 50) slots, keyed `availability`. Null collection
+entries, missing slot values and reversed/equal times are invalid. Valid group slots may overlap on the same day, unlike own student availability.
 The group form must block invalid/incomplete raw time drafts and include them in exit
 protection; overlap permission does not relax start/end or whole-minute validity. Slots retain
 their campus-local meaning; dated E2 sessions use the separate session endpoints.
@@ -479,6 +501,14 @@ student who is an accepted member of the open group; only its leader manages
 them. Buddy sessions require the particular active connection and both accounts
 active; either participant manages them. Administrators gain no participant access.
 Sessions do not expose contacts/emails/tokens or invite unrelated students.
+
+For one session (`GET`/`PUT /api/sessions/{id}`, `POST .../cancel`, `GET .../calendar`), a
+student with no tie to it gets 404, as if it did not exist, so session IDs reveal nothing: someone
+outside the group (including a member who left or was removed) or not one of the connection's two
+buddies. A tied student who may not act gets 403: a member of a closed group, a buddy of an ended
+connection, or a non-leader member writing a group session. The group and connection agendas and
+`/api/groups/{groupId}/sessions/availability` keep 403 for a non-member, since the group itself is
+visible to every student.
 
 | Method | Path | Input / result |
 | --- | --- | --- |
@@ -641,17 +671,16 @@ random, single-use `state` that expires after `app.spotify.authorization-lifetim
 | `POST /api/spotify/authorization` | `SpotifyAuthorizationDto { url }`: the Spotify sign-in page to open |
 | `GET /api/spotify/callback?state&code&error` | 302 to `app.spotify.return-url?spotify=connected/denied/expired/failed` |
 | `GET /api/spotify/token` | `SpotifyAccessTokenDto { accessToken, expiresAt }` for the in-browser player, renewed when close to expiry |
-| `GET /api/spotify/playlists?query=` | `SpotifyPlaylistDto[] { id, uri, name, owner, imageUrl|null }`, at most 10 |
-| `POST /api/spotify/play` `{ deviceId, playlistUri }` | 204; starts the playlist on the student's player in this tab |
-| `DELETE /api/spotify/connection` | 204; forgets the student's Spotify tokens |
+
+Sign-in asks only for the scopes the Web Playback SDK needs (`app.spotify.scopes`: `streaming`,
+`user-read-email`, `user-read-private`). The backend calls Spotify's accounts service for sign-in
+and token renewal only; it does not search or control playback. The student starts music from
+their own Spotify app by choosing this tab's player as the device.
 
 The refresh token never leaves the server, and tokens are held in memory only, so a server
 restart asks students to connect again. No app credentials returns 503 `SPOTIFY_UNAVAILABLE`, as
 does a Spotify outage. Not connected, or a connection Spotify no longer accepts, returns 409
-`SPOTIFY_NOT_CONNECTED` (not 401, which would sign the student out of this app). Spotify refusing
-playback (player not ready, or no Premium) returns 409 `SPOTIFY_PLAYBACK_REFUSED`. A blank or
-overlong search returns 400 `INVALID_INPUT`; a `playlistUri` that is not `spotify:playlist:…`
-returns 400.
+`SPOTIFY_NOT_CONNECTED` (not 401, which would sign the student out of this app).
 
 ## Notifications
 
@@ -990,7 +1019,12 @@ it. `sort` and `limit` affect discovery only and are omitted.
 ```
 
 `source` is `AI` for validated Gemini wording and `STANDARD` for the matching engine's own
-explanation. Both carry the matching evaluation ID. The frontend renders text literally,
+explanation, the same sentence the card shows, for example "Strong match: same course, 4 shared
+hours a week, study mode matches, study goal partly matches, group size differs. A comparison of
+study preferences, not a probability of success." Each enabled criterion reads as same course or
+matches, partly matches, differs, or not shared when either student left it empty; disabled
+criteria are left out. Shared time is rounded to the nearest half hour (with "about" when
+rounding changed it), or reads "no shared free time". Both carry the matching evaluation ID. The frontend renders text literally,
 labels AI as potentially inaccurate and keeps numeric scores independent of wording.
 
 ### Card freshness and lifecycle
@@ -1056,8 +1090,10 @@ returns the already validated AI answer. Optional cache logs contain only operat
 exception class. Authentication, matching, unavailable-candidate and core database failures
 retain their normal error behavior. The provider wait holds no matching database transaction.
 
-Quota is a per-process daily budget, reset on restart; it is not a durable multi-instance
-billing cap. Concurrent cache misses may each call the provider; insert-on-conflict prevents
+E1's quota is its own `AiQuota`, held by E1's Gemini client and spent only on a cache miss; it
+is separate from the study tools' and the assistant chat's allowances. It is a per-process daily
+budget, reset on restart; it is not a durable multi-instance billing cap. A Gemini reply that did
+not finish normally is unusable output. Concurrent cache misses may each call the provider; insert-on-conflict prevents
 duplicate cache rows only. Tests are listed in [TESTING.md](TESTING.md).
 
 ## Study plans (AI study assistant)
@@ -1070,7 +1106,7 @@ or for a study session (`scope: SESSION`), the session's upcoming meetings.
 | POST | `/api/study-plans` | `multipart/form-data`: `PersonalPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto` | Student |
 | GET | `/api/study-plans` | none | 200 `StudyPlanSummaryDto[]`, own personal plans newest first | Student |
 | POST | `/api/sessions/{sessionId}/study-plan` | `multipart/form-data`: `SessionPlanInput` fields plus 0 to `max-files` parts named `files` | 201 `StudyPlanDto`, replacing the session's old plan | Session manager |
-| GET | `/api/sessions/{sessionId}/study-plan` | none | 200 `StudyPlanDto`; 404 when the session has none yet | Session participant |
+| GET | `/api/sessions/{sessionId}/study-plan` | none | 200 `StudyPlanDto`; 204 No Content when the session has none yet | Session participant |
 | GET | `/api/study-plans/{planId}` | none | 200 `StudyPlanDto` | Owner, or session participant |
 | PUT | `/api/study-plans/{planId}/entries/{entryId}/progress` | `{ "completed": true }` | 200 `StudyPlanDto` | Owner, or session manager |
 | DELETE | `/api/study-plans/{planId}` | none | 204 | Owner, or session manager |
@@ -1099,8 +1135,8 @@ days, which is each entry's `scheduledDate`.
 The material is one or more `files` (PDF, `.txt` or `.md`) or `topicsText`, never both. Files
 together must fit `max-upload-size` and `max-text-file-characters`, and each file's contents must
 match its extension. Files are sent to Google Gemini for this one request and never stored; only
-their names are kept. The roadmap Gemini returns must pass the checks in the README's
-"AI study assistant" configuration section; a student may keep several plans for one course.
+their names are kept. The roadmap Gemini returns must pass the checks in the
+[AI study assistant configuration](CONFIGURATION.md#ai-study-assistant); a student may keep several plans for one course.
 
 Errors, in the order they are checked, so a bad request never spends the student's AI allowance:
 
@@ -1137,13 +1173,18 @@ Errors, in the order they are checked, so a bad request never spends an AI call:
 
 | Status | Code | When |
 | --- | --- | --- |
-| 404 | `NOT_FOUND` | The session does not exist, or the student is not a current participant; on `GET`, also when the session has no plan yet |
+| 404 | `NOT_FOUND` | The session does not exist, or the student is not a current participant |
 | 403 | `FORBIDDEN` | A group member who is not the leader tries to plan, tick or delete |
 | 400 | `INVALID_INPUT` | A buddy session without a `courseId`, or an unknown one; then the material checks above |
-| 409 | `NO_UPCOMING_MEETINGS` | The session is cancelled, or all its meetings have ended |
+| 409 | `NO_UPCOMING_MEETINGS` | The session is cancelled, or all its meetings have ended, including while Gemini answered |
 | 413 / 415 | as above | The material checks above |
 | 503 | `AI_UNAVAILABLE` | As above. The session's old plan is kept |
-| 409 | `STATE_CONFLICT` | The session was cancelled or rescheduled while Gemini answered; nothing is saved |
+| 409 | `STATE_CONFLICT` | The session was edited or cancelled while Gemini answered ("This session was changed while the roadmap was written; try again"); nothing is saved |
+
+A session without a plan is a normal state, so `GET` answers 204 No Content rather than 404.
+The save after Gemini answers compares the session's version with the one read before the call.
+If only time has passed, meetings that ended in the meantime are left out of the saved roadmap
+and the rest are renumbered from 1; if none is left, the answer is 409 `NO_UPCOMING_MEETINGS`.
 
 ## Quizzes (AI study assistant)
 
@@ -1195,6 +1236,7 @@ its student submits it, and then closes. `status` already reads an open quiz pas
 options and explanations stay on the server until the quiz closes. The leaderboard ranks current
 members who have submitted by score, then time taken, then submit time, and holds display names
 and scores only. A member who leaves or is deactivated drops off it but keeps their attempt.
+`QuizDto.submittedCount` counts the same current members, so it always equals the leaderboard's.
 
 Errors:
 

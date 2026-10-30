@@ -166,7 +166,7 @@ def architecture():
     c.box(505,800,620,126,"DTO assemblers",["ProfileViewAssembler picks the permitted response shape.", "PublicProfileDto omits the contact; ConnectedProfileDto has it."],color=TEAL)
     externals=[
         ("Google Gemini",["Explanations, quizzes, study", "plans and the Pixel assistant"]),
-        ("Spotify Web API",["Sign-in, token refresh,", "playlist search and playback"]),
+        ("Spotify Accounts",["Sign-in and token refresh", "for the browser player"]),
         ("Freesound",["CC0 ambient sound search;", "the browser plays previews"]),
         ("Open-Meteo",["Campus weather at fixed", "coordinates; cached, fallback"]),
     ]

@@ -109,7 +109,7 @@ value is still in the payload and visible in the network tab.
   not into a test, not into a comment, not as a "temporary" default. `application-local.yml` and
   `.env` are both git-ignored; keep them that way. If you think you have committed a secret, say
   so immediately. Rotating it is easy, but only if we know.
-- Add a configuration key -> add a row to the configuration table in `README.md`, same change.
+- Add a configuration key -> add a row to the matching table in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md), same change.
 
 ---
 
@@ -149,8 +149,9 @@ Student profile, Matching, Notifications, Study prep, study timer.
   is no movable stacking-window manager.
 - Authenticated screens and the current landing page use the shared retro components under
   `frontend/src/shared/components/`. Matching adds feature-specific bars and a heatmap.
-- Body and window text use Tahoma/Verdana/system fonts. The existing entry stylesheet still
-  imports Inter/Fraunces; sources/licences are in the README. No pixel font is required.
+- Body and window text use Tahoma/Verdana/system fonts; no web font is loaded. The entry
+  stylesheet `frontend/src/index.css` holds only a plain-CSS reset adapted from Tailwind's
+  preflight (MIT, credited in the README). No pixel font is required.
 - Shared palette/styles live in `frontend/src/shared/desktop.css`. Narrow layouts wrap
   navigation, forms, weekly schedules and admin rows rather than declaring desktop-only use.
 - Original `PixelIcon` CSS drawings are reused. Inventory shipped assets/services in the
@@ -171,7 +172,8 @@ The implemented set to reuse:
 | --------- | ------ |
 | App shell and navigation | `AppShell`: menu bar (notifications, help, account) and a sidebar grouped into Connect, Study and You with `NavSection` |
 | Tabs within a page | `TabBar` |
-| Window frame / page container | `WindowPage` |
+| Window frame / page container | `RetroWindow` (title bar and content, also used by the landing page), wrapped by `WindowPage` for app screens |
+| Menu bar | `MenuBar`: skip link, brand and the screen's own tools; used by `AppShell` and the landing page |
 | Button (primary, secondary, destructive) | `Button` |
 | Form field, label, validation message | `Field`, `AccountFields`, `FormActions` |
 | Modal / dialog | `Dialog`, `ConfirmDialog` |

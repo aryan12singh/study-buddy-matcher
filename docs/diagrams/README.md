@@ -8,7 +8,7 @@ detailed, editable Mermaid views behind them.
 
 | Panel | What it shows | Companion document |
 | --- | --- | --- |
-| [architecture.svg](exports/architecture.svg) | Browser, Spring layers, PostgreSQL and the external services (Google Gemini, Spotify Web API, Freesound, Open-Meteo, and the browser-loaded Spotify Web Playback SDK), with the contact-privacy boundary | [PLATFORM.md](PLATFORM.md) |
+| [architecture.svg](exports/architecture.svg) | Browser, Spring layers, PostgreSQL and the external services (Google Gemini, Spotify Accounts, Freesound, Open-Meteo, and the browser-loaded Spotify Web Playback SDK), with the contact-privacy boundary | [PLATFORM.md](PLATFORM.md) |
 | [use-cases.svg](exports/use-cases.svg) | UML use cases for the compulsory features: Student and Administrator actors, with group-scoped leader authority | [PLATFORM.md](PLATFORM.md) |
 | [e2-use-cases.svg](exports/e2-use-cases.svg) | UML use cases for collaborative study (E2): rooms, Pomodoro, room reactions, the focus forest, music, dated sessions, mutual availability and weather | [TEAM_C.md](TEAM_C.md) |
 | [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course` and `AvailabilitySlot`, with the `@MapsId` association and multiplicities | [PLATFORM.md](PLATFORM.md) |

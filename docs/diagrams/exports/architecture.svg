@@ -87,9 +87,9 @@
 <text x="1258" y="210" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Google Gemini</text>
 <text x="1258" y="244" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Explanations, quizzes, study</text>
 <text x="1258" y="271" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">plans and the Pixel assistant</text>
-<text x="1258" y="346" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Spotify Web API</text>
-<text x="1258" y="380" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Sign-in, token refresh,</text>
-<text x="1258" y="407" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">playlist search and playback</text>
+<text x="1258" y="346" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Spotify Accounts</text>
+<text x="1258" y="380" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Sign-in and token refresh</text>
+<text x="1258" y="407" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">for the browser player</text>
 <text x="1258" y="482" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">Freesound</text>
 <text x="1258" y="516" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">CC0 ambient sound search;</text>
 <text x="1258" y="543" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">the browser plays previews</text>

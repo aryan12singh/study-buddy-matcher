@@ -3,12 +3,14 @@
 The team's choices where the IS442 brief is silent or open to interpretation, with the reason for
 each and the alternative it replaced. Where a row records an interpretation rather than a rule from
 the brief, it says "Team decision". API details are in [API_CONTRACT.md](API_CONTRACT.md) and
-configuration keys in the README.
+configuration keys in [CONFIGURATION.md](CONFIGURATION.md).
 
 ## Contents
 
 - [Accounts, relationships and groups (Team C)](#accounts-relationships-and-groups-team-c)
 - [Transaction and database guarantees](#transaction-and-database-guarantees)
+- [Errors and request bounds](#errors-and-request-bounds)
+- [Demo data](#demo-data)
 - [Platform and own profile (Team B)](#platform-and-own-profile-team-b)
 - [Interface behaviour](#interface-behaviour)
 - [Matching decisions (Team A)](#matching-decisions-team-a)
@@ -41,7 +43,7 @@ Deactivate actions.
 | Group capacity | Accepted members including the leader count; pending requests do not. The group row serialises approval, edit, removal and close | Separate pre-counts allow over-capacity commits |
 | Group closure | One-way; pending applicants rejected; other members notified; no new requests, approvals or edits. Also revokes room leases and cancels scheduled sessions | Leader transfer and reopening are not implemented |
 | Taking back an action | The sender withdraws a pending buddy request (`CANCELLED`); the applicant withdraws a pending application (`WITHDRAWN`); a member leaves an open group, which also ends their study-room presence. Each confirms first and notifies the other party. The leader cannot leave and closes the group instead | Without these, a pending request blocked a pair indefinitely and deactivation had to record withdrawals as leader rejections |
-| Optional group data | Goals, mode and weekly slots may be empty; name, course and capacity of at least 2 are required | Inventing compulsory choices would change a graded field requirement |
+| Optional group data | Goals, mode and weekly slots may be empty; name, course and a capacity from 2 to `app.study-group.max-capacity` (10) are required | Inventing compulsory choices would change a graded field requirement |
 | Weekly times | Whole minutes, same-day start before end, Asia/Singapore. Group schedules may be empty or overlap; a student's own schedule rejects same-day overlap | Group meeting slots and personal availability are different contracts; overnight splitting is not supported |
 | Event times | Java `Instant`, PostgreSQL `timestamptz`, `Z` timestamps in the API; legacy local values converted from Asia/Singapore | Relabelling a timestamp without conversion shifts recorded moments |
 | Notifications | One service; safe summary and resource metadata; recipient scope; persistent read state; transaction and event-key deduplication | Email, SMS, push and scheduled reminders are not implemented |
@@ -67,6 +69,33 @@ commit in the same transaction as the transition that caused them. HTTP tests in
 failure and verify rollback, and run simultaneous decisions against PostgreSQL. The advisory
 protocol covers this backend's writes; privileged SQL run outside it can still break cross-row
 capacity rules, so operators must not bypass it.
+
+## Errors and request bounds
+
+| Decision | Choice and reason | Alternative rejected |
+| --- | --- | --- |
+| Framework refusals | Spring MVC's own 4xx keep their status with a neutral problem body: unknown address 404, wrong method 405 with `Allow`, unsupported body 415, a missing parameter 400 `INVALID_INPUT`; an unacceptable `Accept` is 406 with no body. They are logged at debug level | The catch-all handler answered them with 500 and logged a client's mistake as a server failure |
+| Internal faults | `InternalInvariantException` marks a broken internal rule (missing wiring, a write outside a transaction, a missing prompt template or slot value, the time taken of an unsubmitted quiz attempt) and falls through to 500. `IllegalStateException` remains the domain's 409 `STATE_CONFLICT` | Throwing `IllegalStateException` for programming faults told students they had a conflict to resolve |
+| JSON body size | `JsonBodySizeFilter` refuses a JSON body over `app.http.max-json-body-size` (1 MB) with 413 `REQUEST_TOO_LARGE` before Jackson reads it; a body without a declared length is read only to one byte past the limit. Multipart uploads keep their own limits | Without a cap one request could hold a large document in memory |
+| Whole numbers | `spring.jackson.deserialization.accept-float-as-int: false`, so `8.7` in a whole-number field is 400 | Silently truncating to 8 saves a value the student did not send |
+| NUL characters | `TextWithoutNulDeserializer` refuses U+0000 in every JSON string, and `InputRules` in form and query text, with 400 | PostgreSQL cannot store NUL in text, so the request failed deep in a save as a 500 |
+| Collection sizes | At most `app.availability.max-weekly-slots` (50) weekly blocks for a student or a group, and a group maximum size of at most `app.study-group.max-capacity` (10), each a 400 field error | Unbounded lists made one save, and the matching maths over it, unbounded |
+| Sign-in lockout | The 429 carries `Retry-After` in seconds, rounded up, and CORS exposes the header | A client could learn the wait only by parsing the message |
+
+## Demo data
+
+The opt-in seed (`DemoSeedService`) replays a scripted history from `demo-data.json` through the
+real services; [DATABASE.md](DATABASE.md#demo-seed) lists what it creates.
+
+| Decision | Choice and reason | Alternative rejected |
+| --- | --- | --- |
+| Real services, prewritten AI content | Requests, groups, sessions, quizzes and plans go through the normal services, so validation, locks and notifications apply. Quiz questions and roadmaps are written in advance in the shape of Gemini's reply and pass the same validators, so seeding makes no AI call | Direct inserts would skip the rules being demonstrated; generating content while seeding would spend AI allowance and differ between runs |
+| One presenter | `priya@demo.example.test` holds every scenario: a request in each status, an active and an ended connection, a group she leads with pending applications, a group she joined, sessions, quizzes, a study plan, a session roadmap, badges and a forest | Spreading scenarios across accounts makes the presenter switch accounts |
+| Read state | Whoever answered a request or application read its notice first, so only items still open stay unread | Every replayed event left unread buried the ones the demo acts on |
+| Formed in the past | `DemoGroupHistory` back-dates `created_at` and the members' `joined_at` with SQL, only for a group with `formedWeeksAgo` (the presenter's Design Patterns Clinic) and only on rows the seed has just created. The streak and Planner count meetings from the current join time, and the services always record joining as now, so without it the Clinic's earlier weekly meetings would not count | A service method or entity setter for past join times would let the application itself rewrite history |
+| Series under way | A session's `weeksAgo` starts its weekly series in the past (the Clinic began three weeks ago), so the agenda, streak and roadmap show a running series | Future-only sessions start every streak at zero |
+| Usable without Gemini | An open personal quiz to take live, and a seeded roadmap for the Clinic so Pixel's "what are we covering next session?" answers from it | A demo that needs a working AI key at every step fails on an exhausted allowance or venue wifi |
+| Stable dates | Relative values (exam in 20 days, weeks ago, days ago) are resolved from the seed's clock in the feature's own time zone, so the data reads the same whatever day and hour it runs | Fixed dates go stale before the presentation |
 
 ## Platform and own profile (Team B)
 
@@ -155,7 +184,8 @@ disclosed in [AI_USAGE.md](AI_USAGE.md).
 | Which facts reach Gemini? | Allowlisted anonymous evidence only, with scoring course distinguished from shared course and the effective goal intent (`StudyGoalIntent`, shared with the scorer) | A search goal need not be a saved goal; a shared course may not be the scored one |
 | Failure | Off, quota, provider, validation and cache-read failures return the standard template text. A cache-write failure keeps the validated text. Core auth and matching errors propagate | Optional caching must not make an available explanation fail |
 | Output checks | Fresh and cached answers pass length and bounded evidence-reference checks; the UI cautions that text may be inaccurate | Not a complete factual validator |
-| Cost | A daily quota per process, reset at Singapore midnight: `daily-call-limit` (18) shared, `daily-call-limit-per-student` (5) each; cache hits are free. After a provider 429, no calls for `rate-limit-cooldown` (60 s). Concurrent misses may each call | A shared allowance alone lets one student use it up; a per-student counter alone could exceed the free tier |
+| Cost | E1's own `AiQuota`, held by its own `GeminiClient`: a daily quota per process, reset at Singapore midnight, `daily-call-limit` (18) shared and `daily-call-limit-per-student` (5) each; cache hits are free. After a provider 429, no calls for `rate-limit-cooldown` (60 s). Concurrent misses may each call | A shared allowance alone lets one student use it up; a per-student counter alone could exceed the free tier |
+| Provider wiring | `AiExplanationConfiguration` builds E1's `GeminiClient` from `app.ai.explanation.*` (its own key, model, timeout and quota) and wraps it in `GeminiExplanationProvider`, an adapter that turns `AiUnavailableException` into an empty answer. `AiExplanationWriter` holds no quota; the provider spends it on a cache miss | A second hand-written HTTP client for E1 duplicated request, timeout and reply handling |
 | Evidence wording | `ExplanationVocabulary` sends plain words and each criterion's weight; the strategy name is not sent. The validator rejects leftover code names such as `ONE_TO_ONE` | Raw enum names were copied into student-facing text; without weights the model could lead with a criterion that barely counts |
 | Two hashes | The `evaluationId` proves the clicked card is current; the evidence hash lets identical anonymous facts reuse wording | One hash cannot do both |
 | Status codes | Evaluation runs before the ID comparison, so an ineligible candidate gets 404 and an eligible one with a wrong ID gets 409. Low risk: eligible candidates are already visible in search | The current ID only exists after evaluation |
@@ -163,20 +193,22 @@ disclosed in [AI_USAGE.md](AI_USAGE.md).
 
 ### Study assistant AI (shared)
 
-Pixel, quizzes and study plans share one Gemini integration in `com.studybuddy.ai`, separate from
-the match explanation provider in `matchexplanation`.
+All four AI features (match explanations, Pixel, quizzes and study plans) share one Gemini
+integration in `com.studybuddy.ai`: one `GeminiClient` class, built once per client from its own
+`GeminiSettings` and given its own `AiQuota`, and one `PromptTemplate` for every prompt.
 
 | Decision | Choice and reason |
 | --- | --- |
-| Separate project and quota | `app.ai.assistant.*` has its own API key (from a different Google project than match explanations) and its own `AiQuota`, so assistant use never spends the match explanation allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
-| Provider behind an interface | Features depend on `AiClient`; `GeminiClient` is the implementation, so tests supply a fake |
-| Quota | Per process, in memory, reset at Singapore midnight: `daily-call-limit` (18) shared and `daily-call-limit-per-student` (5). After a provider 429, calls pause for `rate-limit-cooldown`. A disabled assistant is checked before the quota, so it never spends allowance |
-| JSON replies | Requests ask for `application/json`; a reply that did not finish normally (token limit, safety block) is rejected rather than parsed |
+| One client class, three instances | `GeminiClient` is not a Spring component. `AiAssistantConfiguration` declares the `AiClient` bean that quizzes and study plans share; `AssistantConfiguration` builds the chat's own client; `AiExplanationConfiguration` builds E1's. Each takes a `GeminiSettings` record (switch, base URL, model, key, timeout, reply size, whether to turn thinking off) from its properties' `geminiSettings(...)` and a fresh `AiQuota` from `newQuota()` |
+| Separate projects and allowances | `app.ai.assistant.*` has its own API key (from a different Google project than match explanations), and each client counts its own `AiQuota`, so one feature never spends another's allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
+| Provider behind an interface | Features depend on `AiClient` (E1 on `ExplanationProvider`); `GeminiClient` is the implementation, so tests supply a fake |
+| Quota | One `AiQuota` class per client: per process, in memory, reset at Singapore midnight, with a shared daily limit and a per-student one (18 and 5 for the study tools). After a provider 429, that client pauses for `rate-limit-cooldown`. A switched-off feature is checked before the quota, so it never spends allowance |
+| JSON replies | Requests ask for `application/json`; a reply that did not finish with `STOP` (token limit, safety block) is rejected rather than parsed, and thought parts are skipped when reading the text |
 | Long requests | `timeout` 90 s and `max-output-tokens` 4000, because a quiz or roadmap from a lecture PDF can take Gemini well over 30 seconds |
 | No transaction during the call | Creation runs as a short checking read, the AI call, then a short write, so no connection or account lock is held while Gemini answers |
 | Validate before spending | Every check that needs no AI runs first, so a bad request never uses the student's allowance |
-| Versioned prompts | Templates live in `backend/src/main/resources/prompts/` (`assistant-v2.txt`, `quiz-v1.txt`, `study-plan-v2.txt`); a wording change is a new file and version |
-| Prompt injection | Student text and material are marked as data, never instructions; slots are filled in a single pass so student text is never searched for slots |
+| Versioned prompts | Templates live in `backend/src/main/resources/prompts/` (`assistant-v2.txt`, `match-explanation-v5.txt`, `quiz-v1.txt`, `study-plan-v2.txt`) and are read by `PromptTemplate`; a wording change is a new file and version |
+| Prompt injection | Student text and material are marked as data, never instructions. `PromptTemplate` fills `{{slot}}` markers in one pass over the template only, so student text is never searched for slots; a slot without a value is an internal fault (500), never a half-filled prompt. `StudyMaterial` strips `<material>` markers from student text and file names and describes where the material is |
 | Failure | Any failure is `AiUnavailableException` (503 `AI_UNAVAILABLE`); logs never contain the prompt, file, reply or key |
 
 ### Pixel study assistant
@@ -201,7 +233,7 @@ matching `AssistantIntent` answers it:
 | --- | --- |
 | AI reads, the app answers | The only AI call classifies the message and extracts details (`IntentParser`); every fact in the reply comes from existing services, so the model cannot invent a buddy, time or task |
 | Deterministic fast path | `QuickIntentReader` answers the suggested questions, greetings, "what do I need to do?", navigation questions and simple buddy, meeting and quiz requests with rules and no AI call. It never guesses: a message with a time of day, date, goal or other detail only the AI can read goes to the AI |
-| Lighter model, own allowance | `app.ai.assistant.chat.*` uses `gemini-3.5-flash-lite` with its own limits (200 shared, 30 per student, 20 s timeout), so chatting never spends the allowance needed for quizzes and plans. It shares the key, switch and rate-limit pause |
+| Lighter model, own allowance | `app.ai.assistant.chat.*` uses `gemini-3.5-flash-lite` with its own limits (200 shared, 30 per student, 20 s timeout), so chatting never spends the allowance needed for quizzes and plans. It shares the key, switch and cooldown length; its client keeps its own quota and rate-limit pause, and leaves the thinking setting out because lite models reject it |
 | Reply validation | `AssistantOutputValidator` requires a JSON object with a known intent; each detail is kept only if valid (known enum, whole number in range, readable date), otherwise dropped rather than guessed |
 | Intents as classes | Intents are looked up by type, not chosen in a `switch`; the service refuses to start if any type lacks a handler |
 | Page allowlist | Navigation targets come from the `AppPage` enum, so the model cannot produce an arbitrary link |
@@ -233,7 +265,7 @@ sessions; members take it, see a leaderboard and review answers after it closes.
 | Timing | A group quiz is open for `open-duration` (15 min) and reads as closed afterwards, so no scheduler is needed; hosts can close it early. A personal quiz has no time limit and closes when submitted, so the owner sees answers straight away |
 | Attempts | Starting records the time; asking again returns the same attempt, so a reload does not reset the clock. The member's row is locked so a double click cannot start two |
 | Marking | `QuizMarker` requires every question answered exactly once with a valid option; anything else is invalid input, so skipping cannot save time |
-| Leaderboard | `QuizLeaderboard` ranks by score, then less time, then earlier submission, then student ID, so ranks are distinct and stable between polls. A member who leaves, is removed or is deactivated keeps their attempt but drops off |
+| Leaderboard | `QuizLeaderboard` ranks by score, then less time, then earlier submission, then student ID, so ranks are distinct and stable between polls. A member who leaves, is removed or is deactivated keeps their attempt but drops off. The quiz's `submittedCount` uses the same current-member filter, so the two numbers always agree |
 | Quiz for a session | When the group has upcoming scheduled sessions, Quiz Buddy asks which one the quiz is for, with one button per session and "Not for a session"; the quiz list then names it. The question is optional and is skipped when the group has none or the list fails to load, so it never blocks a quiz. The server accepts only a scheduled session of the same group |
 | Session cancelled during the AI call | The quiz is saved without a session rather than failing |
 
@@ -266,7 +298,8 @@ Entries can be ticked off and the plan deleted.
 | Size limits | Spring's multipart limit reads the same `max-upload-size`, so they cannot drift apart. Text files together hold at most `max-text-file-characters` (100,000); pasted topics at most `max-topics-characters` (4000) |
 | Immutable plan | A plan is built in one go from a validated draft; afterwards it can only be ticked off or deleted |
 | Session plans follow session access | Every current participant reads it (accepted members of an open group, or both buddies); whoever manages the session (the group leader, or either buddy) plans, ticks and deletes it. Reusing the session's rules means no second permission model |
-| One plan per session | A new session plan replaces the old one, and its progress goes with it; if Gemini fails the old plan is kept. Editing the session does not regenerate it, so the screen compares the session's `updatedAt` with the plan's `createdAt` to flag a possibly outdated plan. A session cancelled or rescheduled while Gemini answers saves nothing (409) |
+| One plan per session | A new session plan replaces the old one, and its progress goes with it; if Gemini fails the old plan is kept. Editing the session does not regenerate it, so the screen compares the session's `updatedAt` with the plan's `createdAt` to flag a possibly outdated plan. The save compares the session's version with the one read before the call: a session edited or cancelled while Gemini answers saves nothing (409). A meeting that merely ended meanwhile is dropped and the rest renumbered, since the remaining dates still match; if none is left, 409 `NO_UPCOMING_MEETINGS` |
+| No plan yet | `GET /api/sessions/{id}/study-plan` answers 204 No Content, because a session without a roadmap is a normal state, not a missing resource |
 | Course for a session | A group session studies its group's course; a buddy connection has none, so the buddy planning it chooses one |
 
 **Privacy.** A personal plan belongs to its student alone and a session plan to the session's
@@ -315,11 +348,12 @@ recommendations, calendar OAuth or two-way sync, and scheduled reminders.
 | Presence lease | 90 seconds by default, longer than the one-minute timer floor browsers apply to hidden tabs. Several tabs count once; leaving removes only that tab's lease | A crashed tab holds its place for up to 90 seconds; a shorter lease dropped students who switched tabs |
 | Host disconnect | The timer continues. A departing or expired host hands over to the present co-host, else the most recently active person still there; the last person leaving ends the session and resets the timer. Leadership never transfers | Without a background job, an expired tab counts as leaving only when someone next joins |
 | Roles and settings | The leader alone assigns host and co-host. Present hosts may change durations (only from IDLE) and capacity, without changing roles | Capacity cannot drop below the students present or exceed the group |
-| Revocation | `RoomLifecycle` deletes leases and revokes roles in the membership, deactivation and closure transaction | A restored membership never restores an old lease or role |
+| Revocation | `RoomLifecycle` deletes leases, revokes roles and ends the student's open focus-forest visit in the membership, deactivation and closure transaction | A restored membership never restores an old lease or role, and no visit keeps growing after access ends |
 | Phase cue | A continuously observed automatic focus/break change is announced once through a polite status; the countdown itself is not announced | Entry, reset, hidden-tab gaps and reconnect do not replay cues; not a background alarm |
 | Room audio | Rooms hold no audio state | The unused `study_rooms` audio columns remain until a later migration |
 | Session model | A separate `studysession` feature with exactly one parent (open group or active connection), its own assembler and parent-row locking | Weekly preference schedules unchanged; room presence is independent of a booking |
 | Session authority | The group leader manages group series; both buddies manage their connection's series; members and buddies can read and export | Every read rechecks current eligibility; old relationship IDs confer nothing |
+| Session visibility | A student with no tie to a session (not in its group, including one who left or was removed, nor one of its two buddies) gets 404 for its detail, edit, cancel and calendar, so session IDs reveal nothing. A tied student who may not act (closed group, ended connection, non-leader writing) gets 403 | The group and connection agendas keep 403, since the group or connection ID is already known to the caller |
 | Local time and recurrence | Whole-minute local start and end plus an IANA zone; one occurrence or up to `maximum-occurrences` (52) weekly ones, each keeping its local wall time | Missing or ambiguous DST endpoints are rejected; no silent timezone fallback |
 | Suggested times | Reuse campus-local weekly intersections; default 60-minute duration placed at the start of each long-enough overlap | Selecting a suggestion only fills the form; manual times still work |
 | Session labels | Current/next occurrence and Ongoing/Upcoming/Past from authorised timestamps, one clock per view | Room links are shortcuts only for current or future plans |
@@ -341,7 +375,7 @@ pixel sprite float up with the sender's name, then fade.
 | Delivered by the existing poll | Recent reactions are part of the room snapshot (`StudyRoomDto.reactions`) that every tab already polls, so there is no socket dependency and no second polling loop. Others see a reaction within one poll interval |
 | Who may react | `RoomReactionService.send` checks membership through `RoomAccess` and requires the actor's live lease in that room; otherwise 409 |
 | Window | A reaction stays in snapshots for `app.study-room.reactions.window` (8 s), longer than the poll interval, so every polling tab sees it. `ReactionLayer` animates each ID once; the sender's own reaction floats at once from the POST reply |
-| Burst limit | At most `burst-limit` (5) per student in each `burst-window` (10 s), counted in the database so every tab agrees; beyond it 409 |
+| Burst limit | At most `burst-limit` (5) per student in each `burst-window` (10 s), counted in the database so every tab agrees; beyond it 409. The sender's own row is locked before counting, so parallel clicks are counted one after another and cannot all pass. After a refusal the tray rests for about ten seconds and says so politely |
 | No history | When someone reacts, rows older than the longer of the window and the burst window are deleted for that room in one bulk statement; no scheduler is needed |
 | Fixed set | `RoomReactionType` and a database check constraint; no free text, so a reaction cannot carry a message |
 | Original sprites | `reactionSprites` drawn with the achievements page's `PixelRects` helper, no emoji font; with reduced motion the sprite fades in place instead of rising |
@@ -362,7 +396,7 @@ turning pixel meadow (`ForestPage`, `Meadow3D`).
 | Tiers | `TreeGrowth` maps focused minutes to `TreeSpecies` using `app.forest.tree-minutes`: sprout 10, sapling 25, oak 50, pine 90, ancient blossom 150. A shorter visit plants nothing. Thresholds must rise or startup fails |
 | Light | `TreeLight` picks dawn, day, dusk or night colours from the visit's local start time in `app.forest.zone`, with the hours in `app.forest.light-starts` (5, 11, 17, 21). Deterministic, so a tree's colour can be explained |
 | Variety | `TreeLottery` draws each visit's kind within its species (`variants-per-species`, 3) and meadow plot at random on the server when the visit opens; a browser cannot choose a rarer tree and a planted tree never changes |
-| Kept out of the room code | `StudyRoomService` publishes `RoomVisitTicked` on join and heartbeat and `RoomVisitEnded` when the last tab leaves. `ForestVisitListener` hands each event, after the room transaction commits, to a single forest worker (`ForestConfiguration`), which applies them in commit order in their own transaction. A room request never holds a second database connection, and a forest failure is logged without failing the poll. A full queue (`update-queue-capacity`, 1000) drops an update and costs only a few seconds of credit |
+| Kept out of the room code | `StudyRoomService` publishes `RoomVisitTicked` on join and heartbeat and `RoomVisitEnded` when the last tab leaves; `RoomLifecycle` also publishes `RoomVisitEnded` when a member is removed, a student is deactivated or the group closes. `ForestVisitListener` hands each event, after the room transaction commits, to a single forest worker (`ForestConfiguration`), which applies them in commit order in their own transaction. A room request never holds a second database connection, and a forest failure is logged without failing the poll. A full queue (`update-queue-capacity`, 1000) drops an update and costs only a few seconds of credit |
 | Concurrent ticks | The credit update succeeds only if the visit has not moved on since the tick read it, so two tabs never credit the same stretch twice; a tick older than the visit's end cannot reopen it |
 | Solo timer | The personal Study Room timer is browser-only and grows no trees; crediting it would mean trusting the browser |
 | Planted trees are kept | A tree counts once its visit is over. Trees copy the group name, so they survive the group closing or being deleted. Deleting the student deletes the forest; deactivation keeps it |
@@ -378,8 +412,8 @@ only that time is counted from server time while the shared timer runs a focus p
 menu) and a corner mini player (`NowPlayingMini`: track, next, music and ambient volume).
 
 - **Spotify.** Without an account link, a team-chosen playlist plays through Spotify's free embed.
-  A student can connect their Spotify account and search playlists; with Premium they play in the
-  browser through the Web Playback SDK.
+  A student can connect their Spotify account; with Premium, the room becomes a Spotify Connect
+  device through the Web Playback SDK, and they choose it as the player in their own Spotify app.
 - **Ambient sounds.** Six Freesound categories (rain, cafe, forest, ocean, fireplace, wind), each
   playing a random suitable sound, with "try another sound" and a one-time remix that layers two
   or three categories at random volumes (`remixPlan.ts`).
@@ -388,6 +422,7 @@ menu) and a corner mini player (`NowPlayingMini`: track, next, music and ambient
 | --- | --- |
 | Personal, not shared | Music plays only in the student's own browser and never enters the room API |
 | Tokens in memory only | `SpotifyTokenStore` keeps tokens in server memory, never in the database; a restart asks students to connect again. Only a short-lived access token reaches the browser; the refresh token and client secret never leave the server |
+| Narrow Spotify scope | Sign-in asks only for `streaming`, `user-read-email` and `user-read-private`, which the Web Playback SDK needs; the backend calls Spotify only for sign-in and token renewal. Playlist search, remote playback control and the disconnect endpoint were removed with the `user-modify-playback-state` scope, since choosing the device in Spotify's own app covers it |
 | Sign-in callback | Spotify's redirect carries no app token, so a random, single-use, expiring `state` (`SpotifyAuthorizationStore`) ties the callback to the student and stops another site completing a sign-in |
 | CC0 licence | Only Creative Commons 0 sounds are requested, so no per-author credit is needed on screen |
 | Sound length | `min-duration-seconds` (30) to `max-duration-seconds` (600): shorter clips loop audibly, longer ones start slowly on campus wifi |

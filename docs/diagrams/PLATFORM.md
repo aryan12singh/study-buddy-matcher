@@ -111,7 +111,7 @@ mapped DDL that Hibernate may update.
 | External service | Called by | Used for |
 | --- | --- | --- |
 | Google Gemini | Backend | E1 match explanations, quizzes, study plans and the Pixel assistant |
-| Spotify accounts service and Web API | Backend | Spotify sign-in, token refresh, playlist search and starting playback |
+| Spotify accounts service | Backend | Spotify sign-in and token refresh only; the student starts playback from their own Spotify app |
 | Spotify Web Playback SDK | Browser | Premium playback in the study room, using an access token issued by the backend; free mode uses Spotify's embedded playlist player instead |
 | Freesound | Backend (search); browser (preview audio) | CC0 ambient sounds: the backend searches with its key, the browser plays the returned preview files |
 | Open-Meteo | Backend | Cached campus weather for fixed coordinates |
