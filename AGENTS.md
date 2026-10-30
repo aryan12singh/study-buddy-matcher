@@ -169,7 +169,8 @@ The implemented set to reuse:
 
 | Component | Status |
 | --------- | ------ |
-| App shell and navigation | `AppShell`, `TabBar` |
+| App shell and navigation | `AppShell`: menu bar (notifications, help, account) and a sidebar grouped into Connect, Study and You with `NavSection` |
+| Tabs within a page | `TabBar` |
 | Window frame / page container | `WindowPage` |
 | Button (primary, secondary, destructive) | `Button` |
 | Form field, label, validation message | `Field`, `AccountFields`, `FormActions` |
@@ -199,7 +200,7 @@ The implemented set to reuse:
 | ---- | ------- | ---- |
 | Team A | nat, cy, jo | Matching engine: scorers, `TimeSlot` maths, strategies, `MatchScore`, matching config, matching and admin-config UI; the Study Room tab (personal Pomodoro and groups panel) and its music (`music` package, Spotify and Freesound) |
 | Team B | angel, averyl, gh | Spring Boot and React skeletons, entities, enums, repositories, Spring Security and JWT, `ProfileService`, data seeder, shared UI shell, auth and profile screens; AI study tools: `ai` client and quota, `quiz`, `studyplan` (personal and session roadmaps), `assistant` (Pixel) and their screens |
-| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 `matchexplanation`, E2 group rooms (`studyroom`), `studysession` and `weather`, help guide and `achievement` |
+| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 match explanations (`matchexplanation`); E2 group rooms (`studyroom`, including room reactions), `studysession` and `weather`, `achievement` and the focus forest (`forest`); help guide |
 
 Do not refactor another team's code as a side effect of your task. If their code blocks you,
 raise it rather than rewriting it. A surprise refactor in someone else's file is how merge
@@ -211,13 +212,18 @@ the pull request description.
 
 ## Process
 
+The course requires two extra features beyond the compulsory requirements: E1 AI study
+assistance and E2 collaborative study experience (see
+[requirement coverage](docs/REQUIREMENT_COVERAGE.md)). Feature freeze is in effect: only fixes,
+tests, documentation and demo preparation.
+
 ### Milestones
 
 | Milestone | Date | Means |
 | --------- | ---- | ----- |
 | Base code | 11 Oct | Every compulsory feature works end to end |
 | Internal feature freeze | 24 Oct | Feature work stops; tests, integration and polish are ready for delivery |
-| Extras/integration delivery target | 25 Oct | Team issue milestone for the agreed selected extras |
+| Extras/integration delivery target | 25 Oct | Team issue milestone for the two required extras |
 | Materials/rehearsal target | 8 Nov | Supporting materials and timed demo/Q&A rehearsal |
 | Final handoff target | 15 Nov 2026, 11:59 PM SGT | Team target; verify the actual LMS deadline and submission receipt |
 

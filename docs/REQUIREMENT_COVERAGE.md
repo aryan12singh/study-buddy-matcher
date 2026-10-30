@@ -9,11 +9,14 @@ choice in [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md), and how to run the tests i
 
 ## Scope
 
+The course requires two extra features beyond the compulsory requirements; the team delivers them
+as E1 and E2.
+
 | Group | Contents |
 | --- | --- |
-| [Compulsory requirements](#compulsory-requirements) | Accounts and profiles, weekly availability, matching, match requests and contact privacy, study groups, notifications and admin management |
-| [Selected extras](#selected-extras) | E1 AI match explanation; E2 collaborative study room, sessions, calendar and weather |
-| [Additional features](#additional-features) | Pixel study assistant, quizzes, study plans, music, achievements and help |
+| [Compulsory requirements](#compulsory-requirements) | Accounts and profiles, weekly availability, matching, match requests and contact privacy, study groups, notifications and admin management, with the help guide as core support |
+| [E1 AI study assistance](#e1-ai-study-assistance) | Match explanations, Quiz Buddy quizzes, personal and session study plans and the Pixel assistant, on one validated AI layer with fallbacks, privacy rules and disclosure in [AI_USAGE.md](AI_USAGE.md) |
+| [E2 collaborative study experience](#e2-collaborative-study-experience) | Group rooms with a shared Pomodoro, host roles and room reactions; dated sessions and calendar export; the Study Room tab with a personal Pomodoro and music; weather scenes; the focus forest; achievements |
 
 Team interpretations (contact format, group-size intervals, learning style, separate deactivation
 and deletion) are recorded in the
@@ -65,7 +68,7 @@ and deletion) are recorded in the
 
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
-| Guarded navigation and shared retro components | `AppShell`, `TabBar`, `WindowPage`, `Button`, `Dialog`, `StatePanel`, `routes.tsx` | `Dialog.test.tsx`, `DialogDrafts.test.tsx`, `ActionNotice.test.tsx`, `FormPolish.test.tsx` |
+| Guarded navigation: a menu bar with notifications and help, and a sidebar grouped into Connect, Study and You; shared retro components | `AppShell`, `NavSection`, `TabBar`, `WindowPage`, `Button`, `Dialog`, `StatePanel`, `routes.tsx` | `Dialog.test.tsx`, `DialogDrafts.test.tsx`, `ActionNotice.test.tsx`, `FormPolish.test.tsx` |
 | Home from real profile, activity, request, group, notification and matching data | `HomePage`, `nextStep`, `profileProgress` | `HomePage.test.tsx`, `nextStep.test.ts`, `profileProgress.test.ts`, `ActivityFeed.test.tsx`, `homeTime.test.ts` |
 
 ### Matching algorithm and scoring
@@ -153,9 +156,16 @@ and deletion) are recorded in the
 | Permanently delete | `StudentDeletion`, `GroupClosure` | `AccountHttpTest` |
 | Admins cannot remove themselves | `AdminUserService` | `AdminUserServiceTest` |
 
-## Selected extras
+### Help guide (core support)
 
-### E1 AI match explanation
+| Requirement | Main classes | Tests |
+| --- | --- | --- |
+| Next step and getting-started checklist from current records | `HelpPage`, `helpNextStep`, `startSteps`, `StartChecklist` | `HelpPage.test.tsx`, `helpNextStep.test.ts` |
+| Topic guides and searchable FAQ | `helpContent`, `ExplainerCard`, `FaqSection`, `FaqItem` | `HelpPage.test.tsx` |
+
+## E1 AI study assistance
+
+### Match explanations
 
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
@@ -165,35 +175,6 @@ and deletion) are recorded in the
 | Gemini call with fallback to standard text | `GeminiExplanationProvider`, `AiExplanationWriter` | `GeminiExplanationProviderTest`, `AiExplanationWriterTest` |
 | Daily quota shared and per student | `ExplanationQuota` | `ExplanationQuotaTest` |
 | Cache keyed by anonymous evidence | `ExplanationHasher`, `ExplanationCache` | `ExplanationHasherTest`, `MatchExplanationHttpTest` |
-
-### E2 collaborative study experience
-
-| Requirement | Main classes | Tests |
-| --- | --- | --- |
-| Private group room with presence leases and capacity | `StudyRoomService`, `RoomAccess`, `RoomPresence`; `StudyRoomPage` | `StudyRoomHttpTest`, `StudyRoomPage.test.tsx` |
-| Host handover and room start invitations | `StudyRoomService`, `RoomStartNotifications` | `StudyRoomDepartureTest`, `RoomStartNotificationsTest` |
-| Removal, closure and deactivation clear leases and roles | `RoomLifecycle` | `StudyRoomHttpTest` |
-| Shared Pomodoro | `PomodoroTimer`; `RoomTimerPanel` | `PomodoroTimerTest`, `RoomTimerPanel.test.tsx`, `timer.test.ts`, `timerPing.test.ts` |
-| Personal Pomodoro | `StudyRoomsPage`, `PersonalPomodoro` | `PersonalPomodoro.test.tsx`, `StudyRoomsPage.test.tsx` |
-| Dated group and buddy sessions with recurrence | `StudySessionService`, `SessionAccess`, `StudySession`, `SessionSchedule`, `SessionSettings`; `SessionsPage`, `SessionFormPage`, `SessionDetailPage` | `SessionScheduleTest`, `StudySessionHttpTest`, `Sessions.test.tsx` |
-| Mutual availability suggestions | `SessionAvailability` | `StudySessionHttpTest` |
-| Session lifecycle and notifications | `SessionEvents`, `StudySessionLifecycle` | `StudySessionHttpTest` |
-| Calendar export | `SessionCalendar` | `SessionCalendarTest`, `StudySessionHttpTest` |
-| Campus weather and pixel themes | `WeatherService`, `WeatherClient`, `OpenMeteoClient`; `RoomWeatherPanel` | `WeatherServiceTest`, `RoomWeatherPanel.test.tsx` |
-
-## Additional features
-
-### Pixel study assistant
-
-| Requirement | Main classes | Tests |
-| --- | --- | --- |
-| Floating chat for students | `AssistantController`, `AssistantService`; `AssistantLauncher`, `AssistantPanel`, `AssistantReplyView` | `AssistantServiceTest`, `AssistantHttpTest`, `AssistantLauncher.test.tsx` |
-| Answer common questions without an AI call | `QuickIntentReader` | `QuickIntentReaderTest` |
-| AI intent reading with its own model and allowance | `IntentParser`, `AssistantAi`, `AssistantConfiguration`, `AssistantPromptBuilder` | `AssistantPromptBuilderTest`, `AssistantServiceTest` |
-| Reply validation | `AssistantOutputValidator` | `AssistantOutputValidatorTest` |
-| To-do, navigation, buddies, meeting times, quiz and plan hand-offs | `MyToDoIntent`, `NavigateIntent`, `FindBuddiesIntent`, `WhenToMeetIntent`, `QuizMeIntent`, `PlanStudyIntent`, `AppPage` | `NavigateAndToDoIntentsTest`, `AssistantIntentsTest` |
-| Plan a session and say what its next meeting covers | `PlanSessionIntent`, `SessionTopicsIntent`, `AssistantSessions` | `SessionIntentsTest` |
-| Shared Gemini client and quota | `AiClient`, `GeminiClient`, `AiQuota`, `AiAttachment` | `GeminiClientTest`, `AiQuotaTest`, `AiAttachmentTest`, `GeminiClientLiveTest` (opt-in) |
 
 ### Quizzes
 
@@ -217,6 +198,58 @@ and deletion) are recorded in the
 | Session roadmap for a study session's upcoming meetings | `SessionStudyPlanController`, `SessionMeetingFrames`, `StudyPlanCreationService`; `SessionRoadmapPanel`, `SessionPlanForm` | `SessionMeetingFramesTest`, `SessionStudyPlanHttpTest`, `SessionRoadmapPanel.test.tsx` |
 | Owner-only access; session plans follow session access | `StudyPlanAccess` | `StudyPlanHttpTest`, `SessionStudyPlanHttpTest` |
 
+### Pixel study assistant
+
+| Requirement | Main classes | Tests |
+| --- | --- | --- |
+| Floating chat for students | `AssistantController`, `AssistantService`; `AssistantLauncher`, `AssistantPanel`, `AssistantReplyView` | `AssistantServiceTest`, `AssistantHttpTest`, `AssistantLauncher.test.tsx` |
+| Answer common questions without an AI call | `QuickIntentReader` | `QuickIntentReaderTest` |
+| AI intent reading with its own model and allowance | `IntentParser`, `AssistantAi`, `AssistantConfiguration`, `AssistantPromptBuilder` | `AssistantPromptBuilderTest`, `AssistantServiceTest` |
+| Reply validation | `AssistantOutputValidator` | `AssistantOutputValidatorTest` |
+| To-do, navigation, buddies, meeting times, quiz and plan hand-offs | `MyToDoIntent`, `NavigateIntent`, `FindBuddiesIntent`, `WhenToMeetIntent`, `QuizMeIntent`, `PlanStudyIntent`, `AppPage` | `NavigateAndToDoIntentsTest`, `AssistantIntentsTest` |
+| Plan a session and say what its next meeting covers | `PlanSessionIntent`, `SessionTopicsIntent`, `AssistantSessions` | `SessionIntentsTest` |
+
+### Shared AI layer
+
+| Requirement | Main classes | Tests |
+| --- | --- | --- |
+| Shared Gemini client and quota | `AiClient`, `GeminiClient`, `AiQuota`, `AiAttachment` | `GeminiClientTest`, `AiQuotaTest`, `AiAttachmentTest`, `GeminiClientLiveTest` (opt-in) |
+
+## E2 collaborative study experience
+
+### Group rooms, sessions and weather
+
+| Requirement | Main classes | Tests |
+| --- | --- | --- |
+| Private group room with presence leases and capacity | `StudyRoomService`, `RoomAccess`, `RoomPresence`; `StudyRoomPage` | `StudyRoomHttpTest`, `StudyRoomPage.test.tsx` |
+| Host handover and room start invitations | `StudyRoomService`, `RoomStartNotifications` | `StudyRoomDepartureTest`, `RoomStartNotificationsTest` |
+| Removal, closure and deactivation clear leases and roles | `RoomLifecycle` | `StudyRoomHttpTest` |
+| Shared Pomodoro | `PomodoroTimer`; `RoomTimerPanel` | `PomodoroTimerTest`, `RoomTimerPanel.test.tsx`, `timer.test.ts`, `timerPing.test.ts` |
+| Personal Pomodoro | `StudyRoomsPage`, `PersonalPomodoro` | `PersonalPomodoro.test.tsx`, `StudyRoomsPage.test.tsx` |
+| Dated group and buddy sessions with recurrence | `StudySessionService`, `SessionAccess`, `StudySession`, `SessionSchedule`, `SessionSettings`; `SessionsPage`, `SessionFormPage`, `SessionDetailPage` | `SessionScheduleTest`, `StudySessionHttpTest`, `Sessions.test.tsx` |
+| Mutual availability suggestions | `SessionAvailability` | `StudySessionHttpTest` |
+| Session lifecycle and notifications | `SessionEvents`, `StudySessionLifecycle` | `StudySessionHttpTest` |
+| Calendar export | `SessionCalendar` | `SessionCalendarTest`, `StudySessionHttpTest` |
+| Campus weather and pixel themes | `WeatherService`, `WeatherClient`, `OpenMeteoClient`; `RoomWeatherPanel` | `WeatherServiceTest`, `RoomWeatherPanel.test.tsx` |
+
+### Room reactions
+
+| Requirement | Main classes | Tests |
+| --- | --- | --- |
+| Send one of six fixed reactions while present in the room; burst limit per student | `StudyRoomController`, `RoomReactionService`, `RoomReactionType`, `RoomReactionSettings`; `ReactionTray` | `RoomReactionsAndForestHttpTest`, `ReactionLayer.test.tsx` |
+| Every member's room snapshot lists recent reactions; old rows are pruned | `RoomReactionService`, `RoomReaction`, `RoomReactionRepository`, `RoomReactionDto`, `StudyRoomService` | `RoomReactionsAndForestHttpTest` |
+| Original pixel sprites float once per reaction, the sender's at once | `ReactionLayer`, `ReactionSprite`, `reactionSprites` | `ReactionLayer.test.tsx` |
+
+### Focus forest
+
+| Requirement | Main classes | Tests |
+| --- | --- | --- |
+| One tree per continuous room visit; focus time measured on the shared timer | `ForestService`, `FocusCredit`, `FocusVisit`, `FocusVisitRepository`; room events `RoomVisitTicked`, `RoomVisitEnded` | `FocusCreditTest`, `RoomReactionsAndForestHttpTest` |
+| Room updates reach the forest after commit on its own worker | `ForestVisitListener`, `ForestConfiguration` | `RoomReactionsAndForestHttpTest` |
+| Tiers from configured minutes; colours from the visit's local start time; random kind and plot | `TreeGrowth`, `TreeSpecies`, `TreeLight`, `TreeLottery`, `ForestProperties` | `TreeGrowthTest`, `TreeLotteryTest` |
+| Own forest page and live growing tree in the room | `ForestController`, `ForestAssembler`; `ForestPage`, `Meadow3D`, `meadowLayout`, `GrowingTree` | `RoomReactionsAndForestHttpTest`, `ForestPage.test.tsx`, `meadowLayout.test.ts`, `GrowingTree.test.tsx` |
+| Seeded demo forest | `DemoForestSeeder` | `DemoSeedTest` |
+
 ### Music
 
 | Requirement | Main classes | Tests |
@@ -229,15 +262,8 @@ and deletion) are recorded in the
 
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
-| Private badges derived from existing records | `AchievementController`, `AchievementService`, `BadgeDefinition`, `AchievementAssembler` | `AchievementServiceTest`, `AchievementAssemblerTest`, `AchievementHttpTest` |
+| Seven private badges derived from existing records, including Forester for planted trees | `AchievementController`, `AchievementService`, `BadgeDefinition`, `AchievementAssembler` | `AchievementServiceTest`, `AchievementAssemblerTest`, `AchievementHttpTest` |
 | Tiers, points and level | `BadgeEvaluator`, `AchievementProperties` | `BadgeEvaluatorTest`, `AchievementPropertiesTest` |
 | Earned tiers are kept when counts fall | `EarnedBadgeRecorder`, `EarnedBadge`, `EarnedBadgeRepository` | `EarnedBadgeRecorderTest`, `AchievementServiceTest`, `AchievementHttpTest` |
 | Planned-session weekly streak | `WeeklyStreakCalculator`, `AchievementSessionRepository` | `WeeklyStreakCalculatorTest`, `AchievementHttpTest` |
 | Achievements page and own-profile summary | `AchievementsPage`, `StudyGrove`, `OwnAchievementSummary` | `AchievementsPage.test.tsx`, `StudentProfilePage.test.tsx` |
-
-### Help
-
-| Requirement | Main classes | Tests |
-| --- | --- | --- |
-| Next step and getting-started checklist from current records | `HelpPage`, `helpNextStep`, `startSteps`, `StartChecklist` | `HelpPage.test.tsx`, `helpNextStep.test.ts` |
-| Topic guides and searchable FAQ | `helpContent`, `ExplainerCard`, `FaqSection`, `FaqItem` | `HelpPage.test.tsx` |

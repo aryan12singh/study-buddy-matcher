@@ -130,6 +130,9 @@ flowchart LR
     subgraph E2[Authenticated E2 application]
         Room[Private group room and live presence]
         Timer[Authoritative shared Pomodoro]
+        Reactions[Short-lived room reactions]
+        Forest[Focus forest: one tree per room visit]
+        Badges[Private achievements and Forester badge]
         Music[Personal Spotify and ambient sounds]
         Sessions[Dated group and buddy sessions]
         Suggestions[Mutual weekly availability]
@@ -147,6 +150,9 @@ flowchart LR
     Host --> Timer
     Room --> Timer
     Room --> Music
+    Room --> Reactions
+    Timer -->|focus time| Forest
+    Forest --> Badges
     Sessions --> Suggestions
     Sessions --> Home
     Sessions --> Events
@@ -157,7 +163,9 @@ flowchart LR
     Theme --> Room
 ```
 
-Room leases, durable timer state and dated sessions have distinct lifecycles.
+Room leases, durable timer state, short-lived reactions, focus visits and dated sessions have
+distinct lifecycles. Trees grow only from focus time on a group room's shared timer; the personal
+Study Room timer is browser-only and grows none.
 The browser reconciles authenticated HTTP snapshots. Music is personal: each
 student's study room Music settings tab plays only in their browser and holds no room state. Session availability reuses Team A's interval maths and
 does not modify matching rankings. Calendar downloads contain no attendee/contact/

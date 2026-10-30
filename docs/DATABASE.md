@@ -102,7 +102,7 @@ every row.
 
 ## Schema overview
 
-The migrations create 32 tables in `public`.
+The migrations create 34 tables in `public`.
 
 | Area | Tables |
 | --- | --- |
@@ -156,7 +156,8 @@ What it does, in one transaction under the same advisory lock:
   the real services: match requests, connections, four groups and one deactivation, with
   notifications produced as in live use. It then schedules the presenter's group and buddy
   sessions at their time block's next occurrence, starts a group quiz and a practice quiz and
-  has members take them, and creates a study plan with some topics ticked off. The quiz
+  has members take them, creates a study plan with some topics ticked off, and records finished study room visits so the
+  presenter's focus forest shows every tree species. The quiz
   questions and the roadmap are written in advance in the data file and pass the same
   validators as Gemini's replies, so no AI call is made.
 
@@ -174,8 +175,9 @@ depending on it, so the seed can rebuild the demo from scratch:
   availability; groups led by demo students with their memberships, applications, slots and
   goals; requests and connections involving a demo student; study sessions under those
   groups and connections; notifications sent to demo students or pointing at a removed
-  student, group, request or session. Quizzes, quiz attempts, study plans and earned badges
-  go with their student or group through `ON DELETE CASCADE`.
+  student, group, request or session. Quizzes, quiz attempts, study plans, earned badges, room
+  reactions and focus visits go with their student or group through `ON DELETE CASCADE`; a
+  non-demo student's focus visit in a removed demo group keeps its tree, with the group set to null.
 - **Keeps:** courses, matching configuration and every non-demo account. A non-demo account
   loses only its own links to demo accounts.
 

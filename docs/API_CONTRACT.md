@@ -439,9 +439,9 @@ been removed; its `study_rooms` columns remain, unused, until a later migration.
 
 ## Focus forest
 
-Each continuous visit to a group study room grows one tree. Join and every heartbeat that is
-not `BREAK` credit the focus time since the student's previous tick, measured on the server
-from the room timer: only time in a running focus phase counts, never pauses, breaks or time
+Each continuous visit to a group study room grows one tree. Join and every heartbeat credit the
+focus time since the student's previous tick, measured on the server from the room timer, whatever
+the tab reports: only time in a running focus phase counts, never pauses, breaks or time
 before a start. A gap longer than the lease lifetime means the student had gone, so the old visit
 is finished and a new one starts. Leaving from the student's last tab ends the visit. Two tabs
 share one visit. A tick that predates the visit's end is ignored, so a late heartbeat cannot reopen
@@ -1337,6 +1337,7 @@ BadgeDto        { key, title, description, tier: BRONZE|SILVER|GOLD|null, curren
 | `FOUNDER` | Retained groups created by the student, including closed groups |
 | `PLANNER` | Individual non-cancelled scheduled occurrences on currently accessible open-group/active-buddy schedules, including past and future occurrences, from the start of the current membership or exact connection onward |
 | `GROVE_KEEPER` | Longest consecutive planned-week run derived from those currently eligible occurrences; it can decrease if the source schedules change or become inaccessible |
+| `FORESTER` | Trees planted in the student's focus forest (finished room visits with at least the sprout threshold of focus time); trees are never removed while the account exists |
 
 The schedule read uses one projection query including each membership's `joinedAt` or connection's
 `createdAt`. A newcomer or readmitted member does not inherit occurrences before that current tenure.
@@ -1348,8 +1349,8 @@ Each distinct eligible week counts once. Future weeks are excluded, but an occur
 current week counts immediately because the metric measures planning. A run ending last week remains
 current while this week is still open; a gap of a whole week resets the current run. `bestWeeks` is the
 longest run in currently eligible data, not a stored all-time record. Removing/cancelling/editing a
-schedule can change both streak values. Neither scheduling nor the room timer records attendance,
-completed focus time or study quality.
+schedule can change both streak values. Scheduling records neither attendance nor study quality;
+focus time is recorded only by the focus forest, from group room visits.
 
 Thresholds are positive and nondecreasing bronze/silver/gold values from `app.achievements.*`;
 `points-per-level` must be positive. `tier` is the highest tier ever reached and `currentTier` is what
@@ -1357,7 +1358,7 @@ Thresholds are positive and nondecreasing bronze/silver/gold values from `app.ac
 `tier` is not null. Only the highest tier contributes points (Bronze 1, Silver 2, Gold 3); tiers are
 not added together. `target` is the threshold of the next tier above `tier`, or the Gold threshold with
 `nextTier=null` once Gold is earned. Counts may exceed a Gold target.
-Six Gold badges yield `maxPoints=18`; the default maximum is level 7. The last level step is shortened
+Seven Gold badges yield `maxPoints=21`; the default maximum is level 8. The last level step is shortened
 when needed so every configured maximum is reachable. At maximum standing `pointsToNextLevel=0`.
 Counts can fall when eligible records decrease, but `tier`, points and level do not. A tier is saved
 only when the student requests this endpoint, so a tier reached and lost between two requests is

@@ -12,14 +12,12 @@ configuration keys in the README.
 - [Platform and own profile (Team B)](#platform-and-own-profile-team-b)
 - [Interface behaviour](#interface-behaviour)
 - [Matching decisions (Team A)](#matching-decisions-team-a)
-- [AI match explanation decisions (E1)](#ai-match-explanation-decisions-e1)
-- [Collaborative study experience (E2)](#collaborative-study-experience-e2)
-- [Study assistant AI (shared)](#study-assistant-ai-shared)
-- [Pixel study assistant](#pixel-study-assistant)
-- [Quizzes](#quizzes)
-- [Study plans](#study-plans)
-- [Music: Spotify and Freesound](#music-spotify-and-freesound)
-- [Achievements](#achievements)
+- [E1 AI study assistance](#e1-ai-study-assistance): [match explanations](#match-explanations),
+  [shared study assistant AI](#study-assistant-ai-shared), [Pixel](#pixel-study-assistant),
+  [quizzes](#quizzes), [study plans](#study-plans)
+- [E2 collaborative study experience](#e2-collaborative-study-experience):
+  [rooms, sessions and weather](#room-session-and-weather-decisions), [room reactions](#room-reactions),
+  [focus forest](#focus-forest), [music](#music-spotify-and-freesound), [achievements](#achievements)
 - [Baseline requirement contract](#baseline-requirement-contract)
 
 ## Accounts, relationships and groups (Team C)
@@ -125,7 +123,7 @@ Appendix A lets each group choose its formulas and weights. These are the team's
 | Candidate eligibility | Exclude self, inactive or deleted accounts and active connections; keep pending candidates with their incoming/outgoing state | Existing buddies belong on Connections; a pending request is visible but cannot be resent |
 | Results bound | Default 20, maximum 50, from YAML. Count filtered results before limiting; sort before truncating | Full pagination is unnecessary for the bounded dataset |
 | Quality and threshold | Quality cut-offs are YAML defaults; the admin minimum total and the student's minimum quality both apply | A user filter can narrow but never override a global threshold |
-| Explainability | Immutable `MatchScore` holds the bounded total, breakdown, shared hours, unknown criteria and quality. `MatchExplainer` (`TemplateMatchExplainer`) writes deterministic text from the score alone; `MatchResultAssembler` adds it with public profile data. The card shows scores, bars and shared time, and offers the E1 explanation on request | Scoring and wording change for different reasons. Because the explainer sees only the score, never a `Student`, it cannot leak a private field |
+| Explainability | Immutable `MatchScore` holds the bounded total, breakdown, shared hours, unknown criteria and quality. `MatchExplainer` (`TemplateMatchExplainer`) writes deterministic text from the score alone; `MatchResultAssembler` adds it with public profile data. The card shows scores, bars and shared time, and offers the AI match explanation (E1) on request | Scoring and wording change for different reasons. Because the explainer sees only the score, never a `Student`, it cannot leak a private field |
 | Query count | `StudentRepository.findWithMatchingDetailsByIdIn` loads candidates with an `@EntityGraph`; `AvailabilitySlotRepository.findByStudentIdIn` loads slots for eligible students only. Statement count stays constant as the pool grows (`MatchingQueryCountTest`) | A global `default_batch_fetch_size` still grows with the pool, loads inactive students' slots and changes how every entity loads |
 | Defaults and overrides | YAML defaults apply until an admin saves overrides; overrides persist across restarts; Restore clears them and reuses current YAML defaults | Resetting on every startup loses admin settings. Saved overrides keep their own weights until restored |
 | Configuration version | A persisted, monotonically increasing revision; save and restore require the expected revision and stale writes conflict. Search reads one repeatable snapshot and returns its version | Timestamp or memory-only versions cannot protect concurrent writes across restarts |
@@ -138,7 +136,15 @@ the `Student` entity; admin-screen fields for unknown score, bands and session l
 enum value and weight row). Team decision: exact shared time blocks are visible in match results;
 only the contact number is withheld until a request is accepted.
 
-## AI match explanation decisions (E1)
+## E1 AI study assistance
+
+The first required extra. Match explanations, Quiz Buddy quizzes, personal and session study plans
+and the Pixel assistant share one approach: the server builds every prompt, sends only the data
+the feature needs, validates every reply before use, and falls back to a standard answer or the manual path when the
+AI is off, over its allowance or failing. Development assistance and the runtime data flows are
+disclosed in [AI_USAGE.md](AI_USAGE.md).
+
+### Match explanations
 
 | Question | Choice and reason | Alternative rejected |
 | --- | --- | --- |
@@ -155,60 +161,14 @@ only the contact number is withheld until a request is accepted.
 | Status codes | Evaluation runs before the ID comparison, so an ineligible candidate gets 404 and an eligible one with a wrong ID gets 409. Low risk: eligible candidates are already visible in search | The current ID only exists after evaluation |
 | `evaluationId` sensitivity | An unsalted SHA-256 of scoring inputs; only the digest reaches the browser and the input space is large | An HMAC with a server secret, not needed at this scope |
 
-## Collaborative study experience (E2)
-
-### What E2 delivers
-
-| Component | Behaviour |
-| --- | --- |
-| Private group room | Accepted active members only; join/leave, participant list, focus/break state, distinct-student capacity and expiring tab leases |
-| Shared Pomodoro | Configurable durations; server-time start, pause, resume and reset; observed-version conflict checks; survives refresh and reconnect |
-| Leader and delegated control | The leader assigns host and co-host; present hosts control the timer and configure durations and capacity; the leader keeps recovery control |
-| Personal Pomodoro | A personal Study Room with its own timer, independent of any group room |
-| Music | Each student's own Spotify and Freesound player in the room's Music tab (see [Music](#music-spotify-and-freesound)); nothing reaches the room or other members |
-| Dated sessions | Group leaders and both connected buddies manage dated series with timezone, title, optional agenda, location and room link, and whole-series update or cancel |
-| Mutual availability | Team A's interval intersections across current participants; suggestions never confirm attendance |
-| Calendar export | Single or bounded weekly series expanded to stable individual UTC events; authenticated download |
-| Product integration | Sessions on Home and group/buddy agendas; recipient-scoped change notifications; closure and lifecycle revoke access |
-| Weather | Original pixel themes, day/night, and optional backend-cached Open-Meteo campus conditions with a selectable fallback |
-
-Not part of E2: public rooms, chat, task boards, shared notes, global online status, group-score
-recommendations, calendar OAuth or two-way sync, and scheduled reminders.
-
-### Decisions
-
-| Question | Choice and reason | Limits / alternative |
-| --- | --- | --- |
-| Room access | Active accepted members of an open group only; rechecked on every request | Pending applicants, admins and visitors have no access; membership never reveals contacts |
-| Personal Pomodoro | Default 25-minute focus and 5-minute break, whole-minute edits (focus 1-180, break 1-60), start/pause/resume and confirmed reset; recovers after inactive tabs from elapsed timestamps | Session storage holds only validated per-account timer state in the current tab, falling back to memory. It does not control a group room or synchronise across devices |
-| Shared transport | Authenticated HTTP with configured polling, server timestamps and local countdown rendering | No new socket dependency; this is small-dataset synchronisation |
-| Timer model | An immutable server-time anchor plus remaining duration, not ticks | Ticks drift and cannot survive reconnect |
-| Presence lease | 90 seconds by default, longer than the one-minute timer floor browsers apply to hidden tabs. Several tabs count once; leaving removes only that tab's lease | A crashed tab holds its place for up to 90 seconds; a shorter lease dropped students who switched tabs |
-| Host disconnect | The timer continues. A departing or expired host hands over to the present co-host, else the most recently active person still there; the last person leaving ends the session and resets the timer. Leadership never transfers | Without a background job, an expired tab counts as leaving only when someone next joins |
-| Roles and settings | The leader alone assigns host and co-host. Present hosts may change durations (only from IDLE) and capacity, without changing roles | Capacity cannot drop below the students present or exceed the group |
-| Revocation | `RoomLifecycle` deletes leases and revokes roles in the membership, deactivation and closure transaction | A restored membership never restores an old lease or role |
-| Phase cue | A continuously observed automatic focus/break change is announced once through a polite status; the countdown itself is not announced | Entry, reset, hidden-tab gaps and reconnect do not replay cues; not a background alarm |
-| Room audio | Rooms hold no audio state | The unused `study_rooms` audio columns remain until a later migration |
-| Session model | A separate `studysession` feature with exactly one parent (open group or active connection), its own assembler and parent-row locking | Weekly preference schedules unchanged; room presence is independent of a booking |
-| Session authority | The group leader manages group series; both buddies manage their connection's series; members and buddies can read and export | Every read rechecks current eligibility; old relationship IDs confer nothing |
-| Local time and recurrence | Whole-minute local start and end plus an IANA zone; one occurrence or up to `maximum-occurrences` (52) weekly ones, each keeping its local wall time | Missing or ambiguous DST endpoints are rejected; no silent timezone fallback |
-| Suggested times | Reuse campus-local weekly intersections; default 60-minute duration placed at the start of each long-enough overlap | Selecting a suggestion only fills the form; manual times still work |
-| Session labels | Current/next occurrence and Ongoing/Upcoming/Past from authorised timestamps, one clock per view | Room links are shortcuts only for current or future plans |
-| JDBC civil time | Local-time JDBC mappings for weekly slots and dated session civil fields | A Singapore-timezone JVM otherwise shifted times on round trip |
-| Series changes | Whole-series PUT and cancel require the observed version; notifications share the transaction | No per-occurrence editing, invitations or RSVP; cancelled series cannot be edited |
-| Parent lifecycle | An ended connection, closed group or deactivated account cancels affected scheduled series; deletion cascades | Reconnection does not resurrect schedules |
-| Calendar export | Independent UTC events with a stable series UID, occurrence index and revision; title, agenda, location and validated room link only, no emails, contacts or tokens | Snapshot imports can duplicate or miss edits; shortening or cancelling a series never removes an already imported copy |
-| Weather themes | Original CSS pixel scenes (clear, cloudy, rain, storm, snow, fog) and automatic day/night; reduced motion stops animation | A manually chosen theme is decoration, never a forecast |
-| Live weather | Open-Meteo current conditions for configured campus coordinates through the backend, with timeout, cache, stale display and silent fallback. No student data, device location or key is sent | An outage never affects room access or the timer. Weather data is attributed under CC BY 4.0 per the provider's [terms](https://open-meteo.com/en/terms); the test profile disables outbound requests |
-
-## Study assistant AI (shared)
+### Study assistant AI (shared)
 
 Pixel, quizzes and study plans share one Gemini integration in `com.studybuddy.ai`, separate from
-E1's `matchexplanation` package.
+the match explanation provider in `matchexplanation`.
 
 | Decision | Choice and reason |
 | --- | --- |
-| Separate project and quota | `app.ai.assistant.*` has its own API key (from a different Google project than E1) and its own `AiQuota`, so assistant use never spends E1's allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
+| Separate project and quota | `app.ai.assistant.*` has its own API key (from a different Google project than match explanations) and its own `AiQuota`, so assistant use never spends the match explanation allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
 | Provider behind an interface | Features depend on `AiClient`; `GeminiClient` is the implementation, so tests supply a fake |
 | Quota | Per process, in memory, reset at Singapore midnight: `daily-call-limit` (18) shared and `daily-call-limit-per-student` (5). After a provider 429, calls pause for `rate-limit-cooldown`. A disabled assistant is checked before the quota, so it never spends allowance |
 | JSON replies | Requests ask for `application/json`; a reply that did not finish normally (token limit, safety block) is rejected rather than parsed |
@@ -219,7 +179,7 @@ E1's `matchexplanation` package.
 | Prompt injection | Student text and material are marked as data, never instructions; slots are filled in a single pass so student text is never searched for slots |
 | Failure | Any failure is `AiUnavailableException` (503 `AI_UNAVAILABLE`); logs never contain the prompt, file, reply or key |
 
-## Pixel study assistant
+### Pixel study assistant
 
 **What it does.** A floating chat window for students (`AssistantLauncher`, in `AppShell`) that
 answers from the app's own data. `AssistantService` works out what a message asks for, then the
@@ -257,7 +217,7 @@ unavailable, messages that need it return 503 and the fast path still works. The
 targets `/study-plan` with the stated course, exam date and hours as query parameters, which the
 Study plans screen uses to prefill its create form.
 
-## Quizzes
+### Quizzes
 
 **What it does.** Quiz Buddy (`QuizBotLauncher`, `QuizBotWindow`) writes a ten-question
 multiple-choice quiz from uploaded or pasted notes. A personal quiz is the student's own practice,
@@ -284,7 +244,7 @@ students or the group.
 **Limits.** Same upload rules as study plans. Group quizzes are not announced by notification;
 members see open quizzes in the room and in Pixel's to-do list.
 
-## Study plans
+### Study plans
 
 **What it does.** A roadmap written from the student's own material, in two kinds:
 
@@ -317,7 +277,102 @@ only.
 **Limits.** A session plan is not regenerated when the session changes; it is flagged as possibly
 out of date instead. Plans bound the shape and size of Gemini's advice, not its quality.
 
-## Music: Spotify and Freesound
+## E2 collaborative study experience
+
+The second required extra: studying together once a match or group exists. It covers group rooms
+with a shared Pomodoro, host roles and reactions; dated sessions with calendar export; the Study
+Room tab with a personal Pomodoro and music; weather scenes; the focus forest; and achievements.
+
+### What E2 delivers
+
+| Component | Behaviour |
+| --- | --- |
+| Private group room | Accepted active members only; join/leave, participant list, focus/break state, distinct-student capacity and expiring tab leases |
+| Shared Pomodoro | Configurable durations; server-time start, pause, resume and reset; observed-version conflict checks; survives refresh and reconnect |
+| Leader and delegated control | The leader assigns host and co-host; present hosts control the timer and configure durations and capacity; the leader keeps recovery control |
+| Personal Pomodoro | A personal Study Room with its own timer, independent of any group room |
+| Room reactions | Six fixed reactions that float over the room for everyone present; see [Room reactions](#room-reactions) |
+| Focus forest | One tree per continuous group room visit, sized by focused time; see [Focus forest](#focus-forest) |
+| Music | Each student's own Spotify and Freesound player in the room's Music tab (see [Music](#music-spotify-and-freesound)); nothing reaches the room or other members |
+| Dated sessions | Group leaders and both connected buddies manage dated series with timezone, title, optional agenda, location and room link, and whole-series update or cancel |
+| Mutual availability | Team A's interval intersections across current participants; suggestions never confirm attendance |
+| Calendar export | Single or bounded weekly series expanded to stable individual UTC events; authenticated download |
+| Product integration | Sessions on Home and group/buddy agendas; recipient-scoped change notifications; closure and lifecycle revoke access |
+| Weather | Original pixel themes, day/night, and optional backend-cached Open-Meteo campus conditions with a selectable fallback |
+| Achievements | Seven private badges, including Forester for planted trees; see [Achievements](#achievements) |
+
+Not part of E2: public rooms, chat, free-text or custom reactions, reaction history, task boards, shared notes, global online status, group-score
+recommendations, calendar OAuth or two-way sync, and scheduled reminders.
+
+### Room, session and weather decisions
+
+| Question | Choice and reason | Limits / alternative |
+| --- | --- | --- |
+| Room access | Active accepted members of an open group only; rechecked on every request | Pending applicants, admins and visitors have no access; membership never reveals contacts |
+| Personal Pomodoro | Default 25-minute focus and 5-minute break, whole-minute edits (focus 1-180, break 1-60), start/pause/resume and confirmed reset; recovers after inactive tabs from elapsed timestamps | Session storage holds only validated per-account timer state in the current tab, falling back to memory. It does not control a group room or synchronise across devices |
+| Shared transport | Authenticated HTTP with configured polling, server timestamps and local countdown rendering | No new socket dependency; this is small-dataset synchronisation |
+| Timer model | An immutable server-time anchor plus remaining duration, not ticks | Ticks drift and cannot survive reconnect |
+| Presence lease | 90 seconds by default, longer than the one-minute timer floor browsers apply to hidden tabs. Several tabs count once; leaving removes only that tab's lease | A crashed tab holds its place for up to 90 seconds; a shorter lease dropped students who switched tabs |
+| Host disconnect | The timer continues. A departing or expired host hands over to the present co-host, else the most recently active person still there; the last person leaving ends the session and resets the timer. Leadership never transfers | Without a background job, an expired tab counts as leaving only when someone next joins |
+| Roles and settings | The leader alone assigns host and co-host. Present hosts may change durations (only from IDLE) and capacity, without changing roles | Capacity cannot drop below the students present or exceed the group |
+| Revocation | `RoomLifecycle` deletes leases and revokes roles in the membership, deactivation and closure transaction | A restored membership never restores an old lease or role |
+| Phase cue | A continuously observed automatic focus/break change is announced once through a polite status; the countdown itself is not announced | Entry, reset, hidden-tab gaps and reconnect do not replay cues; not a background alarm |
+| Room audio | Rooms hold no audio state | The unused `study_rooms` audio columns remain until a later migration |
+| Session model | A separate `studysession` feature with exactly one parent (open group or active connection), its own assembler and parent-row locking | Weekly preference schedules unchanged; room presence is independent of a booking |
+| Session authority | The group leader manages group series; both buddies manage their connection's series; members and buddies can read and export | Every read rechecks current eligibility; old relationship IDs confer nothing |
+| Local time and recurrence | Whole-minute local start and end plus an IANA zone; one occurrence or up to `maximum-occurrences` (52) weekly ones, each keeping its local wall time | Missing or ambiguous DST endpoints are rejected; no silent timezone fallback |
+| Suggested times | Reuse campus-local weekly intersections; default 60-minute duration placed at the start of each long-enough overlap | Selecting a suggestion only fills the form; manual times still work |
+| Session labels | Current/next occurrence and Ongoing/Upcoming/Past from authorised timestamps, one clock per view | Room links are shortcuts only for current or future plans |
+| JDBC civil time | Local-time JDBC mappings for weekly slots and dated session civil fields | A Singapore-timezone JVM otherwise shifted times on round trip |
+| Series changes | Whole-series PUT and cancel require the observed version; notifications share the transaction | No per-occurrence editing, invitations or RSVP; cancelled series cannot be edited |
+| Parent lifecycle | An ended connection, closed group or deactivated account cancels affected scheduled series; deletion cascades | Reconnection does not resurrect schedules |
+| Calendar export | Independent UTC events with a stable series UID, occurrence index and revision; title, agenda, location and validated room link only, no emails, contacts or tokens | Snapshot imports can duplicate or miss edits; shortening or cancelling a series never removes an already imported copy |
+| Weather themes | Original CSS pixel scenes (clear, cloudy, rain, storm, snow, fog) and automatic day/night; reduced motion stops animation | A manually chosen theme is decoration, never a forecast |
+| Live weather | Open-Meteo current conditions for configured campus coordinates through the backend, with timeout, cache, stale display and silent fallback. No student data, device location or key is sent | An outage never affects room access or the timer. Weather data is attributed under CC BY 4.0 per the provider's [terms](https://open-meteo.com/en/terms); the test profile disables outbound requests |
+
+### Room reactions
+
+**What it does.** A student present in a group study room presses one of six reactions on the
+`ReactionTray` (clap, heart, fire, lightbulb, coffee, sprout). Everyone in the room sees an original
+pixel sprite float up with the sender's name, then fade.
+
+| Decision | Choice and reason |
+| --- | --- |
+| Delivered by the existing poll | Recent reactions are part of the room snapshot (`StudyRoomDto.reactions`) that every tab already polls, so there is no socket dependency and no second polling loop. Others see a reaction within one poll interval |
+| Who may react | `RoomReactionService.send` checks membership through `RoomAccess` and requires the actor's live lease in that room; otherwise 409 |
+| Window | A reaction stays in snapshots for `app.study-room.reactions.window` (8 s), longer than the poll interval, so every polling tab sees it. `ReactionLayer` animates each ID once; the sender's own reaction floats at once from the POST reply |
+| Burst limit | At most `burst-limit` (5) per student in each `burst-window` (10 s), counted in the database so every tab agrees; beyond it 409 |
+| No history | When someone reacts, rows older than the longer of the window and the burst window are deleted for that room in one bulk statement; no scheduler is needed |
+| Fixed set | `RoomReactionType` and a database check constraint; no free text, so a reaction cannot carry a message |
+| Original sprites | `reactionSprites` drawn with the achievements page's `PixelRects` helper, no emoji font; with reduced motion the sprite fades in place instead of rising |
+
+**Privacy.** A reaction carries the sender's ID and name only, to members of that room.
+
+### Focus forest
+
+**What it does.** Each continuous visit to a group study room grows one tree. The longer the room's
+shared timer runs a focus phase while the student is there, the grander the tree. The room shows the
+tree growing (`GrowingTree`) and the student's own `/forest` page shows every planted tree in a
+turning pixel meadow (`ForestPage`, `Meadow3D`).
+
+| Decision | Choice and reason |
+| --- | --- |
+| One tree per room visit | A visit runs from joining until the student's last tab leaves, or until their ticks stop for longer than a room lease (`app.study-room.lease-lifetime`); the next tick then starts a new visit. Two tabs share one open visit (a partial unique index). This matches "one tree per session" without attendance tracking |
+| Focus measured on the server | `FocusCredit` projects the shared `PomodoroTimer` over the time since the previous tick and counts only running focus phases: pauses, breaks and time before a start earn nothing. What a tab reports is not trusted |
+| Tiers | `TreeGrowth` maps focused minutes to `TreeSpecies` using `app.forest.tree-minutes`: sprout 10, sapling 25, oak 50, pine 90, ancient blossom 150. A shorter visit plants nothing. Thresholds must rise or startup fails |
+| Light | `TreeLight` picks dawn, day, dusk or night colours from the visit's local start time in `app.forest.zone`, with the hours in `app.forest.light-starts` (5, 11, 17, 21). Deterministic, so a tree's colour can be explained |
+| Variety | `TreeLottery` draws each visit's kind within its species (`variants-per-species`, 3) and meadow plot at random on the server when the visit opens; a browser cannot choose a rarer tree and a planted tree never changes |
+| Kept out of the room code | `StudyRoomService` publishes `RoomVisitTicked` on join and heartbeat and `RoomVisitEnded` when the last tab leaves. `ForestVisitListener` hands each event, after the room transaction commits, to a single forest worker (`ForestConfiguration`), which applies them in commit order in their own transaction. A room request never holds a second database connection, and a forest failure is logged without failing the poll. A full queue (`update-queue-capacity`, 1000) drops an update and costs only a few seconds of credit |
+| Concurrent ticks | The credit update succeeds only if the visit has not moved on since the tick read it, so two tabs never credit the same stretch twice; a tick older than the visit's end cannot reopen it |
+| Solo timer | The personal Study Room timer is browser-only and grows no trees; crediting it would mean trusting the browser |
+| Planted trees are kept | A tree counts once its visit is over. Trees copy the group name, so they survive the group closing or being deleted. Deleting the student deletes the forest; deactivation keeps it |
+
+**Privacy.** Students only, for themselves: `/api/forest/me` has no variant for another student.
+
+**Limits.** A student who leaves a tab open in a running room still grows a tree; the guarantee is
+only that time is counted from server time while the shared timer runs a focus phase.
+
+### Music: Spotify and Freesound
 
 **What it does.** Both study rooms have a personal Music tab (`MusicPlayer` in the room settings
 menu) and a corner mini player (`NowPlayingMini`: track, next, music and ambient volume).
@@ -347,9 +402,9 @@ Spotify sign-in authorises.
 unavailable until `app.ambient.api-key` is set (503). In-browser playback needs Spotify Premium; the
 embed works without it.
 
-## Achievements
+### Achievements
 
-**What it does.** A private page of six badges with bronze, silver and gold tiers, points, a capped
+**What it does.** A private page of seven badges with bronze, silver and gold tiers, points, a capped
 level and a planned-session weekly streak shown as a growing grove (`AchievementsPage`), plus a
 summary on the student's own profile.
 
@@ -361,10 +416,11 @@ summary on the student's own profile.
 | Founder | Groups created, including closed ones |
 | Planner | Planned occurrences on active buddy and group schedules from the student's current join or connection date, excluding cancelled sessions |
 | Grove Keeper | Longest run of consecutive weeks with a planned session |
+| Forester | Trees planted in the student's [focus forest](#focus-forest) |
 
 | Decision | Choice and reason |
 | --- | --- |
-| Derived counts | `AchievementService` recomputes every count from connections, requests, groups and sessions on each read, so progress always matches the records |
+| Derived counts | `AchievementService` recomputes every count from connections, requests, groups, sessions and planted trees on each read, so progress always matches the records |
 | Current versus history | Some badges count current standing (connections, memberships) and their counts fall; others count retained history (sent requests, created groups). Each badge states which |
 | Earned tiers are kept | `EarnedBadgeRecorder` saves the highest tier each badge reaches in `earned_badges`, so losing a connection or leaving a group never takes away a medal, points or level. Students expect an earned achievement to stay earned; letting tiers fall felt like a penalty for other people's actions. A badge whose count has fallen shows what its current count alone reaches (`currentTier`) |
 | When a tier is saved | When the student opens their achievements (page or own-profile summary), in the same request. Hooking every connection, group and session service instead would cross team boundaries, so a tier reached and lost between two visits is not recorded |
@@ -377,8 +433,8 @@ summary on the student's own profile.
 achievement fields appear in profile DTOs. The profile summary is fetched only for the signed-in
 owner.
 
-**Limits.** No attendance or completed-focus tracking: a planned session counts whether or not it
-was attended. Tiers are saved only on a visit, as above.
+**Limits.** No attendance tracking: a planned session counts whether or not it was attended. Focus
+time is recorded only by the focus forest, from group room visits. Tiers are saved only on a visit, as above.
 
 ## Baseline requirement contract
 

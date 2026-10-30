@@ -231,24 +231,26 @@ def use_cases():
 
 
 def e2_use_cases():
-    c = Canvas("e2-use-cases", "UML use cases — collaborative study (E2)", "Selected extension; this panel supplements the compulsory use cases.",height=1170)
-    c.rect(230,170,1280,820,"white","#93a9b6",8,c.back)
+    c = Canvas("e2-use-cases", "UML use cases — collaborative study (E2)", "Second course-required extra; this panel supplements the compulsory use cases.",height=1220)
+    c.rect(230,170,1280,870,"white","#93a9b6",8,c.back)
     c.text(255,206,"STUDY BUDDY MATCHER / E2",19,TEAL,700)
-    c.actor(100,450,"Student")
+    c.actor(100,530,"Student")
     items=[
-        (290,["Join / leave private room", "and view current participants"],["Accepted active group member;", "distinct students count toward capacity."]),
-        (405,["Control Pomodoro", "and room configuration"],["Group leader or present assigned host/co-host;", "only the leader assigns host roles."]),
-        (520,["Play Spotify and", "ambient sounds"],["Music tab in room settings;", "heard only in this browser."]),
-        (635,["Plan / edit / cancel", "group or buddy sessions"],["Group leader or active buddy participant;", "other accepted group members may view."]),
-        (750,["View mutual availability", "and export calendar snapshot"],["Current parent relationship required;", "suggestions do not confirm attendance."]),
-        (865,["Choose room atmosphere", "and view campus weather"],["Selectable original scenes; optional", "cached Open-Meteo campus conditions."]),
+        (275,["Join / leave private room", "and view current participants"],["Accepted active group member;", "distinct students count toward capacity."]),
+        (375,["Control Pomodoro", "and room configuration"],["Group leader or present assigned host/co-host;", "only the leader assigns host roles."]),
+        (475,["Send room reactions"],["Only while present in the room; a burst limit", "applies. Everyone there sees it float briefly."]),
+        (575,["Grow a focus forest"],["One tree per continuous room visit, sized by", "focused time on the shared timer."]),
+        (675,["Play Spotify and", "ambient sounds"],["Music tab in room settings;", "heard only in this browser."]),
+        (775,["Plan / edit / cancel", "group or buddy sessions"],["Group leader or active buddy participant;", "other accepted group members may view."]),
+        (875,["View mutual availability", "and export calendar snapshot"],["Current parent relationship required;", "suggestions do not confirm attendance."]),
+        (975,["Choose room atmosphere", "and view campus weather"],["Selectable original scenes; optional", "cached Open-Meteo campus conditions."]),
     ]
     for y,rows,note in items:
         c.usecase(595,y,590,rows,True)
-        c.line([(138,495),(300,y)])
+        c.line([(138,575),(300,y)])
         c.lines(955,y-8,note,18,MUTED,gap=25)
         c.line([(890,y),(935,y)],dashed=True)
-    c.note(45,1020,1510,["No global online status, public room, chat, calendar synchronization or RSVP workflow is implied. Calendar files are private snapshots.", "E1 match explanations have a separate companion view (E1.md)."],fill="#edf3f6")
+    c.note(45,1068,1510,["No global online status, public room, chat, calendar synchronisation or RSVP workflow is implied. Calendar files are private snapshots.", "E1 match explanations have a separate companion view (E1.md)."],fill="#edf3f6")
     return c
 
 
@@ -425,10 +427,11 @@ def values_privacy():
 
 
 def collaborative_study():
-    c=Canvas("collaborative-study", "UML collaborators — rooms, sessions and weather", "Three bounded E2 responsibilities; room presence, durable shared state and dated plans have separate lifecycles.",width=1800,height=1380)
+    c=Canvas("collaborative-study", "UML collaborators — rooms, reactions, forest, sessions and weather", "Four bounded E2 responsibilities; room presence, short-lived reactions, focus visits and dated plans have separate lifecycles.",width=2380,height=1380)
     c.panel(45,170,560,1000,"PRIVATE GROUP ROOM",color=TEAL,fill=GREEN)
-    c.panel(625,170,560,1000,"DATED GROUP / BUDDY SESSIONS",color=TEAL,fill=GREEN)
-    c.panel(1205,170,550,1000,"OPTIONAL CAMPUS WEATHER",color=TEAL,fill=GREEN)
+    c.panel(625,170,560,1000,"ROOM REACTIONS AND FOCUS FOREST",color=TEAL,fill=GREEN)
+    c.panel(1205,170,560,1000,"DATED GROUP / BUDDY SESSIONS",color=TEAL,fill=GREEN)
+    c.panel(1785,170,550,1000,"OPTIONAL CAMPUS WEATHER",color=TEAL,fill=GREEN)
     c.cls(85,235,480,"StudyRoomService",[],["+ state(groupId, actorId): StudyRoomDto", "+ join(...), heartbeat(...): StudyRoomDto", "+ leave(...): void", "+ controlTimer(...),", "  configure(...): StudyRoomDto"],color=TEAL,size=17)
     c.cls(85,505,480,"StudyRoom",["- studyGroup: StudyGroup [1]", "- host, coHost: Student [0..1 each]", "- version: long"],["+ timer(): PomodoroTimer", "+ applyTimer(timer): void"],color=TEAL,size=18)
     c.cls(85,795,480,"RoomPresence",["- studyRoom: StudyRoom [1]", "- student: Student [1]", "- clientId: UUID", "- expiresAt, observedAt: Instant"],["+ renew(presence, now, expiresAt): void"],color=TEAL,size=17)
@@ -438,24 +441,36 @@ def collaborative_study():
     c.label(349,748,"1",17)
     c.label(361,779,"0..*",17)
     c.note(75,1065,500,["Read / renew: membership check; no group lock.", "Join / control: account locks → group lock."],fill="white")
-    c.cls(665,235,480,"StudySessionService",[],["+ createGroup(...), createBuddy(...)", "+ edit(...), cancel(...): SessionDto", "+ calendar(id, actorId): CalendarExportDto"],color=TEAL,size=17)
-    c.cls(665,460,480,"StudySession",["- group: StudyGroup [0..1]", "- connection: Connection [0..1]", "- version: long", "- status: SessionStatus"],["+ schedule(): SessionSchedule", "+ edit(details, now): void", "+ cancel(now): void"],color=TEAL,size=18)
-    c.cls(665,825,480,"SessionSchedule",["startLocal, endLocal: LocalDateTime", "timeZone: String", "occurrenceCount: int"],["+ occurrences(): List<SessionOccurrenceDto>"],stereotype="record",color=TEAL,size=17)
-    c.line([(905,362),(905,460)],end="arrow")
-    c.label(905,416,"authorizes via SessionAccess",17)
-    c.line([(905,711),(905,825)],end="arrow",dashed=True)
-    c.label(905,786,"constructs immutable value",17)
-    c.note(655,1090,500,["Exactly one parent: group XOR connection.", "SessionCalendar emits private UTC snapshots."],fill="white")
-    c.cls(1245,235,470,"WeatherService",[],["+ current(): WeatherDto"],color=TEAL,size=18)
-    c.cls(1245,455,470,"WeatherClient",[],["+ fetch(): WeatherSample"],stereotype="interface",color=TEAL,size=18)
-    c.cls(1245,685,470,"OpenMeteoClient",[],["+ fetch(): WeatherSample"],color=TEAL,size=18)
-    c.line([(1480,330),(1480,455)],end="arrow")
-    c.label(1480,401,"bounded cache / retry",17)
-    c.line([(1480,685),(1480,571)],end="triangle",dashed=True)
-    c.box(1245,915,470,135,"Open-Meteo API",["Fixed campus coordinates and weather fields.", "No student identity, location or schedule."],color=AMBER,fill=WARM,size=18)
-    c.line([(1480,780),(1480,915)],end="arrow")
-    c.label(1480,856,"Java HTTP client + timeout",17)
-    c.note(45,1210,1710,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler return DTOs.", "PomodoroTimer is an immutable server-time value. SessionAvailability reuses WeeklyAvailability; SessionEvents writes recipient notifications transactionally.", "Detailed E2 transaction and ER diagrams are in TEAM_C.md. E1 match explanations have their own companion view in E1.md."],fill="#edf3f6")
+    c.cls(665,225,480,"RoomReactionService",[],["+ send(groupId, actorId, type): RoomReactionDto", "+ recent(room, now): List<RoomReaction>"],color=TEAL,size=17)
+    c.cls(665,400,480,"RoomReaction",["- studyRoom: StudyRoom [1]", "- student: Student [1]", "- type: RoomReactionType", "- sentAt: Instant"],[],color=TEAL,size=17)
+    c.line([(905,346),(905,400)],end="arrow")
+    c.label(905,380,"saves / lists",17)
+    c.line([(565,300),(665,300)],end="arrow")
+    c.label(615,286,"recent",15)
+    c.cls(665,665,480,"ForestService",[],["+ recordTick(tick): void", "+ endVisit(ended): void", "+ forestOf(studentId): ForestDto"],color=TEAL,size=17)
+    c.cls(665,885,480,"FocusVisit",["- studentId, studyGroupId: Long", "- startedAt, lastSeenAt: Instant", "- focusedMillis: long", "- variant, plot: int"],["+ isOver(now, leaseLifetime): boolean", "+ plantedAt(): Instant"],color=TEAL,size=17)
+    c.line([(905,812),(905,885)],end="arrow")
+    c.label(905,856,"one per room visit",17)
+    c.line([(565,400),(615,400),(615,720),(665,720)],end="arrow",dashed=True)
+    c.label(905,610,["RoomVisitTicked / RoomVisitEnded after commit,", "via ForestVisitListener"],15)
+    c.cls(1245,235,480,"StudySessionService",[],["+ createGroup(...), createBuddy(...)", "+ edit(...), cancel(...): SessionDto", "+ calendar(id, actorId): CalendarExportDto"],color=TEAL,size=17)
+    c.cls(1245,460,480,"StudySession",["- group: StudyGroup [0..1]", "- connection: Connection [0..1]", "- version: long", "- status: SessionStatus"],["+ schedule(): SessionSchedule", "+ edit(details, now): void", "+ cancel(now): void"],color=TEAL,size=18)
+    c.cls(1245,825,480,"SessionSchedule",["startLocal, endLocal: LocalDateTime", "timeZone: String", "occurrenceCount: int"],["+ occurrences(): List<SessionOccurrenceDto>"],stereotype="record",color=TEAL,size=17)
+    c.line([(1485,362),(1485,460)],end="arrow")
+    c.label(1485,416,"authorizes via SessionAccess",17)
+    c.line([(1485,711),(1485,825)],end="arrow",dashed=True)
+    c.label(1485,786,"constructs immutable value",17)
+    c.note(1235,1090,500,["Exactly one parent: group XOR connection.", "SessionCalendar emits private UTC snapshots."],fill="white")
+    c.cls(1825,235,470,"WeatherService",[],["+ current(): WeatherDto"],color=TEAL,size=18)
+    c.cls(1825,455,470,"WeatherClient",[],["+ fetch(): WeatherSample"],stereotype="interface",color=TEAL,size=18)
+    c.cls(1825,685,470,"OpenMeteoClient",[],["+ fetch(): WeatherSample"],color=TEAL,size=18)
+    c.line([(2060,330),(2060,455)],end="arrow")
+    c.label(2060,401,"bounded cache / retry",17)
+    c.line([(2060,685),(2060,571)],end="triangle",dashed=True)
+    c.box(1825,915,470,135,"Open-Meteo API",["Fixed campus coordinates and weather fields.", "No student identity, location or schedule."],color=AMBER,fill=WARM,size=18)
+    c.line([(2060,780),(2060,915)],end="arrow")
+    c.label(2060,856,"Java HTTP client + timeout",17)
+    c.note(45,1210,2290,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler / ForestAssembler return DTOs.", "PomodoroTimer is an immutable server-time value; FocusCredit measures focus time from it and TreeGrowth maps minutes to a TreeSpecies. SessionAvailability reuses WeeklyAvailability.", "SessionEvents writes recipient notifications transactionally. Detailed E2 transaction and ER diagrams are in TEAM_C.md; E1 match explanations are in E1.md."],fill="#edf3f6")
     return c
 
 
