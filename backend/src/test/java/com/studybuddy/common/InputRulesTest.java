@@ -15,6 +15,10 @@ class InputRulesTest {
         assertEquals("abc",InputRules.optional(" abc ","Message",3));
         assertThrows(InvalidInputException.class,() -> InputRules.optional("abcd","Message",3));
     }
+    @Test void textWithANulCharacterIsRejected() {
+        var error = assertThrows(InvalidInputException.class,() -> InputRules.required("a\u0000b","Message",255));
+        assertTrue(error.getFieldErrors().containsKey("message"));
+    }
     @Test void bcryptPasswordLengthIsCheckedInUtf8Bytes() {
         assertEquals("a".repeat(72),InputRules.password("a".repeat(72)));
         assertThrows(InvalidInputException.class,() -> InputRules.password("a".repeat(73)));

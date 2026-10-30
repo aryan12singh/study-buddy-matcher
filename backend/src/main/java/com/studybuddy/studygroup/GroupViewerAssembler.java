@@ -7,6 +7,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
+/**
+ * Works out how the viewer relates to one or many groups: leader, member, and their latest
+ * application with its status. For a list it uses two queries in total rather than two per group.
+ */
 @Component
 public class GroupViewerAssembler {
     private final GroupMembershipRepository memberships;

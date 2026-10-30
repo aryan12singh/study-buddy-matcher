@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorMessage, fieldErrors } from '../../shared/api/client'
+import { fieldErrors } from '../../shared/api/client'
 import { getCourses } from '../../shared/api/courses'
+import { useAction } from '../../shared/api/useAction'
 import { useResource } from '../../shared/api/useResource'
 import { campusDate, label, STUDY_GOALS } from '../../shared/api/types'
 import type { Course } from '../../shared/api/types'
@@ -14,7 +15,7 @@ import Field from '../../shared/components/Field'
 import Button from '../../shared/components/Button'
 import ActionNotice from '../../shared/components/ActionNotice'
 import FormActions from '../../shared/components/FormActions'
-import { isAiUnavailable } from '../quiz/api'
+import { describeAiFailure } from '../quiz/api'
 import { createStudyPlan, MAX_HOURS_PER_WEEK } from './api'
 import { initialStudyPlanForm, latestExamDate, planRequest, validateStudyPlanForm } from './studyPlanForm'
 import type { StudyPlanForm } from './studyPlanForm'
@@ -22,8 +23,7 @@ import { addDays } from './planDates'
 import StudyMaterialInput from './StudyMaterialInput'
 import './studyplan.css'
 
-const AI_UNAVAILABLE = 'Gemini could not draft the roadmap just now, so no plan was saved. Try again in a minute,'
-  + ' or plan the weeks yourself from your course outline.'
+const DESCRIBE_FAILURE = describeAiFailure('No plan was saved. You can try again later, or plan the weeks yourself from your course outline.')
 
 export default function CreateStudyPlanPage() {
   const courses = useResource('study-plan-courses', getCourses, true, false)
@@ -42,8 +42,8 @@ function StudyPlanFormView({ courses }: { courses: Course[] }) {
   const [baseline] = useState(() => initialStudyPlanForm(search, courses))
   const [form, setForm] = useState<StudyPlanForm>(baseline)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [pending, setPending] = useState(false)
-  const [failure, setFailure] = useState<string>()
+  const action = useAction({ describeError: DESCRIBE_FAILURE })
+  const pending = action.pending
   const dirty = JSON.stringify({ ...form, files: form.files.map(file => file.name) }) !== JSON.stringify({ ...baseline, files: [] })
   const exit = useFormExit(dirty, pending)
 
@@ -63,20 +63,17 @@ function StudyPlanFormView({ courses }: { courses: Course[] }) {
     event.preventDefault()
     const invalid = validateStudyPlanForm(form, today)
     setErrors(invalid)
-    setFailure(undefined)
+    action.clear()
     if (Object.keys(invalid).length) return
     const { input, material } = planRequest(form)
-    setPending(true)
-    try {
-      const created = await createStudyPlan(input, material)
-      exit.allowSavedNavigation()
-      navigate(`/study-plan/${created.id}`, { state: { notice: 'Study plan created.' } })
-    } catch (error) {
-      setErrors(fieldErrors(error))
-      setFailure(isAiUnavailable(error) ? AI_UNAVAILABLE : errorMessage(error))
-    } finally {
-      setPending(false)
+    const result = await action.run(() => createStudyPlan(input, material))
+    if (!result.ok) {
+      // Server field messages join the form's own, so each clears once its field changes.
+      setErrors(fieldErrors(result.failure))
+      return
     }
+    exit.allowSavedNavigation()
+    navigate(`/study-plan/${result.value.id}`, { state: { notice: 'Study plan created.' } })
   }
 
   if (!courses.length) return <StatePanel empty emptyTitle="No courses available"
@@ -108,7 +105,7 @@ function StudyPlanFormView({ courses }: { courses: Course[] }) {
       onKindChange={switchMaterial}
       onFilesChange={files => change({ files })} onTopicsChange={topicsText => change({ topicsText })} />
     {pending && <p className="muted" role="status">Reading your material and drafting the roadmap. This can take up to a minute.</p>}
-    <ActionNotice error={failure} />
+    <ActionNotice error={action.error} />
     <FormActions dirty={dirty} pending={pending}>
       <Link className="retro-button" to="/study-plan">Cancel</Link>
       <Button type="submit" variant="primary" disabled={pending}>{pending ? 'Drafting roadmap…' : 'Create study plan'}</Button>

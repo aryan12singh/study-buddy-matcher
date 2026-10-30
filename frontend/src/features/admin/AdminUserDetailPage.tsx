@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, useParams } from 'react-router-dom'
 import { changeUserStatus, deleteUser, getUser } from './api'
 import type { AdminAccountTarget } from './api'
@@ -23,7 +24,9 @@ export default function AdminUserDetailPage() {
   const auth = useAuth(),
     navigate = useViewNavigation(),
     action = useAction()
-  const resource = useResource(`admin-user-${id}`, signal => getUser(userId, signal), validId)
+  // Set once the account is deleted, so the refresh that follows does not ask for an account that no longer exists.
+  const [deleted, setDeleted] = useState(false)
+  const resource = useResource(`admin-user-${id}`, signal => getUser(userId, signal), validId && !deleted)
   const user = resource.data?.account,
     profile = resource.data?.profile,
     usage = resource.data?.usage
@@ -35,7 +38,10 @@ export default function AdminUserDetailPage() {
 
   async function permanentDelete() {
     if (!deleting || !deleteReady || confirmation !== deleting.email) return
-    const result = await action.run(() => deleteUser(deleting.id), 'Account permanently deleted.', true)
+    const result = await action.run(async () => {
+      await deleteUser(deleting.id)
+      flushSync(() => setDeleted(true))
+    }, 'Account permanently deleted.', true)
     if (result.ok) navigate('/admin/users', { state: { notice: 'Account permanently deleted.' } })
   }
   return (

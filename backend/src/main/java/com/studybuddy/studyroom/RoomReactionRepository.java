@@ -7,6 +7,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Stores the short-lived reactions sent in a group room: the recent ones to show, how many a
+ * student sent lately for the rate limit, and the old ones to delete.
+ */
 public interface RoomReactionRepository extends JpaRepository<RoomReaction, Long> {
     List<RoomReaction> findByStudyRoomIdAndSentAtAfterOrderByIdAsc(Long roomId, Instant after);
     long countByStudyRoomIdAndStudentIdAndSentAtAfter(Long roomId, Long studentId, Instant after);

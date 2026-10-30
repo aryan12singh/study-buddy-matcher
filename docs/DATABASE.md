@@ -102,7 +102,7 @@ every row.
 
 ## Schema overview
 
-The migrations create 32 tables in `public`.
+The migrations create 34 tables in `public`.
 
 | Area | Tables |
 | --- | --- |
@@ -153,12 +153,29 @@ What it does, in one transaction under the same advisory lock:
   `@demo.example.test`, through the normal account and profile services, so normal
   validation applies;
 - only when none of the demo students existed beforehand, replays the demo history through
-  the real services: match requests, connections, four groups and one deactivation, with
-  notifications produced as in live use. It then schedules the presenter's group and buddy
-  sessions at their time block's next occurrence, starts a group quiz and a practice quiz and
-  has members take them, and creates a study plan with some topics ticked off. The quiz
-  questions and the roadmap are written in advance in the data file and pass the same
-  validators as Gemini's replies, so no AI call is made.
+  the real services, with notifications produced as in live use:
+  - match requests ending as pending, accepted, accepted then ended, declined (`DECLINED`) or
+    withdrawn by the sender (`CANCELLED`); whoever answered a request or application has its
+    notice marked read, so only items still open stay unread;
+  - five groups, one of them full and one closed, and one deactivation. A group with
+    `formedWeeksAgo` (the presenter's IS442 Design Patterns Clinic, four weeks) is back-dated
+    by `DemoGroupHistory`, which sets `study_groups.created_at` and its members'
+    `group_memberships.joined_at` with SQL, on the rows the seed has just created only. The
+    services always record joining as now, and achievements count meetings from the join
+    time, so without it the Clinic's earlier meetings would not count towards the streak;
+  - the presenter's group and buddy sessions at their time block's next occurrence, or
+    `weeksAgo` weeks earlier for a weekly series already under way (the Clinic began three
+    weeks ago);
+  - quizzes taken by their `takers`, each with its `secondsTaken`: a group quiz linked to the
+    group session named in `session` and closed for review, a submitted practice quiz and an
+    open one left to take;
+  - a personal study plan with some topics ticked off, and from `sessionPlans` a roadmap for the
+    Clinic's remaining meetings, with entries for meetings the series no longer has left out;
+  - finished study room visits, so the presenter's focus forest shows every tree species.
+
+  The quiz questions and roadmaps are written in advance in the data file and pass the same
+  validators as Gemini's replies, so no AI call is made. Relative dates are resolved when the
+  seed runs, in each feature's time zone.
 
 Existing courses, profiles and password hashes are left as they are. The seed never resets,
 repairs or reactivates existing data. It runs after startup, so startup log messages appear
@@ -174,8 +191,9 @@ depending on it, so the seed can rebuild the demo from scratch:
   availability; groups led by demo students with their memberships, applications, slots and
   goals; requests and connections involving a demo student; study sessions under those
   groups and connections; notifications sent to demo students or pointing at a removed
-  student, group, request or session. Quizzes, quiz attempts, study plans and earned badges
-  go with their student or group through `ON DELETE CASCADE`.
+  student, group, request or session. Quizzes, quiz attempts, study plans, earned badges, room
+  reactions and focus visits go with their student or group through `ON DELETE CASCADE`; a
+  non-demo student's focus visit in a removed demo group keeps its tree, with the group set to null.
 - **Keeps:** courses, matching configuration and every non-demo account. A non-demo account
   loses only its own links to demo accounts.
 
@@ -195,7 +213,12 @@ it to finish, then disable seeding.
 `scripts/sql/assert-migrated-legacy.sql` and `scripts/sql/test-reset-demo-data.sql` are used
 by `scripts/test-migrations.sh`, which refuses to run unless `PGDATABASE` is the disposable
 `studybuddy_migration_test` database. They insert synthetic fixtures and assert results;
-never run them against the shared database. See [TESTING.md](TESTING.md).
+never run them against the shared database. `test-reset-demo-data.sql` puts a row tied to a
+demo student, group or session in every dependent table (requests, connections, groups,
+sessions and notifications, and the newer study room, presence, reaction, focus visit, earned
+badge, quiz, question, option, attempt, answer, study plan, topic, entry and task tables), runs
+the reset and fails if any of them is left, or if non-demo data was lost. See
+[TESTING.md](TESTING.md).
 
 ## Runbook
 

@@ -10,6 +10,11 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Queries match requests: by id with a write lock, the pending request between two students, a
+ * student's sent and received requests, and the participant ids alone for authorisation checks and
+ * notifications.
+ */
 public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from MatchRequest r where r.id = :id")

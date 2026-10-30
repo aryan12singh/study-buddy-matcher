@@ -39,6 +39,7 @@ export default function GroupFormPage() {
   const [baseline, setBaseline] = useState(JSON.stringify(form))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [slotDrafts, setSlotDrafts] = useState<WeeklySlotDrafts>({})
+  const clearAction = action.clear
   useEffect(
     () => {
       if (!id && initialised.current !== null) {
@@ -47,7 +48,7 @@ export default function GroupFormPage() {
         setForm(empty)
         setSlotDrafts({})
         setErrors({})
-        action.clear()
+        clearAction()
         initialised.current = null
       }
       if (group.data && initialised.current !== id) {
@@ -65,11 +66,11 @@ export default function GroupFormPage() {
         setForm(savedForm)
         setSlotDrafts({})
         setErrors({})
-        action.clear()
+        clearAction()
         initialised.current = id || null
       }
     },
-    [group.data, id, action]
+    [group.data, id, clearAction]
   )
   const denied = Boolean(group.data && (!group.data.viewer.leader || !group.data.active))
   const dirty = Object.keys(slotDrafts).length > 0 || JSON.stringify(form) !== baseline

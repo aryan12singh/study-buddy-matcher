@@ -9,6 +9,11 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;
 
+/**
+ * Issues and verifies the HMAC-signed JWTs used for sign-in. A token carries the account id, its
+ * role and its token version, so logging out revokes every token issued before it and a token stops
+ * working if the account's role changes.
+ */
 @Component
 public class JwtTokenService {
     private final SecretKey key;

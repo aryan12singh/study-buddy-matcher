@@ -4,6 +4,7 @@ import Button from '../../shared/components/Button'
 import Dialog from '../../shared/components/Dialog'
 import StatePanel from '../../shared/components/StatePanel'
 import { errorMessage } from '../../shared/api/client'
+import { useAction } from '../../shared/api/useAction'
 import { AI_QUIZ_LABEL, beginAttempt, formatDuration, submitAnswers } from './api'
 import type { AttemptResult, Quiz, QuizQuestions } from './api'
 
@@ -36,8 +37,9 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
   const [chosen, setChosen] = useState<Record<number, number>>({})
   const [missing, setMissing] = useState(false)
   const [result, setResult] = useState<AttemptResult>()
-  const [error, setError] = useState<string>()
-  const [pending, setPending] = useState(false)
+  // onSubmitted reloads the quiz list, so nothing else needs refreshing.
+  const action = useAction({ refresh: false })
+  const pending = action.pending
   const secondsLeft = useSecondsLeft(questions?.closesAt)
   const timedOut = secondsLeft !== undefined && secondsLeft <= 0
 
@@ -55,16 +57,11 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
     const unanswered = questions.questions.some(question => chosen[question.id] === undefined)
     setMissing(unanswered)
     if (unanswered) return
-    setPending(true)
-    setError(undefined)
-    try {
-      setResult(await submitAnswers(quiz.id, questions.questions.map(question => ({ questionId: question.id, optionIndex: chosen[question.id] }))))
-      onSubmitted()
-    } catch (failure) {
-      setError(errorMessage(failure))
-    } finally {
-      setPending(false)
-    }
+    const submitted = await action.run(() => submitAnswers(quiz.id,
+      questions.questions.map(question => ({ questionId: question.id, optionIndex: chosen[question.id] }))))
+    if (!submitted.ok) return
+    setResult(submitted.value)
+    onSubmitted()
   }
 
   if (result) {
@@ -102,7 +99,7 @@ export default function TakeQuizDialog({ quiz, onClose, onSubmitted, onReview }:
         </li>)}
       </ol>
       {missing && <p className="field-error" role="alert">Answer every question before submitting. The unanswered ones are outlined.</p>}
-      {error && <p className="field-error" role="alert">{error}</p>}
+      {action.error && <p className="field-error" role="alert">{action.error}</p>}
       <div className="actions dialog-actions">
         <Button onClick={onClose} disabled={pending}>Finish later</Button>
         <Button type="submit" variant="primary" disabled={pending || timedOut}>{pending ? 'Submitting…' : 'Submit answers'}</Button>

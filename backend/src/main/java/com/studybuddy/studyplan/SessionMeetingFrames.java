@@ -9,7 +9,11 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Decides which meetings a session plan covers: the session's meetings that have not yet ended,
@@ -45,5 +49,29 @@ public class SessionMeetingFrames {
                 .mapToInt(meeting -> (int) Duration.between(meeting.startAt(), meeting.endAt()).toMinutes())
                 .min().orElseThrow();
         return RoadmapFrame.meetings(dates, minutes);
+    }
+
+    /** A planned roadmap cut down to the meetings that have not ended yet. */
+    public record StillUpcoming(RoadmapFrame frame, RoadmapDraft draft) { }
+
+    /**
+     * Leaves out of a roadmap the meetings that have ended since it was planned, renumbering the
+     * rest from 1. Only for an unedited session (same version), whose remaining meeting dates still
+     * match the plan's.
+     *
+     * @throws NoUpcomingMeetingsException when every planned meeting has ended
+     */
+    public StillUpcoming dropEnded(StudySession session, RoadmapFrame planned, RoadmapDraft draft) {
+        Set<LocalDate> upcomingDates = upcoming(session).blocks().stream().map(RoadmapBlock::date).collect(Collectors.toSet());
+        List<RoadmapBlock> kept = planned.blocks().stream().filter(block -> upcomingDates.contains(block.date())).toList();
+        if (kept.isEmpty()) {
+            throw new NoUpcomingMeetingsException(session.getId());
+        }
+        Map<Integer, Integer> newSequences = new HashMap<>();
+        for (int index = 0; index < kept.size(); index++) {
+            newSequences.put(kept.get(index).sequence(), index + 1);
+        }
+        RoadmapFrame frame = RoadmapFrame.meetings(kept.stream().map(RoadmapBlock::date).toList(), planned.minutesPerBlock());
+        return new StillUpcoming(frame, draft.renumbered(newSequences));
     }
 }

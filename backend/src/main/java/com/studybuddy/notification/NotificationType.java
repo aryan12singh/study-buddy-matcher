@@ -1,5 +1,9 @@
 package com.studybuddy.notification;
 
+/**
+ * Every event a student can be notified about, grouped by match requests, connections, study
+ * groups, study sessions and group rooms.
+ */
 public enum NotificationType {
     MATCH_REQUEST_RECEIVED,
     MATCH_REQUEST_ACCEPTED,

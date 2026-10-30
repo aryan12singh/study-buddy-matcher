@@ -14,6 +14,8 @@ export type Notification = {
 export async function getNotifications(filter: NotificationFilter, signal?: AbortSignal) { return (await api.get<Notification[]>('/notifications', { params: { filter }, signal })).data }
 export async function readNotification(id: number) { return (await api.post<Notification>(`/notifications/${id}/read`)).data }
 export async function readAllNotifications() { await api.post('/notifications/read-all') }
+/** Unread notifications across every filter, as the menu bar badge shows. */
+export async function getUnreadCount(signal?: AbortSignal) { return (await api.get<{ count: number }>('/notifications/unread-count', { signal })).data.count }
 
 /** Following a notification counts as reading it; failed writes leave it unread. */
 export function followNotification(notification: Notification) {

@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Notification endpoints under {@code /api/notifications}: list, optionally filtered, count unread,
+ * mark one read and mark all read. Each handler delegates to {@link NotificationService}.
+ */
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {

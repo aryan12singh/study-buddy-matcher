@@ -10,6 +10,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.random.RandomGenerator;
 
+/**
+ * Lists the ambient sound categories and picks a random sound for one from the sound search
+ * service. A missing key or a failed search becomes an {@link AmbientUnavailableException}, so the
+ * Study Room can say so instead of failing.
+ */
 @Service
 public class AmbientSoundService {
     private static final Logger LOG = LoggerFactory.getLogger(AmbientSoundService.class);

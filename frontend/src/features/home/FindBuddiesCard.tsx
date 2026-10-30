@@ -29,9 +29,9 @@ export default function FindBuddiesCard({ profile }: { profile: Loaded<MyProfile
         <h2 id="home-finder">Find study buddies</h2>
         <p>Pick a course or study goal and get a ranked list of compatible students.</p>
         <ol className="home-finder-steps">{STEPS.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol>
-        <StatePanel loading={profile.loading || matches.loading} error={profile.error || matches.error} onRetry={() => profile.error ? profile.reload(true) : matches.reload(true)}
+        <StatePanel loading={(profile.loading && !profile.data) || (matches.loading && !matches.data)} error={profile.error || matches.error} onRetry={() => profile.error ? profile.reload(true) : matches.reload(true)}
           empty={enabled && matches.data?.matches.length === 0} emptyTitle="No matches for your saved preferences yet" emptyMessage="Try another course or study goal in Find buddies." emptyKind="search" />
-        {profile.data && !profile.loading && !profile.error && !enabled && <p>Choose a course or goal in the search page to get started, or <Link to={`/students/${profile.data?.id}/edit?tab=preferences`}>set a target course or study goal in your profile</Link> for a live preview here.</p>}
+        {profile.data && !profile.error && !enabled && <p>Choose a course or goal in the search page to get started, or <Link to={`/students/${profile.data?.id}/edit?tab=preferences`}>set a target course or study goal in your profile</Link> for a live preview here.</p>}
         {enabled && <p className="row-meta">Preview for {target ? `${target.code} (your saved target course)` : label(goal!)}. The search page lets you choose a different course or goal.</p>}
         {matches.data && <>
           <p className="row-meta">Top {preview.length} of {matches.data.totalMatches} · {STRATEGIES.find(strategy => strategy.value === matches.data?.strategy)?.label} matching · configuration version {matches.data.configurationVersion}</p>

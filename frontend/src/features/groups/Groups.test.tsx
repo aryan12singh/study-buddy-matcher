@@ -199,16 +199,20 @@ describe('group leader permissions and decisions', () => {
   it('lets a member leave after confirming, and never offers it to the leader', async () => {
     const memberView = { ...group, viewer: { leader: false, member: true, requestId: 20, requestStatus: 'ACCEPTED' } }
     let left = false
-    vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? []
+    const get = vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? []
       : left ? { ...memberView, memberCount: 1, viewer: { ...memberView.viewer, member: false } } : memberView))
     const post = vi.spyOn(api, 'post').mockImplementation(async () => { left = true; return response(undefined) })
+    const agendaRequests = () => get.mock.calls.filter(([path]) => path === '/groups/5/sessions').length
     renderPage(<GroupDetailPage />, '/groups/5', '/groups/:id')
     fireEvent.click(await screen.findByRole('button', { name: 'Leave group' }))
+    await waitFor(() => expect(agendaRequests()).toBe(1))
     expect(post).not.toHaveBeenCalled()
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leave group' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/groups/5/leave'))
     expect(await screen.findByText('You left OOP study crew.')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument())
+    // The member-only agenda is gone before the refresh, so it never asks for sessions it can no longer see.
+    expect(agendaRequests()).toBe(1)
   })
   it('hides leaving from the leader', async () => {
     vi.spyOn(api, 'get').mockImplementation(async path => response(path.endsWith('/sessions') ? [] : group))

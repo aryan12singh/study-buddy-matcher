@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Queries study sessions: by id with a write lock, the group or connection a session belongs to, a
+ * group's or connection's sessions, and every scheduled session a student can still attend.
+ */
 public interface StudySessionRepository extends JpaRepository<StudySession, Long> {
     interface Parent { Long getGroupId(); Long getConnectionId(); }
     @Query("select s.group.id as groupId, s.connection.id as connectionId from StudySession s where s.id=:id")

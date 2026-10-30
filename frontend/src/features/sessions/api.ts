@@ -12,7 +12,7 @@ export type StudySession = {
 }
 export type SessionInput = { title: string; startLocal: string; endLocal: string; timeZone: string; occurrenceCount: number; agenda: string | null; location: string | null; roomLink: string | null }
 export type SessionAvailability = { timeZone: string; participantCount: number; sharedSlots: WeeklySlot[]; sharedMinutes: number }
-export const scopePath = (scope: SessionScope) => `/${scope.kind === 'GROUP' ? 'groups' : 'connections'}/${scope.id}/sessions`
+const scopePath = (scope: SessionScope) => `/${scope.kind === 'GROUP' ? 'groups' : 'connections'}/${scope.id}/sessions`
 export const scopeListPath = scopePath
 export async function getMySessions(signal?: AbortSignal) { return (await api.get<StudySession[]>('/sessions/mine', { signal })).data }
 export async function getSessions(scope: SessionScope, signal?: AbortSignal) { return (await api.get<StudySession[]>(scopePath(scope), { signal })).data }

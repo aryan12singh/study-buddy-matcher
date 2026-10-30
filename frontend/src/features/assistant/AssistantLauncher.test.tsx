@@ -93,7 +93,7 @@ describe('Pixel, the study assistant', () => {
     expect(screen.getByRole('link', { name: 'Review requests ›' }).getAttribute('href')).toBe('/connections?view=incoming')
   })
 
-  it('says plainly when Gemini is unavailable', async () => {
+  it('says plainly when the AI helper is unavailable, switched off or busy', async () => {
     const headers = new AxiosHeaders()
     vi.spyOn(api, 'post').mockRejectedValue(new AxiosError('Unavailable', '503', { headers }, undefined, {
       status: 503, statusText: 'Service Unavailable', headers, config: { headers }, data: { code: 'AI_UNAVAILABLE' },
@@ -102,6 +102,6 @@ describe('Pixel, the study assistant', () => {
 
     ask('hello')
 
-    expect(await screen.findByText(/I can't reach Gemini right now/)).toBeTruthy()
+    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. You can still use the navigation menu/)).toBeTruthy()
   })
 })

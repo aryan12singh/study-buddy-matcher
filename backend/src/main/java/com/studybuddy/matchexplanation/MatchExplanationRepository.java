@@ -8,6 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Caches generated match explanations by a hash of the evidence they were written from, so the same
+ * evidence never calls the AI provider twice.
+ */
 public interface MatchExplanationRepository extends JpaRepository<MatchExplanation, Long> {
     Optional<MatchExplanation> findByEvidenceHash(String evidenceHash);
 

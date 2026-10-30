@@ -14,6 +14,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+/**
+ * Reads the bearer token on each request and, when it is valid and still matches an active
+ * account's role and token version, signs the request in as that account. A bad or revoked token
+ * leaves the request anonymous, so protected endpoints answer 401.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenService tokens;
@@ -33,12 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 var token = tokens.verify(authorization.substring(7));
                 users.findById(token.userId()).filter(user -> user.isActive()
                     && user.getTokenVersion() == token.tokenVersion()
-                        && user.getRole().name().equals(token.role())).ifPresent(user -> {
+                    && user.getRole().name().equals(token.role())).ifPresent(user -> {
                         var principal = new AccountPrincipal(user.getId(), user.getRole(), user.getTokenVersion());
                         var authentication = new UsernamePasswordAuthenticationToken(principal, null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+                            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                });
+                    });
             } catch (JwtException | IllegalArgumentException | NullPointerException ignored) {
                 SecurityContextHolder.clearContext();
             }

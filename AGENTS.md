@@ -109,7 +109,7 @@ value is still in the payload and visible in the network tab.
   not into a test, not into a comment, not as a "temporary" default. `application-local.yml` and
   `.env` are both git-ignored; keep them that way. If you think you have committed a secret, say
   so immediately. Rotating it is easy, but only if we know.
-- Add a configuration key -> add a row to the configuration table in `README.md`, same change.
+- Add a configuration key -> add a row to the matching table in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md), same change.
 
 ---
 
@@ -149,8 +149,9 @@ Student profile, Matching, Notifications, Study prep, study timer.
   is no movable stacking-window manager.
 - Authenticated screens and the current landing page use the shared retro components under
   `frontend/src/shared/components/`. Matching adds feature-specific bars and a heatmap.
-- Body and window text use Tahoma/Verdana/system fonts. The existing entry stylesheet still
-  imports Inter/Fraunces; sources/licences are in the README. No pixel font is required.
+- Body and window text use Tahoma/Verdana/system fonts; no web font is loaded. The entry
+  stylesheet `frontend/src/index.css` holds only a plain-CSS reset adapted from Tailwind's
+  preflight (MIT, credited in the README). No pixel font is required.
 - Shared palette/styles live in `frontend/src/shared/desktop.css`. Narrow layouts wrap
   navigation, forms, weekly schedules and admin rows rather than declaring desktop-only use.
 - Original `PixelIcon` CSS drawings are reused. Inventory shipped assets/services in the
@@ -169,8 +170,10 @@ The implemented set to reuse:
 
 | Component | Status |
 | --------- | ------ |
-| App shell and navigation | `AppShell`, `TabBar` |
-| Window frame / page container | `WindowPage` |
+| App shell and navigation | `AppShell`: menu bar (notifications, help, account) and a sidebar grouped into Connect, Study and You with `NavSection` |
+| Tabs within a page | `TabBar` |
+| Window frame / page container | `RetroWindow` (title bar and content, also used by the landing page), wrapped by `WindowPage` for app screens |
+| Menu bar | `MenuBar`: skip link, brand and the screen's own tools; used by `AppShell` and the landing page |
 | Button (primary, secondary, destructive) | `Button` |
 | Form field, label, validation message | `Field`, `AccountFields`, `FormActions` |
 | Modal / dialog | `Dialog`, `ConfirmDialog` |
@@ -199,7 +202,7 @@ The implemented set to reuse:
 | ---- | ------- | ---- |
 | Team A | nat, cy, jo | Matching engine: scorers, `TimeSlot` maths, strategies, `MatchScore`, matching config, matching and admin-config UI; the Study Room tab (personal Pomodoro and groups panel) and its music (`music` package, Spotify and Freesound) |
 | Team B | angel, averyl, gh | Spring Boot and React skeletons, entities, enums, repositories, Spring Security and JWT, `ProfileService`, data seeder, shared UI shell, auth and profile screens; AI study tools: `ai` client and quota, `quiz`, `studyplan` (personal and session roadmaps), `assistant` (Pixel) and their screens |
-| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 `matchexplanation`, E2 group rooms (`studyroom`), `studysession` and `weather`, help guide and `achievement` |
+| Team C | aryan, charlize | `MatchRequest` and its state machine, `Connection` (including ending one), `ProfileViewAssembler` and the profile DTOs, `StudyGroup`, `GroupMembership` and group join requests, admin users, notifications, and their screens; E1 match explanations (`matchexplanation`); E2 group rooms (`studyroom`, including room reactions), `studysession` and `weather`, `achievement` and the focus forest (`forest`); help guide |
 
 Do not refactor another team's code as a side effect of your task. If their code blocks you,
 raise it rather than rewriting it. A surprise refactor in someone else's file is how merge
@@ -211,13 +214,18 @@ the pull request description.
 
 ## Process
 
+The course requires two extra features beyond the compulsory requirements: E1 AI study
+assistance and E2 collaborative study experience (see
+[requirement coverage](docs/REQUIREMENT_COVERAGE.md)). Feature freeze is in effect: only fixes,
+tests, documentation and demo preparation.
+
 ### Milestones
 
 | Milestone | Date | Means |
 | --------- | ---- | ----- |
 | Base code | 11 Oct | Every compulsory feature works end to end |
 | Internal feature freeze | 24 Oct | Feature work stops; tests, integration and polish are ready for delivery |
-| Extras/integration delivery target | 25 Oct | Team issue milestone for the agreed selected extras |
+| Extras/integration delivery target | 25 Oct | Team issue milestone for the two required extras |
 | Materials/rehearsal target | 8 Nov | Supporting materials and timed demo/Q&A rehearsal |
 | Final handoff target | 15 Nov 2026, 11:59 PM SGT | Team target; verify the actual LMS deadline and submission receipt |
 

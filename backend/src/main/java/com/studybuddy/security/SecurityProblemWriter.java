@@ -12,6 +12,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
+/**
+ * Writes the 401 and 403 responses that Spring Security raises before a controller runs, in the
+ * same problem shape {@link com.studybuddy.common.error.ApiExceptionHandler} uses for every other
+ * error.
+ */
 @Component
 public class SecurityProblemWriter implements AuthenticationEntryPoint, AccessDeniedHandler {
     private final JsonMapper json;

@@ -3,7 +3,7 @@
 How the project is tested, how to run the suites, what each area's tests cover, and the
 acceptance scenarios used for demos. Endpoint and DTO details are in
 [API_CONTRACT.md](API_CONTRACT.md); configuration keys are in the
-[README](../README.md#configuration); migrations and the demo reset are in
+[configuration reference](CONFIGURATION.md); migrations and the demo reset are in
 [DATABASE.md](DATABASE.md).
 
 ## 1. Strategy
@@ -12,7 +12,7 @@ Each kind of rule is tested at the boundary where it can actually break.
 
 | Layer | What it is for | Where |
 | --- | --- | --- |
-| Unit tests | Pure rules with no I/O: scorers, `TimeSlot` interval maths, value objects (`MatchScore`, `MatchingWeights`), strategies and priority tiers, state machines (`MatchRequest`, `Connection`, `StudyGroup`, `GroupJoinRequest`), the Pomodoro timer, session schedules and calendar output, badge/streak rules, AI prompt builders and output validators | `backend/src/test/java/com/studybuddy/<feature>/` |
+| Unit tests | Pure rules with no I/O: scorers, `TimeSlot` interval maths, value objects (`MatchScore`, `MatchingWeights`), strategies and priority tiers, state machines (`MatchRequest`, `Connection`, `StudyGroup`, `GroupJoinRequest`), the Pomodoro timer, focus credit and tree growth, session schedules and calendar output, badge/streak rules, AI prompt builders and output validators | `backend/src/test/java/com/studybuddy/<feature>/` |
 | HTTP integration tests | The real Spring web, security, JWT and JPA stack against a real PostgreSQL database. Used for ownership and role checks, contact privacy, concurrency (last group place, simultaneous accept/decline, racing admin saves), transactional rollback and query counts | `backend/src/test/java/com/studybuddy/integration/`, all extending `PostgresHttpTest` |
 | Context-load test | Fails if a bean cannot be wired, a configuration property is missing or an entity mapping does not match the migrated schema (`ddl-auto: validate`) | `StudyBuddyApplicationTests` |
 | Migration tests | Fresh, legacy-upgrade, failed-preflight rollback and populated repeat migrations; demo-reset preservation | `scripts/test-migrations.sh` with fixtures in `scripts/sql/` |
@@ -121,29 +121,33 @@ On a heavily loaded machine, `npm test -- --maxWorkers=1` avoids asynchronous te
 ## 4. Coverage
 
 Backend paths are relative to `backend/src/test/java/com/studybuddy/`; frontend paths to
-`frontend/src/`.
+`frontend/src/`. Compulsory areas come first, then the two course-required extras: E1 AI study
+assistance and E2 collaborative study experience.
 
 | Area | What is covered | Tests |
 | --- | --- | --- |
 | Matching and scoring | Interval overlap/intersection and adjacency; each criterion scorer including unknown values; weighted total and quality bands; Appendix A; score symmetry | `matching/availability/TimeSlotTest`, `matching/scoring/CriterionScorersTest`, `MatchScoreTest`, `MatchingWeightsTest`, `WeightedMatchScorerTest`, `matching/QualityThresholdsTest`, `matching/AppendixAMatchingTest` |
 | Strategies, search and configuration | Priority bands vs totals, disabled priority criterion, deterministic ties; filters and sorts; eligibility; typed config validation; versioned overrides, stale-write conflict, restore, consistent snapshot under concurrent save and search; query count does not grow with candidates | `matching/strategy/MatchingStrategyRankingTest`, `PriorityTiersTest`, `matching/MatchSearchFilterTest`, `MatchServiceTest`, `TemplateMatchExplainerTest`, `matching/config/MatchingConfigServiceTest`, `MatchingPropertiesTest`; `integration/MatchingHttpTest`, `MatchingQueryCountTest`; `features/matching/FindBuddiesPage.test.tsx`, `MatchingSettingsPage.test.tsx`, `matchingSettingsForm.test.ts`, `matchPresentation.test.ts`, `SharedHoursHeatmap.test.tsx`, `features/home/HomePage.test.tsx` |
-| Authentication | Registration cannot set a role; neutral invalid-credential responses; 72-byte BCrypt boundary; malformed/expired/revoked tokens; server-side sign-out; login throttling; old-email login racing an admin email edit | `auth/AuthServiceTest`, `AccountCreationTest`, `security/JwtTokenServiceTest`, `LoginThrottleTest`, `common/AccountAccessTest`, `InputRulesTest`; `integration/AccountHttpTest`, `SignOutHttpTest`, `LoginThrottleHttpTest`, `LoginConcurrencyTest`; `features/auth/Auth.test.tsx` |
-| Profile and availability | Whole-week replacement, overlap/duplicate/time validation; group-size range; SMU school list; contact normalisation (Singapore and international); concurrent same-account writes serialise; unsaved drafts survive refresh errors | `student/ProfileServiceTest`, `AvailabilityRulesTest`, `GroupSizePreferenceTest`, `SmuSchoolTest`; `integration/ProfileConcurrencyTest`, `ContactHttpTest`; `features/profile/EditProfilePage.test.tsx`, `ProfileContact.test.tsx`, `shared/components/WeeklySlotEditor.test.tsx`, `shared/auth/contactNumber.test.ts`, `shared/api/validation.test.ts` |
+| Authentication | Registration cannot set a role; neutral invalid-credential responses; 72-byte BCrypt boundary; malformed/expired/revoked tokens; server-side sign-out; login throttling with `Retry-After`; old-email login racing an admin email edit | `auth/AuthServiceTest`, `AccountCreationTest`, `security/JwtTokenServiceTest`, `LoginThrottleTest`, `common/AccountAccessTest`, `InputRulesTest`; `integration/AccountHttpTest`, `SignOutHttpTest`, `LoginThrottleHttpTest`, `LoginConcurrencyTest`; `features/auth/Auth.test.tsx` |
+| Profile and availability | Whole-week replacement, overlap/duplicate/time validation, the weekly block cap; group-size range; SMU school list; contact normalisation (Singapore and international); concurrent same-account writes serialise; unsaved drafts survive refresh errors | `student/ProfileServiceTest`, `AvailabilityRulesTest`, `GroupSizePreferenceTest`, `SmuSchoolTest`; `integration/ProfileConcurrencyTest`, `ContactHttpTest`; `features/profile/EditProfilePage.test.tsx`, `ProfileContact.test.tsx`, `shared/components/WeeklySlotEditor.test.tsx`, `shared/auth/contactNumber.test.ts`, `shared/api/validation.test.ts` |
 | Requests, connections and privacy | Request state machine; self/duplicate/invalid decisions rejected; opposite concurrent requests make one pending pair; concurrent accept makes exactly one connection; accept and decline cannot both win; sender cancellation; disconnect; contact withheld until accepted and removed on disconnect; group/admin reads never bypass it | `matchrequest/MatchRequestTest`, `MatchRequestServiceTest`, `connection/ConnectionTest`, `ConnectionServiceTest`, `profile/ProfileViewAssemblerTest`, `ProfileViewServiceTest`; `integration/BuddyHttpTest`, `LifecycleHttpTest`; `features/connections/ConnectionsPage.test.tsx`, `DialogDrafts.test.tsx`, `features/students/StudentProfilePage.test.tsx` |
-| Groups, join requests, withdraw and leave | Create/edit with goals, mode, capacity and weekly schedule; apply/approve/reject; last-place and capacity-reduction concurrency; removal and closure; applicant withdrawal; member leave revokes room and session access; failed leave notification rolls back; list queries stay constant; confirmations bound to their original target | `studygroup/StudyGroupTest`, `StudyGroupServiceTest`, `GroupJoinRequestTest`, `GroupJoinRequestServiceTest`, `StudyGroupAssemblerTest`, `StudyGroupFilterTest`; `integration/GroupHttpTest`, `LifecycleHttpTest`, `ListQueryTest`; `features/groups/Groups.test.tsx`, `GroupsBrowsing.test.tsx`, `GroupFormDrafts.test.tsx`, `GroupFormNavigation.test.tsx`, `FormPolish.test.tsx`, `test/ConfirmationLifetime.test.tsx` |
+| Groups, join requests, withdraw and leave | Create/edit with goals, mode, capacity (up to the configured maximum) and weekly schedule; apply/approve/reject; last-place and capacity-reduction concurrency; removal and closure; applicant withdrawal; member leave revokes room and session access; failed leave notification rolls back; list queries stay constant; confirmations bound to their original target | `studygroup/StudyGroupTest`, `StudyGroupServiceTest`, `GroupJoinRequestTest`, `GroupJoinRequestServiceTest`, `StudyGroupAssemblerTest`, `StudyGroupFilterTest`; `integration/GroupHttpTest`, `LifecycleHttpTest`, `ListQueryTest`; `features/groups/Groups.test.tsx`, `GroupsBrowsing.test.tsx`, `GroupFormDrafts.test.tsx`, `GroupFormNavigation.test.tsx`, `FormPolish.test.tsx`, `test/ConfirmationLifetime.test.tsx` |
 | Notifications | Recipient scoping; persistent, idempotent read state; decision links open the right history tab; a failed notification write rolls back the domain change | `notification/NotificationServiceTest`; `integration/BuddyHttpTest`, `NotificationDirectionTest`, `ListQueryTest`; `features/notifications/NotificationsPage.test.tsx`, `api.test.ts`, `features/home/ActivityFeed.test.tsx` |
 | Admin accounts | Create/edit without returning contact or password; write-only contact replacement; deactivate, reactivate (fresh sign-in, relationships stay ended) and permanent delete with dependency cleanup; self-removal leaves one usable admin; no orphan account on invalid create | `admin/AdminUserServiceTest`, `AdminUserFilterTest`; `integration/AccountHttpTest`, `ContactHttpTest`; `features/admin/AdminUsers.test.tsx`, `AdminUserNavigation.test.tsx` |
-| Migrations and demo data | Legacy upgrade, duplicate-email preflight rollback, populated repeat; browser roles cannot read or write tables; database uniqueness and whole-minute schedules; seed minimums, Appendix A pair, presenter scenarios (requests, groups, upcoming sessions, a closed group quiz with a leaderboard, a submitted practice quiz, a partly ticked study plan and earned badges) and repeat-safe seeding; prewritten quiz questions and roadmaps pass the AI output validators; demo reset keeps non-demo data | `scripts/test-migrations.sh`, `scripts/sql/*.sql`; `integration/DatabaseBoundaryTest`, `DemoSeedTest`; `seed/DemoDataTest`; `StudyBuddyApplicationTests` |
-| Study rooms, sessions, weather and calendar | Immutable timer transitions and reconnection; room membership, capacity, per-tab presence, lease expiry, host roles, versioned timer actions; dated sessions, DST handling, stale revisions, buddy/group access; calendar escaping, UTC instants and UTF-8 folding; weekly times round-trip without timezone shift; weather cache, timeout and fallback | `studyroom/PomodoroTimerTest`, `RoomStartNotificationsTest`, `StudyRoomDepartureTest`, `studysession/SessionScheduleTest`, `SessionCalendarTest`, `weather/WeatherServiceTest`; `integration/StudyRoomHttpTest`, `StudySessionHttpTest`; `features/studyroom/*.test.ts(x)`, `features/sessions/Sessions.test.tsx` |
-| E1 AI match explanations | Card identity and freshness (409 on changed inputs); evidence excludes names, IDs, contact and schedules; output validation; cache identity; quota and 429 cooldown; fallback to standard text; one cache row per evidence; panel renders text safely with an AI label | `matchexplanation/*Test` (`MatchExplanationServiceTest`, `AiExplanationWriterTest`, `ExplanationEvidenceFactoryTest`, `ExplanationHasherTest`, `ExplanationOutputValidatorTest`, `ExplanationPromptBuilderTest`, `ExplanationVocabularyTest`, `ExplanationQuotaTest`, `GeminiExplanationProviderTest`); `integration/MatchExplanationHttpTest`; `features/matchexplanation/MatchExplanationPanel.test.tsx` |
-| Help | Next-step priority, unknown vs failed sources and retry, cancelled/expired sessions, active-membership shortcuts, account changes and late responses, FAQ search | `features/help/HelpPage.test.tsx`, `helpNextStep.test.ts`. Help reads existing endpoints, so it has no backend tests of its own |
-| Achievements | Tiers and hints, level cap, configuration validation, weekly streak rules, metric sources; earned tiers kept when counts fall, only higher tiers saved, racing first saves; students only, own standing only, live counts recompute downwards while retained history counts | `achievement/BadgeEvaluatorTest`, `EarnedBadgeRecorderTest`, `AchievementAssemblerTest`, `AchievementPropertiesTest`, `WeeklyStreakCalculatorTest`, `AchievementServiceTest`; `integration/AchievementHttpTest`; `features/achievements/AchievementsPage.test.tsx`, `features/students/StudentProfilePage.test.tsx` |
-| Quizzes | Creation, access, attempts, marking, leaderboard, prompt and output validation; hosts/co-hosts start group quizzes; answers revealed only after closure; open window expiry; unusable AI reply saves nothing | `quiz/QuizTest`, `QuizAccessTest`, `QuizAttemptTest`, `QuizCreationServiceTest`, `QuizMarkerTest`, `QuizLeaderboardTest`, `QuizOutputValidatorTest`, `QuizPromptBuilderTest`; `integration/QuizHttpTest`; `features/quiz/QuizBotWindow.test.tsx` |
-| Study plans | Material upload rules (types, sizes, counts, UTF-8), roadmap frame, calendar weeks in the student's time zone, prompt and output validation; owner-only access; session roadmaps (meeting frames, participant reads, manager-only writes, replacement, cancelled or rescheduled sessions); nothing saved when the AI is unavailable | `studyplan/StudyMaterialReaderTest`, `SessionMeetingFramesTest`, `RoadmapFrameTest`, `RoadmapWriterTest`, `StudyPlanCalendarTest`, `StudyPlanOutputValidatorTest`, `StudyPlanPromptBuilderTest`, `StudyPlanTest`; `integration/StudyPlanHttpTest`, `SessionStudyPlanHttpTest`; `features/studyplan/StudyPlan.test.tsx`, `SessionRoadmapPanel.test.tsx` |
-| Shared AI client | Gemini request/attachment handling and the daily quota | `ai/GeminiClientTest`, `AiAttachmentTest`, `AiQuotaTest` |
-| Pixel assistant | Intent parsing without an AI call for clear messages; buddy search, group meeting times, to-dos and navigation; planning a session and its next meeting's topics; hand-over to Quiz Buddy and study plans; prompt keeps student text inside its block; replies carry no contact details | `assistant/AssistantIntentsTest`, `SessionIntentsTest`, `NavigateAndToDoIntentsTest`, `QuickIntentReaderTest`, `AssistantOutputValidatorTest`, `AssistantPromptBuilderTest`, `AssistantServiceTest`; `integration/AssistantHttpTest`; `features/assistant/AssistantLauncher.test.tsx` |
-| Music (Spotify and Freesound) | Spotify OAuth state, token renewal and disconnect, search and playback, tokens never in text; Freesound parsing and CC0/length filter, unavailable provider; ambient mixer volumes and remix | `music/SpotifyAuthorizationStoreTest`, `SpotifyConnectionServiceTest`, `SpotifyPlaybackServiceTest`, `SpotifyResponseParsingTest`, `FreesoundClientTest`, `AmbientSoundServiceTest`; `features/music/remixPlan.test.ts`, `useAmbientMixer.test.ts`. No HTTP integration tests |
-| Shared frontend primitives | Resource polling, purge and abort; dialogs; notices; copy button; safe return links | `shared/api/useResource.test.ts`, `shared/components/Dialog.test.tsx`, `ActionNotice.test.tsx`, `CopyButton.test.tsx`, `shared/navigation/returnTo.test.ts` |
+| Migrations and demo data | Legacy upgrade, duplicate-email preflight rollback, populated repeat; browser roles cannot read or write tables; database uniqueness and whole-minute schedules; seed minimums, Appendix A pair, presenter scenarios (a request in every status, only open items unread, a group formed weeks ago and one joined, a weekly session under way and a buddy session, a closed session quiz with a leaderboard, a submitted and an open practice quiz, a partly ticked study plan, a session roadmap for every upcoming meeting, earned badges, a streak of several weeks and a forest of every tree species) and repeat-safe seeding; prewritten quiz questions and roadmaps pass the AI output validators; demo reset removes a row from every dependent table and keeps non-demo data | `scripts/test-migrations.sh`, `scripts/sql/*.sql`; `integration/DatabaseBoundaryTest`, `DemoSeedTest`; `seed/DemoDataTest`; `StudyBuddyApplicationTests` |
+| Shared frontend primitives | Resource polling, purge and abort; dialogs; notices; copy button; safe return links; the shell's sidebar (Achievements under You, highlighted on the forest), unread count read with the notifications link, and menu focus and Escape at narrow widths | `shared/api/useResource.test.ts`, `shared/components/Dialog.test.tsx`, `ActionNotice.test.tsx`, `CopyButton.test.tsx`, `AppShell.test.tsx`, `shared/navigation/returnTo.test.ts` |
+| Errors and request bounds | Domain conflicts stay 409 while internal faults are 500 without their message; framework refusals keep 404, 405 (with `Allow`), 415 and a bodiless 406; a JSON body over the limit is 413, declared or chunked; fractions in whole-number fields and NUL in text are 400; weekly blocks and group capacity are capped | `common/error/ApiExceptionHandlerTest`, `common/InputRulesTest`; `integration/RequestRobustnessHttpTest` |
+| Help guide (core support) | Next-step priority, unknown vs failed sources and retry, cancelled/expired sessions, active-membership shortcuts, account changes and late responses, FAQ search | `features/help/HelpPage.test.tsx`, `helpNextStep.test.ts`. Help reads existing endpoints, so it has no backend tests of its own |
+| E1: match explanations | Card identity and freshness (409 on changed inputs); evidence excludes names, IDs, contact and schedules; output validation; cache identity; quota and 429 cooldown; fallback to standard text; one cache row per evidence; panel renders text safely with an AI label | `matchexplanation/*Test` (`MatchExplanationServiceTest`, `AiExplanationWriterTest`, `ExplanationEvidenceFactoryTest`, `ExplanationHasherTest`, `ExplanationOutputValidatorTest`, `ExplanationPromptBuilderTest`, `ExplanationVocabularyTest`, `AiExplanationPropertiesTest`, `GeminiExplanationProviderTest`); `integration/MatchExplanationHttpTest`; `features/matchexplanation/MatchExplanationPanel.test.tsx` |
+| E1: quizzes | Creation, access, attempts, marking, leaderboard, prompt and output validation; hosts/co-hosts start group quizzes; answers revealed only after closure; the submitted count matches the leaderboard; open window expiry; unusable AI reply saves nothing | `quiz/QuizTest`, `QuizAccessTest`, `QuizAttemptTest`, `QuizCreationServiceTest`, `QuizMarkerTest`, `QuizLeaderboardTest`, `QuizOutputValidatorTest`, `QuizPromptBuilderTest`; `integration/QuizHttpTest`; `features/quiz/QuizBotWindow.test.tsx` |
+| E1: study plans | Material upload rules (types, sizes, counts, UTF-8), roadmap frame, calendar weeks in the student's time zone, prompt and output validation; owner-only access; session roadmaps (meeting frames, participant reads, manager-only writes, replacement, no plan yet is 204, meetings that end during the AI call are dropped, an edited or cancelled session is refused); nothing saved when the AI is unavailable | `studyplan/StudyMaterialReaderTest`, `SessionMeetingFramesTest`, `StudyPlanSessionSaveTest`, `RoadmapFrameTest`, `RoadmapWriterTest`, `StudyPlanCalendarTest`, `StudyPlanOutputValidatorTest`, `StudyPlanPromptBuilderTest`, `StudyPlanTest`; `integration/StudyPlanHttpTest`, `SessionStudyPlanHttpTest`; `features/studyplan/StudyPlan.test.tsx`, `SessionRoadmapPanel.test.tsx` |
+| E1: Pixel assistant | Intent parsing without an AI call for clear messages; buddy search, group meeting times, to-dos and navigation; planning a session and its next meeting's topics; hand-over to Quiz Buddy and study plans; prompt keeps student text inside its block; replies carry no contact details | `assistant/AssistantIntentsTest`, `SessionIntentsTest`, `NavigateAndToDoIntentsTest`, `QuickIntentReaderTest`, `AssistantOutputValidatorTest`, `AssistantPromptBuilderTest`, `AssistantServiceTest`; `integration/AssistantHttpTest`; `features/assistant/AssistantLauncher.test.tsx` |
+| E1: shared AI client | Gemini request/attachment handling, unfinished replies and thought parts; the daily quota, with each client's quota counted separately; settings built from each feature's properties without printing the key; prompt templates filled in one pass, a missing slot or template failing loudly | `ai/GeminiClientTest`, `AiAttachmentTest`, `AiQuotaTest`, `AiAssistantPropertiesTest`, `PromptTemplateTest` |
+| E2: study rooms, sessions, weather and calendar | Immutable timer transitions and reconnection; room membership, capacity, per-tab presence, lease expiry, host roles, versioned timer actions; removal, deactivation and closure end open forest visits; dated sessions, DST handling, stale revisions, buddy/group access (404 for students with no tie to a session, 403 for tied students who may not act); calendar escaping, UTC instants and UTF-8 folding; weekly times round-trip without timezone shift; weather cache, timeout and fallback | `studyroom/PomodoroTimerTest`, `RoomLifecycleTest`, `RoomStartNotificationsTest`, `StudyRoomDepartureTest`, `studysession/SessionScheduleTest`, `SessionCalendarTest`, `weather/WeatherServiceTest`; `integration/StudyRoomHttpTest`, `StudySessionHttpTest`; `features/studyroom/*.test.ts(x)`, `features/sessions/Sessions.test.tsx` |
+| E2: room reactions | Only students with a live lease can react, everyone in the room sees it in the snapshot, the burst limit refuses extra reactions and is counted after locking the sender, old reactions drop out; the tray sends only after joining and reports a refusal; each reaction floats once, the sender's at once, and reactions already old on entry are not replayed; the tray rests after a refusal | `studyroom/RoomReactionServiceTest`; `integration/RoomReactionsAndForestHttpTest`; `features/studyroom/ReactionLayer.test.tsx` |
+| E2: focus forest | Focus credit only in running focus phases, across phase boundaries and long runs, never for idle, paused or backward stretches; tier thresholds and light from the local start time; random kinds and plots within range; one tree per visit planted on leaving, short visits plant nothing, a gap starts a new tree, two tabs share one visit and never credit a stretch twice, a late tick cannot reopen a visit; own forest only; the forest page, empty and error states, the meadow layout and the live growing tree; the seeded forest shows every species | `forest/FocusCreditTest`, `ForestServiceTest`, `TreeGrowthTest`, `TreeLotteryTest`; `integration/RoomReactionsAndForestHttpTest`, `DemoSeedTest`; `features/forest/ForestPage.test.tsx`, `meadowLayout.test.ts`, `features/studyroom/GrowingTree.test.tsx` |
+| E2: music (Spotify and Freesound) | Spotify OAuth state, token renewal, token replies, tokens never in text; Freesound parsing and CC0/length filter, unavailable provider; ambient mixer volumes and remix | `music/SpotifyAuthorizationStoreTest`, `SpotifyConnectionServiceTest`, `SpotifyResponseParsingTest`, `FreesoundClientTest`, `AmbientSoundServiceTest`; `features/music/remixPlan.test.ts`, `useAmbientMixer.test.ts`. No HTTP integration tests |
+| E2: achievements | Seven badges including Forester; tiers and hints, level cap, configuration validation, weekly streak rules, metric sources; earned tiers kept when counts fall, only higher tiers saved, racing first saves; students only, own standing only, live counts recompute downwards while retained history counts | `achievement/BadgeEvaluatorTest`, `EarnedBadgeRecorderTest`, `AchievementAssemblerTest`, `AchievementPropertiesTest`, `WeeklyStreakCalculatorTest`, `AchievementServiceTest`; `integration/AchievementHttpTest`; `features/achievements/AchievementsPage.test.tsx`, `features/students/StudentProfilePage.test.tsx` |
 
 ## 5. Scoring fixtures worth explaining
 
@@ -196,9 +200,36 @@ this chain.
 ## 6. Demo walkthroughs
 
 Use synthetic seeded accounts on a local or disposable database. The seeder needs its
-passwords from `application-local.yml`; none are recorded here. The seeded presenter already
-has sessions, quizzes, a study plan and badges, so only the steps that create something new
-need Gemini.
+passwords from `application-local.yml`; none are recorded here. The presenter,
+`priya@demo.example.test`, already has requests, groups, sessions, quizzes, plans, badges and a
+focus forest, so only the steps that create something new need Gemini. Reset and reseed before
+each rehearsal ([DATABASE.md](DATABASE.md#demo-reset)), since the seed dates everything from the
+day it runs.
+
+### What the presenter starts with
+
+| Feature | What Priya sees |
+| --- | --- |
+| Notifications | Five unread: the two applications to her group, Marcus's buddy request, Meera's decline and her acceptance into IS442 Thursday Exam Drills. Notices she has already answered are read |
+| Requests and connections | Incoming: Marcus, pending. Outgoing: Sofia, pending. History: Jamie accepted, Alex accepted and later ended, Meera declined, Joshua withdrawn by Priya. Jamie is her one active buddy, so Jamie's profile shows a contact number; Alex's does not |
+| Groups | She leads IS442 Design Patterns Clinic (formed four weeks ago; members Jamie and Weiming; applications from Aisyah and Daniel to accept or reject) and belongs to Xinyi's IS442 Thursday Exam Drills. Hannah's Stats Finals Crunch is full and Ethan's IS212 Sprint Retro is closed. Ryan's account is deactivated |
+| Sessions | The Clinic meets weekly on Wednesday 19:00-21:00 (Singapore): eight meetings that started three weeks ago. A one-off IS442 revision with Jamie is next Monday 19:00-21:00 |
+| Session roadmap | The Clinic's session page has a roadmap for every remaining meeting: two topics each, 120 minutes in all |
+| Quizzes | "Design patterns", a closed group quiz for the Clinic session, with a leaderboard of Weiming (4:28), Priya (5:12) and Jamie (7:35) and a review of every answer. Personal: "Interfaces and abstract classes", submitted, and "Exceptions and generics", open and untaken |
+| Study plan | IS442 up to an exam 20 days away: three weeks, two of six topics ticked off |
+| Achievements | Bronze Connector, First Move, Team Player and Founder; Silver Planner and Forester; Grove Keeper at Bronze or Silver from a streak of three or four weeks, depending on the day of the week |
+| Forest | Five trees, one of each species from sprout to ancient blossom; Jamie has three and Weiming one |
+
+### Navigation
+
+1. As a student, the menu bar holds the brand link, Notifications with its unread count, Help,
+   the account and Log out. The sidebar starts with Home, then groups pages under Connect (Find
+   buddies, My connections, Study groups), Study (Sessions, Study Room, Study plans) and You (My
+   study profile, Achievements). Achievements stays highlighted on the forest page it links to.
+2. At a narrow width the sidebar collapses behind the Menu button; opening it moves focus into
+   the menu and Escape closes it, returning focus to the button. A screen reader hears the
+   unread count as part of the Notifications link. An administrator sees only User accounts
+   and Matching settings, and a student who opens an admin address lands on Home.
 
 ### Matching
 
@@ -224,17 +255,19 @@ need Gemini.
 2. Open a stranger's profile and inspect the network response: no contact, email or token.
 3. Send a match request with an optional message. The card shows pending as soon as the POST
    succeeds; a failed POST allows retry. "View your requests" opens Outgoing.
-4. As the receiver, follow the notification, accept, and confirm contact appears only in the
-   connected profile. The connection leaves search results.
-5. End the connection: contact disappears from the profile again. Separately, cancel a pending
-   request as sender; the recipient sees it in Past requests and can no longer accept it.
+4. As Priya, follow Marcus's unread notification to Incoming, accept, and confirm his contact
+   appears only in the connected profile. The connection leaves search results.
+5. End the connection: contact disappears from the profile again. Separately, withdraw the
+   pending request to Sofia; Sofia sees it in Past requests and can no longer accept it. Past
+   requests already show Meera's decline and the request to Joshua that Priya withdrew.
 
 ### Groups
 
 1. Create a course group with goals, mode, capacity and a weekly schedule; edit it. An invalid
    time (`25:00`) blocks the save and leaving asks to discard.
-2. Apply as another student, approve as leader and check the member count. Ordinary members
-   cannot manage and do not see contact.
+2. As Priya, open the Clinic's applications and accept Aisyah, then reject Daniel; the member
+   count rises by one. Ordinary members cannot manage and do not see contact. Hannah's full
+   Stats Finals Crunch refuses applications, and Ethan's closed IS212 Sprint Retro is history.
 3. Withdraw a pending application, then apply again.
 4. As a member, leave the group (confirmation first): room and session access end, other
    members are unaffected. The leader cannot leave and must close the group instead.
@@ -266,7 +299,57 @@ need Gemini.
 4. Permanently delete a separate synthetic account after typed confirmation; its token is
    rejected. Self-removal controls are unavailable.
 
-### Study rooms and sessions
+### Help guide
+
+1. With courses, study mode and availability missing, Help shows one setup action and
+   separate per-step labels.
+2. Send or accept a request: only the relationship check changes; searches are untracked. A
+   pending incoming request takes priority.
+3. A pending applicant gets no room shortcut. After acceptance, the room link opens a preview;
+   joining still needs **Join study room**.
+4. Remove membership, close the group or disconnect: private shortcuts disappear. A failed
+   source shows "Could not check" with retry, never "incomplete".
+5. Every contextual Help link lands on its topic heading, and topics and FAQ work by keyboard.
+
+### E1: match explanations
+
+The free tier allows 20 generate requests per day per project and model, so warm the cache
+before a demo.
+
+1. On the demo database, search and click **Explain this match** on every card you will show,
+   at least 15 seconds apart. Each shows the **AI** badge.
+2. Afterwards do not change the prompt version, model, matching weights or the demo students'
+   preferences; any of these needs a fresh call.
+3. Warmed cards answer from the cache. If a fresh call is refused, the student sees the
+   standard explanation with **Try AI again**, never an error.
+4. Change a scoring input after loading a card: the old card is rejected with 409 and the page
+   refreshes it before explaining.
+
+### E1: quizzes, study plans and the assistant
+
+1. In the Clinic's room, open the closed "Design patterns" quiz: the quiz list names the
+   Clinic session, the leaderboard ranks by score then time and highlights Priya, and the
+   review shows every answer.
+2. Without Gemini, take Priya's open personal quiz "Exceptions and generics" in the personal
+   Study Room: it shows answers as soon as it is submitted. With Gemini, the host opens Quiz
+   Buddy with notes or a file and a focus, and picks the upcoming session it is for; members
+   take it and answers stay hidden until the host closes it or its open window ends. An
+   unreadable file is refused before anything is sent.
+3. Ask Pixel to find a buddy for a course: it shows real match cards without contact details.
+   Ask when your group is free, what is waiting for you, or to be quizzed (opens Quiz Buddy).
+4. Open Priya's IS442 study plan: three weeks to the exam, two of six topics ticked. Tick
+   another, reload and check it stays ticked. Ask Pixel to plan your study for a course and
+   exam date: the Study plans form opens with them filled in; with Gemini, create a plan and
+   delete it after confirming.
+5. Open the Clinic session: its roadmap covers every remaining meeting, two topics each. Jamie
+   sees it but cannot plan, tick or delete it. Ask Pixel "what are we covering next session?"
+   to see the next meeting's entries without an AI call. With Gemini, plan a new roadmap from
+   notes; it replaces the old one.
+6. The suggested questions are answered without an AI call. With Gemini unavailable, the four
+   AI screens say "The AI helper isn't available right now — it may be switched off on this
+   server or busy." and offer the manual path, and no quiz or study plan is saved.
+
+### E2: study rooms and sessions
 
 1. In two browsers, join the same group room. The leader assigns host and co-host; delegated
    roles cannot reassign roles. Start, pause, resume and reset the timer. Countdowns follow
@@ -283,66 +366,40 @@ need Gemini.
 5. Check mutual availability suggestions; clearing one participant's week empties them while
    manual scheduling still works.
 6. Download single and weekly calendar files, including a DST-crossing series, and compare UTC
-   times with the API. Exports are refused to strangers, removed members and ended
-   connections, and contain no private contact or token.
+   times with the API. A stranger or removed member is told the session does not exist (404);
+   an ended connection's buddy is refused (403). Exports contain no private contact or token.
 7. Switch weather themes and day/night; with the provider unavailable the manual themes still
    work, and reduced motion stops scene animation.
 
-### E1 AI match explanations
+### E2: room reactions and the focus forest
 
-The free tier allows 20 generate requests per day per project and model, so warm the cache
-before a demo.
+1. In two browsers, join the same group room and press a reaction in each. Both see every
+   reaction float up with the sender's name within a poll; the sender sees their own at once.
+   Pressing quickly past the burst limit is refused with a message. The tray sends only after
+   joining.
+2. With the shared timer running a focus phase, the room's "Your tree" panel counts focused
+   minutes and names the next stage. Pausing or a break adds nothing.
+3. Leave the room: the visit's tree is planted. "View my forest" opens `/forest` in a new tab so
+   the visit is not ended. The presenter's seeded forest shows every species, from sprout to
+   ancient blossom, with dawn, day, dusk and night colours from each visit's start time.
+4. A visit with less than the sprout threshold plants nothing; the empty forest explains how to
+   plant a first tree. The personal Study Room timer grows no trees.
+5. On the achievements page, Forester counts planted trees: locked, it suggests a study room;
+   earned, it links to the forest.
 
-1. On the demo database, search and click **Explain this match** on every card you will show,
-   at least 15 seconds apart. Each shows the **AI** badge.
-2. Afterwards do not change the prompt version, model, matching weights or the demo students'
-   preferences; any of these needs a fresh call.
-3. Warmed cards answer from the cache. If a fresh call is refused, the student sees the
-   standard explanation with **Try AI again**, never an error.
-4. Change a scoring input after loading a card: the old card is rejected with 409 and the page
-   refreshes it before explaining.
+### E2: achievements
 
-### Help
-
-1. With courses, study mode and availability missing, Help shows one setup action and
-   separate per-step labels.
-2. Send or accept a request: only the relationship check changes; searches are untracked. A
-   pending incoming request takes priority.
-3. A pending applicant gets no room shortcut. After acceptance, the room link opens a preview;
-   joining still needs **Join study room**.
-4. Remove membership, close the group or disconnect: private shortcuts disappear. A failed
-   source shows "Could not check" with retry, never "incomplete".
-5. Every contextual Help link lands on its topic heading, and topics and FAQ work by keyboard.
-
-### Achievements
-
-1. As a new student every badge is locked and the grove is a seed, with usable actions.
-2. Join a group or accept a buddy and schedule a recurring session. Planned occurrences count;
+1. As Priya, the page shows the earned badges listed above, a Silver Planner from the Clinic's
+   weekly meetings and a grove grown from a streak of several weeks; Forester links to her
+   forest. The Clinic was formed four weeks ago, so its earlier meetings count.
+2. As a new student every badge is locked and the grove is a seed, with usable actions.
+3. Join a group or accept a buddy and schedule a recurring session. Planned occurrences count;
    streaks count distinct Monday-based weeks up to the current week.
-3. Remove a membership, cancel a session or disconnect: live counts and runs recompute, while each
+4. Remove a membership, cancel a session or disconnect: live counts and runs recompute, while each
    earned tier, the points and the level stay; a fallen badge says what its current count alone
    reaches. Founder still counts closed groups and First Move still counts retained requests.
-4. A readmitted member's earlier occurrences do not count.
-5. Another student's profile shows no achievement summary and makes no achievement request.
-
-### Quizzes, study plans and the assistant
-
-1. In a group room, the host opens Quiz Buddy with notes or a file, a course and a focus, and,
-   when the group has an upcoming session, picks the session it is for; the quiz list names it.
-   Members take the quiz; answers stay hidden until the host closes it or its open window
-   ends. The leaderboard ranks by score and highlights the signed-in member.
-2. A personal quiz shows answers as soon as it is submitted. An unreadable file is refused
-   before anything is sent.
-3. Ask Pixel to find a buddy for a course: it shows real match cards without contact details.
-   Ask when your group is free, what is waiting for you, or to be quizzed (opens Quiz Buddy).
-4. Ask Pixel to plan your study for a course and exam date: the Study plans form opens with
-   them filled in. Create the plan, tick off a topic, reload and check it stays ticked, then
-   delete the plan after confirming.
-5. As a group leader, open an upcoming weekly session and plan its roadmap from notes: one block per
-   remaining meeting. A member sees it but cannot plan, tick or delete it. Ask Pixel "what are we
-   covering next session?" to see that meeting's entries.
-6. The suggested questions are answered without an AI call. With Gemini unavailable, Pixel and
-   Quiz Buddy say so plainly, and no quiz or study plan is saved.
+5. A readmitted member's earlier occurrences do not count.
+6. Another student's profile shows no achievement summary and makes no achievement request.
 
 ## 7. Known limits
 

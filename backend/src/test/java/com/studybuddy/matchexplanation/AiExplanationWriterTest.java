@@ -16,12 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+/** Cache first, then the provider; every answer is validated and only good new answers are cached. */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AiExplanationWriterTest {
@@ -29,7 +31,6 @@ class AiExplanationWriterTest {
     private static final String GOOD_REPLY = "{\"explanation\":\"You both take IS442.\"}";
 
     @Mock private ExplanationCache cache;
-    @Mock private ExplanationQuota quota;
     @Mock private ExplanationProvider provider;
 
     private final ExplanationEvidence evidence = new ExplanationEvidenceFactory().from(ExplanationFixtures.evaluation());
@@ -37,11 +38,10 @@ class AiExplanationWriterTest {
 
     @BeforeEach
     void setUp() {
-        writer = new AiExplanationWriter(cache, quota, new ExplanationPromptBuilder(ExplanationFixtures.JSON), provider,
+        writer = new AiExplanationWriter(cache, new ExplanationPromptBuilder(ExplanationFixtures.JSON), provider,
                 new ExplanationOutputValidator(600, ExplanationFixtures.JSON));
         when(cache.find(evidence)).thenReturn(Optional.empty());
-        when(quota.tryAcquire(STUDENT_ID)).thenReturn(true);
-        when(provider.explain(anyString())).thenReturn(Optional.of(GOOD_REPLY));
+        when(provider.explain(eq(STUDENT_ID), anyString())).thenReturn(Optional.of(GOOD_REPLY));
     }
 
     @Test
@@ -49,7 +49,7 @@ class AiExplanationWriterTest {
         when(cache.find(evidence)).thenReturn(Optional.of("Cached answer."));
 
         assertEquals(Optional.of("Cached answer."), writer.write(evidence, STUDENT_ID));
-        verifyNoInteractions(provider, quota);
+        verifyNoInteractions(provider);
     }
 
     @Test
@@ -60,7 +60,7 @@ class AiExplanationWriterTest {
 
     @Test
     void noAnswerGivesNothingAndCachesNothing() {
-        when(provider.explain(anyString())).thenReturn(Optional.empty());
+        when(provider.explain(eq(STUDENT_ID), anyString())).thenReturn(Optional.empty());
 
         assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
         verify(cache, never()).save(any(), anyString());
@@ -68,26 +68,18 @@ class AiExplanationWriterTest {
 
     @Test
     void aRejectedAnswerGivesNothingAndCachesNothing() {
-        when(provider.explain(anyString())).thenReturn(Optional.of("{\"explanation\":\"A 90% chance of success.\"}"));
+        when(provider.explain(eq(STUDENT_ID), anyString())).thenReturn(Optional.of("{\"explanation\":\"A 90% chance of success.\"}"));
 
         assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
         verify(cache, never()).save(any(), anyString());
     }
 
     @Test
-    void anExhaustedQuotaGivesNothingWithoutCallingTheProvider() {
-        when(quota.tryAcquire(STUDENT_ID)).thenReturn(false);
-
-        assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
-        verifyNoInteractions(provider);
-    }
-
-    @Test
-    void cacheReadFailureGivesNothingWithoutSpendingQuota() {
+    void cacheReadFailureGivesNothingWithoutCallingTheProvider() {
         when(cache.find(evidence)).thenThrow(new DataAccessResourceFailureException("cache unavailable"));
 
         assertTrue(writer.write(evidence, STUDENT_ID).isEmpty());
-        verifyNoInteractions(quota, provider);
+        verifyNoInteractions(provider);
     }
 
     @Test
@@ -103,6 +95,6 @@ class AiExplanationWriterTest {
             when(cache.find(evidence)).thenReturn(Optional.of(cached));
             assertTrue(writer.write(evidence, STUDENT_ID).isEmpty(), cached);
         }
-        verifyNoInteractions(quota, provider);
+        verifyNoInteractions(provider);
     }
 }

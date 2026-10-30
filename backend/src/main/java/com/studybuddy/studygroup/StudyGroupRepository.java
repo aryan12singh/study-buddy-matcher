@@ -9,6 +9,10 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Queries study groups: by id with a write lock, the leader's id alone for lock ordering, open
+ * groups to browse, and the groups a student leads or belongs to.
+ */
 public interface StudyGroupRepository extends JpaRepository<StudyGroup, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select g from StudyGroup g where g.id=:id")

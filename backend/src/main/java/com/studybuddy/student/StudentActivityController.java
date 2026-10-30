@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code GET /api/students/me/summary}, the counts on the signed-in student's home screen.
+ * It only delegates to {@link StudentActivityService}.
+ */
 @RestController
 @RequestMapping("/api/students/me")
 public class StudentActivityController {

@@ -4,6 +4,10 @@ import com.studybuddy.student.Student;
 import com.studybuddy.user.User;
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds the {@link CurrentAccountDto} for a signed-in account, adding the student's name when the
+ * account has a student profile.
+ */
 @Component
 public class AccountAssembler {
 

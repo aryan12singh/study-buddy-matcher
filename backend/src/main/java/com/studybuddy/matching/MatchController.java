@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code GET /api/matches}, the signed-in student's ranked study-buddy matches. The optional
+ * query parameters become a {@link MatchSearchCriteria}; filtering, scoring and ranking all happen
+ * in {@link MatchService}.
+ */
 @RestController
 @RequestMapping("/api/matches")
 public class MatchController {

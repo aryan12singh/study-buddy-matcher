@@ -1,5 +1,6 @@
 package com.studybuddy.common;
 
+import com.studybuddy.common.error.InternalInvariantException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -29,7 +30,7 @@ public class DatabaseMutationLock {
 
     private void acquire(String function) {
         if (!TransactionSynchronizationManager.isActualTransactionActive()) {
-            throw new IllegalStateException("A database mutation must run in a transaction");
+            throw new InternalInvariantException("A database mutation must run in a transaction");
         }
         jdbcTemplate.execute("select " + function + "(" + ACCOUNT_LIFECYCLE_KEY + ")");
     }

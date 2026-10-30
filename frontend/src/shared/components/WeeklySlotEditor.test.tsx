@@ -74,6 +74,15 @@ describe('weekly editor conveniences', () => {
     expect(screen.getByLabelText('Start 1')).toHaveAttribute('aria-invalid', 'true')
     expect(saved()[0].startTime).toBe('18:00:00')
   })
+  it('leaves a block that ends before it starts out of the preview instead of showing it backwards', () => {
+    const backwards: WeeklySlot = { dayOfWeek: 'FRIDAY', startTime: '16:00', endTime: '14:00' }
+    render(<Editor initial={[monday, backwards]} />)
+    const preview = screen.getByRole('region', { name: 'Weekly schedule preview' })
+    expect(within(preview).queryByText('16:00–14:00')).not.toBeInTheDocument()
+    expect(within(preview).getByText('18:00–20:00')).toBeInTheDocument()
+    expect(within(preview).getByText('Blocks that end before they start are left out until they are corrected.')).toBeInTheDocument()
+  })
+
   it('shows an overlap on both clashing rows', () => {
     render(<Editor initial={[monday, { ...monday, startTime: '19:00', endTime: '21:00' }]} />)
     expect(screen.getByText('This clashes with Monday 19:00–21:00. Change the times or remove one of them.')).toBeInTheDocument()

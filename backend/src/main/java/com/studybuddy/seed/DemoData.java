@@ -28,9 +28,10 @@ import java.util.Set;
  * @param requests    match requests to replay, in order
  * @param groups      study groups to form, in order
  * @param deactivated handles of students an administrator deactivates
- * @param sessions    group and buddy sessions to schedule, starting at their block's next time
+ * @param sessions    group and buddy sessions to schedule, each around its block's next time
  * @param quizzes     quizzes to start from questions written in advance, then take
  * @param plans       study plans to create from roadmaps written in advance
+ * @param sessionPlans session roadmaps to create from roadmaps written in advance
  * @param forest      finished study room visits that grew trees, so the demo forest is not empty
  */
 public record DemoData(
@@ -44,6 +45,7 @@ public record DemoData(
         List<SessionEntry> sessions,
         List<QuizEntry> quizzes,
         List<PlanEntry> plans,
+        List<SessionPlanEntry> sessionPlans,
         List<ForestEntry> forest) {
 
     public List<AvailabilitySlotDto> studentSlots(List<String> blockNames) {
@@ -85,32 +87,38 @@ public record DemoData(
     public record RequestEntry(String from, String to, String message, String course, RequestOutcome outcome) {
     }
 
-    /** A group, its accepted members and its still-pending applicants. */
+    /**
+     * A group, its accepted members and its still-pending applicants. A group formed
+     * {@code formedWeeksAgo} weeks back dates its members' joining to then, so its earlier
+     * meetings count towards their planned-session streak.
+     */
     public record GroupEntry(String leader, String name, String description, String course, int maxSize,
             Set<StudyGoal> goals, StudyMode studyMode, List<String> meets, List<String> members,
-            List<String> applicants, boolean closed) {
+            List<String> applicants, boolean closed, int formedWeeksAgo) {
     }
 
     /**
      * A weekly session scheduled by {@code organiser}, either for a group they belong to or with a
-     * connected {@code buddy}; exactly one of the two is set.
+     * connected {@code buddy}; exactly one of the two is set. It starts at its block's next time, or
+     * {@code weeksAgo} weeks before that for a series already under way.
      */
-    public record SessionEntry(String organiser, String group, String buddy, String title, String block, int weeks,
-            String timeZone, String agenda, String location) {
+    public record SessionEntry(String organiser, String group, String buddy, String title, String block, int weeksAgo,
+            int weeks, String timeZone, String agenda, String location) {
     }
 
     /**
      * A quiz started by {@code by}: for a group they may host when {@code group} is set, otherwise a
-     * personal practice quiz for {@code course}. {@code questions} has the shape of Gemini's reply,
-     * so it passes the same checks. Each taker answers in question order; {@code close} closes a
-     * group quiz early so its answers can be reviewed.
+     * personal practice quiz for {@code course}. A group quiz may belong to the group's session
+     * titled {@code session}. {@code questions} has the shape of Gemini's reply, so it passes the
+     * same checks. Each taker answers in question order; {@code close} closes a group quiz early so
+     * its answers can be reviewed. A personal quiz with no takers stays open to take in the demo.
      */
-    public record QuizEntry(String by, String group, String course, String focus, String notes, JsonNode questions,
-            List<TakerEntry> takers, boolean close) {
+    public record QuizEntry(String by, String group, String session, String course, String focus, String notes,
+            JsonNode questions, List<TakerEntry> takers, boolean close) {
     }
 
-    /** A student's chosen option for each question, in question order. */
-    public record TakerEntry(String handle, List<Integer> answers) {
+    /** A student's chosen option for each question, in question order, and how long they took. */
+    public record TakerEntry(String handle, List<Integer> answers, int secondsTaken) {
     }
 
     /**
@@ -123,14 +131,25 @@ public record DemoData(
     }
 
     /**
+     * A roadmap for the upcoming meetings of the session titled {@code session}, made by its
+     * {@code organiser}. {@code roadmap} has the shape of Gemini's reply, numbering the meetings
+     * from the next one; meetings the session no longer has are left out.
+     */
+    public record SessionPlanEntry(String organiser, String session, StudyGoal goal, String topics, JsonNode roadmap) {
+    }
+
+    /**
      * A finished visit by {@code student} to {@code group}'s study room, {@code daysAgo} days back,
      * starting at {@code startTime} in the forest zone, with {@code focusedMinutes} of focus.
      */
     public record ForestEntry(String student, String group, int daysAgo, LocalTime startTime, int focusedMinutes) {
     }
 
-    /** PENDING stays unanswered; CONNECTED is accepted; ENDED is accepted, then ended by the receiver. */
+    /**
+     * PENDING stays unanswered; CONNECTED is accepted; ENDED is accepted, then ended by the receiver;
+     * DECLINED is declined by the receiver; CANCELLED is withdrawn by the sender.
+     */
     public enum RequestOutcome {
-        PENDING, CONNECTED, ENDED
+        PENDING, CONNECTED, ENDED, DECLINED, CANCELLED
     }
 }

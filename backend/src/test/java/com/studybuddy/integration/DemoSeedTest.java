@@ -3,6 +3,7 @@ package com.studybuddy.integration;
 import com.studybuddy.achievement.AchievementService;
 import com.studybuddy.achievement.BadgeDto;
 import com.studybuddy.achievement.BadgeTier;
+import com.studybuddy.achievement.StreakDto;
 import com.studybuddy.forest.ForestService;
 import com.studybuddy.forest.TreeDto;
 import com.studybuddy.forest.TreeSpecies;
@@ -123,13 +124,39 @@ class DemoSeedTest extends PostgresHttpTest {
     }
 
     @Test
+    void thePresentersHistoryShowsEveryRequestStatusAndAGroupTheyJoined() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+
+        assertEquals(1, count("select count(*) from match_requests where sender_id=? and status='DECLINED'", presenter));
+        assertEquals(1, count("select count(*) from match_requests where sender_id=? and status='CANCELLED'", presenter));
+        assertEquals(1, count("select count(*) from group_memberships m join study_groups g on g.id=m.study_group_id "
+            + "where m.student_id=? and g.leader_id<>? and g.active", presenter, presenter), "a group the presenter joined");
+    }
+
+    @Test
+    void thePresentersFeedHasOnlyTheOpenApplicationsUnread() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+        long led = count("select id from study_groups where leader_id=? and active", presenter);
+
+        assertEquals(2, count("select count(*) from notifications where recipient_id=? and type='GROUP_JOIN_REQUEST_RECEIVED' "
+            + "and resource_id=? and not read", presenter, led), "only the two pending applications");
+        assertEquals(2, count("select count(*) from notifications where recipient_id=? and type='GROUP_JOIN_REQUEST_RECEIVED' "
+            + "and resource_id=? and read", presenter, led), "the accepted members' requests were read");
+        assertEquals(1, count("select count(*) from notifications where recipient_id=? and type='MATCH_REQUEST_RECEIVED' "
+            + "and not read", presenter), "the pending buddy request");
+    }
+
+    @Test
     void preparesThePresentersGroupAndBuddySessions() {
         seed.seed();
         long presenter = idOf(PRESENTER);
         long led = count("select id from study_groups where leader_id=? and active", presenter);
 
         assertEquals(1, count("select count(*) from study_sessions where study_group_id=? and status='SCHEDULED' "
-            + "and occurrence_count > 1 and start_at > now()", led));
+            + "and occurrence_count > 1 and start_at < now() - interval '2 weeks' "
+            + "and start_at + (occurrence_count - 1) * interval '1 week' > now()", led), "a weekly series under way");
         assertEquals(1, count("select count(*) from study_sessions s join connections c on c.id=s.connection_id "
             + "where (c.student_a_id=? or c.student_b_id=?) and c.ended_at is null and s.start_at > now()", presenter, presenter));
     }
@@ -147,8 +174,23 @@ class DemoSeedTest extends PostgresHttpTest {
             "a leaderboard needs several members' scores");
         assertTrue(count("select count(distinct score) from quiz_attempts where quiz_id=?", groupQuiz) > 1,
             "members should not all tie");
+        assertEquals(0, count("select count(*) from quiz_attempts where submitted_at - started_at < interval '1 minute'"),
+            "every taker took a plausible time");
+        assertTrue(count("select count(distinct submitted_at - started_at) from quiz_attempts where quiz_id=?", groupQuiz) > 1,
+            "takers took different times");
+        assertEquals(count("select id from study_sessions where study_group_id=?", led),
+            count("select session_id from quizzes where id=?", groupQuiz), "the quiz belongs to the group's session");
         assertEquals(1, count("select count(*) from quizzes q join quiz_attempts a on a.quiz_id=q.id "
             + "where q.student_id=? and q.scope='PERSONAL' and a.submitted_at is not null", presenter));
+    }
+
+    @Test
+    void thePresenterHasAnOpenPracticeQuizToTakeWithoutAnAiKey() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+
+        assertEquals(1, count("select count(*) from quizzes q where q.student_id=? and q.scope='PERSONAL' and q.status='OPEN' "
+            + "and q.closes_at is null and not exists (select 1 from quiz_attempts a where a.quiz_id=q.id)", presenter));
     }
 
     @Test
@@ -161,6 +203,24 @@ class DemoSeedTest extends PostgresHttpTest {
         long done = count("select count(*) from study_plan_entries where plan_id=? and completed", plan);
         assertTrue(entries > 3, "a roadmap of several weeks");
         assertTrue(done > 0 && done < entries, done + " of " + entries + " topics ticked off");
+        assertEquals(20, count("select exam_date - first_block_date from study_plans where id=?", plan),
+            "the exam is counted from the plan's own today");
+    }
+
+    @Test
+    void preparesARoadmapForEveryUpcomingMeetingOfTheGroupSession() {
+        seed.seed();
+        long presenter = idOf(PRESENTER);
+        long led = count("select id from study_groups where leader_id=? and active", presenter);
+        long session = count("select id from study_sessions where study_group_id=?", led);
+        long plan = count("select id from study_plans where session_id=? and scope='SESSION'", session);
+
+        long meetings = count("select block_count from study_plans where id=?", plan);
+        assertTrue(meetings >= 5, "the series' remaining meetings, got " + meetings);
+        assertEquals(meetings, count("select count(distinct sequence) from study_plan_entries where plan_id=?", plan));
+        assertEquals(120, count("select minutes_per_block from study_plans where id=?", plan));
+        assertTrue(count("select count(*) from study_plans where id=? and first_block_date >= (now() at time zone 'Asia/Singapore')::date", plan) == 1,
+            "the roadmap starts at the next meeting");
     }
 
     @Test
@@ -172,6 +232,19 @@ class DemoSeedTest extends PostgresHttpTest {
         assertTrue(badges.stream().filter(BadgeDto::earned).count() >= 4, "most badges earned");
         assertEquals(BadgeTier.SILVER, badges.stream().filter(badge -> badge.key().equals("PLANNER"))
             .findFirst().orElseThrow().tier(), "planner shows progress towards gold");
+        for (String key : List.of("GROVE_KEEPER", "TEAM_PLAYER")) {
+            assertTrue(badges.stream().filter(badge -> badge.key().equals(key)).findFirst().orElseThrow().earned(), key);
+        }
+    }
+
+    @Test
+    void thePresentersStreakRunsForSeveralWeeks() {
+        seed.seed();
+
+        StreakDto streak = achievements.forStudent(idOf(PRESENTER)).streak();
+
+        assertTrue(streak.currentWeeks() >= 3, "current run " + streak.currentWeeks());
+        assertTrue(streak.bestWeeks() >= streak.currentWeeks());
     }
 
     @Test
@@ -183,6 +256,7 @@ class DemoSeedTest extends PostgresHttpTest {
         assertEquals(EnumSet.allOf(TreeSpecies.class), trees.stream().map(TreeDto::species)
             .collect(Collectors.toCollection(() -> EnumSet.noneOf(TreeSpecies.class))), "one visit per tree tier");
         assertEquals(TreeSpecies.ANCIENT_BLOSSOM, trees.getFirst().species(), "newest visit first");
+        assertTrue(forest.forestOf(idOf("jamie@demo.example.test")).trees().size() >= 3, "another student's forest");
     }
 
     @Test

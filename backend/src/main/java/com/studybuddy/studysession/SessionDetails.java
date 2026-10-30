@@ -5,6 +5,11 @@ import com.studybuddy.common.error.InvalidInputException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+/**
+ * A study session's validated details, built from {@link SessionInput}. A room link must be this
+ * group's own room path or a plain HTTPS address, so a session cannot carry a link with credentials
+ * or tracking parameters.
+ */
 public record SessionDetails(String title, SessionSchedule schedule, String agenda, String location, String roomLink) {
     /** Matches the room_link column length. */
     private static final int ROOM_LINK_LIMIT = 2048;

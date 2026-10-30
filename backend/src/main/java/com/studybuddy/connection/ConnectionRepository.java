@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Queries connections between two students: by id with a write lock, the active one between a pair,
+ * and a student's active connections and their count, matching either side of the pair.
+ */
 public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Connection c where c.id = :id")

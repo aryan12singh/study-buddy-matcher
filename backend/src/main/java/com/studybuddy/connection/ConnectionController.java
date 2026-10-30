@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code /api/connections}: lists the signed-in student's active study-buddy connections and
+ * ends one. Each handler delegates to {@link ConnectionService}.
+ */
 @RestController
 @RequestMapping("/api/connections")
 public class ConnectionController {

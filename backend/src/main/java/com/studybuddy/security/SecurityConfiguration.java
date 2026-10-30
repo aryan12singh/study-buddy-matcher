@@ -16,6 +16,12 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/**
+ * Spring Security set-up for a stateless JSON API: JWT authentication, BCrypt password hashing,
+ * CORS for the configured origins, and the access rules (login and registration open,
+ * {@code /api/admin/**} for administrators, other {@code /api/**} routes for students). Also
+ * registers {@link AuthProperties} and {@link LoginThrottleProperties}.
+ */
 @Configuration
 @EnableConfigurationProperties({AuthProperties.class, LoginThrottleProperties.class})
 public class SecurityConfiguration {
@@ -55,6 +61,8 @@ public class SecurityConfiguration {
         config.setAllowedOrigins(properties.allowedOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Not on the browser's safe list, so a cross-origin page could not read the sign-in lockout otherwise.
+        config.setExposedHeaders(List.of("Retry-After"));
         config.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);

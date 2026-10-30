@@ -3,6 +3,11 @@ package com.studybuddy.studysession;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds a {@link SessionDto}: the schedule with every weekly occurrence, the next one still to
+ * come, and whether the viewer may manage the session (any participant of a buddy session, only the
+ * leader of a group session).
+ */
 @Component
 public class SessionAssembler {
     public SessionDto toDto(StudySession session, Long actorId, Instant now) {

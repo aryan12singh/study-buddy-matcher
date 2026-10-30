@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { AppRoutes } from '../../App'
+import { appRoutes } from '../../routes'
 import AuthProvider from '../../shared/auth/AuthProvider'
 import { AuthContext } from '../../shared/auth/context'
 import { useAuth } from '../../shared/auth/useAuth'
@@ -67,10 +68,11 @@ describe('auth and role boundaries', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create student account' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', expect.objectContaining({ contactNumber: '+6591234567' })))
   })
-  it('guards admin routes from a student without requesting admin data', async () => {
-    const get = vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: 0 } : []))
-    render(<AuthContext.Provider value={{ account: studentAccount, loading: false, retry: vi.fn(), logout: vi.fn(), login: vi.fn(), register: vi.fn() }}><MemoryRouter initialEntries={['/admin/users']}><AppRoutes /></MemoryRouter></AuthContext.Provider>)
-    expect(await screen.findByRole('heading', { name: 'Connections' })).toBeInTheDocument()
+  it('sends a student on an admin address to their home page without requesting admin data', async () => {
+    const get = vi.spyOn(api, 'get').mockImplementation(path => path === '/notifications/unread-count' ? Promise.resolve(response({ count: 0 })) : new Promise(() => {}))
+    const router = createMemoryRouter(appRoutes, { initialEntries: ['/admin/users'] })
+    render(<AuthContext.Provider value={{ account: studentAccount, loading: false, retry: vi.fn(), logout: vi.fn(), login: vi.fn(), register: vi.fn() }}><RouterProvider router={router} /></AuthContext.Provider>)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/home'))
     expect(get.mock.calls.some(([path]) => path.startsWith('/admin'))).toBe(false)
   })
   it('keeps administrator sessions outside the student group routes', async () => {

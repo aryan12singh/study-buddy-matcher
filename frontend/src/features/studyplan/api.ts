@@ -60,10 +60,11 @@ export async function createStudyPlan(input: PersonalPlanInput, material: StudyM
   return (await api.post<StudyPlan>('/study-plans', form, { timeout: WRITING_TIMEOUT_MS })).data
 }
 
-/** The session's roadmap, or null when it has none yet. */
+/** The session's roadmap, or null when it has none yet: the server answers 204 No Content (404 is still accepted). */
 export async function getSessionPlan(sessionId: number, signal?: AbortSignal) {
   try {
-    return (await api.get<StudyPlan>(`/sessions/${sessionId}/study-plan`, { signal })).data
+    const response = await api.get<StudyPlan | ''>(`/sessions/${sessionId}/study-plan`, { signal })
+    return response.status === 204 || !response.data ? null : response.data
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) return null
     throw error

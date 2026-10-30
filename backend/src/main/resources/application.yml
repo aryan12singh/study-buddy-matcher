@@ -16,6 +16,11 @@ spring:
       # Study plan uploads; both follow the assistant's own limit so they cannot drift apart.
       max-file-size: ${app.ai.assistant.study-plan.max-upload-size}
       max-request-size: ${app.ai.assistant.study-plan.max-upload-size}
+  jackson:
+    deserialization:
+      # A number with a fraction, such as 8.7, is refused for a whole-number field (400) instead
+      # of being silently cut down to 8.
+      accept-float-as-int: false
   jpa:
     hibernate:
       # The SQL migrations own the schema; Hibernate only checks the mappings against it.
@@ -35,6 +40,16 @@ jwt:
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 app:
+  http:
+    # Largest JSON request body; a bigger one is refused with 413 before it is parsed. File
+    # uploads are multipart and keep the spring.servlet.multipart limits above.
+    max-json-body-size: ${HTTP_MAX_JSON_BODY_SIZE:1MB}
+  availability:
+    # Weekly time blocks one student profile or one study group may save.
+    max-weekly-slots: ${AVAILABILITY_MAX_WEEKLY_SLOTS:50}
+  study-group:
+    # Largest maximum group size a leader may set, the leader included.
+    max-capacity: ${STUDY_GROUP_MAX_CAPACITY:10}
   study-session:
     maximum-occurrences: ${SESSION_MAXIMUM_OCCURRENCES:52}
     maximum-duration-hours: ${SESSION_MAXIMUM_DURATION_HOURS:24}
@@ -257,14 +272,11 @@ app:
     # Where the browser returns after sign-in.
     return-url: ${SPOTIFY_RETURN_URL:http://localhost:5173/study-room}
     accounts-url: https://accounts.spotify.com
-    api-url: https://api.spotify.com/v1
     # streaming, user-read-email and user-read-private are required by the Web Playback SDK.
-    scopes: [streaming, user-read-email, user-read-private, user-modify-playback-state]
+    scopes: [streaming, user-read-email, user-read-private]
     timeout: 5s
     authorization-lifetime: 10m
     token-refresh-margin: 60s
-    search-limit: 10
-    max-query-length: 100
     # Played through Spotify's embed for students without Premium. Chosen by the team.
     embed-playlist-id: 3bZTQGrvewbkJJe6UpTFKc
   demo-seed:

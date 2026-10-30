@@ -6,6 +6,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Writes notifications for other services inside their transaction, so a notice exists only if the
+ * action it reports was saved, and lets a student list their notifications and mark them read.
+ */
 @Service
 @Transactional
 public class NotificationService {
@@ -28,11 +32,6 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public boolean hasUnread(Long recipientId, NotificationType type, Long resourceId) {
         return notifications.existsByRecipientIdAndTypeAndResourceIdAndReadFalse(recipientId, type, resourceId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<NotificationDto> list(Long actorId) {
-        return list(actorId, NotificationFilter.ALL);
     }
 
     @Transactional(readOnly = true)

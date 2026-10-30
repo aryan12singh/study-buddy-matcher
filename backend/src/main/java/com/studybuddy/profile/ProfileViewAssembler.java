@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
+/**
+ * Enforces the contact-number privacy rule. Builds a {@link ConnectedProfileDto}, which includes
+ * the contact number, only when the viewer is the student or is connected to them; everyone else
+ * gets a {@link PublicProfileDto}, which has no contact number field at all.
+ */
 @Component
 public class ProfileViewAssembler {
     private final ProfileRelationshipAssembler relationships;

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import RetroWindow from './RetroWindow'
 
 export default function WindowPage({ title, description, actions, children }: {
   title: string
@@ -7,29 +8,19 @@ export default function WindowPage({ title, description, actions, children }: {
   children: ReactNode
 }) {
   return (
-    <section className="retro-window" aria-label={title}>
-      <div className="window-titlebar">
-        <span className="window-dots" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span>{title}</span>
-      </div>
-      <div className="window-content">
-        <div className="page-heading">
-          <div>
-            <h1>{title}</h1>
-            {description && (
-              <p>{description}</p>
-            )}
-          </div>
-          {actions && (
-            <div className="actions">{actions}</div>
+    <RetroWindow title={title}>
+      <div className="page-heading">
+        <div>
+          <h1>{title}</h1>
+          {description && (
+            <p>{description}</p>
           )}
         </div>
-        {children}
+        {actions && (
+          <div className="actions">{actions}</div>
+        )}
       </div>
-    </section>
+      {children}
+    </RetroWindow>
   )
 }

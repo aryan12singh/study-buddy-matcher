@@ -20,6 +20,12 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Group room use cases: read the room, join, renew presence, leave, control the timer and configure
+ * the room. Joining locks the group so capacity holds; departures hand the host role on or end the
+ * session when the room empties. Every change is checked against the room version so a stale
+ * browser cannot overwrite a newer state.
+ */
 @Service
 @Transactional
 public class StudyRoomService {
@@ -55,6 +61,10 @@ public class StudyRoomService {
         return detail(room, actorId);
     }
 
+    /**
+     * Joins the room from one browser tab. Expired leases are cleared first, so tabs closed without
+     * leaving free their places, and the join is refused when the room is already full.
+     */
     public StudyRoomDto join(Long groupId, Long actorId, RoomJoinInput input) {
         StudyGroup group = access.lockMember(groupId, actorId);
         StudyRoom room = persistedRoom(group);

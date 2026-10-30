@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { startSpotifyAuthorization } from './spotifyApi'
 import type { SpotifyStatus } from './spotifyApi'
 import { useSpotify } from './spotifyContext'
-import { errorMessage } from '../../shared/api/client'
+import { useAction } from '../../shared/api/useAction'
 import ActionNotice from '../../shared/components/ActionNotice'
 import Button from '../../shared/components/Button'
 import PixelIcon from '../../shared/components/PixelIcon'
@@ -24,7 +24,8 @@ export default function SpotifyPremiumPlayer({ status }: { status: SpotifyStatus
   const [outcome, setOutcome] = useState<{ success?: string; error?: string }>({})
   const connected = status.connected
   const { player, volume, setVolume } = useSpotify()
-  const [pending, setPending] = useState(false)
+  // Connecting leaves the page for Spotify's sign-in, so there is nothing here to refresh.
+  const connection = useAction({ refresh: false })
   const [volumeOpen, setVolumeOpen] = useState(false)
 
   // Show the sign-in outcome once, then drop it from the address so a refresh does not repeat it.
@@ -38,14 +39,9 @@ export default function SpotifyPremiumPlayer({ status }: { status: SpotifyStatus
   }, [search, setSearch])
 
   async function connect() {
-    setPending(true)
     setOutcome({})
-    try {
-      window.location.assign(await startSpotifyAuthorization())
-    } catch (error) {
-      setOutcome({ error: errorMessage(error) })
-      setPending(false)
-    }
+    const started = await connection.run(startSpotifyAuthorization)
+    if (started.ok) window.location.assign(started.value)
   }
 
   if (!status.configured) {
@@ -55,10 +51,10 @@ export default function SpotifyPremiumPlayer({ status }: { status: SpotifyStatus
   if (!connected) {
     return (
       <div className="spotify-panel">
-        <ActionNotice error={outcome.error} success={outcome.success} />
+        <ActionNotice error={outcome.error ?? connection.error} success={outcome.success} />
         <p>Connect your Spotify account to play your music while you study. Spotify only allows this with a Premium account; without one, switch to the free playlist above.</p>
         <div className="actions">
-          <Button variant="primary" disabled={pending} onClick={() => void connect()}>Connect Spotify</Button>
+          <Button variant="primary" disabled={connection.pending} onClick={() => void connect()}>Connect Spotify</Button>
         </div>
       </div>
     )

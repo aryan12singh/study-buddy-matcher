@@ -10,7 +10,8 @@ import { scopeListPath } from './api'
 import { getGroup } from '../groups/api'
 import { getConnections } from '../connections/api'
 import { useResource } from '../../shared/api/useResource'
-import { errorMessage, fieldErrors, refreshResources } from '../../shared/api/client'
+import { fieldErrors } from '../../shared/api/client'
+import { useAction } from '../../shared/api/useAction'
 import { useAuth } from '../../shared/auth/useAuth'
 import { useFormExit } from '../../shared/components/useFormExit'
 import { useViewNavigation } from '../../shared/components/useViewNavigation'
@@ -58,9 +59,9 @@ function SessionEditor({ context }: { context: EditorContext }) {
   const navigate = useViewNavigation()
   const [form, setForm] = useState<SessionForm>(() => initialSessionForm(context.session, context.scope.kind === 'GROUP' ? context.scope.id : undefined))
   const [baseline, setBaseline] = useState(() => JSON.stringify(form))
-  const [pending, setPending] = useState(false)
+  const action = useAction()
+  const { pending, error } = action
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [error, setError] = useState<string>()
   const [denied, setDenied] = useState(false)
   const [discard, setDiscard] = useState(false)
   const [suggestionDuration, setSuggestionDuration] = useState('60')
@@ -84,23 +85,20 @@ function SessionEditor({ context }: { context: EditorContext }) {
     event.preventDefault()
     if (pending || denied) return
     const invalid = validateSessionForm(form, groupId)
-    setErrors(invalid); setError(undefined)
+    setErrors(invalid); action.clear()
     if (Object.keys(invalid).length) return
-    setPending(true)
-    try {
-      const data = context.session ? await updateSession(context.session.id, sessionInput(form), context.session.version)
-        : await createSession(context.scope, sessionInput(form))
-      if (!alive.current) return
+    const saved = await action.run(() => context.session ? updateSession(context.session.id, sessionInput(form), context.session.version)
+      : createSession(context.scope, sessionInput(form)))
+    if (!alive.current) return
+    if (saved.ok) {
       setBaseline(JSON.stringify(form)); exit.allowSavedNavigation()
-      refreshResources()
-      navigate(`/sessions/${data.id}`, { state: { notice: context.session ? 'Study session updated.' : 'Study session created.' } })
-    } catch (failure) {
-      if (!alive.current) return
-      setError(errorMessage(failure)); setErrors(fieldErrors(failure))
-      if (axios.isAxiosError(failure) && [401, 403, 404].includes(failure.response?.status ?? 0)) {
-        setDenied(true); setForm(initialSessionForm()); setBaseline(JSON.stringify(initialSessionForm()))
-      }
-    } finally { if (alive.current) setPending(false) }
+      navigate(`/sessions/${saved.value.id}`, { state: { notice: context.session ? 'Study session updated.' : 'Study session created.' } })
+      return
+    }
+    setErrors(fieldErrors(saved.failure))
+    if (axios.isAxiosError(saved.failure) && [401, 403, 404].includes(saved.failure.response?.status ?? 0)) {
+      setDenied(true); setForm(initialSessionForm()); setBaseline(JSON.stringify(initialSessionForm()))
+    }
   }
   return <>
     {!denied && <form noValidate onSubmit={submit} className="stack-form session-form">
@@ -157,7 +155,7 @@ function SessionEditor({ context }: { context: EditorContext }) {
     {exit.confirmation}
     {discard && <Dialog title="Discard session edits?" onClose={() => setDiscard(false)}><p>Your edits will be replaced with the saved values.</p>
       <div className="actions"><Button onClick={() => setDiscard(false)}>Keep editing</Button><Button variant="danger" onClick={() => {
-        setForm(initialSessionForm(context.session, groupId)); setErrors({}); setError(undefined); setDiscard(false)
+        setForm(initialSessionForm(context.session, groupId)); setErrors({}); action.clear(); setDiscard(false)
       }}>Discard changes</Button></div></Dialog>}
     {context.session && error && !denied && <p className="muted">If another participant changed this plan, keep a copy of your edits, then <Link to={sessionParent(context.session)}>return to the session list</Link> and reopen the latest version.</p>}
   </>

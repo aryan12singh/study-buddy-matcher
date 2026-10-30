@@ -8,7 +8,7 @@ import { useAction } from '../../shared/api/useAction'
 import { useAuth } from '../../shared/auth/useAuth'
 import WindowPage from '../../shared/components/WindowPage'
 import Button from '../../shared/components/Button'
-import Dialog from '../../shared/components/Dialog'
+import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import RoomWeatherPanel from './RoomWeatherPanel'
@@ -139,8 +139,12 @@ function RoomPage({ groupId }: { groupId: number }) {
     description="A private focus space for accepted group members."
     actions={<Link className="retro-button" to="/study-room">Back to study room</Link>}>
     <ActionNotice error={action.error} success={action.success} />
-    <StatePanel loading={resource.loading} error={valid ? resource.error : 'This room link is invalid.'}
-      onRetry={valid ? () => void resource.refresh() : undefined} />
+    {resource.closed
+      ? <StatePanel empty emptyKind="groups" emptyTitle="This group is closed"
+        emptyMessage="Its study room is no longer available. The group page still shows its details and members."
+        emptyAction={<Link className="retro-button primary" to={`/groups/${groupId}`}>Go to the group</Link>} />
+      : <StatePanel loading={resource.loading} error={valid ? resource.error : 'This room link is invalid.'}
+        onRetry={valid ? () => void resource.refresh() : undefined} />}
     {room && resource.snapshot && <>
       {resource.reconnecting && <p className="group-room-notices" role="status">
         <strong>Connection lost.</strong> Reconnecting to the room; the shared timer keeps running.
@@ -193,16 +197,11 @@ function RoomPage({ groupId }: { groupId: number }) {
         <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
       </div>
     </>}
-    {confirmation && <Dialog title={confirmation === 'leave' ? 'Leave study room?' : 'End this session?'}
-      busy={action.pending} onClose={() => setConfirmation(null)}>
+    {confirmation && <ConfirmDialog title={confirmation === 'leave' ? 'Leave study room?' : 'End this session?'}
+      confirmLabel={confirmation === 'leave' ? 'Leave study room' : 'End session for everyone'} cancelLabel="Keep studying"
+      pending={action.pending} error={action.error} onClose={() => setConfirmation(null)}
+      onConfirm={() => void (confirmation === 'leave' ? leave() : reset())}>
       <p>{confirmation === 'leave' ? room ? leaveMessage(room, account?.id) : '' : `The timer goes back to ${room ? `${room.focusMinutes}:00` : 'the start'} for everyone. Everyone stays in the room.`}</p>
-      <ActionNotice error={action.error} />
-      <div className="actions">
-        <Button disabled={action.pending} onClick={() => setConfirmation(null)}>Keep studying</Button>
-        <Button variant="danger" disabled={action.pending} onClick={() => void (confirmation === 'leave' ? leave() : reset())}>
-          {confirmation === 'leave' ? 'Leave study room' : 'End session for everyone'}
-        </Button>
-      </div>
-    </Dialog>}
+    </ConfirmDialog>}
   </WindowPage>
 }

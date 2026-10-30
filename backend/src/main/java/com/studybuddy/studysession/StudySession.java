@@ -19,6 +19,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * A planned study session, repeated weekly, belonging to exactly one study group or one buddy
+ * connection. It keeps both the local wall time and the first occurrence as instants; a cancelled
+ * session cannot be edited. The {@code @Version} field detects edits made from a stale screen.
+ */
 @Entity
 @Table(name = "study_sessions")
 public class StudySession {

@@ -40,7 +40,7 @@ class ProfileServiceTest {
     private Student student;
 
     @BeforeEach void setUp() {
-        service = new ProfileService(access, courses, availability, new AvailabilityRules(),
+        service = new ProfileService(access, courses, availability, new AvailabilityRules(new AvailabilityProperties(50)),
             new MyProfileAssembler(new CourseAssembler(), properties), properties, mutationLock);
         User user = new User("student04@demo.example.test", "hash", Role.STUDENT);
         ReflectionTestUtils.setField(user, "id", STUDENT_ID);
