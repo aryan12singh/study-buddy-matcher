@@ -82,7 +82,7 @@ describe('form protection and destination feedback', () => {
     await act(async () => { await router.navigate(-1) })
     fireEvent.click(await screen.findByRole('button', { name: 'Keep editing' }))
     expect(router.state.location.pathname).toBe('/groups/new')
-    fireEvent.click(screen.getByRole('link', { name: 'Connections' }))
+    fireEvent.click(screen.getByRole('link', { name: 'My connections' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/connections'))
     unmount()
