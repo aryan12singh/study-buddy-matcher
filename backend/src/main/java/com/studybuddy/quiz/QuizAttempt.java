@@ -1,5 +1,6 @@
 package com.studybuddy.quiz;
 
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.student.Student;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -68,7 +69,7 @@ public class QuizAttempt {
 
     /** From receiving the questions to submitting; only for a submitted attempt. */
     public Duration timeTaken() {
-        if (!isSubmitted()) throw new IllegalStateException("Only a submitted attempt has a time taken");
+        if (!isSubmitted()) throw new InternalInvariantException("Only a submitted attempt has a time taken");
         return Duration.between(startedAt, submittedAt);
     }
 

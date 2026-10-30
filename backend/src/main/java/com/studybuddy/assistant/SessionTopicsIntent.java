@@ -62,7 +62,7 @@ public class SessionTopicsIntent implements AssistantIntent {
 
     private Optional<StudyPlanDto> roadmapOf(AssistantSessions.Upcoming session, Long actorId) {
         try {
-            return Optional.of(plans.getForSession(session.session().id(), actorId));
+            return plans.getForSession(session.session().id(), actorId);
         } catch (SessionPlanNotFoundException none) {
             return Optional.empty();
         }

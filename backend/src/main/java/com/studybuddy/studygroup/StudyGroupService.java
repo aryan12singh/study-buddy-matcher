@@ -8,6 +8,7 @@ import com.studybuddy.course.CourseRepository;
 import com.studybuddy.notification.NotificationResourceType;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
+import com.studybuddy.student.AvailabilityProperties;
 import com.studybuddy.studyroom.RoomLifecycle;
 import java.util.List;
 import java.util.Objects;
@@ -30,11 +31,14 @@ public class StudyGroupService {
     private final RoomLifecycle roomLifecycle;
     private final NotificationService notifications;
     private final AccountAccess access;
+    private final StudyGroupProperties properties;
+    private final AvailabilityProperties availabilityLimits;
 
     public StudyGroupService(StudyGroupRepository groups, GroupMembershipRepository memberships,
         GroupAvailabilitySlotRepository availability, GroupJoinRequestRepository requests, CourseRepository courses, StudyGroupLookup lookup,
         StudyGroupAssembler assembler, GroupViewerAssembler viewers, GroupClosure closure,
-        NotificationService notifications, AccountAccess access, RoomLifecycle roomLifecycle) {
+        NotificationService notifications, AccountAccess access, RoomLifecycle roomLifecycle,
+        StudyGroupProperties properties, AvailabilityProperties availabilityLimits) {
         this.groups = groups;
         this.memberships = memberships;
         this.availability = availability;
@@ -47,6 +51,8 @@ public class StudyGroupService {
         this.roomLifecycle = roomLifecycle;
         this.notifications = notifications;
         this.access = access;
+        this.properties = properties;
+        this.availabilityLimits = availabilityLimits;
     }
 
     public StudyGroupDetailDto create(Long actorId, StudyGroupDetails details) {
@@ -183,7 +189,7 @@ public class StudyGroupService {
         return availability.saveAll(slots.stream().map(slot -> new GroupAvailabilitySlot(group, slot.dayOfWeek(), slot.startTime(), slot.endTime())).toList());
     }
 
-    private static void validate(StudyGroupDetails details) {
+    private void validate(StudyGroupDetails details) {
         if (details == null) {
             throw new InvalidStudyGroupException("Group details are required");
         }
@@ -193,8 +199,14 @@ public class StudyGroupService {
         if (details.maxGroupSize() == null || details.maxGroupSize()<StudyGroupDetails.MIN_GROUP_SIZE) {
             throw new InvalidStudyGroupException("maxGroupSize", "Maximum group size must be at least 2");
         }
+        if (details.maxGroupSize() > properties.maxCapacity()) {
+            throw new InvalidStudyGroupException("maxGroupSize", "Maximum group size can be at most " + properties.maxCapacity());
+        }
         if (details.studyGoals().stream().anyMatch(Objects::isNull)) {
             throw new InvalidStudyGroupException("studyGoals", "Study goals cannot contain a null value");
+        }
+        if (details.availability().size() > availabilityLimits.maxWeeklySlots()) {
+            throw new InvalidStudyGroupException("availability", "Add at most " + availabilityLimits.maxWeeklySlots() + " weekly time blocks");
         }
         for (var slot : details.availability()) {
             if (slot == null || slot.dayOfWeek() == null || slot.startTime() == null || slot.endTime() == null) {

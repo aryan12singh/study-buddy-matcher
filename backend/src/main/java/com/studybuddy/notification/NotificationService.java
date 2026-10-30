@@ -31,11 +31,6 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<NotificationDto> list(Long actorId) {
-        return list(actorId, NotificationFilter.ALL);
-    }
-
-    @Transactional(readOnly = true)
     public List<NotificationDto> list(Long actorId, NotificationFilter filter) {
         access.requireStudent(actorId);
         return assembler.toDtos(filter == NotificationFilter.ALL

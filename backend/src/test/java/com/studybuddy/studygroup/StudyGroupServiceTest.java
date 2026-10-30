@@ -5,6 +5,7 @@ import com.studybuddy.course.CourseNotFoundException;
 import com.studybuddy.course.CourseRepository;
 import com.studybuddy.notification.NotificationService;
 import com.studybuddy.notification.NotificationType;
+import com.studybuddy.student.AvailabilityProperties;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentNotFoundException;
 import com.studybuddy.student.StudentRepository;
@@ -54,6 +55,8 @@ class StudyGroupServiceTest {
     private static final Long IS442_ID = 100L;
     private static final Long IS216_ID = 101L;
     private static final Long GROUP_ID = 5L;
+    private static final int MAX_CAPACITY = 10;
+    private static final int MAX_WEEKLY_SLOTS = 2;
 
     private static final GroupAvailabilitySlotDto MONDAY_EVENING =
             new GroupAvailabilitySlotDto(DayOfWeek.MONDAY, LocalTime.of(18, 0), LocalTime.of(20, 0));
@@ -95,7 +98,8 @@ class StudyGroupServiceTest {
                 groupAvailabilitySlotRepository, groupJoinRequestRepository, courseRepository, new StudyGroupLookup(studyGroupRepository), new StudyGroupAssembler(),
                 new GroupViewerAssembler(groupMembershipRepository, groupJoinRequestRepository),
                 new GroupClosure(groupJoinRequestRepository, groupMembershipRepository, notificationService, roomLifecycle, sessionLifecycle),
-                notificationService, access, roomLifecycle);
+                notificationService, access, roomLifecycle, new StudyGroupProperties(MAX_CAPACITY),
+                new AvailabilityProperties(MAX_WEEKLY_SLOTS));
         alice = student(ALICE_ID, "Alice");
         bob = student(BOB_ID, "Bob");
         is442 = course(IS442_ID, "IS442");
@@ -167,6 +171,28 @@ class StudyGroupServiceTest {
         assertThrows(com.studybuddy.common.error.InvalidInputException.class,
                 () -> service.create(ALICE_ID, details("   ", 4, List.of())));
 
+        verify(studyGroupRepository, never()).save(any());
+    }
+
+    @Test
+    void createRejectsMaxSizeAboveTheConfiguredCapacity() {
+        InvalidStudyGroupException error = assertThrows(InvalidStudyGroupException.class,
+                () -> service.create(ALICE_ID, details("Midterm crammers", MAX_CAPACITY + 1, List.of())));
+
+        assertTrue(error.getFieldErrors().containsKey("maxGroupSize"));
+        verify(studyGroupRepository, never()).save(any());
+    }
+
+    @Test
+    void createRejectsMoreAvailabilityBlocksThanTheConfiguredLimit() {
+        List<GroupAvailabilitySlotDto> tooMany = List.of(MONDAY_EVENING,
+                new GroupAvailabilitySlotDto(DayOfWeek.TUESDAY, LocalTime.of(18, 0), LocalTime.of(20, 0)),
+                new GroupAvailabilitySlotDto(DayOfWeek.WEDNESDAY, LocalTime.of(18, 0), LocalTime.of(20, 0)));
+
+        InvalidStudyGroupException error = assertThrows(InvalidStudyGroupException.class,
+                () -> service.create(ALICE_ID, details("Midterm crammers", 4, tooMany)));
+
+        assertTrue(error.getFieldErrors().containsKey("availability"));
         verify(studyGroupRepository, never()).save(any());
     }
 

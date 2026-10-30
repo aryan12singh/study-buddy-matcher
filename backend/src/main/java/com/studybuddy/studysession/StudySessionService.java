@@ -98,6 +98,7 @@ public class StudySessionService {
     private void authorize(Long id, Long actorId, boolean write) {
         accounts.requireStudent(actorId);
         var parent = sessions.findParent(id).orElseThrow(() -> missing(id));
+        if (!access.isRelated(parent.getGroupId(), parent.getConnectionId(), actorId)) throw missing(id);
         if (parent.getGroupId() != null) {
             if (write) access.lockGroup(parent.getGroupId(), actorId); else access.readGroup(parent.getGroupId(), actorId);
         } else {

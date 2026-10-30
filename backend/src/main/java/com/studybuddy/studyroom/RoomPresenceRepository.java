@@ -17,6 +17,12 @@ public interface RoomPresenceRepository extends JpaRepository<RoomPresence, Long
     void deleteByStudyRoomStudyGroupId(Long groupId);
     void deleteByStudentId(Long studentId);
 
+    @Query("select distinct p.studyRoom.studyGroup.id from RoomPresence p where p.student.id = :studentId")
+    List<Long> findGroupIdsByStudentId(@Param("studentId") Long studentId);
+
+    @Query("select distinct p.student.id from RoomPresence p where p.studyRoom.studyGroup.id = :groupId")
+    List<Long> findStudentIdsByGroupId(@Param("groupId") Long groupId);
+
     @Query("""
         select p from RoomPresence p where p.studyRoom.id = :roomId and p.expiresAt > :now
         and p.student.user.active = true

@@ -1,6 +1,7 @@
 package com.studybuddy.common.error;
 
 import java.util.Map;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 public class ApiException extends RuntimeException {
@@ -29,5 +30,10 @@ public class ApiException extends RuntimeException {
 
     public Map<String, String> getFieldErrors() {
         return fieldErrors;
+    }
+
+    /** Extra response headers; none unless a subclass needs one, such as {@code Retry-After}. */
+    public HttpHeaders getHeaders() {
+        return new HttpHeaders();
     }
 }

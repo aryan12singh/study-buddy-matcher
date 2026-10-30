@@ -55,6 +55,8 @@ public class SecurityConfiguration {
         config.setAllowedOrigins(properties.allowedOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Not on the browser's safe list, so a cross-origin page could not read the sign-in lockout otherwise.
+        config.setExposedHeaders(List.of("Retry-After"));
         config.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);

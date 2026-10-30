@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AvailabilityRulesTest {
-    private final AvailabilityRules rules = new AvailabilityRules();
+    private static final int MAX_SLOTS = 3;
+    private final AvailabilityRules rules = new AvailabilityRules(new AvailabilityProperties(MAX_SLOTS));
 
     private static AvailabilitySlotDto slot(DayOfWeek day, String start, String end) {
         return new AvailabilitySlotDto(day, LocalTime.parse(start), LocalTime.parse(end));
@@ -25,6 +26,16 @@ class AvailabilityRulesTest {
                 slot(DayOfWeek.TUESDAY, "09:00", "11:00"),
                 slot(DayOfWeek.TUESDAY, "11:00", "12:00"),
                 slot(DayOfWeek.THURSDAY, "18:00", "20:00"))));
+    }
+
+    @Test void moreBlocksThanTheConfiguredLimitAreRejected() {
+        List<AvailabilitySlotDto> atLimit = List.of(slot(DayOfWeek.MONDAY, "09:00", "10:00"),
+                slot(DayOfWeek.TUESDAY, "09:00", "10:00"), slot(DayOfWeek.WEDNESDAY, "09:00", "10:00"));
+        assertDoesNotThrow(() -> rules.validate(atLimit));
+        List<AvailabilitySlotDto> overLimit = new ArrayList<>(atLimit);
+        overLimit.add(slot(DayOfWeek.THURSDAY, "09:00", "10:00"));
+        InvalidInputException error = assertThrows(InvalidInputException.class, () -> rules.validate(overLimit));
+        assertTrue(error.getFieldErrors().containsKey("availability"));
     }
 
     @Test void aMissingListIsRejected() {
@@ -60,15 +71,5 @@ class AvailabilityRulesTest {
         assertDoesNotThrow(() -> rules.validate(List.of(
                 slot(DayOfWeek.MONDAY, "18:00", "20:00"),
                 slot(DayOfWeek.FRIDAY, "18:00", "20:00"))));
-    }
-
-    @Test void thereIsNoLimitOnHowManyBlocks() {
-        List<AvailabilitySlotDto> manyBlocks = new ArrayList<>();
-        for (DayOfWeek day : DayOfWeek.values()) {
-            for (int hour = 6; hour < 22; hour += 2) {
-                manyBlocks.add(slot(day, String.format("%02d:00", hour), String.format("%02d:00", hour + 1)));
-            }
-        }
-        assertDoesNotThrow(() -> rules.validate(manyBlocks));
     }
 }

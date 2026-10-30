@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Reads, ticks off and deletes study plans, and does the two short database steps of creating one.
@@ -77,37 +78,41 @@ public class StudyPlanService {
         if (!role.manager()) throw new ForbiddenActionException("Only the group leader can plan this session");
         StudySession session = role.session();
         Course course = session.getGroup() != null ? session.getGroup().getCourse() : chosenCourse(input.courseId());
-        return new SessionPlanRequest(sessionId, course, input.studyGoal(), meetings.upcoming(session));
+        return new SessionPlanRequest(sessionId, session.getVersion(), course, input.studyGoal(), meetings.upcoming(session));
     }
 
     /**
      * Saves a validated session roadmap in place of the session's old one, holding the same locks
-     * as a change to the session. Refuses if the session's meetings changed while Gemini answered,
-     * since the roadmap's dates would no longer match them.
+     * as a change to the session. Refuses if the session was edited while Gemini answered, since
+     * the roadmap's dates would no longer match its meetings; a meeting that merely ended in the
+     * meantime is left out of the saved roadmap instead.
      */
     public StudyPlanDto saveSession(Long actorId, SessionPlanRequest request, StudyMaterial material, RoadmapDraft draft) {
         accounts.beginWrite();
         StudySession session = access.lockForManaging(request.sessionId(), actorId);
-        if (!meetings.upcoming(session).equals(request.frame())) {
-            throw new ConflictException("This session's meetings changed while the roadmap was written; try again");
+        if (session.getVersion() != request.sessionVersion()) {
+            throw new ConflictException("This session was changed while the roadmap was written; try again");
         }
+        SessionMeetingFrames.StillUpcoming roadmap = meetings.dropEnded(session, request.frame(), draft);
         Long courseId = request.course().getId();
         Course course = courses.findById(courseId).orElseThrow(() -> new CourseNotFoundException(courseId));
         plans.deleteAll(plans.findBySessionIdOrderByFirstBlockDateAscIdAsc(session.getId()));
         plans.flush();
-        StudyPlan plan = plans.save(StudyPlan.forSession(session, course, request.goal(), request.frame(),
-                material, draft, actorId, clock.instant()));
+        StudyPlan plan = plans.save(StudyPlan.forSession(session, course, request.goal(), roadmap.frame(),
+                material, roadmap.draft(), actorId, clock.instant()));
         return assembler.toDto(plan, true);
     }
 
-    /** The session's roadmap, for any current participant; managers may also change it. */
+    /**
+     * The session's roadmap, for any current participant; managers may also change it. Empty when
+     * the session has no roadmap yet, which is a normal state rather than an error.
+     */
     @Transactional(readOnly = true)
-    public StudyPlanDto getForSession(Long sessionId, Long actorId) {
+    public Optional<StudyPlanDto> getForSession(Long sessionId, Long actorId) {
         accounts.requireStudent(actorId);
         StudyPlanAccess.SessionRole role = access.sessionRole(sessionId, actorId);
-        StudyPlan plan = plans.findFirstBySessionIdOrderByCreatedAtDescIdDesc(sessionId)
-                .orElseThrow(() -> new SessionPlanNotFoundException(sessionId));
-        return assembler.toDto(plan, role.manager());
+        return plans.findFirstBySessionIdOrderByCreatedAtDescIdDesc(sessionId)
+                .map(plan -> assembler.toDto(plan, role.manager()));
     }
 
     /** A buddy session has no course of its own, so the buddy planning it chooses one. */

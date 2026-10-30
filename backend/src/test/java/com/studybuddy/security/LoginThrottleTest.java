@@ -53,6 +53,7 @@ class LoginThrottleTest {
 
         var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
         assertEquals("Too many incorrect sign-in attempts. Try again in 15 minutes.", refused.getMessage());
+        assertEquals("900", refused.getHeaders().getFirst("Retry-After"));
     }
 
     @Test
@@ -62,6 +63,7 @@ class LoginThrottleTest {
 
         var refused = assertThrows(TooManyLoginAttemptsException.class, () -> throttle.beginAttempt(EMAIL));
         assertEquals("Too many incorrect sign-in attempts. Try again in 1 minute.", refused.getMessage());
+        assertEquals(30, refused.getRetryAfterSeconds());
     }
 
     @Test

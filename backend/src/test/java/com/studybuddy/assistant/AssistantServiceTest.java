@@ -1,6 +1,7 @@
 package com.studybuddy.assistant;
 
 import com.studybuddy.common.AccountAccess;
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.common.error.InvalidInputException;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +55,6 @@ class AssistantServiceTest {
     void refusesToStartWithoutAnIntentForEveryType() {
         List<AssistantIntent> missingOne = everyIntent().subList(1, AssistantIntentType.values().length);
 
-        assertThrows(IllegalStateException.class, () -> new AssistantService(missingOne, parser, mock(AccountAccess.class), PROPERTIES));
+        assertThrows(InternalInvariantException.class, () -> new AssistantService(missingOne, parser, mock(AccountAccess.class), PROPERTIES));
     }
 }

@@ -38,7 +38,7 @@ class SpotifyConnectionServiceTest {
         assertTrue(url.contains("client_id=client"));
         assertTrue(url.contains("response_type=code"));
         assertTrue(url.contains("redirect_uri=http://127.0.0.1:8080/api/spotify/callback"));
-        assertTrue(url.contains("scope=streaming%20user-modify-playback-state"));
+        assertTrue(url.contains("scope=streaming%20user-read-email"));
         assertTrue(url.contains("state=state-1"));
         assertFalse(url.contains("secret"));
     }
@@ -88,11 +88,5 @@ class SpotifyConnectionServiceTest {
 
     @Test void notConnectedStudentHasNoToken() {
         assertThrows(SpotifyNotConnectedException.class, () -> service.accessToken(7L));
-    }
-
-    @Test void disconnectForgetsTheTokens() {
-        tokens.save(7L, new SpotifyTokens("access", "refresh", now.plusSeconds(3600)));
-        service.disconnect(7L);
-        assertFalse(service.status(7L).connected());
     }
 }

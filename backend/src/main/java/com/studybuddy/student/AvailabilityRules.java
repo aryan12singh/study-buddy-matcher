@@ -9,15 +9,24 @@ import org.springframework.stereotype.Component;
 /**
  * Checks a student's whole weekly availability before it replaces the saved
  * one. Overlapping blocks are rejected so the matching engine's overlap maths
- * never counts the same hour twice. There is no limit on the number of blocks.
+ * never counts the same hour twice. The number of blocks is capped by
+ * {@code app.availability.max-weekly-slots}.
  */
 @Component
 public class AvailabilityRules {
     private static final String FIELD = "availability";
+    private final AvailabilityProperties properties;
+
+    public AvailabilityRules(AvailabilityProperties properties) {
+        this.properties = properties;
+    }
 
     public void validate(List<AvailabilitySlotDto> slots) {
         if (slots == null) {
             throw new InvalidInputException(FIELD, "Availability is required, even if it is empty");
+        }
+        if (slots.size() > properties.maxWeeklySlots()) {
+            throw new InvalidInputException(FIELD, "Add at most " + properties.maxWeeklySlots() + " weekly time blocks");
         }
         slots.forEach(AvailabilityRules::validateSlot);
         rejectOverlaps(slots);

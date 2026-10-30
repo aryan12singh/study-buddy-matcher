@@ -118,7 +118,7 @@ public class AdminUserService {
         User user = access.lockLifecycle(actorId, id);
         removalAllowed(user, actorId);
         if (!user.isActive()) {
-            throw new IllegalStateException("This account is already deactivated");
+            throw new AdminActionNotAllowedException("This account is already deactivated");
         }
         user.deactivate();
         if (user.getRole() == Role.STUDENT) {
@@ -131,7 +131,7 @@ public class AdminUserService {
     public AdminUserDetailDto reactivate(Long id, Long actorId) {
         User user = access.lockLifecycle(actorId, id);
         if (user.isActive()) {
-            throw new IllegalStateException("This account is already active");
+            throw new AdminActionNotAllowedException("This account is already active");
         }
         user.setActive(true);
         LOG.info("Administrator {} reactivated {} account {}", actorId, user.getRole(), id);

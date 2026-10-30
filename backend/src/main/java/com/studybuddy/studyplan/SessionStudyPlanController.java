@@ -4,6 +4,7 @@ import com.studybuddy.security.AccountPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,8 +38,11 @@ public class SessionStudyPlanController {
         return creation.createForSession(actor.id(), sessionId, input, files);
     }
 
+    /** 204 No Content when the session has no roadmap yet. */
     @GetMapping
-    public StudyPlanDto get(@PathVariable Long sessionId, @AuthenticationPrincipal AccountPrincipal actor) {
-        return plans.getForSession(sessionId, actor.id());
+    public ResponseEntity<StudyPlanDto> get(@PathVariable Long sessionId, @AuthenticationPrincipal AccountPrincipal actor) {
+        return plans.getForSession(sessionId, actor.id())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 }
