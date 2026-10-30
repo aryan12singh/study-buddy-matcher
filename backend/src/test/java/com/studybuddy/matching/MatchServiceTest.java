@@ -253,8 +253,8 @@ class MatchServiceTest {
         var card = result.matches().getFirst();
         assertEquals(1.0, card.totalScore());
         assertEquals(4L, card.relevantCourse().id());
-        assertTrue(card.explanation().contains("course 100.0%"));
-        assertTrue(card.explanation().contains("not a success probability"));
+        assertTrue(card.explanation().startsWith("Strong match: same course."), card.explanation());
+        assertTrue(card.explanation().contains("not a probability of success"), card.explanation());
         assertTrue(card.breakdown().getFirst().enabled());
         assertEquals(0, card.breakdown().get(1).score());
         assertTrue(!card.breakdown().get(1).enabled());

@@ -1,8 +1,5 @@
 package com.studybuddy.ai;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -12,12 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Decides whether the assistant may call Gemini now: within both the shared daily allowance and the
- * asking student's share of it, and not while pausing after Gemini said it was rate limited. Counts
- * separately from E1's explanation quota, because the two features use separate keys. Kept in
- * memory: a restart resets the count, which suits a single coursework instance.
+ * Decides whether one AI client may call its provider now: within both the shared daily allowance
+ * and the asking student's share of it, and not while pausing after the provider said it was rate
+ * limited. Each client gets its own instance (study tools, assistant chat and E1 explanations use
+ * separate keys), so one feature can never spend another's allowance. Kept in memory: a restart
+ * resets the count, which suits a single coursework instance.
  */
-@Component
 public class AiQuota {
     private final int dailyLimit;
     private final int dailyLimitPerStudent;
@@ -32,15 +29,14 @@ public class AiQuota {
      * The day boundary follows the students' time zone, not the server's. The clock is built here
      * rather than as a shared bean, so it never competes with the application's UTC clock.
      */
-    @Autowired
-    public AiQuota(AiAssistantProperties properties) {
-        this(properties, Clock.system(ZoneId.of(properties.quotaZone())));
+    public AiQuota(int dailyLimit, int dailyLimitPerStudent, Duration cooldown, ZoneId zone) {
+        this(dailyLimit, dailyLimitPerStudent, cooldown, Clock.system(zone));
     }
 
-    AiQuota(AiAssistantProperties properties, Clock clock) {
-        this.dailyLimit = properties.dailyCallLimit();
-        this.dailyLimitPerStudent = properties.dailyCallLimitPerStudent();
-        this.cooldown = properties.rateLimitCooldown();
+    AiQuota(int dailyLimit, int dailyLimitPerStudent, Duration cooldown, Clock clock) {
+        this.dailyLimit = dailyLimit;
+        this.dailyLimitPerStudent = dailyLimitPerStudent;
+        this.cooldown = cooldown;
         this.clock = clock;
     }
 
@@ -64,7 +60,7 @@ public class AiQuota {
         return true;
     }
 
-    /** Gemini refused a call for being too frequent; stop asking until the cooldown passes. */
+    /** The provider refused a call for being too frequent; stop asking until the cooldown passes. */
     public synchronized void pauseAfterRateLimit() {
         pausedUntil = clock.instant().plus(cooldown);
     }

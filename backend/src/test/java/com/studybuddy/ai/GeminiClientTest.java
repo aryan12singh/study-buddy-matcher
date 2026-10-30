@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** The shared Gemini client against a stub server: what it sends, what it accepts and how each failure ends. */
 class GeminiClientTest {
     private static final Long STUDENT_ID = 7L;
     private static final JsonMapper JSON = JsonMapper.builder().build();
@@ -71,11 +73,11 @@ class GeminiClientTest {
 
     /** The real base URL carries a version path, as Gemini's does. */
     private GeminiClient client(boolean enabled, String basePath, int dailyLimit) {
-        AiAssistantProperties properties = new AiAssistantProperties(enabled,
+        GeminiSettings settings = new GeminiSettings("test", enabled,
                 "http://127.0.0.1:" + server.getAddress().getPort() + basePath, "test-model", "test-key",
-                Duration.ofMillis(500), 4000, dailyLimit, dailyLimit, "UTC", Duration.ofSeconds(60));
-        quota = new AiQuota(properties);
-        return new GeminiClient(properties, JSON, quota);
+                Duration.ofMillis(500), 4000, true);
+        quota = new AiQuota(dailyLimit, dailyLimit, Duration.ofSeconds(60), ZoneId.of("UTC"));
+        return new GeminiClient(settings, JSON, quota);
     }
 
     @Test
@@ -101,10 +103,11 @@ class GeminiClientTest {
 
     @Test
     void leavesOutTheThinkingSettingForModelsWithoutAThinkingStep() {
-        AiAssistantProperties properties = new AiAssistantProperties(true,
+        GeminiSettings settings = new GeminiSettings("test", true,
                 "http://127.0.0.1:" + server.getAddress().getPort(), "lite-model", "test-key",
-                Duration.ofMillis(500), 400, 10, 10, "UTC", Duration.ofSeconds(60));
-        new GeminiClient(properties, JSON, new AiQuota(properties), false).generateJson(STUDENT_ID, "PROMPT");
+                Duration.ofMillis(500), 400, false);
+        new GeminiClient(settings, JSON, new AiQuota(10, 10, Duration.ofSeconds(60), ZoneId.of("UTC")))
+                .generateJson(STUDENT_ID, "PROMPT");
 
         assertFalse(requestBody.get().contains("thinkingConfig"), requestBody.get());
         assertTrue(requestBody.get().contains("\"maxOutputTokens\":400"), requestBody.get());

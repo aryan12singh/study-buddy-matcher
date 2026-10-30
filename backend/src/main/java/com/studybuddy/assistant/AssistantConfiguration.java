@@ -1,7 +1,6 @@
 package com.studybuddy.assistant;
 
 import com.studybuddy.ai.AiAssistantProperties;
-import com.studybuddy.ai.AiQuota;
 import com.studybuddy.ai.GeminiClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +22,6 @@ public class AssistantConfiguration {
         AiAssistantProperties forChat = new AiAssistantProperties(shared.enabled(), shared.baseUrl(), chat.model(),
                 shared.apiKey(), chat.timeout(), chat.maxOutputTokens(), chat.dailyCallLimit(),
                 chat.dailyCallLimitPerStudent(), shared.quotaZone(), shared.rateLimitCooldown());
-        return new AssistantAi(new GeminiClient(forChat, json, new AiQuota(forChat), false));
+        return new AssistantAi(new GeminiClient(forChat.geminiSettings("assistant chat", false), json, forChat.newQuota()));
     }
 }
