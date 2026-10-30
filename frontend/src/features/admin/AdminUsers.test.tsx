@@ -200,10 +200,11 @@ describe('administrator lifecycle actions', () => {
     expect(await screen.findByRole('button', { name: 'Reactivate account' })).toBeInTheDocument()
   })
   it('makes permanent deletion a distinct confirmation requiring the email', async () => {
-    vi.spyOn(api, 'get').mockResolvedValue(response(detail))
+    const get = vi.spyOn(api, 'get').mockResolvedValue(response(detail))
     const remove = vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
     renderPage(<AdminUserDetailPage />, '/admin/users/2', '/admin/users/:id', adminAccount)
     fireEvent.click(await screen.findByRole('button', { name: 'Delete account permanently' }))
+    const detailRequests = get.mock.calls.length
     const dialog = screen.getByRole('dialog'), confirm = within(dialog).getByRole('button', { name: 'Delete permanently' })
     expect(confirm).toBeDisabled()
     expect(dialog).toHaveTextContent("Every group they lead and those groups' dependent records")
@@ -212,6 +213,8 @@ describe('administrator lifecycle actions', () => {
     fireEvent.click(confirm)
     await waitFor(() => expect(remove).toHaveBeenCalledWith('/admin/users/2'))
     expect(await screen.findByText('Destination page')).toBeInTheDocument()
+    // The deleted account is not asked for again on the way out.
+    expect(get).toHaveBeenCalledTimes(detailRequests)
   })
   it('disables removal of the currently signed-in account', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response({ account: { ...account, ...adminAccount, active: true }, profile: null, usage: null }))

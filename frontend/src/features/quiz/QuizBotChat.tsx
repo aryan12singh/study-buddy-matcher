@@ -9,7 +9,7 @@ import type { Course } from '../../shared/api/types'
 import { getSessions } from '../sessions/api'
 import { COURSE_CODE, findCourse } from './findCourse'
 import {
-  ACCEPTED_EXTENSIONS, checkFiles, isAiUnavailable, MAX_FILES, MAX_FOCUS_CHARACTERS, MAX_NOTES_CHARACTERS,
+  ACCEPTED_EXTENSIONS, aiUnavailableMessage, checkFiles, isAiUnavailable, MAX_FILES, MAX_FOCUS_CHARACTERS, MAX_NOTES_CHARACTERS,
   sessionLabel, startGroupQuiz, startPersonalQuiz, upcomingSessions,
 } from './api'
 import type { Quiz, QuizHome, QuizMaterial } from './api'
@@ -18,7 +18,7 @@ import type { Quiz, QuizHome, QuizMaterial } from './api'
 type Stage = 'material' | 'course' | 'focus' | 'session' | 'writing' | 'done' | 'failed'
 type Message = { id: number; from: 'bot' | 'me'; text: string; files?: string[]; error?: boolean }
 
-const AI_UNAVAILABLE = "I couldn't reach Gemini just now. Give it a minute and say \"try again\", or quiz each other from your notes."
+const AI_UNAVAILABLE = aiUnavailableMessage('You can say "try again" in a minute, or quiz each other from your notes.')
 const SKIP_WORDS = ['skip', 'no', 'nope', 'none', 'nothing', 'everything', 'all', 'cover everything', 'anything']
 const NO_SESSION_WORDS = ['skip', 'no', 'nope', 'none', 'not for a session']
 /**

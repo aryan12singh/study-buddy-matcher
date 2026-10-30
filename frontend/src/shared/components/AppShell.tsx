@@ -1,40 +1,53 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/useAuth'
-import { api } from '../api/client'
 import { useResource } from '../api/useResource'
 import Button from './Button'
 import Avatar from './Avatar'
 import PixelIcon from './PixelIcon'
 import NavSection from './NavSection'
+import MenuBar from './MenuBar'
 import RouteNotice from './RouteNotice'
 import AssistantLauncher from '../../features/assistant/AssistantLauncher'
+import AchievementNavIcon from '../../features/achievements/AchievementNavIcon'
+import { getUnreadCount } from '../../features/notifications/api'
 
 export default function AppShell() {
   const { account, logout } = useAuth()
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuButton = useRef<HTMLButtonElement>(null)
+  const navigation = useRef<HTMLElement>(null)
   const viewingStudyRoom = pathname === '/study-room' || /^\/groups\/[^/]+\/room\/?$/.test(pathname)
-  const notifications = useResource(
-    'shell-unread',
-    async signal => (await api.get<{ count: number }>('/notifications/unread-count', { signal })).data,
-    account?.role === 'STUDENT'
-  )
+  // The forest is reached from the achievements page, so it keeps that sidebar entry highlighted.
+  const viewingAchievements = pathname === '/achievements' || pathname === '/forest'
+  const notifications = useResource('shell-unread', getUnreadCount, account?.role === 'STUDENT')
+  const unread = notifications.data ?? 0
   useEffect(() => {
     document.querySelector<HTMLElement>('#main-content')?.focus()
   }, [pathname])
+  // The narrow-screen menu moves focus into its links when it opens, and Escape closes it back to its button.
+  useEffect(() => {
+    if (!menuOpen) return
+    navigation.current?.querySelector<HTMLElement>('a')?.focus()
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setMenuOpen(false)
+      menuButton.current?.focus()
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [menuOpen])
   return (
     <div className="desktop">
-      <a href="#main-content" className="skip-link">Skip to content</a>
-      <header className="desktop-menubar">
-        <NavLink to="/app" className="desktop-brand"><PixelIcon kind="brand" /><span>Study Buddy Matcher</span></NavLink>
+      <MenuBar brandTo="/app">
         <div className="session-menu">
           {account?.role === 'STUDENT' && (
             <div className="menubar-tools">
               <NavLink to="/notifications" className="retro-button menubar-icon-button menubar-notifications" title="Notifications">
                 <PixelIcon kind="notifications" /><span className="visually-hidden">Notifications</span>
-                {notifications.data && notifications.data.count > 0 && (
-                  <span className="unread-count" aria-label={`${notifications.data.count} unread notifications`}>{notifications.data.count}</span>
+                {unread > 0 && (
+                  <><span className="unread-count" aria-hidden="true">{unread}</span><span className="visually-hidden">, {unread} unread</span></>
                 )}
               </NavLink>
               {notifications.error && (
@@ -50,14 +63,14 @@ export default function AppShell() {
             <span className="session-identity" title={account?.email}><strong>{account?.name || (account?.role === 'ADMIN' ? 'Administrator' : 'Student')}</strong><span>{account?.role === 'ADMIN' ? 'Admin account' : 'Student account'}</span></span>
             <Button onClick={logout}>Log out</Button>
           </div>
-          <button type="button" className="retro-button menubar-icon-button menubar-menu" aria-expanded={menuOpen}
+          <button type="button" ref={menuButton} className="retro-button menubar-icon-button menubar-menu" aria-expanded={menuOpen}
             aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)}>
             <PixelIcon kind="menu" /><span className="visually-hidden">Menu</span>
           </button>
         </div>
-      </header>
+      </MenuBar>
       <div className="desktop-layout">
-        <nav id="main-navigation" className={`desktop-navigation${menuOpen ? ' is-open' : ''}`} aria-label="Main navigation"
+        <nav id="main-navigation" ref={navigation} className={`desktop-navigation${menuOpen ? ' is-open' : ''}`} aria-label="Main navigation"
           onClick={event => { if ((event.target as Element).closest('a')) setMenuOpen(false) }}>
           {account?.role === 'STUDENT' ? (
             <>
@@ -76,6 +89,8 @@ export default function AppShell() {
               </NavSection>
               <NavSection title="You">
                 <NavLink to={`/students/${account.id}`}><PixelIcon kind="profile" /><span>My study profile</span></NavLink>
+                <Link to="/achievements" className={viewingAchievements ? 'active' : undefined}
+                  aria-current={viewingAchievements ? 'page' : undefined}><AchievementNavIcon /><span>Achievements</span></Link>
               </NavSection>
             </>
           ) : (

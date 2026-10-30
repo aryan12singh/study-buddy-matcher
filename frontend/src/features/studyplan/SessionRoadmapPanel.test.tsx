@@ -67,6 +67,15 @@ describe('session roadmap panel', () => {
     expect(screen.queryByRole('button', { name: 'Plan these meetings' })).not.toBeInTheDocument()
   })
 
+  it('treats a 204 No Content answer as a session without a roadmap', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => path === '/courses' ? response([course]) : { data: '', status: 204 } as never)
+    const consoleError = vi.spyOn(console, 'error')
+    open({ ...session, canManage: false })
+    expect(await screen.findByText('The group leader can create one for everyone.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
   it('offers no planning for a cancelled session', async () => {
     serve(() => null)
     open({ ...session, status: 'CANCELLED', nextOccurrence: null })
@@ -127,14 +136,14 @@ describe('session roadmap panel', () => {
     expect((post.mock.calls[0][1] as FormData).get('topicsText')).toBe('Generics')
   })
 
-  it('says plainly when Gemini could not draft the roadmap', async () => {
+  it('says plainly when the AI helper could not draft the roadmap', async () => {
     serve(() => null)
     vi.spyOn(api, 'post').mockRejectedValue(failure(503, 'The AI assistant is unavailable.', 'AI_UNAVAILABLE'))
     open()
     fireEvent.click(await screen.findByRole('button', { name: 'Plan these meetings' }))
     pasteTopics()
     fireEvent.click(screen.getByRole('button', { name: 'Create session roadmap' }))
-    expect(await screen.findByText(/Gemini could not draft the roadmap just now, so nothing changed/)).toBeInTheDocument()
+    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. Nothing changed/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create session roadmap' })).toBeEnabled()
   })
 

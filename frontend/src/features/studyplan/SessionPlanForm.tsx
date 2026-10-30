@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { errorMessage, fieldErrors } from '../../shared/api/client'
+import { fieldErrors } from '../../shared/api/client'
 import { getCourses } from '../../shared/api/courses'
+import { useAction } from '../../shared/api/useAction'
 import { useResource } from '../../shared/api/useResource'
 import { label, STUDY_GOALS } from '../../shared/api/types'
 import Field from '../../shared/components/Field'
@@ -9,15 +10,14 @@ import Button from '../../shared/components/Button'
 import ActionNotice from '../../shared/components/ActionNotice'
 import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import StatePanel from '../../shared/components/StatePanel'
-import { isAiUnavailable } from '../quiz/api'
+import { describeAiFailure } from '../quiz/api'
 import type { StudySession } from '../sessions/api'
 import { createSessionPlan } from './api'
 import { EMPTY_MATERIAL, sessionPlanRequest, validateSessionPlanForm } from './studyPlanForm'
 import type { SessionPlanForm as Form } from './studyPlanForm'
 import StudyMaterialInput from './StudyMaterialInput'
 
-const AI_UNAVAILABLE = 'Gemini could not draft the roadmap just now, so nothing changed. Try again in a minute,'
-  + ' or write the plan in the session’s agenda instead.'
+const DESCRIBE_FAILURE = describeAiFailure('Nothing changed. You can try again later, or write the plan in the session’s agenda instead.')
 
 /**
  * Creates a session's roadmap, or replaces its current one after a confirm. A group session
@@ -33,8 +33,8 @@ export default function SessionPlanForm({ session, replacing, onCreated, onCance
   const courses = useResource('session-plan-courses', getCourses, needsCourse, false)
   const [form, setForm] = useState<Form>({ courseId: '', studyGoal: '', ...EMPTY_MATERIAL })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [pending, setPending] = useState(false)
-  const [failure, setFailure] = useState<string>()
+  const action = useAction({ describeError: DESCRIBE_FAILURE })
+  const pending = action.pending
   const [confirming, setConfirming] = useState(false)
 
   function change(next: Partial<Form>) {
@@ -51,7 +51,7 @@ export default function SessionPlanForm({ session, replacing, onCreated, onCance
     event.preventDefault()
     const invalid = validateSessionPlanForm(form, needsCourse)
     setErrors(invalid)
-    setFailure(undefined)
+    action.clear()
     if (Object.keys(invalid).length) return
     if (replacing) setConfirming(true)
     else void send()
@@ -59,17 +59,11 @@ export default function SessionPlanForm({ session, replacing, onCreated, onCance
 
   async function send() {
     const { input, material } = sessionPlanRequest(form, needsCourse)
-    setPending(true)
-    try {
-      await createSessionPlan(session.id, input, material)
-      onCreated()
-    } catch (error) {
-      setErrors(fieldErrors(error))
-      setFailure(isAiUnavailable(error) ? AI_UNAVAILABLE : errorMessage(error))
-    } finally {
-      setPending(false)
-      setConfirming(false)
-    }
+    const result = await action.run(() => createSessionPlan(session.id, input, material))
+    setConfirming(false)
+    // Server field messages join the form's own, so each clears once its field changes.
+    if (result.ok) onCreated()
+    else setErrors(fieldErrors(result.failure))
   }
 
   if (needsCourse && !courses.data) {
@@ -94,7 +88,7 @@ export default function SessionPlanForm({ session, replacing, onCreated, onCance
     <StudyMaterialInput kind={form.materialKind} files={form.files} topicsText={form.topicsText} errors={errors} disabled={pending}
       onKindChange={switchMaterial} onFilesChange={files => change({ files })} onTopicsChange={topicsText => change({ topicsText })} />
     {pending && <p className="muted" role="status">Reading your material and planning the meetings. This can take up to a minute.</p>}
-    <ActionNotice error={failure} />
+    <ActionNotice error={action.error} />
     <div className="actions">
       <Button disabled={pending} onClick={onCancel}>Cancel</Button>
       <Button type="submit" variant="primary" disabled={pending}>

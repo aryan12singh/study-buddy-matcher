@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, useParams } from 'react-router-dom'
 import { getGroup, leaveGroup, withdrawApplication } from './api'
 import { useResource } from '../../shared/api/useResource'
@@ -42,6 +43,8 @@ function GroupDetailContent({ actorId }: { actorId?: number }) {
   const [applicationGroup, setApplicationGroup] = useState<{ id: number; name: string } | null>(null)
   const [agenda, setAgenda] = useState(false)
   const [confirming, setConfirming] = useState<MembershipConfirmation | null>(null)
+  // The membership tenure this student has just left, so its member-only agenda stops at once.
+  const [leftTenure, setLeftTenure] = useState<string>()
   const action = useAction()
   const joinedAt = group?.members.find(member => member.studentId === actorId)?.joinedAt
   const confirmationCurrent = Boolean(confirming && group?.id === confirming.groupId && group.active &&
@@ -62,7 +65,11 @@ function GroupDetailContent({ actorId }: { actorId?: number }) {
     if (!confirming || !confirmationCurrent) return
     const target = confirming
     const result = target.kind === 'leave'
-      ? await action.run(() => leaveGroup(target.groupId), `You left ${target.groupName}.`, true)
+      ? await action.run(async () => {
+        await leaveGroup(target.groupId)
+        // Remove the agenda before the refresh that follows, so it never asks for sessions the student can no longer see.
+        flushSync(() => setLeftTenure(target.joinedAt))
+      }, `You left ${target.groupName}.`, true)
       : await action.run(() => withdrawApplication(target.requestId!), 'Application withdrawn.')
     if (result.ok) setConfirming(null)
   }
@@ -160,7 +167,7 @@ function GroupDetailContent({ actorId }: { actorId?: number }) {
               <p className="muted">You withdrew your previous application. You may send a new request if a place is available.</p>
             ) : null}
           </section>
-          {group.active && group.viewer.member && <GroupSessionAgenda groupId={group.id} leader={group.viewer.leader} />}
+          {group.active && group.viewer.member && joinedAt !== leftTenure && <GroupSessionAgenda groupId={group.id} leader={group.viewer.leader} />}
           <section className="detail-panel">
             <h2>Weekly meeting schedule</h2>
             <WeeklySchedule slots={group.availability} />

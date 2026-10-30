@@ -116,7 +116,7 @@ describe('Quiz Buddy', () => {
     expect(screen.getByText(/Anything I should focus on/)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Cover everything' }))
 
-    expect(await screen.findByText(/I couldn't reach Gemini just now/)).toBeTruthy()
+    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. You can say "try again"/)).toBeTruthy()
     const [path, form] = post.mock.calls[0] as [string, FormData]
     expect(path).toBe('/groups/3/quizzes')
     expect(form.get('notesText')).toBe('Polymorphism lets a subclass override a method of its parent class.')

@@ -9,8 +9,13 @@ function isTransient(error: unknown) {
   return axios.isAxiosError(error) && (!error.response || error.response.status >= 500)
 }
 
+/** Reading a room is refused with 409 only when its group has closed; a joined heartbeat's 409 can also mean an expired lease. */
+function isClosedGroup(error: unknown, previewing: boolean) {
+  return previewing && axios.isAxiosError(error) && error.response?.status === 409
+}
+
 export function useStudyRoom(groupId: number, clientId: string, valid: boolean) {
-  const [state, setState] = useState<{ snapshot?: RoomSnapshot; error?: string; loading: boolean }>({ loading: valid })
+  const [state, setState] = useState<{ snapshot?: RoomSnapshot; error?: string; closed?: boolean; loading: boolean }>({ loading: valid })
   const [joinedHere, setJoinedHere] = useState(false)
   const [pollInterval, setPollInterval] = useState<number>()
   const [reconnecting, setReconnecting] = useState(false)
@@ -38,8 +43,9 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
     const controller = new AbortController()
     request.current = controller
     const generation = ++sequence.current
+    const previewing = !joined.current
     try {
-      const snapshot = joined.current
+      const snapshot = !previewing
         ? await heartbeatRoom(groupId, clientId, presence.current, controller.signal)
         : await getRoom(groupId, controller.signal)
       if (!controller.signal.aborted && generation === sequence.current) {
@@ -54,7 +60,7 @@ export function useStudyRoom(groupId: number, clientId: string, valid: boolean) 
         } else {
           setReconnecting(false)
           markJoined(false)
-          setState({ loading: false, error: errorMessage(error) })
+          setState({ loading: false, error: errorMessage(error), closed: isClosedGroup(error, previewing) })
         }
       }
     } finally { if (request.current === controller) request.current = null }

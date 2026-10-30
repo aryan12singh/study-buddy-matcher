@@ -166,13 +166,13 @@ describe('creating a study plan', () => {
     expect(body.has('files')).toBe(false)
   })
 
-  it('says plainly when Gemini could not draft the plan', async () => {
+  it('says plainly when the AI helper could not draft the plan', async () => {
     vi.spyOn(api, 'post').mockRejectedValue(failure(503, 'The AI assistant is unavailable.', 'AI_UNAVAILABLE'))
     open('/study-plan/new?courseId=4&hoursPerWeek=6')
     fireEvent.click(await screen.findByLabelText('Paste topics'))
     fireEvent.change(screen.getByLabelText('Topics to cover'), { target: { value: 'Encapsulation' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create study plan' }))
-    expect(await screen.findByText(/Gemini could not draft the roadmap just now, so no plan was saved/)).toBeInTheDocument()
+    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. No plan was saved/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create study plan' })).toBeEnabled()
   })
 

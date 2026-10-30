@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
 import ReactionLayer from './ReactionLayer'
-import ReactionTray from './ReactionTray'
+import ReactionTray, { REACTION_COOLDOWN_MS } from './ReactionTray'
 import type { RoomReaction } from './api'
 
 const NOW = '2026-10-29T02:00:10Z'
@@ -45,6 +46,23 @@ describe('room reactions', () => {
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send growing reaction' })) })
     expect(screen.getByRole('alert')).toHaveTextContent('You are reacting too quickly')
     expect(onSent).toHaveBeenCalledTimes(1)
+  })
+
+  it('rests the buttons for the cooldown window after the server says the student is reacting too quickly', async () => {
+    vi.useFakeTimers()
+    const tooQuick = new AxiosError('Conflict', 'ERR_BAD_REQUEST', undefined, undefined, { config: { headers: new AxiosHeaders() }, status: 409,
+      statusText: 'Conflict', headers: {}, data: { code: 'STATE_CONFLICT', message: 'You are reacting too quickly; wait a moment and try again' } })
+    const post = vi.spyOn(api, 'post').mockRejectedValue(tooQuick)
+    render(<ReactionTray groupId={5} joined onSent={vi.fn()} />)
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send heart reaction' })) })
+    expect(screen.getByRole('status')).toHaveTextContent('You are reacting too quickly; wait a moment and try again')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Send clap reaction' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Send clap reaction' }))
+    expect(post).toHaveBeenCalledTimes(1)
+    act(() => { vi.advanceTimersByTime(REACTION_COOLDOWN_MS) })
+    expect(screen.getByRole('button', { name: 'Send clap reaction' })).toBeEnabled()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 
   it('floats the sender\'s own reaction at once and does not repeat it when the snapshot catches up', () => {

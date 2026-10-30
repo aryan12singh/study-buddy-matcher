@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { cancelSession, getSession } from './api'
 import { displayedOccurrence, nextSessionOccurrence, occurrenceLabel, sessionParent, sessionStatusLabel } from './sessionPresentation'
 import { useSessionClock } from './useSessionClock'
@@ -12,7 +12,7 @@ import StatePanel from '../../shared/components/StatePanel'
 import ActionNotice from '../../shared/components/ActionNotice'
 import Badge from '../../shared/components/Badge'
 import Button from '../../shared/components/Button'
-import Dialog from '../../shared/components/Dialog'
+import ConfirmDialog from '../../shared/components/ConfirmDialog'
 import CalendarButton from './CalendarButton'
 import SessionRoadmapPanel from '../studyplan/SessionRoadmapPanel'
 import './sessions.css'
@@ -28,14 +28,18 @@ function SessionDetail({ id }: { id: number }) {
   const session = useResource(`session-${account?.id}-${id}`, signal => getSession(id, signal), valid)
   const action = useAction()
   const [confirm, setConfirm] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
   const data = session.data
   const clockSessions = useMemo(() => data ? [data] : [], [data])
   const now = useSessionClock(clockSessions)
   async function cancel() {
     if (!data) return
     const result = await action.run(() => cancelSession(id, data.version), 'Study session cancelled for everyone.')
-    if (result.ok) setConfirm(false)
-    else session.reload()
+    if (!result.ok) { session.reload(); return }
+    setConfirm(false)
+    // Drop the notice this page arrived with (such as "Study session created.") so only the latest outcome shows.
+    void navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
   }
   return <WindowPage title={data?.title ?? 'Study session'} description="A shared study plan."
     actions={<Link className="retro-button" to={data ? sessionParent(data) : '/sessions'}>Back to sessions</Link>}>
@@ -63,11 +67,9 @@ function SessionDetail({ id }: { id: number }) {
         <ul className="session-times">{data.occurrences.map(item => <li key={item.startAt}>{occurrenceLabel(item)}</li>)}</ul>
       </section>
     </>}
-    {confirm && data?.canManage && <Dialog title="Cancel study session?" busy={action.pending} onClose={() => setConfirm(false)}>
+    {confirm && data?.canManage && <ConfirmDialog title="Cancel study session?" confirmLabel="Cancel for everyone" cancelLabel="Keep session"
+      pending={action.pending} error={action.error} onConfirm={() => void cancel()} onClose={() => setConfirm(false)}>
       <p>This cancels {data.occurrenceCount > 1 ? `all ${data.occurrenceCount} weekly dates` : 'the session'} for everyone. Participants will be notified.</p>
-      <ActionNotice error={action.error} />
-      <div className="actions"><Button disabled={action.pending} onClick={() => setConfirm(false)}>Keep session</Button>
-        <Button variant="danger" disabled={action.pending} onClick={() => void cancel()}>Cancel for everyone</Button></div>
-    </Dialog>}
+    </ConfirmDialog>}
   </WindowPage>
 }

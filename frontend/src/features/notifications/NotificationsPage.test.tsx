@@ -79,6 +79,17 @@ describe('notifications', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mark all as read' }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/notifications/read-all'))
   })
+  it('offers Mark all as read only while something is unread', async () => {
+    let unread = 1
+    vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: unread } : [{ ...notification, read: unread === 0 }]))
+    vi.spyOn(api, 'post').mockImplementation(async () => { unread = 0; return response(undefined) })
+    renderPage(<NotificationsPage />)
+    const markAll = screen.getByRole('button', { name: 'Mark all as read' })
+    await waitFor(() => expect(markAll).toBeEnabled())
+    fireEvent.click(markAll)
+    expect(await screen.findByText('All notifications marked as read.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Mark all as read' })).toBeDisabled())
+  })
   it('shows a retry and recovers from a failed read view', async () => {
     vi.spyOn(api, 'get').mockRejectedValueOnce(new Error('Network unavailable')).mockResolvedValue(response([]))
     renderPage(<NotificationsPage />)
@@ -98,8 +109,8 @@ describe('notifications', () => {
     vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/notifications/unread-count' ? { count: read ? 0 : 1 } : [{ ...notification, read }]))
     vi.spyOn(api, 'post').mockImplementation(async () => { read = true; return response({ ...notification, read: true }) })
     render(<AuthContext.Provider value={{ account: studentAccount, loading: false, retry: vi.fn(), logout: vi.fn(), login: vi.fn(), register: vi.fn() }}><MemoryRouter initialEntries={['/notifications']}><AppRoutes /></MemoryRouter></AuthContext.Provider>)
-    expect(await screen.findByLabelText('1 unread notifications')).toHaveTextContent('1')
+    expect(await screen.findByRole('link', { name: 'Notifications, 1 unread' })).toHaveTextContent('1')
     fireEvent.click(await screen.findByRole('button', { name: 'Mark as read' }))
-    await waitFor(() => expect(screen.queryByLabelText('1 unread notifications')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Notifications' })).not.toHaveTextContent('1'))
   })
 })
