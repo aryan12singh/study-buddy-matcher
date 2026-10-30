@@ -3,6 +3,9 @@ package com.studybuddy.integration;
 import com.studybuddy.achievement.AchievementService;
 import com.studybuddy.achievement.BadgeDto;
 import com.studybuddy.achievement.BadgeTier;
+import com.studybuddy.forest.ForestService;
+import com.studybuddy.forest.TreeDto;
+import com.studybuddy.forest.TreeSpecies;
 import com.studybuddy.matching.MatchResultDto;
 import com.studybuddy.matching.MatchSearchCriteria;
 import com.studybuddy.matching.MatchService;
@@ -15,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,6 +44,8 @@ class DemoSeedTest extends PostgresHttpTest {
     private MatchService matches;
     @Autowired
     private AchievementService achievements;
+    @Autowired
+    private ForestService forest;
 
     @Test
     void seedsAtLeastTheBriefsMinimumCoursesAndStudents() {
@@ -168,11 +175,22 @@ class DemoSeedTest extends PostgresHttpTest {
     }
 
     @Test
+    void thePresentersForestShowsEveryTreeSpecies() {
+        seed.seed();
+
+        var trees = forest.forestOf(idOf(PRESENTER)).trees();
+
+        assertEquals(EnumSet.allOf(TreeSpecies.class), trees.stream().map(TreeDto::species)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(TreeSpecies.class))), "one visit per tree tier");
+        assertEquals(TreeSpecies.ANCIENT_BLOSSOM, trees.getFirst().species(), "newest visit first");
+    }
+
+    @Test
     void seedingAgainLeavesExistingDataUntouched() {
         seed.seed();
         String[] tables = {"users", "courses", "match_requests", "connections", "study_groups",
             "group_memberships", "group_join_requests", "notifications", "availability_slots", "study_sessions",
-            "quizzes", "quiz_attempts", "study_plans", "study_plan_entries"};
+            "quizzes", "quiz_attempts", "study_plans", "study_plan_entries", "focus_visits"};
         long[] before = Arrays.stream(tables).mapToLong(table -> count("select count(*) from " + table)).toArray();
 
         seed.seed();

@@ -1,7 +1,7 @@
 import { api } from '../../shared/api/client'
 
 export type BadgeTier = 'BRONZE' | 'SILVER' | 'GOLD'
-export type BadgeKey = 'CONNECTOR' | 'FIRST_MOVE' | 'TEAM_PLAYER' | 'FOUNDER' | 'PLANNER' | 'GROVE_KEEPER'
+export type BadgeKey = 'CONNECTOR' | 'FIRST_MOVE' | 'TEAM_PLAYER' | 'FOUNDER' | 'PLANNER' | 'GROVE_KEEPER' | 'FORESTER'
 
 export interface Badge {
   key: BadgeKey

@@ -19,7 +19,7 @@ class AchievementPropertiesTest {
     void rejectsZeroLevelStepBeforeAnyDivision() {
         TierThresholds thresholds = new TierThresholds(1, 3, 5);
         assertThatThrownBy(() -> new AchievementProperties(ZoneId.of("Asia/Singapore"), 0,
-                thresholds, thresholds, thresholds, thresholds, thresholds, thresholds))
+                thresholds, thresholds, thresholds, thresholds, thresholds, thresholds, thresholds))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -1,0 +1,39 @@
+/* Reactions and the growing tree in a group study room. */
+.reaction-tray { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; }
+.reaction-buttons { display: flex; flex-wrap: wrap; gap: .25rem; padding: .2rem; border: 2px solid; border-color: #808080 #fff #fff #808080; background: #e9e6dc; }
+.reaction-button { width: 40px; height: 40px; display: grid; place-items: center; padding: 4px; background: #f4f1e8; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; }
+.reaction-button svg { width: 26px; height: 26px; image-rendering: pixelated; }
+.reaction-button:hover:not(:disabled) { background: #fffbe8; }
+.reaction-button:active:not(:disabled) { border-color: #808080 #fff #fff #808080; }
+.reaction-button:active:not(:disabled) svg { transform: translate(1px, 1px); }
+.reaction-button:focus-visible { outline: 2px dotted #000; outline-offset: 2px; }
+.reaction-button:disabled { cursor: not-allowed; opacity: .55; }
+.reaction-hint, .reaction-error { margin: 0; font-size: .85rem; }
+.reaction-error { color: #9b1c1c; }
+
+.reaction-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+.reaction-float { position: absolute; bottom: 8%; display: grid; justify-items: center; gap: .15rem; will-change: transform, opacity; animation: reaction-rise 3.6s cubic-bezier(.22, .61, .36, 1) forwards; }
+/* No filter on the sprite: a drop-shadow over every pixel would be repainted on each frame. */
+.reaction-float svg { width: 44px; height: 44px; image-rendering: pixelated; }
+.reaction-name { font-size: .7rem; padding: 0 .3rem; background: #fffbe8; border: 1px solid #5a3a2a; box-shadow: 2px 2px 0 rgba(0, 0, 0, .25); color: #2b3134; white-space: nowrap; }
+@keyframes reaction-rise {
+  0% { transform: translate3d(0, 0, 0) scale(.5); opacity: 0; }
+  8% { transform: translate3d(0, -18px, 0) scale(1.15); opacity: 1; }
+  14% { transform: translate3d(0, -30px, 0) scale(1); }
+  45% { transform: translate3d(var(--sway, 0), -120px, 0); }
+  75% { opacity: 1; }
+  100% { transform: translate3d(0, -240px, 0); opacity: 0; }
+}
+
+.growing-tree { display: flex; align-items: flex-end; gap: .75rem; padding: .5rem .75rem; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: linear-gradient(180deg, #dff0f6, #f4f9ec 80%); color: #2b3134; }
+.growing-tree-sprite { width: 48px; height: 81px; flex: none; image-rendering: pixelated; }
+.growing-tree h3 { font-size: .95rem; margin: 0 0 .15rem; }
+.growing-tree p { margin: 0 0 .2rem; font-size: .85rem; }
+.growing-tree .retro-button { margin-top: .25rem; font-size: .8rem; }
+.growing-tree-error { color: #9b1c1c; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reaction-float { animation: reaction-fade 3.6s ease-out forwards; }
+}
+@keyframes reaction-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.group-room-social { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }

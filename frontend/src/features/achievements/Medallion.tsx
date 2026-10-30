@@ -9,7 +9,8 @@ const EMBLEMS: Record<BadgeKey, readonly string[]> = {
   TEAM_PLAYER: ['...xx...', '.x.xx.x.', 'xx....xx', '...xx...', '.xxxxxx.', 'xxxxxxxx', 'xx.xx.xx', '........'],
   FOUNDER: ['xxxxxx..', 'xooooxx.', 'xooooxxx', 'xxxxxx..', 'x.......', 'x.......', 'x.......', 'xxx.....'],
   PLANNER: ['.x...x..', 'xxxxxxxx', 'x......x', 'x.xx.x.x', 'x......x', 'x.x.xx.x', 'x......x', 'xxxxxxxx'],
-  GROVE_KEEPER: ['...xx...', '..xoox..', '.xooxxx.', 'xooxxxxx', '.xxxxxx.', '...xx...', '...xx...', '..xxxx..']
+  GROVE_KEEPER: ['...xx...', '..xoox..', '.xooxxx.', 'xooxxxxx', '.xxxxxx.', '...xx...', '...xx...', '..xxxx..'],
+  FORESTER: ['...x....', '..xox..x', '.xooxx.x', '..xox.xo', '.xooxxxo', 'xooxxxxx', '...x...x', '..xxx.xx']
 }
 
 const METALS: Record<BadgeTier | 'LOCKED', { light: string; mid: string; dark: string; ink: string; ribbon: string }> = {

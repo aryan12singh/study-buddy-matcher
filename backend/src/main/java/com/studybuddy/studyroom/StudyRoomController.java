@@ -19,8 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/groups/{groupId}/room")
 public class StudyRoomController {
     private final StudyRoomService service;
+    private final RoomReactionService reactions;
 
-    public StudyRoomController(StudyRoomService service) { this.service = service; }
+    public StudyRoomController(StudyRoomService service, RoomReactionService reactions) {
+        this.service = service;
+        this.reactions = reactions;
+    }
 
     @GetMapping
     public StudyRoomDto state(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor) {
@@ -43,6 +47,11 @@ public class StudyRoomController {
     @PostMapping("/timer")
     public StudyRoomDto timer(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
         @Valid @RequestBody RoomTimerInput input) { return service.controlTimer(groupId, actor.id(), input); }
+
+    @PostMapping("/reactions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public RoomReactionDto react(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,
+        @Valid @RequestBody RoomReactionInput input) { return reactions.send(groupId, actor.id(), input.type()); }
 
     @PutMapping("/settings")
     public StudyRoomDto configure(@PathVariable Long groupId, @AuthenticationPrincipal AccountPrincipal actor,

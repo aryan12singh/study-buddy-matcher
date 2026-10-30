@@ -56,6 +56,23 @@ app:
     # reading in another tab keeps their place. Closing the tab still leaves immediately.
     lease-lifetime: ${ROOM_LEASE_LIFETIME:90s}
     poll-interval: ${ROOM_POLL_INTERVAL:2s}
+    reactions:
+      # How long a reaction stays in room snapshots. Longer than the poll interval so every tab sees it.
+      window: ${ROOM_REACTION_WINDOW:8s}
+      # At most this many reactions per student in each burst window.
+      burst-limit: ${ROOM_REACTION_BURST_LIMIT:5}
+      burst-window: ${ROOM_REACTION_BURST_WINDOW:10s}
+  forest:
+    # A visit's local start time in this zone picks its tree's dawn/day/dusk/night colours.
+    zone: Asia/Singapore
+    # Focused minutes in one room visit for each tree. Shorter visits plant nothing.
+    tree-minutes: { sprout: 10, sapling: 25, oak: 50, pine: 90, ancient-blossom: 150 }
+    # Kinds of tree drawn at random within each species (the frontend draws this many per species).
+    variants-per-species: 3
+    # Local hour each tree light begins: dawn, daytime, dusk, then night until the next dawn.
+    light-starts: { dawn: 5, day: 11, dusk: 17, night: 21 }
+    # Pending forest updates the worker may hold; beyond this one is dropped and logged.
+    update-queue-capacity: 1000
   auth:
     secret: ${jwt.secret}
     token-lifetime: ${jwt.expiration-ms}ms
@@ -78,6 +95,7 @@ app:
     groups-led: { bronze: 1, silver: 2, gold: 3 }
     sessions-planned: { bronze: 1, silver: 5, gold: 10 }
     streak-weeks: { bronze: 2, silver: 4, gold: 8 }
+    trees-planted: { bronze: 1, silver: 5, gold: 15 }
   matching:
     default-strategy: BALANCED
     default-enabled-criteria: [COURSE, AVAILABILITY, STUDY_MODE, STUDY_GOAL, GROUP_SIZE]

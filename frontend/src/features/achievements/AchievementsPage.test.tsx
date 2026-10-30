@@ -37,7 +37,8 @@ describe('achievements page', () => {
     expect(screen.getByText(/weeks starting on Monday/)).toHaveTextContent('A session later this week counts now; future weeks wait until they begin.')
     fireEvent.click(screen.getByText('How these numbers work'))
     expect(screen.getByText(/from your current connection or membership start date onward/)).toBeVisible()
-    expect(screen.getByText(/does not record attendance, completed focus time or study quality/)).toBeVisible()
+    expect(screen.getByText(/Planning a session does not record attendance or study quality/)).toBeVisible()
+    expect(screen.getByText(/Forester is the one badge that counts focus/)).toBeVisible()
   })
 
   it('keeps an earned tier and says what the current count reaches when it has fallen', async () => {
@@ -132,5 +133,15 @@ describe('achievements page', () => {
     const get = vi.spyOn(api, 'get')
     renderPage(<AchievementsPage />, '/', '/', adminAccount)
     expect(get).not.toHaveBeenCalled()
+  })
+
+  it('shows the Forester badge with a way to grow a tree, and a link to the forest once earned', async () => {
+    const forester = { key: 'FORESTER' as const, title: 'Forester', description: 'Trees in your focus forest.', tier: null,
+      currentTier: null, nextTier: 'BRONZE' as const, current: 0, target: 1, earned: false, earnedHint: '1 more tree to reach Bronze.' }
+    vi.spyOn(api, 'get').mockResolvedValue(response({ ...achievementStanding, badges: [...achievementStanding.badges, forester] }))
+    renderPage(<AchievementsPage />)
+    expect(await screen.findByRole('link', { name: 'Grow a tree in a study room' })).toHaveAttribute('href', '/study-room')
+    expect(within(screen.getByRole('region', { name: 'Planned-session grove' })).getByRole('link', { name: 'View my forest' }))
+      .toHaveAttribute('href', '/forest')
   })
 })

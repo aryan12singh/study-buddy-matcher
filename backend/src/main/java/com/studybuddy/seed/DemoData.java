@@ -31,6 +31,7 @@ import java.util.Set;
  * @param sessions    group and buddy sessions to schedule, starting at their block's next time
  * @param quizzes     quizzes to start from questions written in advance, then take
  * @param plans       study plans to create from roadmaps written in advance
+ * @param forest      finished study room visits that grew trees, so the demo forest is not empty
  */
 public record DemoData(
         String presenter,
@@ -42,7 +43,8 @@ public record DemoData(
         List<String> deactivated,
         List<SessionEntry> sessions,
         List<QuizEntry> quizzes,
-        List<PlanEntry> plans) {
+        List<PlanEntry> plans,
+        List<ForestEntry> forest) {
 
     public List<AvailabilitySlotDto> studentSlots(List<String> blockNames) {
         return blockNames.stream().map(this::block)
@@ -118,6 +120,13 @@ public record DemoData(
      */
     public record PlanEntry(String student, String course, StudyGoal goal, int hoursPerWeek, int examInDays,
             String topics, JsonNode roadmap, List<String> completed) {
+    }
+
+    /**
+     * A finished visit by {@code student} to {@code group}'s study room, {@code daysAgo} days back,
+     * starting at {@code startTime} in the forest zone, with {@code focusedMinutes} of focus.
+     */
+    public record ForestEntry(String student, String group, int daysAgo, LocalTime startTime, int focusedMinutes) {
     }
 
     /** PENDING stays unanswered; CONNECTED is accepted; ENDED is accepted, then ended by the receiver. */

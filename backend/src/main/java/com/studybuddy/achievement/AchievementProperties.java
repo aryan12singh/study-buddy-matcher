@@ -19,7 +19,8 @@ public record AchievementProperties(
         @Valid @NotNull TierThresholds groupsJoined,
         @Valid @NotNull TierThresholds groupsLed,
         @Valid @NotNull TierThresholds sessionsPlanned,
-        @Valid @NotNull TierThresholds streakWeeks) {
+        @Valid @NotNull TierThresholds streakWeeks,
+        @Valid @NotNull TierThresholds treesPlanted) {
 
     public AchievementProperties {
         Objects.requireNonNull(weekZone, "Week zone is required");
@@ -30,6 +31,7 @@ public record AchievementProperties(
         Objects.requireNonNull(groupsLed, "Created-group thresholds are required");
         Objects.requireNonNull(sessionsPlanned, "Session thresholds are required");
         Objects.requireNonNull(streakWeeks, "Streak thresholds are required");
+        Objects.requireNonNull(treesPlanted, "Tree thresholds are required");
     }
 
     /** The counts at which a badge reaches bronze, silver and gold, in increasing order. */

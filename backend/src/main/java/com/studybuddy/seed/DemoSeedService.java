@@ -34,6 +34,7 @@ public class DemoSeedService {
     private final DemoSessionSeeder sessions;
     private final DemoQuizSeeder quizzes;
     private final DemoPlanSeeder plans;
+    private final DemoForestSeeder forest;
     private final AccountCreation creation;
     private final UserRepository users;
     private final CourseRepository courses;
@@ -41,6 +42,7 @@ public class DemoSeedService {
 
     public DemoSeedService(DemoSeedProperties properties, DemoDataLoader loader, DemoStudentSeeder students,
             DemoScenarioSeeder scenario, DemoSessionSeeder sessions, DemoQuizSeeder quizzes, DemoPlanSeeder plans,
+            DemoForestSeeder forest,
             AccountCreation creation, UserRepository users, CourseRepository courses, DatabaseMutationLock mutationLock) {
         this.properties = properties;
         this.loader = loader;
@@ -49,6 +51,7 @@ public class DemoSeedService {
         this.sessions = sessions;
         this.quizzes = quizzes;
         this.plans = plans;
+        this.forest = forest;
         this.creation = creation;
         this.users = users;
         this.courses = courses;
@@ -70,6 +73,7 @@ public class DemoSeedService {
             sessions.seed(data, roster, groupIds);
             quizzes.seed(data, roster, courseIds, groupIds);
             plans.seed(data, roster, courseIds);
+            forest.seed(data, roster, groupIds);
         }
     }
 

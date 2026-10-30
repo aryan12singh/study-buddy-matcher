@@ -1,5 +1,6 @@
 package com.studybuddy.achievement;
 
+import com.studybuddy.forest.ForestService;
 import com.studybuddy.achievement.AchievementProperties.TierThresholds;
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.connection.ConnectionRepository;
@@ -31,6 +32,7 @@ public class AchievementService {
     private final GroupMembershipRepository memberships;
     private final StudyGroupRepository groups;
     private final AchievementSessionRepository sessions;
+    private final ForestService forest;
     private final AchievementProperties properties;
     private final EarnedBadgeRecorder recorder;
     private final AchievementAssembler assembler;
@@ -40,13 +42,14 @@ public class AchievementService {
 
     public AchievementService(AccountAccess access, ConnectionRepository connections, MatchRequestRepository requests,
             GroupMembershipRepository memberships, StudyGroupRepository groups, AchievementSessionRepository sessions,
-            AchievementProperties properties, EarnedBadgeRecorder recorder, AchievementAssembler assembler, Clock clock) {
+            ForestService forest, AchievementProperties properties, EarnedBadgeRecorder recorder, AchievementAssembler assembler, Clock clock) {
         this.access = access;
         this.connections = connections;
         this.requests = requests;
         this.memberships = memberships;
         this.groups = groups;
         this.sessions = sessions;
+        this.forest = forest;
         this.properties = properties;
         this.recorder = recorder;
         this.assembler = assembler;
@@ -70,7 +73,8 @@ public class AchievementService {
                 new BadgeProgress(BadgeDefinition.TEAM_PLAYER, memberships.countJoinedOpenByStudentId(actorId), properties.groupsJoined()),
                 new BadgeProgress(BadgeDefinition.FOUNDER, groups.countByLeaderId(actorId), properties.groupsLed()),
                 new BadgeProgress(BadgeDefinition.PLANNER, starts.size(), properties.sessionsPlanned()),
-                new BadgeProgress(BadgeDefinition.GROVE_KEEPER, streak.bestWeeks(), properties.streakWeeks()));
+                new BadgeProgress(BadgeDefinition.GROVE_KEEPER, streak.bestWeeks(), properties.streakWeeks()),
+                new BadgeProgress(BadgeDefinition.FORESTER, forest.plantedTreeCount(actorId), properties.treesPlanted()));
 
         Map<BadgeDefinition, BadgeTier> liveTiers = new EnumMap<>(BadgeDefinition.class);
         progress.forEach(badge -> liveTiers.put(badge.definition(), evaluator.tierFor(badge.count(), badge.thresholds())));

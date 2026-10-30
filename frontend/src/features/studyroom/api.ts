@@ -3,6 +3,8 @@ import { api } from '../../shared/api/client'
 export type TimerPhase = 'FOCUS' | 'BREAK'
 export type TimerStatus = 'IDLE' | 'RUNNING' | 'PAUSED'
 export type PresenceState = 'PRESENT' | 'FOCUS' | 'BREAK'
+export type RoomReactionType = 'CLAP' | 'HEART' | 'FIRE' | 'LIGHTBULB' | 'COFFEE' | 'SPROUT'
+export type RoomReaction = { id: number; type: RoomReactionType; studentId: number; senderName: string; sentAt: string }
 export type RoomTimer = { phase: TimerPhase; status: TimerStatus; remainingMillis: number; focusMillis: number; breakMillis: number }
 export type StudyRoom = {
   groupId: number; groupName: string; version: number; serverTime: string
@@ -12,6 +14,8 @@ export type StudyRoom = {
   timer: RoomTimer
   participants: { studentId: number; name: string; presence: PresenceState; expiresAt: string; leader: boolean; host: boolean; coHost: boolean }[]
   members: { studentId: number; name: string }[]
+  /** Reactions sent in the last few seconds, oldest first. */
+  reactions?: RoomReaction[]
 }
 export type RoomSnapshot = { room: StudyRoom; receivedAt: number; estimatedLatency: number }
 export type RoomConfiguration = { focusMinutes: number; breakMinutes: number; participantLimit: number; hostId: number | null; coHostId: number | null; expectedVersion: number }
@@ -38,4 +42,7 @@ export function timerCommand(groupId: number, command: 'START' | 'PAUSE' | 'RESU
 }
 export function configureRoom(groupId: number, configuration: RoomConfiguration) {
   return snapshot(() => api.put(`${path(groupId)}/settings`, configuration))
+}
+export async function sendReaction(groupId: number, type: RoomReactionType) {
+  return (await api.post<RoomReaction>(`${path(groupId)}/reactions`, { type })).data
 }

@@ -30,6 +30,9 @@ Specific pieces of work:
 - **Study Room tab.** Codex added the separate tab with a personal Pomodoro, groups sidebar,
   original CSS scenery and a reduced-motion-aware progress animation, reusing the existing
   group-room APIs and components.
+- **Room reactions and focus forest.** Claude checked feasibility against the room timer and
+  presence code, wrote the plan, and implemented the reactions endpoint and tray, focus crediting,
+  tree tiers, the forest page, original pixel sprites, demo data and tests at Charlize's request.
 
 Every member reviewed the work they retained and explained it to the team in physical meetings
 and demos.

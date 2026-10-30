@@ -74,6 +74,10 @@ export default function StudyGrove({ streak }: { streak: Streak }) {
           </ul>
         </>
       )}
+      <div className="grove-forest">
+        <p>Every study room visit also plants a tree in your focus forest.</p>
+        <Link className="retro-button" to="/forest">View my forest</Link>
+      </div>
     </section>
   )
 }

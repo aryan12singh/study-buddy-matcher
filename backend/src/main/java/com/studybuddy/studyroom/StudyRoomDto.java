@@ -8,4 +8,4 @@ public record StudyRoomDto(Long groupId, String groupName, long version, Instant
     int participantLimit, int groupLimit, Long hostId, Long coHostId, boolean hostOnline,
     boolean leader, boolean canControl, boolean joined, long pollIntervalMillis, long leaseLifetimeMillis,
     RoomTimerDto timer,
-    List<RoomParticipantDto> participants, List<RoomMemberDto> members) {}
+    List<RoomParticipantDto> participants, List<RoomMemberDto> members, List<RoomReactionDto> reactions) {}

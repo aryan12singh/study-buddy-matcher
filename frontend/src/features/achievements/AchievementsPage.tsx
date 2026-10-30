@@ -30,7 +30,7 @@ export default function AchievementsPage() {
             <p>Each badge contributes the highest tier you have reached: Bronze 1 point, Silver 2, Gold 3. Points determine your level, up to {data.maxPoints} points and level {data.maxLevel}. A tier is saved when you open your achievements, so losing a record later lowers only the count, not the tier or level.</p>
             <p>Planner counts individual occurrences, including each week of a recurring session. Only non-cancelled sessions in an active buddy connection or an open group you currently belong to count, from your current connection or membership start date onward. Anyone may have scheduled these sessions.</p>
             <p>Current planned streak is the consecutive run ending this week, or last week while this week is still open. Best eligible run is the longest run in those currently eligible schedules. Editing, cancelling or losing access to a schedule can change either number.</p>
-            <p>Planning a session or opening a study-room timer does not record attendance, completed focus time or study quality. These badges make no claim about those activities.</p>
+            <p>Planning a session does not record attendance or study quality. Forester is the one badge that counts focus: it counts trees, and a study room visit plants one only when you stay while the shared focus timer runs. It measures time in the room, not how well you studied.</p>
           </details>
           <section aria-labelledby="badges-title">
             <h2 id="badges-title" className="achievements-heading">Badges</h2>

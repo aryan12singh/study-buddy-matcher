@@ -261,5 +261,13 @@
         ]
       },
       "completed": ["Review the SOLID principles", "Interfaces versus abstract classes"] }
+  ],
+  "forest": [
+    { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 1, "startTime": "20:30", "focusedMinutes": 165 },
+    { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 2, "startTime": "14:00", "focusedMinutes": 95 },
+    { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 3, "startTime": "09:15", "focusedMinutes": 55 },
+    { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 5, "startTime": "18:00", "focusedMinutes": 30 },
+    { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 6, "startTime": "22:10", "focusedMinutes": 12 },
+    { "student": "jamie", "group": "IS442 Design Patterns Clinic", "daysAgo": 1, "startTime": "20:30", "focusedMinutes": 60 }
   ]
 }
