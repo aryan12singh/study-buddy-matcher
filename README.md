@@ -22,6 +22,17 @@
   <img src="docs/assets/screenshots/study-room.png" alt="A group study room with a shared Pomodoro, reactions and a growing tree" width="49%" />
 </p>
 
+### Demo videos
+
+| [Launch film (1 min)](docs/assets/video/study-buddy-launch-film.mp4) | [Walkthrough (2 min)](docs/assets/video/study-buddy-walkthrough.mp4) |
+| --- | --- |
+| [<img src="docs/assets/video/launch-film-preview.gif" alt="Launch film preview: the app boots and Find buddies explains a match" width="100%" />](docs/assets/video/study-buddy-launch-film.mp4) | [<img src="docs/assets/video/walkthrough-preview.gif" alt="Walkthrough preview: the server's profile response has no contact number" width="100%" />](docs/assets/video/study-buddy-walkthrough.mp4) |
+| A student's lonely exam week, then the app that fixes it | Every feature in order, following Priya, as a marker would test it |
+
+Click a preview to open the video, then **View raw** or the download button to save it (1080p,
+with sound). Both are recorded from the real app with the seeded demo data; the narration is a
+synthetic voice and the music was generated in code (see [AI usage](docs/AI_USAGE.md)).
+
 ---
 
 **Contents:** [Features](#features) · [Two extensions](#two-extensions) · [Architecture](#architecture) ·
