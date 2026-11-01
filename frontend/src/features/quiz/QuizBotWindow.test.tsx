@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
 import { response } from '../../test/renderApp'
 import QuizBotLauncher from './QuizBotLauncher'
-import { findCourse } from './findCourse'
+import { findCourse, preferCourses } from './findCourse'
 import type { Quiz } from './api'
 
 afterEach(() => vi.restoreAllMocks())
@@ -171,6 +171,26 @@ describe('Quiz Buddy', () => {
     expect(screen.queryByText(/upcoming sessions/)).toBeNull()
     const [, form] = post.mock.calls[0] as [string, FormData]
     expect(form.get('sessionId')).toBeNull()
+  })
+
+  it('suggests the course named in pasted notes, then the student’s own courses', async () => {
+    const catalogue = ['ACCT101', 'ECON101', 'FNCE101', 'IS111', 'IS112', 'IS113', 'IS212', 'IS442']
+      .map((code, i) => ({ id: i + 1, code, name: code }))
+    const is212 = catalogue[6]
+    vi.spyOn(api, 'get').mockImplementation(async (url: string) => response(url === '/courses' ? catalogue
+      : url === '/profile/me' ? { coursesTaken: [is212], targetCourse: null } : []))
+    openBot({ scope: 'PERSONAL' }, true)
+
+    type('IS442 week 9: Strategy, Observer and Template Method patterns.')
+    send()
+    expect(await screen.findByText(/Which course are these notes for/)).toBeTruthy()
+    const choices = within(screen.getByLabelText('Suggested replies')).getAllByRole('button').map(button => button.textContent)
+    expect(choices.slice(0, 3)).toEqual(['IS442', 'IS212', 'ACCT101'])
+  })
+
+  it('puts preferred courses first without repeating them', () => {
+    const [a, b, c] = [1, 2, 3].map(id => ({ id, code: `C${id}`, name: `C${id}` }))
+    expect(preferCourses([a, b, c], [c, null, c, undefined, b])).toEqual([c, b, a])
   })
 
   it('matches a course by code or by name', () => {

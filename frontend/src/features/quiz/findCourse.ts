@@ -15,3 +15,11 @@ export function findCourse(text: string, courses: Course[]): Course | null {
   if (words.length < 3) return null
   return courses.find(course => course.name.toLowerCase().includes(words) || words.includes(course.name.toLowerCase())) ?? null
 }
+
+/** The courses to suggest first, in this order, followed by the rest in catalogue order. */
+export function preferCourses(courses: Course[], preferred: (Course | null | undefined)[]): Course[] {
+  const ids: number[] = []
+  for (const course of preferred) if (course && !ids.includes(course.id)) ids.push(course.id)
+  const first = ids.flatMap(id => courses.filter(course => course.id === id))
+  return [...first, ...courses.filter(course => !ids.includes(course.id))]
+}
