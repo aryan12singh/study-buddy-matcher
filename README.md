@@ -168,39 +168,100 @@ stale saves are rejected. Formulas and alternatives are in the
 
 ## Getting started
 
-| Requirement | Used for |
-| --- | --- |
-| JDK 21 in `JAVA_HOME` | Building and running the backend |
-| Node.js 22 and npm | The frontend (matches CI) |
-| `psql` and OpenSSL | Applying migrations and generating a signing key |
-| A PostgreSQL database | The team uses shared Supabase; access is shared privately |
-| Bash and Docker | The full backend test suite only |
+### Run it locally (about 5 minutes)
 
-1. **Install the frontend:** `cd frontend && cp .env.example .env && npm ci`. The `.env` points
-   the frontend at `http://localhost:8080/api`.
-2. **Add backend secrets** in `backend/src/main/resources/application-local.yml` (git-ignored,
-   loaded by the default `local` profile):
+This path needs no shared database or keys: a local PostgreSQL in Docker, filled with the demo
+data. It works on macOS, Linux and Windows.
+
+| Install | Check it with |
+| --- | --- |
+| JDK 21 | `java -version` shows 21 |
+| Node.js 22 (includes npm) | `node -v` shows v22 |
+| Docker Desktop, running | `docker info` succeeds |
+
+1. **Get the code:** `git clone https://github.com/aryan12singh/study-buddy-matcher.git`, then
+   `cd study-buddy-matcher`. Or use **Code → Download ZIP** on GitHub and unzip it.
+2. **Start a database and create the tables** (run from the project folder):
+
+   ```bash
+   docker run -d --name studybuddy-db -e POSTGRES_PASSWORD=studybuddy -p 5432:5432 postgres:16
+   docker exec studybuddy-db sh -c 'until pg_isready -q; do sleep 1; done'
+   cat backend/src/main/resources/db/migrations/*.sql | docker exec -i studybuddy-db psql -U postgres -q -v ON_ERROR_STOP=1 --single-transaction
+   ```
+
+   On Windows PowerShell, replace the last line with:
+   `Get-Content backend/src/main/resources/db/migrations/*.sql | docker exec -i studybuddy-db psql -U postgres -q -v ON_ERROR_STOP=1 --single-transaction`
+3. **Create `backend/src/main/resources/application-local.yml`** with this content. It is
+   git-ignored and loads automatically. The secret can be any random text of 32 or more characters.
 
    ```yaml
    spring:
      datasource:
-       url: jdbc:postgresql://<host>:5432/postgres
-       username: <database-user>
-       password: <database-password>
+       url: jdbc:postgresql://localhost:5432/postgres
+       username: postgres
+       password: studybuddy
    jwt:
-     secret: <output of: openssl rand -base64 48>
+     secret: replace-with-any-random-text-of-at-least-32-characters
    ```
 
-3. **Apply the migrations** with `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` and `PGPASSWORD`
-   set for that database: `scripts/migrate-database.sh`. The migrations own the schema; the
-   backend validates it at startup and never changes it. See the [database guide](docs/DATABASE.md).
-4. **Run** the backend (`cd backend && ./mvnw spring-boot:run`) and the frontend
-   (`cd frontend && npm run dev`), then open `http://localhost:5173`.
+4. **Start the backend with the demo data.** The demo passwords are yours to choose (8 to 72
+   characters). The three `DEMO_` variables are only needed on the first start.
+
+   ```bash
+   cd backend
+   DEMO_SEED_ENABLED=true DEMO_STUDENT_PASSWORD=demo-pass-123 DEMO_ADMIN_PASSWORD=admin-pass-123 ./mvnw spring-boot:run
+   ```
+
+   On Windows PowerShell:
+   `$env:DEMO_SEED_ENABLED="true"; $env:DEMO_STUDENT_PASSWORD="demo-pass-123"; $env:DEMO_ADMIN_PASSWORD="admin-pass-123"; .\mvnw.cmd spring-boot:run`
+
+   Wait for `Started StudyBuddyApplication`. The first run downloads dependencies and takes a few minutes.
+5. **Start the frontend** in a second terminal, from the project folder:
+
+   ```bash
+   cd frontend
+   cp .env.example .env
+   npm ci
+   npm run dev
+   ```
+
+   (Windows: `copy .env.example .env` instead of `cp`.)
+6. **Open `http://localhost:5173`** and sign in as `priya@demo.example.test` with
+   `demo-pass-123`, or as `admin@demo.example.test` with `admin-pass-123`. The
+   [demo data](#demo-data) table below says what each account shows.
+
+To stop: `Ctrl+C` in both terminals, then `docker stop studybuddy-db`. To start again later,
+run `docker start studybuddy-db` and repeat steps 4 to 6. Everything works without AI keys: the
+AI screens say the helper is unavailable and fall back to standard wording. To try Gemini, add
+the keys from [configuration](docs/CONFIGURATION.md#ai-match-explanations) to
+`application-local.yml` and restart the backend:
+
+```yaml
+app:
+  ai:
+    explanation:
+      enabled: true
+      api-key: <Gemini API key>
+    assistant:
+      enabled: true
+      api-key: <Gemini API key, ideally from a second Google project>
+```
+
+### Team setup (shared Supabase)
+
+Team members use the shared Supabase database instead of Docker; its access details are shared
+privately. Put its datasource in `application-local.yml` as above, apply new migrations with
+`scripts/migrate-database.sh` (it needs `psql` and the `PGHOST`, `PGPORT`, `PGDATABASE`,
+`PGUSER` and `PGPASSWORD` variables), and run steps 4 to 6 without the demo variables. The
+migrations own the schema; the backend validates it at startup and never changes it. See the
+[database guide](docs/DATABASE.md). The full backend test suite also needs Bash and Docker; see
+[Testing](#testing).
 
 > [!IMPORTANT]
 > Secrets live only in `application-local.yml` or the process environment. Anything prefixed
 > `VITE_` is bundled into the public frontend, so never put a secret there.
 
+<a id="demo-data"></a>
 <details>
 <summary><strong>Demo data</strong></summary>
 
