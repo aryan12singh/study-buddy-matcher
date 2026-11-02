@@ -12,6 +12,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -74,9 +76,17 @@ class RoomReactionServiceTest {
     void refusesOnceTheBurstLimitIsReached() {
         inRoom();
         when(reactions.countByStudyRoomIdAndStudentIdAndSentAtAfter(ROOM_ID, STUDENT_ID, NOW.minusSeconds(10))).thenReturn(2L);
+        RoomReaction oldest = mock(RoomReaction.class);
+        when(oldest.getSentAt()).thenReturn(NOW.minusSeconds(4));
+        when(reactions.findFirstByStudyRoomIdAndStudentIdAndSentAtAfterOrderBySentAtAsc(ROOM_ID, STUDENT_ID, NOW.minusSeconds(10)))
+            .thenReturn(Optional.of(oldest));
 
-        assertThrows(ConflictException.class, () -> service.send(GROUP_ID, STUDENT_ID, RoomReactionType.FIRE));
+        ReactionRateLimitException error = assertThrows(ReactionRateLimitException.class,
+            () -> service.send(GROUP_ID, STUDENT_ID, RoomReactionType.FIRE));
 
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, error.getStatus());
+        // The oldest reaction leaves the ten-second window six seconds from now.
+        assertEquals("6", error.getHeaders().getFirst(HttpHeaders.RETRY_AFTER));
         verify(reactions, never()).save(any());
     }
 

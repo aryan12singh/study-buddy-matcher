@@ -78,6 +78,7 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 401 | `INVALID_CREDENTIALS` | Login email/password does not match an account (checked before account state) |
 | 403 | `ACCOUNT_DEACTIVATED` | Login with the correct password for a deactivated account |
 | 429 | `TOO_MANY_LOGIN_ATTEMPTS` | Login for an email that reached the wrong-password limit; refused even with the right password until the lockout passes; `Retry-After` gives the seconds left |
+| 429 | `REACTION_RATE_LIMITED` | A room reaction past the per-student burst limit; `Retry-After` gives the seconds until the next one goes through |
 | 403 | `FORBIDDEN` | Wrong role, request receiver, connection participant, group leader or notification recipient |
 | 404 | `NOT_FOUND` | Missing resource, unavailable/inactive student subject/target, or an address no endpoint serves |
 | 405 | `METHOD_NOT_ALLOWED` | The address exists but not for this method; the `Allow` header lists the methods it takes |
@@ -391,7 +392,7 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
-| POST | `/api/groups/{groupId}/room/reactions` | `{type: CLAP / HEART / FIRE / LIGHTBULB / COFFEE / SPROUT}`; the saved `{id, type, studentId, senderName, sentAt}`, 201, so the sender can show it at once. 409 unless the actor has a live lease in this room, or after the per-student burst limit |
+| POST | `/api/groups/{groupId}/room/reactions` | `{type: CLAP / HEART / FIRE / LIGHTBULB / COFFEE / SPROUT}`; the saved `{id, type, studentId, senderName, sentAt}`, 201, so the sender can show it at once. 409 unless the actor has a live lease in this room; 429 `REACTION_RATE_LIMITED` with a `Retry-After` header (seconds) after the per-student burst limit |
 
 `expectedVersion` is a non-negative integer matching the current room version.
 Shared changes increment it; presence renewals do not. A stale command or invalid

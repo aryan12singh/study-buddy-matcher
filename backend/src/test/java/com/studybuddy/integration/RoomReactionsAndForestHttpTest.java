@@ -58,7 +58,10 @@ class RoomReactionsAndForestHttpTest extends PostgresHttpTest {
     void reactionsAreRateLimitedAndOldOnesDropOut() {
         join(member, UUID.randomUUID());
         for (int i = 0; i < 5; i++) expect(call("POST", reactions(), member, Map.of("type", "FIRE")), 201);
-        expect(call("POST", reactions(), member, Map.of("type", "FIRE")), 409);
+        var tooQuick = call("POST", reactions(), member, Map.of("type", "FIRE"));
+        assertEquals("REACTION_RATE_LIMITED", expect(tooQuick, 429).path("code").asString());
+        long retryAfter = Long.parseLong(tooQuick.header("Retry-After"));
+        assertTrue(retryAfter > 0 && retryAfter <= 10, "Retry-After " + retryAfter);
         database.update("update room_reactions set sent_at=now()-interval '1 minute'");
         assertEquals(0, state(member).path("reactions").size());
         expect(call("POST", reactions(), member, Map.of("type", "SPROUT")), 201);

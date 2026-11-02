@@ -3,6 +3,7 @@ package com.studybuddy.studyroom;
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.error.ConflictException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,9 +45,9 @@ public class RoomReactionService {
         var lease = presences.findEligible(room.getId(), now).stream()
             .filter(p -> p.getStudent().getId().equals(actorId)).findFirst().orElseThrow(this::notInRoom);
         reactions.deleteOlderThan(room.getId(), now.minus(settings.retention()));
-        if (reactions.countByStudyRoomIdAndStudentIdAndSentAtAfter(room.getId(), actorId,
-            now.minus(settings.burstWindow())) >= settings.burstLimit()) {
-            throw new ConflictException("You are reacting too quickly; wait a moment and try again");
+        Instant windowStart = now.minus(settings.burstWindow());
+        if (reactions.countByStudyRoomIdAndStudentIdAndSentAtAfter(room.getId(), actorId, windowStart) >= settings.burstLimit()) {
+            throw rateLimited(room.getId(), actorId, windowStart, now);
         }
         RoomReaction saved = reactions.save(new RoomReaction(room, lease.getStudent(), type, now));
         return new RoomReactionDto(saved.getId(), type, actorId, lease.getStudent().getName(), now);
@@ -56,6 +57,14 @@ public class RoomReactionService {
     public List<RoomReaction> recent(StudyRoom room, Instant now) {
         return room.getId() == null ? List.of()
             : reactions.findByStudyRoomIdAndSentAtAfterOrderByIdAsc(room.getId(), now.minus(settings.window()));
+    }
+
+    /** The next reaction goes through once the oldest one in the window drops out of it. */
+    private ReactionRateLimitException rateLimited(Long roomId, Long actorId, Instant windowStart, Instant now) {
+        Duration remaining = reactions.findFirstByStudyRoomIdAndStudentIdAndSentAtAfterOrderBySentAtAsc(roomId, actorId, windowStart)
+            .map(oldest -> Duration.between(now, oldest.getSentAt().plus(settings.burstWindow())))
+            .orElse(settings.burstWindow());
+        return new ReactionRateLimitException(remaining);
     }
 
     private ConflictException notInRoom() {

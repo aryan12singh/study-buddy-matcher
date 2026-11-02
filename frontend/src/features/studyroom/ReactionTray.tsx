@@ -8,8 +8,8 @@ import ReactionSprite from './ReactionSprite'
 import { REACTIONS, REACTION_TYPES } from './reactionSprites'
 
 /**
- * How long the buttons rest after the server refuses a reaction as too quick. It matches the
- * default app.study-room.reactions.burst-window; a Retry-After header from the server takes precedence.
+ * How long the buttons rest when the server refuses a reaction as too quick without saying how long:
+ * the default app.study-room.reactions.burst-window. The server's Retry-After header takes precedence.
  */
 export const REACTION_COOLDOWN_MS = 10000
 
@@ -36,8 +36,9 @@ export default function ReactionTray({ groupId, joined, onSent }: { groupId: num
   async function react(type: RoomReactionType) {
     const sent = await action.run(() => sendReaction(groupId, type))
     if (sent.ok) onSent(sent.value)
-    else if (axios.isAxiosError(sent.failure) && sent.failure.response?.status === 409) {
-      // Rest the buttons for the rate limit's window instead of letting every click be refused.
+    else if (axios.isAxiosError(sent.failure) && sent.failure.response?.status === 429) {
+      // Rest the buttons until the rate limit allows another reaction, instead of letting every click be refused.
+      // Other refusals, such as not being in the room, stay as an ordinary error with the buttons usable.
       cooldownMillis.current = cooldownAfter(sent.failure)
       action.clear()
       setCooldown(errorMessage(sent.failure))
