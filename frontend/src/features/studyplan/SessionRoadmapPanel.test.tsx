@@ -28,12 +28,12 @@ function failure(status: number, message: string, code?: string) {
   return new AxiosError(message, 'ERR_BAD_RESPONSE', undefined, undefined,
     { config: { headers: new AxiosHeaders() }, status, statusText: 'Error', headers: {}, data: { message, code } })
 }
-/** Serves the session's roadmap (or 404 for none) and the course list. */
+/** Serves the session's roadmap (or 204 No Content for none) and the course list. */
 function serve(current: () => StudyPlan | null) {
   return vi.spyOn(api, 'get').mockImplementation(async path => {
     if (path === '/courses') return response([course])
     const found = current()
-    if (!found) throw failure(404, 'Study session 11 has no study plan', 'NOT_FOUND')
+    if (!found) return { data: '', status: 204 } as never
     return response(found)
   })
 }
@@ -74,6 +74,16 @@ describe('session roadmap panel', () => {
     expect(await screen.findByText('The group leader can create one for everyone.')).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it('shows an error, not the planning form, when the session is gone', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => {
+      if (path === '/courses') return response([course])
+      throw failure(404, 'Study session 11 was not found', 'NOT_FOUND')
+    })
+    open()
+    expect(await screen.findByText('Study session 11 was not found')).toBeInTheDocument()
+    expect(screen.queryByText('No roadmap for this session yet')).not.toBeInTheDocument()
   })
 
   it('offers no planning for a cancelled session', async () => {
