@@ -28,6 +28,11 @@ describe('form contract limits', () => {
   it('retains honest optional group goals, mode and availability', () => {
     expect(validateGroupForm({ name: 'Group', description: '', courseId: '1', preferredStudyMode: '', maxGroupSize: '2', studyGoals: [], availability: [] }, 1)).toEqual({})
   })
+  it('caps a group at the server\'s maximum size', () => {
+    const form = { name: 'Group', description: '', courseId: '1', preferredStudyMode: '', maxGroupSize: '10', studyGoals: [], availability: [] }
+    expect(validateGroupForm(form, 1)).toEqual({})
+    expect(validateGroupForm({ ...form, maxGroupSize: '11' }, 1).maxGroupSize).toBe('Capacity must be a whole number from 2 to 10. The leader counts as a member.')
+  })
   it('bounds background refresh to 15 seconds through 5 minutes', () => {
     expect(REFRESH_INTERVAL_MS).toBeGreaterThanOrEqual(15000)
     expect(REFRESH_INTERVAL_MS).toBeLessThanOrEqual(300000)

@@ -75,7 +75,7 @@ describe('group fields and saved state', () => {
     expect(screen.getByLabelText('Problem solving')).toBeChecked()
     fireEvent.change(screen.getByLabelText('Maximum group size'), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save group changes' }))
-    expect(screen.getByText(/Capacity must be a whole number of at least 3/)).toBeInTheDocument()
+    expect(screen.getByText(/Capacity must be a whole number from 3 to 10/)).toBeInTheDocument()
     expect(put).not.toHaveBeenCalled()
   })
   it('shows the saved agenda and never exposes contact through member rows', async () => {
