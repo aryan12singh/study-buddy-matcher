@@ -5,6 +5,8 @@ import com.studybuddy.studyroom.PomodoroTimer;
 import com.studybuddy.studyroom.RoomSettings;
 import com.studybuddy.studyroom.RoomVisitEnded;
 import com.studybuddy.studyroom.RoomVisitTicked;
+import com.studybuddy.studyroom.StudentRoomAccessRevoked;
+import com.studybuddy.studyroom.StudyRoomClosed;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -117,5 +119,19 @@ class ForestServiceTest {
         service.endVisit(new RoomVisitEnded(STUDENT, GROUP, NOW));
 
         verify(visits).end(VISIT, NOW);
+    }
+
+    @Test
+    void revokingAStudentEndsEveryOpenVisitOfTheirs() {
+        service.endVisitsOf(new StudentRoomAccessRevoked(STUDENT, NOW));
+
+        verify(visits).endAllOfStudent(STUDENT, NOW);
+    }
+
+    @Test
+    void closingARoomEndsEveryOpenVisitToIt() {
+        service.endVisitsIn(new StudyRoomClosed(GROUP, NOW));
+
+        verify(visits).endAllInGroup(GROUP, NOW);
     }
 }

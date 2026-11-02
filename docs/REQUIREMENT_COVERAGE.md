@@ -247,7 +247,7 @@ and deletion) are recorded in the
 
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
-| One tree per continuous room visit; focus time measured on the shared timer | `ForestService`, `FocusCredit`, `FocusVisit`, `FocusVisitRepository`; room events `RoomVisitTicked`, `RoomVisitEnded` | `FocusCreditTest`, `ForestServiceTest`, `RoomReactionsAndForestHttpTest` |
+| One tree per continuous room visit; focus time measured on the shared timer | `ForestService`, `FocusCredit`, `FocusVisit`, `FocusVisitRepository`; room events `RoomVisitTicked`, `RoomVisitEnded`, `StudentRoomAccessRevoked`, `StudyRoomClosed` | `FocusCreditTest`, `ForestServiceTest`, `RoomLifecycleTest`, `RoomReactionsAndForestHttpTest` |
 | Room updates reach the forest after commit on its own worker | `ForestVisitListener`, `ForestConfiguration` | `RoomReactionsAndForestHttpTest` |
 | Tiers from configured minutes; colours from the visit's local start time; random kind and plot | `TreeGrowth`, `TreeSpecies`, `TreeLight`, `TreeLottery`, `ForestProperties` | `TreeGrowthTest`, `TreeLotteryTest` |
 | Own forest page and live growing tree in the room | `ForestController`, `ForestAssembler`; `ForestPage`, `Meadow3D`, `meadowLayout`, `GrowingTree` | `RoomReactionsAndForestHttpTest`, `ForestPage.test.tsx`, `meadowLayout.test.ts`, `GrowingTree.test.tsx` |

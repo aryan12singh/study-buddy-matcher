@@ -2,6 +2,8 @@ package com.studybuddy.forest;
 
 import com.studybuddy.studyroom.RoomVisitEnded;
 import com.studybuddy.studyroom.RoomVisitTicked;
+import com.studybuddy.studyroom.StudentRoomAccessRevoked;
+import com.studybuddy.studyroom.StudyRoomClosed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,22 +35,30 @@ public class ForestVisitListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTick(RoomVisitTicked tick) {
-        updates.execute(() -> {
-            try {
-                transaction.executeWithoutResult(status -> forest.recordTick(tick));
-            } catch (RuntimeException failure) {
-                LOG.warn("Could not grow the tree for student {} in group {}", tick.studentId(), tick.groupId(), failure);
-            }
-        });
+        update(() -> forest.recordTick(tick), "grow the tree for student " + tick.studentId() + " in group " + tick.groupId());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEnded(RoomVisitEnded ended) {
+        update(() -> forest.endVisit(ended), "plant the tree for student " + ended.studentId() + " in group " + ended.groupId());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onAccessRevoked(StudentRoomAccessRevoked revoked) {
+        update(() -> forest.endVisitsOf(revoked), "end the visits of student " + revoked.studentId());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onClosed(StudyRoomClosed closed) {
+        update(() -> forest.endVisitsIn(closed), "end the visits to group " + closed.groupId());
+    }
+
+    private void update(Runnable change, String description) {
         updates.execute(() -> {
             try {
-                transaction.executeWithoutResult(status -> forest.endVisit(ended));
+                transaction.executeWithoutResult(status -> change.run());
             } catch (RuntimeException failure) {
-                LOG.warn("Could not plant the tree for student {} in group {}", ended.studentId(), ended.groupId(), failure);
+                LOG.warn("Could not {}", description, failure);
             }
         });
     }

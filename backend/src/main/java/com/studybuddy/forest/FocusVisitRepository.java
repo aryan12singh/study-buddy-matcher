@@ -47,4 +47,12 @@ public interface FocusVisitRepository extends JpaRepository<FocusVisit, Long> {
     @Modifying(clearAutomatically = true)
     @Query("update FocusVisit v set v.endedAt = :at where v.id = :id and v.endedAt is null")
     void end(@Param("id") Long id, @Param("at") Instant at);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update FocusVisit v set v.endedAt = :at where v.studentId = :studentId and v.endedAt is null")
+    void endAllOfStudent(@Param("studentId") Long studentId, @Param("at") Instant at);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update FocusVisit v set v.endedAt = :at where v.studyGroupId = :groupId and v.endedAt is null")
+    void endAllInGroup(@Param("groupId") Long groupId, @Param("at") Instant at);
 }

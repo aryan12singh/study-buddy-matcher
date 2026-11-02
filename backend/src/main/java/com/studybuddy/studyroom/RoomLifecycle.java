@@ -1,7 +1,6 @@
 package com.studybuddy.studyroom;
 
 import java.time.Clock;
-import java.time.Instant;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -37,18 +36,15 @@ public class RoomLifecycle {
     }
 
     public void revokeStudent(Long studentId) {
-        Instant now = clock.instant();
-        presences.findGroupIdsByStudentId(studentId)
-            .forEach(groupId -> events.publishEvent(new RoomVisitEnded(studentId, groupId, now)));
         presences.deleteByStudentId(studentId);
         rooms.findByHostIdOrCoHostId(studentId, studentId).forEach(room -> room.revokeRoles(studentId));
+        // Covers every room, not just those with a current tab: a visit can outlive its last lease.
+        events.publishEvent(new StudentRoomAccessRevoked(studentId, clock.instant()));
     }
 
     public void close(Long groupId) {
-        Instant now = clock.instant();
-        presences.findStudentIdsByGroupId(groupId)
-            .forEach(studentId -> events.publishEvent(new RoomVisitEnded(studentId, groupId, now)));
         presences.deleteByStudyRoomStudyGroupId(groupId);
         rooms.findByStudyGroupId(groupId).ifPresent(StudyRoom::close);
+        events.publishEvent(new StudyRoomClosed(groupId, clock.instant()));
     }
 }

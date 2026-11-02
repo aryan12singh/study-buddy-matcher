@@ -4,6 +4,8 @@ import com.studybuddy.common.AccountAccess;
 import com.studybuddy.studyroom.RoomSettings;
 import com.studybuddy.studyroom.RoomVisitEnded;
 import com.studybuddy.studyroom.RoomVisitTicked;
+import com.studybuddy.studyroom.StudentRoomAccessRevoked;
+import com.studybuddy.studyroom.StudyRoomClosed;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -62,6 +64,14 @@ public class ForestService {
     public void endVisit(RoomVisitEnded ended) {
         visits.findByStudentIdAndStudyGroupIdAndEndedAtIsNull(ended.studentId(), ended.groupId())
             .ifPresent(visit -> visits.end(visit.getId(), ended.at()));
+    }
+
+    public void endVisitsOf(StudentRoomAccessRevoked revoked) {
+        visits.endAllOfStudent(revoked.studentId(), revoked.at());
+    }
+
+    public void endVisitsIn(StudyRoomClosed closed) {
+        visits.endAllInGroup(closed.groupId(), closed.at());
     }
 
     /** Records a visit that already happened; used to seed the demo forest. */
