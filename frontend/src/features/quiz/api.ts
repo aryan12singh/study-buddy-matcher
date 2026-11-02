@@ -1,6 +1,4 @@
-import axios from 'axios'
 import { api } from '../../shared/api/client'
-import type { Problem } from '../../shared/api/client'
 import type { Course } from '../../shared/api/types'
 import type { StudySession } from '../sessions/api'
 
@@ -30,11 +28,6 @@ export type QuizHome = { scope: 'GROUP'; groupId: number } | { scope: 'PERSONAL'
 /** Shown wherever Gemini's questions or explanations appear. */
 export const AI_QUIZ_LABEL = 'Questions written by Gemini; they may be inaccurate.'
 
-/** Upload limits matching app.ai.assistant.study-plan.*; the server checks them again. */
-export const MAX_FILES = 6
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
-export const MAX_NOTES_CHARACTERS = 4000
-export const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md']
 /** Matches app.ai.assistant.quiz.max-focus-characters. */
 export const MAX_FOCUS_CHARACTERS = 200
 /**
@@ -83,18 +76,6 @@ export async function startPersonalQuiz(courseId: number, material: QuizMaterial
   return (await api.post<Quiz>('/quizzes', form, { timeout: WRITING_TIMEOUT_MS })).data
 }
 
-/** Says what is wrong with a set of files before anything is sent, or nothing when they are fine. */
-export function checkFiles(files: File[]): string | undefined {
-  if (!files.length) return 'Choose at least one file.'
-  if (files.length > MAX_FILES) return `Upload at most ${MAX_FILES} files.`
-  const wrong = files.find(file => !ACCEPTED_EXTENSIONS.some(extension => file.name.toLowerCase().endsWith(extension)))
-  if (wrong) return `${wrong.name} is not a PDF, .txt or .md file. Export Word or PowerPoint files to PDF first.`
-  const empty = files.find(file => file.size === 0)
-  if (empty) return `${empty.name} is empty.`
-  if (files.reduce((total, file) => total + file.size, 0) > MAX_UPLOAD_BYTES) return 'The files must add up to at most 10MB.'
-  return undefined
-}
-
 export async function beginAttempt(quizId: number) {
   return (await api.post<QuizQuestions>(`/quizzes/${quizId}/start`)).data
 }
@@ -113,21 +94,6 @@ export async function closeQuiz(quizId: number) {
 
 export async function getReview(quizId: number, signal?: AbortSignal) {
   return (await api.get<QuizReview>(`/quizzes/${quizId}/review`, { signal })).data
-}
-
-/** True when the server answered AI_UNAVAILABLE: AI is switched off on the server, or the provider is busy or failed. */
-export function isAiUnavailable(error: unknown) {
-  return axios.isAxiosError<Problem>(error) && error.response?.data?.code === 'AI_UNAVAILABLE'
-}
-
-/** The one wording for AI_UNAVAILABLE, which covers both causes, followed by the screen's way to carry on without AI. */
-export function aiUnavailableMessage(alternative: string) {
-  return `The AI helper isn't available right now — it may be switched off on this server or busy. ${alternative}`
-}
-
-/** For useAction: the AI_UNAVAILABLE wording, or undefined to keep the server's message for any other failure. */
-export function describeAiFailure(alternative: string) {
-  return (failure: unknown) => isAiUnavailable(failure) ? aiUnavailableMessage(alternative) : undefined
 }
 
 /** 95 seconds reads as "1:35". */

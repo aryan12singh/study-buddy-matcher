@@ -9,10 +9,9 @@ import type { Course } from '../../shared/api/types'
 import { getSessions } from '../sessions/api'
 import { getMyProfile } from '../profile/api'
 import { COURSE_CODE, findCourse, preferCourses } from './findCourse'
-import {
-  ACCEPTED_EXTENSIONS, aiUnavailableMessage, checkFiles, isAiUnavailable, MAX_FILES, MAX_FOCUS_CHARACTERS, MAX_NOTES_CHARACTERS,
-  sessionLabel, startGroupQuiz, startPersonalQuiz, upcomingSessions,
-} from './api'
+import { aiUnavailableMessage, isAiUnavailable } from '../../shared/api/aiErrors'
+import { ACCEPTED_EXTENSIONS, checkFiles, MAX_FILES, MAX_NOTES_CHARACTERS } from '../../shared/api/studyMaterial'
+import { MAX_FOCUS_CHARACTERS, sessionLabel, startGroupQuiz, startPersonalQuiz, upcomingSessions } from './api'
 import type { Quiz, QuizHome, QuizMaterial } from './api'
 
 /** What the bot is waiting for next. */
