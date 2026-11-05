@@ -32,4 +32,10 @@ class GroupSizePreferenceTest {
     @Test void aProfileWithNoPreferenceYetReadsAsEither() {
         assertEquals(GroupSizePreference.EITHER, GroupSizePreference.fromRange(null, null));
     }
+
+    @Test void matchingSeesNoStatedPreferenceAsUnknownRatherThanEither() {
+        assertNull(GroupSizePreference.statedRange(null, null));
+        assertEquals(GroupSizePreference.ONE_TO_ONE, GroupSizePreference.statedRange(2, 2));
+        assertEquals(GroupSizePreference.EITHER, GroupSizePreference.statedRange(2, 5));
+    }
 }

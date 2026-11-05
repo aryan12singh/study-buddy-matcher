@@ -3,6 +3,7 @@ package com.studybuddy.connection;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -28,7 +29,8 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     Optional<Connection> findActiveBetween(@Param("first") Long first, @Param("second") Long second);
     List<Connection> findByStudentAIdOrStudentBId(Long studentAId, Long studentBId);
 
-    /** The student's active connections, on either side, newest first. */
+    /** The student's active connections, on either side, newest first, with both students in one query. */
+    @EntityGraph(attributePaths = {"studentA", "studentB"})
     @Query("""
             select c from Connection c
             where c.endedAt is null

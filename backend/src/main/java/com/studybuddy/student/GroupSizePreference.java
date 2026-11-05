@@ -22,6 +22,14 @@ public enum GroupSizePreference {
         return this == ONE_TO_ONE ? PAIR : largestGroup;
     }
 
+    /**
+     * The stated preference, or null when the student never set one. Matching uses this, so evidence
+     * for an AI explanation never claims "either" for a group size the score treats as not shared.
+     */
+    public static GroupSizePreference statedRange(Integer minimum, Integer maximum) {
+        return minimum == null && maximum == null ? null : fromRange(minimum, maximum);
+    }
+
     /** Reads a stored range back as the closest of the three choices. */
     public static GroupSizePreference fromRange(Integer minimum, Integer maximum) {
         if (maximum != null && maximum <= PAIR) {
