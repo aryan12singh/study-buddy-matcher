@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -47,22 +46,39 @@ class SpotifyConnectionServiceTest {
         assertThrows(SpotifyUnavailableException.class, () -> service(SpotifyTestSettings.withCredentials("client", " ")).startAuthorization(7L));
     }
 
-    @Test void successfulCallbackSavesTokensForTheStudentWhoStarted() throws Exception {
-        when(authorizations.finish("state-1")).thenReturn(Optional.of(7L));
+    @Test void callbackSavesNothingAndRelaysTheSignInToTheBrowser() throws Exception {
+        when(authorizations.isPending("state-1")).thenReturn(true);
+        assertEquals("http://localhost:5173/study-room?spotify=confirm&state=state-1&code=code-1",
+                service.relayCallback("state-1", "code-1", null));
+        verify(accounts, never()).exchangeCode(any());
+        assertTrue(tokens.find(7L).isEmpty());
+    }
+
+    @Test void unknownStateAndDeniedAccessReturnToMusicWithAnOutcome() {
+        when(authorizations.isPending("denied")).thenReturn(true);
+        assertEquals("http://localhost:5173/study-room?spotify=expired", service.relayCallback("forged", "code-1", null));
+        assertEquals("http://localhost:5173/study-room?spotify=denied", service.relayCallback("denied", null, "access_denied"));
+    }
+
+    @Test void theStudentWhoStartedFinishesTheSignIn() throws Exception {
+        when(authorizations.finish("state-1", 7L)).thenReturn(true);
         when(accounts.exchangeCode("code-1")).thenReturn(new SpotifyTokens("access", "refresh", now.plusSeconds(3600)));
-        assertEquals("http://localhost:5173/study-room?spotify=connected", service.completeAuthorization("state-1", "code-1", null));
+        assertEquals(new SpotifyConnectionOutcomeDto("connected"), service.finishAuthorization(7L, new SpotifyAuthorizationInput("state-1", "code-1")));
         assertEquals("access", tokens.find(7L).orElseThrow().accessToken());
     }
 
-    @Test void unknownStateDeniedAccessAndProviderFailureEachReturnToMusic() throws Exception {
-        when(authorizations.finish("forged")).thenReturn(Optional.empty());
-        when(authorizations.finish("denied")).thenReturn(Optional.of(7L));
-        when(authorizations.finish("failing")).thenReturn(Optional.of(7L));
+    @Test void someoneOpeningAnotherStudentsSignInLinkNeverConnectsTheirAccountToThem() throws Exception {
+        when(authorizations.finish("state-1", 8L)).thenReturn(false);
+        assertEquals(new SpotifyConnectionOutcomeDto("expired"), service.finishAuthorization(8L, new SpotifyAuthorizationInput("state-1", "victim-code")));
+        verify(accounts, never()).exchangeCode(any());
+        assertTrue(tokens.find(7L).isEmpty());
+        assertTrue(tokens.find(8L).isEmpty());
+    }
+
+    @Test void providerFailureReportsFailedAndSavesNothing() throws Exception {
+        when(authorizations.finish("failing", 7L)).thenReturn(true);
         when(accounts.exchangeCode("code-2")).thenThrow(new IOException("down"));
-        assertEquals("http://localhost:5173/study-room?spotify=expired", service.completeAuthorization("forged", "code-1", null));
-        assertEquals("http://localhost:5173/study-room?spotify=denied", service.completeAuthorization("denied", null, "access_denied"));
-        assertEquals("http://localhost:5173/study-room?spotify=failed", service.completeAuthorization("failing", "code-2", null));
-        verify(accounts, never()).exchangeCode("code-1");
+        assertEquals(new SpotifyConnectionOutcomeDto("failed"), service.finishAuthorization(7L, new SpotifyAuthorizationInput("failing", "code-2")));
         assertTrue(tokens.find(7L).isEmpty());
     }
 

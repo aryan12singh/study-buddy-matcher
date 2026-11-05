@@ -20,6 +20,14 @@ export async function startSpotifyAuthorization() {
   return (await api.post<{ url: string }>('/spotify/authorization')).data.url
 }
 
+/**
+ * Finishes a sign-in as the signed-in student. The server connects Spotify only if this student
+ * started it, so a sign-in link someone else sent can never hand them this student's account.
+ */
+export async function completeSpotifyAuthorization(state: string, code: string) {
+  return (await api.post<{ outcome: string }>('/spotify/authorization/complete', { state, code })).data.outcome
+}
+
 export async function getSpotifyAccessToken() {
   return (await api.get<SpotifyAccessToken>('/spotify/token')).data
 }

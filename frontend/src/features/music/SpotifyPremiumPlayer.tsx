@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { startSpotifyAuthorization } from './spotifyApi'
+import { completeSpotifyAuthorization, startSpotifyAuthorization } from './spotifyApi'
 import type { SpotifyStatus } from './spotifyApi'
 import { useSpotify } from './spotifyContext'
 import { useAction } from '../../shared/api/useAction'
@@ -23,20 +23,29 @@ export default function SpotifyPremiumPlayer({ status }: { status: SpotifyStatus
   const [search, setSearch] = useSearchParams()
   const [outcome, setOutcome] = useState<{ success?: string; error?: string }>({})
   const connected = status.connected
-  const { player, volume, setVolume } = useSpotify()
+  const { status: { reload: reloadStatus }, player, volume, setVolume } = useSpotify()
   // Connecting leaves the page for Spotify's sign-in, so there is nothing here to refresh.
   const connection = useAction({ refresh: false })
   const [volumeOpen, setVolumeOpen] = useState(false)
 
+  const finishing = useRef(false)
   // Show the sign-in outcome once, then drop it from the address so a refresh does not repeat it.
+  // "confirm" carries Spotify's one-time code, which this signed-in tab finishes with the server.
   useEffect(() => {
     const result = search.get('spotify')
     if (!result) return
-    queueMicrotask(() => setOutcome(OUTCOMES[result] ?? {}))
+    const state = search.get('state'), code = search.get('code')
     const rest = new URLSearchParams(search)
-    rest.delete('spotify')
+    for (const key of ['spotify', 'state', 'code']) rest.delete(key)
     setSearch(rest, { replace: true })
-  }, [search, setSearch])
+    if (result !== 'confirm') { queueMicrotask(() => setOutcome(OUTCOMES[result] ?? {})); return }
+    if (!state || !code || finishing.current) return
+    finishing.current = true
+    completeSpotifyAuthorization(state, code)
+      .then(finished => { setOutcome(OUTCOMES[finished] ?? OUTCOMES.failed); reloadStatus() })
+      .catch(() => setOutcome(OUTCOMES.failed))
+      .finally(() => { finishing.current = false })
+  }, [search, setSearch, reloadStatus])
 
   async function connect() {
     setOutcome({})

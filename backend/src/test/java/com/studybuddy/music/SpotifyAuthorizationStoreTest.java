@@ -13,11 +13,20 @@ class SpotifyAuthorizationStoreTest {
     private final Clock clock = mock(Clock.class);
     private final SpotifyAuthorizationStore store = new SpotifyAuthorizationStore(SpotifyTestSettings.configured(), clock);
 
-    @Test void stateIdentifiesTheStudentOnceOnly() {
+    @Test void onlyTheStudentWhoStartedCanFinishAndOnlyOnce() {
         when(clock.instant()).thenReturn(now);
         String state = store.start(7L);
-        assertEquals(7L, store.finish(state).orElseThrow());
-        assertTrue(store.finish(state).isEmpty());
+        assertTrue(store.isPending(state));
+        assertTrue(store.finish(state, 7L));
+        assertFalse(store.finish(state, 7L));
+        assertFalse(store.isPending(state));
+    }
+
+    @Test void someoneElseFinishingUsesTheSignInUpWithoutConnectingIt() {
+        when(clock.instant()).thenReturn(now);
+        String state = store.start(7L);
+        assertFalse(store.finish(state, 8L));
+        assertFalse(store.finish(state, 7L), "A sign-in someone else tried to finish cannot be reused");
     }
 
     @Test void statesAreUnpredictableAndUnique() {
@@ -28,8 +37,9 @@ class SpotifyAuthorizationStoreTest {
     @Test void expiredOrUnknownStateIsRejected() {
         when(clock.instant()).thenReturn(now, now.plusSeconds(601));
         String state = store.start(7L);
-        assertTrue(store.finish(state).isEmpty());
-        assertTrue(store.finish("made-up").isEmpty());
-        assertTrue(store.finish(null).isEmpty());
+        assertFalse(store.finish(state, 7L));
+        assertFalse(store.finish("made-up", 7L));
+        assertFalse(store.finish(null, 7L));
+        assertFalse(store.isPending(null));
     }
 }

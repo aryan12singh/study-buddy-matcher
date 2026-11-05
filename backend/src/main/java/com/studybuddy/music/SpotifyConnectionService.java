@@ -7,7 +7,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.Clock;
-import java.util.Optional;
 
 /** Connects a student's Spotify account, keeps its token fresh, and disconnects it. */
 @Service
@@ -54,22 +53,35 @@ public class SpotifyConnectionService {
 
     /**
      * Handles Spotify's redirect after sign-in and returns where to send the browser next. Never
-     * throws: the student always lands back on the Study Room with an outcome to show.
+     * throws. It saves nothing: the code goes on to the browser that completed the sign-in, which
+     * finishes it with {@link #finishAuthorization} as the signed-in student.
      */
-    public String completeAuthorization(String state, String code, String error) {
-        Optional<Long> studentId = authorizations.finish(state);
-        if (studentId.isEmpty() || !properties.ready()) {
+    public String relayCallback(String state, String code, String error) {
+        if (!properties.ready() || !authorizations.isPending(state)) {
             return returnUrl(Outcome.EXPIRED);
         }
         if (error != null || code == null || code.isBlank()) {
             return returnUrl(Outcome.DENIED);
         }
+        return UriComponentsBuilder.fromUriString(properties.returnUrl()).queryParam("spotify", "confirm")
+                .queryParam("state", state).queryParam("code", code).encode().build().toUriString();
+    }
+
+    /**
+     * Connects Spotify for the signed-in student, but only if they started this sign-in. Someone
+     * who opens another student's sign-in link gets {@code expired}, and their account stays theirs.
+     */
+    public SpotifyConnectionOutcomeDto finishAuthorization(Long studentId, SpotifyAuthorizationInput input) {
+        requireConfigured();
+        if (!authorizations.finish(input.state(), studentId)) {
+            return outcome(Outcome.EXPIRED);
+        }
         try {
-            tokens.save(studentId.get(), accounts.exchangeCode(code));
-            return returnUrl(Outcome.CONNECTED);
+            tokens.save(studentId, accounts.exchangeCode(input.code()));
+            return outcome(Outcome.CONNECTED);
         } catch (IOException failure) {
             LOG.warn("Spotify sign-in could not be completed: {}", failure.getMessage());
-            return returnUrl(Outcome.FAILED);
+            return outcome(Outcome.FAILED);
         }
     }
 
@@ -102,6 +114,10 @@ public class SpotifyConnectionService {
         if (!properties.ready()) {
             throw new SpotifyUnavailableException("Spotify is not set up on this server");
         }
+    }
+
+    private static SpotifyConnectionOutcomeDto outcome(Outcome outcome) {
+        return new SpotifyConnectionOutcomeDto(outcome.name().toLowerCase());
     }
 
     private String returnUrl(Outcome outcome) {
