@@ -68,7 +68,7 @@ function PlanShown({ session, plan: loaded, canPlan, onReplace, onDeleted }: {
   }
 
   return <>
-    <p>{plan.course.code} · {done} of {plan.entries.length} topics covered ·{' '}
+    <p>{plan.course.code} · {done} of {plan.entries.length} steps covered ·{' '}
       {plan.sourceKind === 'UPLOAD' ? `drafted from ${plan.sourceFilenames.join(', ')}` : 'drafted from pasted topics'}</p>
     <p className="study-plan-ai-label"><span aria-hidden="true">✦ </span>{AI_PLAN_LABEL}</p>
     {outdated && <p className="field-error" role="status">This session was changed after the roadmap was made, so its meeting dates may not match.

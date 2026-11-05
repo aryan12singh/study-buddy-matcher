@@ -41,7 +41,7 @@ function StudyPlanRow({ plan }: { plan: StudyPlanSummary }) {
     <div>
       <h3><Link to={`/study-plan/${plan.id}`}>{plan.course.code} — {plan.course.name}</Link></h3>
       <div className="tag-list">
-        <Badge tone={finished ? 'good' : 'neutral'}>{plan.completedCount} of {plan.entryCount} topics done</Badge>
+        <Badge tone={finished ? 'good' : 'neutral'}>{plan.completedCount} of {plan.entryCount} steps done</Badge>
         <Badge>{weekCountLabel(plan.blockCount)}</Badge>
         {plan.studyGoal && <Badge>{label(plan.studyGoal)}</Badge>}
       </div>

@@ -40,7 +40,7 @@ describe('study plan list', () => {
     const rows = within(list).getAllByRole('listitem')
     expect(rows).toHaveLength(2)
     expect(within(rows[0]).getByRole('link', { name: 'IS442 — Object Oriented Programming' })).toHaveAttribute('href', '/study-plan/7')
-    expect(within(rows[0]).getByText('3 of 8 topics done')).toBeInTheDocument()
+    expect(within(rows[0]).getByText('3 of 8 steps done')).toBeInTheDocument()
     expect(within(rows[0]).getByText('4 weeks')).toBeInTheDocument()
     expect(within(rows[0]).getByText('Exam preparation')).toBeInTheDocument()
     expect(within(rows[0]).getByText('Exam on 20 Nov 2026')).toBeInTheDocument()
@@ -213,7 +213,7 @@ describe('a study plan’s roadmap', () => {
     expect(screen.getByRole('checkbox', { name: /Encapsulation/ })).toBeChecked()
     expect(screen.getByRole('checkbox', { name: /Polymorphism/ })).not.toBeChecked()
     expect(within(screen.getByRole('list', { name: 'Tasks for Inheritance' })).getByText('Re-read the Inheritance slides')).toBeInTheDocument()
-    expect(screen.getByText('1 of 3 topics done')).toBeInTheDocument()
+    expect(screen.getByText('1 of 3 steps done')).toBeInTheDocument()
     expect(screen.getByText(/Drafted from week1.pdf, week2.pdf/)).toBeInTheDocument()
     expect(screen.getByText('Roadmap written by Gemini; it may be inaccurate.')).toBeInTheDocument()
   })
@@ -226,7 +226,7 @@ describe('a study plan’s roadmap', () => {
     fireEvent.click(await screen.findByRole('checkbox', { name: /Polymorphism/ }))
     await waitFor(() => expect(screen.getByRole('checkbox', { name: /Polymorphism/ })).toBeChecked())
     expect(put).toHaveBeenCalledWith('/study-plans/7/entries/3/progress', { completed: true })
-    expect(screen.getByText('2 of 3 topics done')).toBeInTheDocument()
+    expect(screen.getByText('2 of 3 steps done')).toBeInTheDocument()
   })
 
   it('keeps the topic as it was when saving fails', async () => {
