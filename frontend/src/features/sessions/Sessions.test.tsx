@@ -316,7 +316,9 @@ describe('dated study session workflows', () => {
     Object.defineProperty(URL, 'createObjectURL', { value: create, configurable: true })
     const delayed = deferred<never>()
     const get = serve()
-    get.mockImplementation(path => path.endsWith('/calendar') ? delayed.promise : Promise.resolve(response(path === '/sessions/11' ? session : { ...session, id: 12, title: 'New session' })))
+    get.mockImplementation(path => path.endsWith('/calendar') ? delayed.promise
+      : path.endsWith('/study-plan') ? Promise.resolve(response(null))
+      : Promise.resolve(response(path === '/sessions/11' ? session : { ...session, id: 12, title: 'New session' })))
     const { router } = renderPage(<SessionDetailPage />, '/sessions/11', '/sessions/:id')
     fireEvent.click(await screen.findByRole('button', { name: 'Download calendar (.ics)' }))
     await router.navigate('/sessions/12')
