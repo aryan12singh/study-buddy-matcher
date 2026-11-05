@@ -26,11 +26,11 @@
 
 **Launch film (1 min):** a student's lonely exam week, then the app that fixes it.
 
-https://github.com/user-attachments/assets/7285be44-89f5-4510-bcfc-613bdcee8a6f
+https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa
 
 **Walkthrough (2 min):** every feature in order, following Priya, as a marker would test it.
 
-https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa
+https://github.com/user-attachments/assets/7285be44-89f5-4510-bcfc-613bdcee8a6f
 
 Both are recorded from the real app with the seeded demo data; the narration is a synthetic voice
 and the music was generated in code (see [AI usage](docs/AI_USAGE.md)). Full 1080p copies to
