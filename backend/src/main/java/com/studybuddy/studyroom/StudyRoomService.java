@@ -76,7 +76,6 @@ public class StudyRoomService {
         expired.remove(actorId);
         presences.deleteByStudyRoomIdAndExpiresAtLessThanEqual(room.getId(), now);
         presences.flush();
-        afterDeparture(room, group, expired, now);
         var current = presences.findEligible(room.getId(), now);
         boolean alreadyHere = current.stream().anyMatch(p -> p.getStudent().getId().equals(actorId));
         if (!alreadyHere && participantCount(current) >= Math.min(room.getParticipantLimit(), group.getMaxGroupSize())) {
@@ -87,6 +86,9 @@ public class StudyRoomService {
             .orElseGet(() -> new RoomPresence(room, student, input.clientId(), now, now.plus(settings.leaseLifetime())));
         lease.renew(PresenceState.PRESENT, now, now.plus(settings.leaseLifetime()));
         presences.saveAndFlush(lease);
+        // Only now does the joiner count as present, so expired tabs cannot end a running session
+        // or move the host role as if the room were empty.
+        afterDeparture(room, group, expired, now);
         events.publishEvent(new RoomVisitTicked(actorId, groupId, group.getName(), room.timer(), now));
         return detail(room, actorId);
     }
@@ -120,9 +122,13 @@ public class StudyRoomService {
     public void leave(Long groupId, Long actorId, UUID clientId) {
         StudyGroup group = access.lockMember(groupId, actorId);
         rooms.findByStudyGroupId(groupId).ifPresent(room -> {
+            Instant now = clock.instant();
+            boolean wasHere = presences.findByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId)
+                .filter(p -> p.getExpiresAt().isAfter(now)).isPresent();
             presences.deleteByStudyRoomIdAndStudentIdAndClientId(room.getId(), actorId, clientId);
             presences.flush();
-            Instant now = clock.instant();
+            // Leaving is idempotent: a repeated, unknown or already expired tab is not a departure.
+            if (!wasHere) return;
             // A student studying in two tabs is still here after closing one of them.
             if (presences.findEligible(room.getId(), now).stream().noneMatch(p -> p.getStudent().getId().equals(actorId))) {
                 events.publishEvent(new RoomVisitEnded(actorId, groupId, now));

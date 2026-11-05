@@ -1,5 +1,6 @@
 package com.studybuddy.security;
 
+import jakarta.servlet.DispatcherType;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -44,6 +45,9 @@ public class SecurityConfiguration {
                 .cors(org.springframework.security.config.Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // A failure the API handler never saw (say, the database is down while the token is
+                // checked) is forwarded to /error; answer it as that error, not as a 401 sign-out.
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                 // Spotify's sign-in redirect carries no app token; the service checks its single-use state.
                 .requestMatchers(HttpMethod.GET, "/api/spotify/callback").permitAll()

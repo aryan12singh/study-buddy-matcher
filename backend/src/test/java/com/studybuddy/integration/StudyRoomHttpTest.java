@@ -239,6 +239,21 @@ class StudyRoomHttpTest extends PostgresHttpTest {
     }
 
     @Test
+    void anExpiredTabDoesNotEndTheSessionWhenSomeoneJoins() {
+        join(other, UUID.randomUUID());
+        expire(otherId);
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        assertEquals("RUNNING", join(member, UUID.randomUUID()).path("timer").path("status").asString());
+    }
+
+    @Test
+    void leavingFromATabThatIsNotHereDoesNotEndTheSession() {
+        expect(command(leader, "START", state(leader).path("version").asLong()), 200);
+        expect(call("DELETE", path() + "/presence/" + UUID.randomUUID(), member, null), 204);
+        assertEquals("RUNNING", state(leader).path("timer").path("status").asString());
+    }
+
+    @Test
     void aLeavingHostHandsOverToThePresentCoHostOrElseSomeoneStillHere() {
         configure(0, 25, 4, memberId, otherId);
         UUID memberTab = UUID.randomUUID(), otherTab = UUID.randomUUID();
