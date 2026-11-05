@@ -30,7 +30,6 @@ import com.studybuddy.matchrequest.MatchRequestStatus;
 import com.studybuddy.profile.RelationshipState;
 import com.studybuddy.student.AvailabilitySlot;
 import com.studybuddy.student.AvailabilitySlotRepository;
-import com.studybuddy.student.GroupSizePreference;
 import com.studybuddy.student.ProfileProperties;
 import com.studybuddy.student.Student;
 import com.studybuddy.student.StudentNotFoundException;
@@ -59,6 +58,7 @@ import static com.studybuddy.matching.MatchingFixtures.evenWeights;
 import static java.time.DayOfWeek.MONDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -310,7 +310,8 @@ class MatchServiceTest {
         assertEquals(new MatchingWeights(evenWeights()), evaluation.weights());
         assertEquals(StudyMode.ONLINE, evaluation.searcherStudyMode());
         assertEquals(java.util.Set.of(StudyGoal.EXAM_PREPARATION), evaluation.effectiveStudyGoals());
-        assertEquals(GroupSizePreference.EITHER, evaluation.candidateGroupSize());
+        // The candidate never set a group size, so the evidence says so instead of claiming "either".
+        assertNull(evaluation.candidateGroupSize());
     }
 
     @Test
