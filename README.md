@@ -24,14 +24,18 @@
 
 ### Demo videos
 
-| [Launch film (1 min)](docs/assets/video/study-buddy-launch-film.mp4) | [Walkthrough (2 min)](docs/assets/video/study-buddy-walkthrough.mp4) |
-| --- | --- |
-| [<img src="docs/assets/video/launch-film-preview.gif" alt="Launch film preview: the app boots and Find buddies explains a match" width="100%" />](docs/assets/video/study-buddy-launch-film.mp4) | [<img src="docs/assets/video/walkthrough-preview.gif" alt="Walkthrough preview: the server's profile response has no contact number" width="100%" />](docs/assets/video/study-buddy-walkthrough.mp4) |
-| A student's lonely exam week, then the app that fixes it | Every feature in order, following Priya, as a marker would test it |
+**Launch film (1 min):** a student's lonely exam week, then the app that fixes it.
 
-Click a preview to open the video, then **View raw** or the download button to save it (1080p,
-with sound). Both are recorded from the real app with the seeded demo data; the narration is a
-synthetic voice and the music was generated in code (see [AI usage](docs/AI_USAGE.md)).
+https://github.com/user-attachments/assets/7285be44-89f5-4510-bcfc-613bdcee8a6f
+
+**Walkthrough (2 min):** every feature in order, following Priya, as a marker would test it.
+
+https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa
+
+Both are recorded from the real app with the seeded demo data; the narration is a synthetic voice
+and the music was generated in code (see [AI usage](docs/AI_USAGE.md)). Full 1080p copies to
+download: [launch film](docs/assets/video/study-buddy-launch-film.mp4) ·
+[walkthrough](docs/assets/video/study-buddy-walkthrough.mp4).
 
 ---
 
