@@ -17,9 +17,14 @@
   <img src="https://img.shields.io/badge/PostgreSQL-Supabase-6b4fa0" alt="PostgreSQL on Supabase" />
 </p>
 
-<p align="center"><strong>▶ The 1-minute launch film</strong>: a student's lonely exam week, then the app that fixes it</p>
-
-<video src="https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa" width="100%" controls muted></video>
+<table>
+  <tr>
+    <td><video src="https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa" width="100%" controls muted></video></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>▶ The 1-minute launch film</strong> · a student's lonely exam week, then the app that fixes it. Turn the sound on.</td>
+  </tr>
+</table>
 
 <p align="center">
   <a href="#walkthrough"><strong>Watch the 2-minute walkthrough</strong></a> ·
