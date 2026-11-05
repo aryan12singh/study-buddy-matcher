@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -111,9 +112,7 @@ public class QuizService {
     public List<QuizDto> listMine(Long actorId) {
         accounts.requireStudent(actorId);
         Instant now = clock.instant();
-        return quizzes.findByStudentIdOrderByCreatedAtDescIdDesc(actorId).stream()
-                .map(quiz -> toDto(quiz, actorId, true, now))
-                .toList();
+        return toDtos(quizzes.findByStudentIdOrderByCreatedAtDescIdDesc(actorId), actorId, true, now);
     }
 
     /** The group's quizzes, newest first. */
@@ -122,9 +121,7 @@ public class QuizService {
         StudyGroup group = access.requireMember(groupId, actorId);
         boolean canHost = access.canHost(group, actorId);
         Instant now = clock.instant();
-        return quizzes.findByStudyGroupIdOrderByCreatedAtDescIdDesc(groupId).stream()
-                .map(quiz -> toDto(quiz, actorId, canHost, now))
-                .toList();
+        return toDtos(quizzes.findByStudyGroupIdOrderByCreatedAtDescIdDesc(groupId), actorId, canHost, now);
     }
 
     @Transactional(readOnly = true)
@@ -212,15 +209,36 @@ public class QuizService {
     }
 
     /**
+     * A whole list in three queries, however many quizzes it has: the actor's attempts, the
+     * submitted attempts and the takers. Every quiz in one list shares its takers, because a list
+     * is one group's quizzes or one student's own.
+     */
+    private List<QuizDto> toDtos(List<Quiz> list, Long actorId, boolean canHost, Instant now) {
+        if (list.isEmpty()) return List.of();
+        List<Long> ids = list.stream().map(Quiz::getId).toList();
+        Map<Long, QuizAttempt> mine = attempts.findByStudentIdAndQuizIdIn(actorId, ids).stream()
+                .collect(Collectors.toMap(attempt -> attempt.getQuiz().getId(), attempt -> attempt));
+        Map<Long, List<QuizAttempt>> submitted = attempts.findByQuizIdInAndSubmittedAtIsNotNull(ids).stream()
+                .collect(Collectors.groupingBy(attempt -> attempt.getQuiz().getId()));
+        Set<Long> takers = takerIds(list.getFirst());
+        return list.stream()
+                .map(quiz -> assembler.toDto(quiz, Optional.ofNullable(mine.get(quiz.getId())),
+                        current(submitted.getOrDefault(quiz.getId(), List.of()), takers).size(), canHost, now))
+                .toList();
+    }
+
+    /**
      * Submitted attempts by students who may still take the quiz. A member who left, was removed or
      * was deactivated keeps their attempt as history but drops off the leaderboard.
      */
     private List<QuizResult> currentResults(Quiz quiz) {
-        Set<Long> takers = takerIds(quiz);
-        return attempts.findByQuizIdAndSubmittedAtIsNotNull(quiz.getId()).stream()
-                .filter(attempt -> takers.contains(attempt.getStudent().getId()))
+        return current(attempts.findByQuizIdAndSubmittedAtIsNotNull(quiz.getId()), takerIds(quiz)).stream()
                 .map(QuizResult::of)
                 .toList();
+    }
+
+    private static List<QuizAttempt> current(List<QuizAttempt> submitted, Set<Long> takers) {
+        return submitted.stream().filter(attempt -> takers.contains(attempt.getStudent().getId())).toList();
     }
 
     /** The group's current members, or a personal quiz's owner. */

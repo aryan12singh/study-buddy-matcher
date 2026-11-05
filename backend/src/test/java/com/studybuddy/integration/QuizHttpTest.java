@@ -3,8 +3,11 @@ package com.studybuddy.integration;
 import com.studybuddy.ai.AiAttachment;
 import com.studybuddy.ai.AiClient;
 import com.studybuddy.ai.AiUnavailableException;
+import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
@@ -67,6 +70,7 @@ class QuizHttpTest extends PostgresHttpTest {
     }
 
     @LocalServerPort private int port;
+    @Autowired private EntityManagerFactory entityManagers;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
     private String leader;
     private String member;
@@ -153,6 +157,41 @@ class QuizHttpTest extends PostgresHttpTest {
     private static void conflict(Reply reply, String code) {
         assertEquals(409, reply.status(), reply.body());
         assertEquals(code, reply.payload().path("code").asString());
+    }
+
+    @Test
+    void theQuizListQueryCountDoesNotGrowWithTheNumberOfQuizzes() {
+        takeAndClose(startQuiz(leader));
+        var small = measure("/groups/" + groupId + "/quizzes", member);
+        for (int index = 0; index < 5; index++) takeAndClose(startQuiz(leader));
+
+        var large = measure("/groups/" + groupId + "/quizzes", member);
+
+        assertEquals(6, large.payload().size());
+        for (JsonNode quiz : large.payload()) assertEquals(1, quiz.path("submittedCount").asInt());
+        assertEquals(small.queries(), large.queries(), "Quiz list query count must not grow from 1 to 6 quizzes");
+    }
+
+    /** The member takes the quiz, then the leader closes it, so the next one can start. */
+    private void takeAndClose(long quizId) {
+        JsonNode questions = expect(call("POST", "/quizzes/" + quizId + "/start", member, null), 200).path("questions");
+        expect(submit(quizId, member, answers(questions, 3)), 201);
+        expect(call("POST", "/quizzes/" + quizId + "/close", leader, null), 200);
+    }
+
+    private record MeasuredList(JsonNode payload, long queries) {}
+
+    private MeasuredList measure(String path, String token) {
+        var statistics = entityManagers.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+        statistics.setStatisticsEnabled(true);
+        try {
+            JsonNode payload = expect(call("GET", path, token, null), 200);
+            return new MeasuredList(payload, statistics.getPrepareStatementCount());
+        } finally {
+            statistics.setStatisticsEnabled(false);
+            statistics.clear();
+        }
     }
 
     @Test
