@@ -17,32 +17,57 @@
   <img src="https://img.shields.io/badge/PostgreSQL-Supabase-6b4fa0" alt="PostgreSQL on Supabase" />
 </p>
 
+<p align="center"><strong>▶ The 1-minute launch film</strong>: a student's lonely exam week, then the app that fixes it</p>
+
+<video src="https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa" width="100%" controls muted></video>
+
+<p align="center">
+  <a href="#walkthrough"><strong>Watch the 2-minute walkthrough</strong></a> ·
+  <a href="#run-it-locally-about-5-minutes"><strong>Run it in 5 minutes</strong></a> ·
+  <a href="#two-extensions"><strong>The two extensions</strong></a>
+</p>
+
+---
+
+**Contents:** [Walkthrough](#walkthrough) · [Features](#features) · [Two extensions](#two-extensions) · [Architecture](#architecture) ·
+[Matching engine](#matching-engine) · [Privacy](#privacy-and-relationships) ·
+[Getting started](#getting-started) · [Testing](#testing) · [Documentation](#documentation) ·
+[Libraries](#libraries) · [Team](#team-and-workflow)
+
+## Walkthrough
+
+Every feature in order, following Priya, a third-year student, through one week. Recorded from
+the real app with the seeded demo data.
+
+<table>
+  <tr>
+    <td width="64%"><video src="https://github.com/user-attachments/assets/7285be44-89f5-4510-bcfc-613bdcee8a6f" width="100%" controls muted></video></td>
+    <td>
+      <strong>Chapters</strong><br /><br />
+      <code>0:00</code> Welcome<br />
+      <code>0:10</code> Sign in<br />
+      <code>0:16</code> Study profile<br />
+      <code>0:27</code> Home<br />
+      <code>0:30</code> Matching and AI explanation<br />
+      <code>0:49</code> Privacy of contact numbers<br />
+      <code>1:00</code> Groups and sessions<br />
+      <code>1:13</code> Study room<br />
+      <code>1:19</code> Quiz Buddy, plans and Pixel<br />
+      <code>1:33</code> Notifications<br />
+      <code>1:35</code> Admin<br />
+      <code>1:46</code> Design and tests
+    </td>
+  </tr>
+</table>
+
 <p align="center">
   <img src="docs/assets/screenshots/find-buddies.png" alt="Find buddies: ranked matches with a score breakdown and shared-hours heatmap" width="49%" />
   <img src="docs/assets/screenshots/study-room.png" alt="A group study room with a shared Pomodoro, reactions and a growing tree" width="49%" />
 </p>
 
-### Demo videos
-
-**Launch film (1 min):** a student's lonely exam week, then the app that fixes it.
-
-https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa
-
-**Walkthrough (2 min):** every feature in order, following Priya, as a marker would test it.
-
-https://github.com/user-attachments/assets/7285be44-89f5-4510-bcfc-613bdcee8a6f
-
-Both are recorded from the real app with the seeded demo data; the narration is a synthetic voice
-and the music was generated in code (see [AI usage](docs/AI_USAGE.md)). Full 1080p copies to
-download: [launch film](docs/assets/video/study-buddy-launch-film.mp4) ·
-[walkthrough](docs/assets/video/study-buddy-walkthrough.mp4).
-
----
-
-**Contents:** [Features](#features) · [Two extensions](#two-extensions) · [Architecture](#architecture) ·
-[Matching engine](#matching-engine) · [Privacy](#privacy-and-relationships) ·
-[Getting started](#getting-started) · [Testing](#testing) · [Documentation](#documentation) ·
-[Libraries](#libraries) · [Team](#team-and-workflow)
+<sub>Narration is a synthetic voice and the music was generated in code (see [AI usage](docs/AI_USAGE.md)).
+Full 1080p downloads: [launch film](docs/assets/video/study-buddy-launch-film.mp4) ·
+[walkthrough](docs/assets/video/study-buddy-walkthrough.mp4).</sub>
 
 ## Features
 
