@@ -2,6 +2,7 @@ package com.studybuddy.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -19,9 +20,12 @@ class LoginThrottleHttpTest extends PostgresHttpTest {
         expect(attemptLogin("guessed@example.test", false), 401);
         expect(attemptLogin("guessed@example.test", false), 401);
 
-        var refused = expect(attemptLogin("guessed@example.test", true), 429);
+        Reply lockedOut = attemptLogin("guessed@example.test", true);
+        var refused = expect(lockedOut, 429);
         assertEquals("TOO_MANY_LOGIN_ATTEMPTS", refused.path("code").asString());
         assertEquals("Too many incorrect sign-in attempts. Try again in 15 minutes.", refused.path("message").asString());
+        long retryAfter = Long.parseLong(lockedOut.header("Retry-After"));
+        assertTrue(retryAfter > 0 && retryAfter <= 900, "Retry-After " + retryAfter);
         assertFalse(refused.has("token"));
         assertEquals(0, database.queryForObject("select count(*) from users where email='guessed@example.test' and last_login_at is not null", Integer.class));
         expect(attemptLogin("other@example.test", true), 200);

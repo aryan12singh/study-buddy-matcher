@@ -33,7 +33,7 @@ by a participant. Leader authority is checked against the URL's particular group
 authority does not bypass profile contact privacy. Server checks remain necessary when
 the UI hides or disables unavailable actions.
 
-## E2 room and session boundaries
+## E2 room, reaction, forest and session boundaries
 
 ```mermaid
 classDiagram
@@ -56,6 +56,23 @@ classDiagram
     StudentDeactivation --> RoomLifecycle : revoke account leases and roles
     RoomLifecycle --> RoomPresenceRepository
     RoomLifecycle --> StudyRoomRepository
+    StudyRoom "1" --> "0..*" RoomReaction
+    RoomReaction --> Student : sender
+    StudyRoomController --> RoomReactionService
+    RoomReactionService --> RoomAccess
+    RoomReactionService --> RoomReactionRepository
+    StudyRoomService --> RoomReactionService : recent reactions for the snapshot
+    StudyRoomService ..> RoomVisitTicked : publishes on join and heartbeat
+    StudyRoomService ..> RoomVisitEnded : publishes when the last tab leaves
+    ForestVisitListener --> ForestService : forest worker, after commit
+    ForestController --> ForestService
+    ForestService --> FocusVisitRepository
+    ForestService --> FocusCredit
+    ForestService --> TreeLottery
+    ForestService --> ForestAssembler
+    ForestAssembler --> TreeGrowth
+    FocusVisitRepository --> FocusVisit
+    AchievementService --> ForestService : Forester tree count
     StudyGroup "0..1" --> "0..*" StudySession
     Connection "0..1" --> "0..*" StudySession
     StudySession --> SessionSchedule : immutable local-time series
@@ -101,6 +118,14 @@ changes use `lockMember`: account locks precede the group lock, followed by a cu
 membership check. Assemblers expose only DTOs. The leader retains controls, delegated
 hosts must be present, and distinct students count toward capacity. Membership/account/
 closure operations revoke leases and roles transactionally, so readmission needs a fresh join.
+
+Reactions are sent only by a student with a live lease in the room, limited per student by a
+burst window, and listed in every member's room snapshot for a short window; old rows are
+deleted when someone next reacts. The forest stays outside the room code: `StudyRoomService`
+publishes `RoomVisitTicked` and `RoomVisitEnded`, and `ForestVisitListener` hands each one, after
+the room transaction commits, to a single forest worker. `ForestService` credits the focus time
+`FocusCredit` measures on the shared timer to the student's open `FocusVisit`; one continuous
+visit grows one tree, and a gap longer than the lease lifetime starts a new one.
 
 Each dated session belongs to exactly one group or connection. Group leaders and
 the relevant buddy pair manage their own series; current parent eligibility gates

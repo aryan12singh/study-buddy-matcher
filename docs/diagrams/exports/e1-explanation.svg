@@ -40,7 +40,7 @@
 <rect x="555" y="800" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
 <rect x="555" y="945" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
 <rect x="555" y="945" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
-<rect x="555" y="1090" width="680" height="130" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="555" y="1090" width="680" height="155" rx="6" fill="white" stroke="#254e73" stroke-width="1.5" />
 <rect x="555" y="1090" width="680" height="6" rx="0" fill="#254e73" stroke="none" stroke-width="1.5" />
 <rect x="1350" y="220" width="380" height="405" rx="6" fill="white" stroke="#176c63" stroke-width="1.5" data-node="box"/>
 <rect x="1350" y="220" width="380" height="6" rx="0" fill="#176c63" stroke="none" stroke-width="1.5" />
@@ -110,14 +110,15 @@
 <text x="573" y="863" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationCache.find(hash); current validator on every hit.</text>
 <text x="573" y="887" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Valid hit → AI. Invalid hit or read failure → STANDARD.</text>
 <text x="573" y="911" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Only a cache miss continues; no quota spent on a hit/error.</text>
-<text x="573" y="977" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">6  Acquire quota for this cache miss</text>
-<text x="573" y="1008" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationQuota.tryAcquire(); unavailable → STANDARD.</text>
-<text x="573" y="1032" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Daily, synchronized and process-local; restart resets it.</text>
-<text x="573" y="1056" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Concurrent misses can make duplicate provider calls.</text>
-<text x="573" y="1122" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">7  Generate, validate, then attempt to cache</text>
-<text x="573" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v5 → ExplanationProvider → validate raw JSON/text.</text>
-<text x="573" y="1177" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Unavailable/rejected output → STANDARD.</text>
-<text x="573" y="1201" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Validated output → AI, even if cache.save() fails.</text>
+<text x="573" y="977" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">6  Build the prompt from plain-word evidence</text>
+<text x="573" y="1008" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationPromptBuilder fills prompt v5 via PromptTemplate.</text>
+<text x="573" y="1032" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationVocabulary: plain words and weights, no code names.</text>
+<text x="573" y="1056" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">The student ID is kept for the allowance; Gemini never sees it.</text>
+<text x="573" y="1122" font-size="22" fill="#254e73" font-weight="700" text-anchor="start">7  Call Gemini within E1’s quota, validate, cache</text>
+<text x="573" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ExplanationProvider.explain(studentId, prompt) → E1’s own</text>
+<text x="573" y="1177" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">GeminiClient, which spends its AiQuota before calling.</text>
+<text x="573" y="1201" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Over quota, 429 pause, failure or rejected output → STANDARD.</text>
+<text x="573" y="1225" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Validated output → AI, even if cache.save() fails.</text>
 <text x="1368" y="255" font-size="23" fill="#176c63" font-weight="700" text-anchor="start">Provider evidence only</text>
 <text x="1368" y="289" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Quality, strategy and criteria:</text>
 <text x="1368" y="316" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">rounded scores + known/enabled.</text>
@@ -143,10 +144,10 @@
 <rect x="1272.8" y="1025" width="48.400000000000006" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="1297" y="1040" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">save</text>
 <text x="1368" y="1065" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">GeminiExplanationProvider</text>
-<text x="1368" y="1099" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Implements ExplanationProvider.</text>
-<text x="1368" y="1126" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Server HTTP call with timeouts.</text>
-<text x="1368" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Prompt v5 + allowlisted evidence.</text>
-<text x="1368" y="1180" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Error/empty/malformed reply</text>
+<text x="1368" y="1099" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Adapts E1’s own GeminiClient:</text>
+<text x="1368" y="1126" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">its key, model, timeout, AiQuota.</text>
+<text x="1368" y="1153" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Quota is daily, per process.</text>
+<text x="1368" y="1180" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Any failure or unfinished reply</text>
 <text x="1368" y="1207" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">becomes the STANDARD path.</text>
 <rect x="1255.65" y="1105" width="72.7" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="1292" y="1120" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">explain</text>

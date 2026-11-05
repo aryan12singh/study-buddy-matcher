@@ -1,5 +1,7 @@
 package com.studybuddy.matchexplanation;
 
+import com.studybuddy.ai.AiQuota;
+import com.studybuddy.ai.GeminiSettings;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -8,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
+import java.time.ZoneId;
 
 /**
  * AI match explanation settings, bound from {@code app.ai.explanation.*}. The API key comes only
@@ -38,6 +41,16 @@ public record AiExplanationProperties(
     /** True only when the feature is switched on and a key is configured. */
     public boolean ready() {
         return enabled && apiKey != null && !apiKey.isBlank();
+    }
+
+    /** How a Gemini client built from these settings connects; the key stays in the settings. */
+    public GeminiSettings geminiSettings(String purpose, boolean turnOffThinking) {
+        return new GeminiSettings(purpose, enabled, baseUrl, model, apiKey, timeout, maxOutputTokens, turnOffThinking);
+    }
+
+    /** A new call allowance with these limits, counted separately from every other client's. */
+    public AiQuota newQuota() {
+        return new AiQuota(dailyCallLimit, dailyCallLimitPerStudent, rateLimitCooldown, ZoneId.of(quotaZone));
     }
 
     /** Never print the key, even in a startup error. */

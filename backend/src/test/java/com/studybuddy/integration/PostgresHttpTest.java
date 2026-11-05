@@ -98,7 +98,25 @@ abstract class PostgresHttpTest {
             JsonNode payload = response.body().isBlank() || response.headers().firstValue("content-type").orElse("").startsWith("text/calendar")
                     ? json.nullNode() : json.readTree(response.body());
             return new Reply(response.statusCode(), payload, response.body(),
-                    response.headers().firstValue("content-type").orElse(""));
+                    response.headers().firstValue("content-type").orElse(""), response.headers());
+        } catch (Exception error) {
+            throw new AssertionError("HTTP request failed: " + method + " " + path, error);
+        }
+    }
+
+    /** A request with a body sent exactly as given, for content types and lengths {@link #call} never sends. */
+    protected Reply raw(String method, String path, String token, String contentType, HttpRequest.BodyPublisher body) {
+        try {
+            HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/api" + path))
+                    .timeout(Duration.ofSeconds(20)).header("Accept", "application/json").header("Content-Type", contentType)
+                    .method(method, body);
+            if (token != null) {
+                request.header("Authorization", "Bearer " + token);
+            }
+            HttpResponse<String> response = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
+            JsonNode payload = response.body().isBlank() ? json.nullNode() : json.readTree(response.body());
+            return new Reply(response.statusCode(), payload, response.body(),
+                    response.headers().firstValue("content-type").orElse(""), response.headers());
         } catch (Exception error) {
             throw new AssertionError("HTTP request failed: " + method + " " + path, error);
         }
@@ -154,5 +172,13 @@ abstract class PostgresHttpTest {
         return database.queryForObject(sql, Long.class, args);
     }
 
-    protected record Reply(int status, JsonNode payload, String body, String contentType) { }
+    protected record Reply(int status, JsonNode payload, String body, String contentType, java.net.http.HttpHeaders headers) {
+        Reply(int status, JsonNode payload, String body, String contentType) {
+            this(status, payload, body, contentType, java.net.http.HttpHeaders.of(Map.of(), (name, value) -> true));
+        }
+
+        String header(String name) {
+            return headers.firstValue(name).orElse(null);
+        }
+    }
 }

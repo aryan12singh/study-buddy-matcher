@@ -11,6 +11,10 @@ import com.studybuddy.studygroup.StudyGroup;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
+/**
+ * Suggests times for a study session by intersecting the weekly availability of everyone taking
+ * part: both students of a connection, or the active members of a group.
+ */
 @Component
 public class SessionAvailability {
     /** Weekly availability is stored as Singapore campus time, so suggestions are too. */
@@ -19,7 +23,8 @@ public class SessionAvailability {
     private final AvailabilitySlotRepository slots;
     private final GroupMembershipRepository memberships;
     public SessionAvailability(AvailabilitySlotRepository slots, GroupMembershipRepository memberships) {
-        this.slots = slots; this.memberships = memberships;
+        this.slots = slots;
+        this.memberships = memberships;
     }
     public SessionAvailabilityDto forGroup(StudyGroup group) {
         return intersect(memberships.findByStudyGroupId(group.getId()).stream().map(GroupMembership::getStudent)

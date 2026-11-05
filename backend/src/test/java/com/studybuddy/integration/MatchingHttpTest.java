@@ -163,7 +163,7 @@ class MatchingHttpTest extends PostgresHttpTest {
         assertEquals(strongest,best.path("matches").get(0).path("studentId").asLong());
         assertEquals(1.0,best.path("matches").get(0).path("totalScore").asDouble());
         assertEquals(course,best.path("matches").get(0).path("relevantCourse").path("id").asLong());
-        assertTrue(best.path("matches").get(0).path("explanation").asString().contains("course 100.0%"));
+        assertTrue(best.path("matches").get(0).path("explanation").asString().startsWith("Strong match: same course."));
         assertFalse(best.path("matches").get(0).path("breakdown").get(1).path("enabled").asBoolean());
         for (String sort : new String[]{"MOST_SHARED_HOURS","SAME_YEAR_FIRST"}) {
             var results = expect(call("GET",path+"&sort="+sort,studentToken,null),200);

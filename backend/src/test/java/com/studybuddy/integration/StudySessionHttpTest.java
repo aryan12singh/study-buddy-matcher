@@ -29,8 +29,13 @@ class StudySessionHttpTest extends PostgresHttpTest {
         JsonNode member = expect(call("GET", "/sessions/" + id, people.memberToken, null), 200);
         assertFalse(member.path("canManage").asBoolean());
         assertEquals(2, member.path("occurrences").size());
-        expect(call("GET", "/sessions/" + id, people.outsiderToken, null), 403);
-        expect(call("GET", "/sessions/" + id + "/calendar", people.outsiderToken, null), 403);
+        // A student outside the group is told the session does not exist; members who may only read get 403 on writes.
+        expect(call("GET", "/sessions/" + id, people.outsiderToken, null), 404);
+        expect(call("GET", "/sessions/" + id + "/calendar", people.outsiderToken, null), 404);
+        var outsiderEdit = details("Hijack", 1); outsiderEdit.put("expectedVersion", 0);
+        expect(call("PUT", "/sessions/" + id, people.outsiderToken, outsiderEdit), 404);
+        expect(call("POST", "/sessions/" + id + "/cancel", people.outsiderToken, Map.of("expectedVersion", 0)), 404);
+        expect(call("PUT", "/sessions/" + id, people.memberToken, outsiderEdit), 403);
         expect(call("GET", "/groups/" + group + "/sessions/availability", people.outsiderToken, null), 403);
         assertEquals(1, expect(call("GET", "/sessions/mine", people.memberToken, null), 200).size());
         assertEquals(1, count("select count(*) from notifications where type='GROUP_SESSION_CREATED' and recipient_id=?", people.member));
@@ -68,6 +73,7 @@ class StudySessionHttpTest extends PostgresHttpTest {
         long id = created.path("id").asLong();
         assertEquals("BUDDY", created.path("scope").asString());
         assertTrue(expect(call("GET", "/sessions/" + id, people.memberToken, null), 200).path("canManage").asBoolean());
+        expect(call("GET", "/sessions/" + id, people.outsiderToken, null), 404);
         var update = details("Buddy final revision", 1); update.put("expectedVersion", 0);
         expect(call("PUT", "/sessions/" + id, people.memberToken, update), 200);
         expect(call("POST", "/connections/" + connection + "/sessions", people.outsiderToken, details("Intrusion", 1)), 403);
@@ -91,7 +97,7 @@ class StudySessionHttpTest extends PostgresHttpTest {
         assertEquals("10:00:00", shared.path("sharedSlots").get(0).path("startTime").asString());
         JsonNode created = expect(call("POST", "/groups/" + group + "/sessions", people.leaderToken, details("Revision", 1)), 201);
         expect(call("DELETE", "/groups/" + group + "/members/" + people.member, people.leaderToken, null), 204);
-        expect(call("GET", "/sessions/" + created.path("id").asLong(), people.memberToken, null), 403);
+        expect(call("GET", "/sessions/" + created.path("id").asLong(), people.memberToken, null), 404);
         assertEquals(0, expect(call("GET", "/sessions/mine", people.memberToken, null), 200).size());
         assertEquals(120, expect(call("GET", "/groups/" + group + "/sessions/availability", people.leaderToken, null), 200).path("sharedMinutes").asLong());
     }

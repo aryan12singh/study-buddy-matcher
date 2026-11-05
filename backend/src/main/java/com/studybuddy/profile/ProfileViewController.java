@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code GET /api/students/{id}/profile}, another student's profile as the signed-in student
+ * may see it. The response is marked {@code no-store} so no browser or proxy keeps a copy of a
+ * contact number. It only delegates to {@link ProfileViewService}.
+ */
 @RestController
 @RequestMapping("/api/students")
 public class ProfileViewController {

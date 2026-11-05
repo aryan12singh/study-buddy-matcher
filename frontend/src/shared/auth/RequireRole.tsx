@@ -27,6 +27,6 @@ export default function RequireRole({ role }: { role?: Role }) {
     state={{ from: location.pathname + location.search }}
     replace
   />
-  if (role && auth.account.role !== role) return <Navigate to={auth.account.role === 'ADMIN' ? '/admin/users' : '/connections'} replace />
+  if (role && auth.account.role !== role) return <Navigate to={auth.account.role === 'ADMIN' ? '/admin/users' : '/home'} replace />
   return <Outlet />
 }

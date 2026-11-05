@@ -4,6 +4,10 @@ import com.studybuddy.common.AccountAccess;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Shows one active student's profile to a signed-in student, leaving the choice of public or
+ * connected view to {@link ProfileViewAssembler}.
+ */
 @Service
 @Transactional(readOnly = true)
 public class ProfileViewService {

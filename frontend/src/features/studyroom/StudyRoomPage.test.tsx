@@ -330,6 +330,18 @@ describe('private room screen', () => {
     expect(screen.queryByRole('button', { name: 'Show panel' })).not.toBeInTheDocument()
   })
 
+  it('explains that a closed group has no study room and links back to the group', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => {
+      if (path === '/weather') return response(weather)
+      throw new AxiosError('Conflict', 'ERR_BAD_REQUEST', undefined, undefined, { config: { headers: new AxiosHeaders() }, status: 409,
+        statusText: 'Conflict', headers: {}, data: { code: 'STATE_CONFLICT', message: 'This group is closed; its study room is unavailable' } })
+    })
+    renderPage(<StudyRoomPage />, '/groups/5/room', '/groups/:id/room')
+    expect(await screen.findByRole('heading', { name: 'This group is closed' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to the group' })).toHaveAttribute('href', '/groups/5')
+    expect(screen.queryByText('Unable to load this view')).not.toBeInTheDocument()
+  })
+
   it('does not call the API for an invalid group link', () => {
     const get = vi.spyOn(api, 'get')
     renderPage(<StudyRoomPage />, '/groups/invalid/room', '/groups/:id/room')

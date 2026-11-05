@@ -1,6 +1,7 @@
 package com.studybuddy.assistant;
 
 import com.studybuddy.common.AccountAccess;
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.common.error.InvalidInputException;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class AssistantService {
         intents.forEach(intent -> this.intents.put(intent.type(), intent));
         for (AssistantIntentType type : AssistantIntentType.values()) {
             if (!this.intents.containsKey(type)) {
-                throw new IllegalStateException("No assistant intent handles " + type);
+                throw new InternalInvariantException("No assistant intent handles " + type);
             }
         }
         this.parser = parser;

@@ -4,6 +4,10 @@ import com.studybuddy.connection.ConnectionRepository;
 import com.studybuddy.matchrequest.MatchRequestRepository;
 import org.springframework.stereotype.Component;
 
+/**
+ * Works out how the viewer relates to the student whose profile they are viewing: themselves,
+ * connected, a pending request either way, or a stranger.
+ */
 @Component
 public class ProfileRelationshipAssembler {
     private final ConnectionRepository connections;
@@ -23,8 +27,10 @@ public class ProfileRelationshipAssembler {
             return new ProfileRelationshipDto(RelationshipState.CONNECTED, null, connection.get().getId());
         }
         var request = requests.findPendingBetween(subjectId, viewerId);
-        if (request.isPresent()) return new ProfileRelationshipDto(request.get().isReceiver(viewerId)
-            ? RelationshipState.INCOMING_PENDING : RelationshipState.OUTGOING_PENDING, request.get().getId(), null);
+        if (request.isPresent()) {
+            return new ProfileRelationshipDto(request.get().isReceiver(viewerId)
+                ? RelationshipState.INCOMING_PENDING : RelationshipState.OUTGOING_PENDING, request.get().getId(), null);
+        }
         return new ProfileRelationshipDto(RelationshipState.STRANGER, null, null);
     }
 }

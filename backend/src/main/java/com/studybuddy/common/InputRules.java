@@ -16,6 +16,7 @@ public final class InputRules {
     private static final Pattern SINGAPORE_CONTACT = Pattern.compile("[689][0-9]{7}");
     private static final Pattern INTERNATIONAL_CONTACT = Pattern.compile("\\+[1-9][0-9]{6,14}");
     private static final String SINGAPORE_CODE = "+65";
+    private static final char NUL = '\u0000';
 
     private InputRules() {
     }
@@ -68,6 +69,10 @@ public final class InputRules {
             return null;
         }
         String normal = value.strip();
+        if (normal.indexOf(NUL) >= 0) {
+            // JSON bodies are refused earlier; this covers text from form fields and query strings.
+            throw new InvalidInputException(fieldKey(field), field + " cannot contain the NUL character");
+        }
         if (normal.length() > limit) {
             throw new InvalidInputException(fieldKey(field), field + " must contain at most " + limit + " characters");
         }

@@ -18,6 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Quiz endpoints: start a group or personal quiz from notes and files, list, read, take, submit,
+ * rank, close and review quizzes. Starting delegates to {@link QuizCreationService}, which calls
+ * the AI provider outside any transaction; everything else delegates to {@link QuizService}.
+ */
 @RestController
 @RequestMapping("/api")
 public class QuizController {

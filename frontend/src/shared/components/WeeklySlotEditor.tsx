@@ -48,6 +48,8 @@ export default function WeeklySlotEditor({ value, onChange, drafts, onDraftsChan
   const [added, setAdded] = useState<{ index: number; message: string } | null>(null)
   const [copying, setCopying] = useState<{ slot: WeeklySlot; days: WeeklySlot['dayOfWeek'][] } | null>(null)
   const [notice, setNotice] = useState('')
+  // A block that ends before it starts is shown only on its row, never as a backwards time in the preview.
+  const previewSlots = value.filter(slot => minutesOf(slot.startTime) < minutesOf(slot.endTime))
 
   useEffect(() => {
     if (added) document.getElementById(`${prefix}-${added.index}-day`)?.focus()
@@ -220,7 +222,8 @@ export default function WeeklySlotEditor({ value, onChange, drafts, onDraftsChan
       <section className="schedule-preview" aria-label="Weekly schedule preview">
         <h3>Schedule preview</h3>
         <p className="field-hint">Check the week below before saving your changes.</p>
-        <WeeklySchedule slots={value} />
+        {previewSlots.length < value.length && <p className="field-hint">Blocks that end before they start are left out until they are corrected.</p>}
+        <WeeklySchedule slots={previewSlots} />
       </section>
       {copying && <Dialog title="Copy time block to other days" onClose={() => setCopying(null)} busy={disabled}>
         <p>Copy {copying.slot.startTime.slice(0, 5) || '--:--'}–{copying.slot.endTime.slice(0, 5) || '--:--'} to the selected days. Identical existing blocks are kept once.</p>

@@ -1,40 +1,44 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import axios from 'axios'
 import { getCalendar } from './api'
-import { errorMessage } from '../../shared/api/client'
+import { useAction } from '../../shared/api/useAction'
 import Button from '../../shared/components/Button'
 
 /** Each download belongs to this mounted account/session view; late responses cannot create files. */
 export default function CalendarButton({ sessionId }: { sessionId: number }) {
   const request = useRef<AbortController | null>(null)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string>()
+  // A download changes nothing other views show.
+  const action = useAction({ refresh: false })
   useEffect(() => () => { request.current?.abort() }, [sessionId])
   async function download() {
     if (request.current) return
     const controller = new AbortController(); request.current = controller
-    setPending(true); setError(undefined)
-    try {
-      const content = await getCalendar(sessionId, controller.signal)
-      if (controller.signal.aborted || request.current !== controller) return
-      const url = URL.createObjectURL(content)
-      const link = document.createElement('a')
+    await action.run(async () => {
       try {
-        link.href = url; link.download = `study-session-${sessionId}.ics`
-        document.body.appendChild(link); link.click()
-      } finally {
-        link.remove()
-        // Give the browser an event-loop turn to consume the URL, then always release it.
-        window.setTimeout(() => URL.revokeObjectURL(url), 0)
+        const content = await getCalendar(sessionId, controller.signal)
+        if (!controller.signal.aborted && request.current === controller) saveFile(content, `study-session-${sessionId}.ics`)
+      } catch (failure) {
+        // A download abandoned by leaving the page is not an error worth showing.
+        if (!controller.signal.aborted && !axios.isCancel(failure)) throw failure
       }
-    } catch (failure) {
-      if (!controller.signal.aborted && !axios.isCancel(failure)) setError(errorMessage(failure))
-    } finally {
-      if (!controller.signal.aborted && request.current === controller) { request.current = null; setPending(false) }
-    }
+    })
+    if (request.current === controller) request.current = null
   }
   return <div>
-    <Button disabled={pending} onClick={() => void download()}>{pending ? 'Preparing calendar…' : 'Download calendar (.ics)'}</Button>
-    {error && <p className="field-error" role="alert">{error}</p>}
+    <Button disabled={action.pending} onClick={() => void download()}>{action.pending ? 'Preparing calendar…' : 'Download calendar (.ics)'}</Button>
+    {action.error && <p className="field-error" role="alert">{action.error}</p>}
   </div>
+}
+
+function saveFile(content: Blob, name: string) {
+  const url = URL.createObjectURL(content)
+  const link = document.createElement('a')
+  try {
+    link.href = url; link.download = name
+    document.body.appendChild(link); link.click()
+  } finally {
+    link.remove()
+    // Give the browser an event-loop turn to consume the URL, then always release it.
+    window.setTimeout(() => URL.revokeObjectURL(url), 0)
+  }
 }

@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code /api/forest/me}: the signed-in student's forest and the tree growing in one group
+ * room. Each handler delegates to {@link ForestService}.
+ */
 @RestController
 @RequestMapping("/api/forest/me")
 public class ForestController {

@@ -1,7 +1,5 @@
-import axios from 'axios'
 import { api } from '../../shared/api/client'
-import type { Problem } from '../../shared/api/client'
-import type { Course } from '../../shared/api/types'
+import { CAMPUS_TIMEZONE, type Course } from '../../shared/api/types'
 import type { StudySession } from '../sessions/api'
 
 export type QuizScope = 'GROUP' | 'PERSONAL'
@@ -30,11 +28,6 @@ export type QuizHome = { scope: 'GROUP'; groupId: number } | { scope: 'PERSONAL'
 /** Shown wherever Gemini's questions or explanations appear. */
 export const AI_QUIZ_LABEL = 'Questions written by Gemini; they may be inaccurate.'
 
-/** Upload limits matching app.ai.assistant.study-plan.*; the server checks them again. */
-export const MAX_FILES = 6
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
-export const MAX_NOTES_CHARACTERS = 4000
-export const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md']
 /** Matches app.ai.assistant.quiz.max-focus-characters. */
 export const MAX_FOCUS_CHARACTERS = 200
 /**
@@ -74,25 +67,13 @@ export function upcomingSessions(sessions: StudySession[]) {
 /** "Week 4 revision · Thu 30 Oct", so two sessions with the same title can be told apart. */
 export function sessionLabel(session: StudySession) {
   const next = session.nextOccurrence
-  return next ? `${session.title} · ${new Date(next.startAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}` : session.title
+  return next ? `${session.title} · ${new Date(next.startAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', timeZone: CAMPUS_TIMEZONE })}` : session.title
 }
 
 export async function startPersonalQuiz(courseId: number, material: QuizMaterial, focus: string) {
   const form = materialForm(material, focus)
   form.append('courseId', String(courseId))
   return (await api.post<Quiz>('/quizzes', form, { timeout: WRITING_TIMEOUT_MS })).data
-}
-
-/** Says what is wrong with a set of files before anything is sent, or nothing when they are fine. */
-export function checkFiles(files: File[]): string | undefined {
-  if (!files.length) return 'Choose at least one file.'
-  if (files.length > MAX_FILES) return `Upload at most ${MAX_FILES} files.`
-  const wrong = files.find(file => !ACCEPTED_EXTENSIONS.some(extension => file.name.toLowerCase().endsWith(extension)))
-  if (wrong) return `${wrong.name} is not a PDF, .txt or .md file. Export Word or PowerPoint files to PDF first.`
-  const empty = files.find(file => file.size === 0)
-  if (empty) return `${empty.name} is empty.`
-  if (files.reduce((total, file) => total + file.size, 0) > MAX_UPLOAD_BYTES) return 'The files must add up to at most 10MB.'
-  return undefined
 }
 
 export async function beginAttempt(quizId: number) {
@@ -113,11 +94,6 @@ export async function closeQuiz(quizId: number) {
 
 export async function getReview(quizId: number, signal?: AbortSignal) {
   return (await api.get<QuizReview>(`/quizzes/${quizId}/review`, { signal })).data
-}
-
-/** True when the server said Gemini could not write the quiz, so the screen can say so plainly. */
-export function isAiUnavailable(error: unknown) {
-  return axios.isAxiosError<Problem>(error) && error.response?.data?.code === 'AI_UNAVAILABLE'
 }
 
 /** 95 seconds reads as "1:35". */

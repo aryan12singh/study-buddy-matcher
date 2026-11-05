@@ -5,6 +5,7 @@ import { LIGHT_NAMES, formatMinutes } from './api'
 import type { Tree } from './api'
 import { layOut } from './meadowLayout'
 import { treeName } from './treeSprites'
+import { CAMPUS_TIMEZONE } from '../../shared/api/types'
 
 const MEADOW_PIXELS = 400
 const START = { spin: -35, tilt: 58 }
@@ -15,7 +16,7 @@ const DRAG_TURN = .45
 const DRAG_TILT = .25
 const SWIPE_TURN = .3
 const KEY_TURN = 15
-const dates = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short', year: 'numeric' })
+const dates = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short', year: 'numeric', timeZone: CAMPUS_TIMEZONE })
 
 function describe(tree: Tree) {
   return `${treeName(tree.species, tree.variant)}, ${formatMinutes(tree.focusedMinutes)} focused in ${tree.groupName}, `

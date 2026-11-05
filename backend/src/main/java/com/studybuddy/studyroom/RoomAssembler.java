@@ -8,6 +8,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds the {@link StudyRoomDto} for one viewer: the timer, the effective host and co-host, who is
+ * in the room, the active members, recent reactions, and what the viewer may control. Several tabs
+ * of one student count as one participant, and deactivated accounts are left out.
+ */
 @Component
 public class RoomAssembler {
     private final RoomSettings settings;

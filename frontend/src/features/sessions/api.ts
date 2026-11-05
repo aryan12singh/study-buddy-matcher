@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { api } from '../../shared/api/client'
 import type { WeeklySlot } from '../../shared/api/types'
 
@@ -12,7 +13,7 @@ export type StudySession = {
 }
 export type SessionInput = { title: string; startLocal: string; endLocal: string; timeZone: string; occurrenceCount: number; agenda: string | null; location: string | null; roomLink: string | null }
 export type SessionAvailability = { timeZone: string; participantCount: number; sharedSlots: WeeklySlot[]; sharedMinutes: number }
-export const scopePath = (scope: SessionScope) => `/${scope.kind === 'GROUP' ? 'groups' : 'connections'}/${scope.id}/sessions`
+const scopePath = (scope: SessionScope) => `/${scope.kind === 'GROUP' ? 'groups' : 'connections'}/${scope.id}/sessions`
 export const scopeListPath = scopePath
 export async function getMySessions(signal?: AbortSignal) { return (await api.get<StudySession[]>('/sessions/mine', { signal })).data }
 export async function getSessions(scope: SessionScope, signal?: AbortSignal) { return (await api.get<StudySession[]>(scopePath(scope), { signal })).data }
@@ -22,5 +23,13 @@ export async function createSession(scope: SessionScope, input: SessionInput) { 
 export async function updateSession(id: number, input: SessionInput, expectedVersion: number) { return (await api.put<StudySession>(`/sessions/${id}`, { ...input, expectedVersion })).data }
 export async function cancelSession(id: number, expectedVersion: number) { return (await api.post<StudySession>(`/sessions/${id}/cancel`, { expectedVersion })).data }
 export async function getCalendar(id: number, signal?: AbortSignal) {
-  return (await api.get<Blob>(`/sessions/${id}/calendar`, { signal, responseType: 'blob', headers: { Accept: 'text/calendar' } })).data
+  try {
+    return (await api.get<Blob>(`/sessions/${id}/calendar`, { signal, responseType: 'blob', headers: { Accept: 'text/calendar' } })).data
+  } catch (error) {
+    // An error body arrives as a Blob too; read it so the server's reason reaches the student.
+    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+      try { error.response.data = JSON.parse(await error.response.data.text()) } catch { /* not JSON: keep the generic message */ }
+    }
+    throw error
+  }
 }

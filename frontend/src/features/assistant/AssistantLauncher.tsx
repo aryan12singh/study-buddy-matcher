@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import PixelIcon from '../../shared/components/PixelIcon'
 import QuizBotWindow from '../quiz/QuizBotWindow'
 import AssistantPanel from './AssistantPanel'
@@ -13,17 +13,24 @@ export default function AssistantLauncher() {
   const [open, setOpen] = useState(false)
   const [started, setStarted] = useState(false)
   const [quizBuddy, setQuizBuddy] = useState(false)
+  const fab = useRef<HTMLButtonElement>(null)
 
   function toggle() {
     setStarted(true)
     setOpen(value => !value)
   }
 
+  /** Focus goes back to the corner button, not to the page body, when the panel hides. */
+  function close() {
+    setOpen(false)
+    fab.current?.focus()
+  }
+
   return <div className="assistant-launcher">
     {started && <div hidden={!open}>
-      <AssistantPanel onClose={() => setOpen(false)} onOpenQuizBuddy={() => { setOpen(false); setQuizBuddy(true) }} />
+      <AssistantPanel open={open} onClose={close} onOpenQuizBuddy={() => { setOpen(false); setQuizBuddy(true) }} />
     </div>}
-    <button type="button" className={`assistant-fab${open ? ' is-open' : ''}`} aria-expanded={open}
+    <button ref={fab} type="button" className={`assistant-fab${open ? ' is-open' : ''}`} aria-expanded={open}
       aria-label={open ? 'Close Pixel, your study assistant' : 'Open Pixel, your study assistant'} title={open ? undefined : 'Ask Pixel'} onClick={toggle}>
       {open ? <span aria-hidden="true">×</span> : <PixelIcon kind="robot" />}
     </button>

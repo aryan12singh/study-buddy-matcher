@@ -2,6 +2,10 @@ package com.studybuddy.matchrequest;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds a {@link MatchRequestDto} from a {@link MatchRequest}, including where the request was
+ * sent from. It names both students but never includes a contact number.
+ */
 @Component
 public class MatchRequestAssembler {
 

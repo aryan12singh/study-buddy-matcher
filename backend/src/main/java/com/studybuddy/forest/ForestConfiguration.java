@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+/**
+ * Forest beans: binds {@link ForestProperties} ({@code app.forest}), supplies the random source for
+ * tree variants and plots, and the single-threaded executor that applies forest updates.
+ */
 @Configuration
 @EnableConfigurationProperties(ForestProperties.class)
 public class ForestConfiguration {

@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { api } from '../../shared/api/client'
 import type { Course, StudyGoal } from '../../shared/api/types'
 
@@ -60,14 +59,13 @@ export async function createStudyPlan(input: PersonalPlanInput, material: StudyM
   return (await api.post<StudyPlan>('/study-plans', form, { timeout: WRITING_TIMEOUT_MS })).data
 }
 
-/** The session's roadmap, or null when it has none yet. */
+/**
+ * The session's roadmap, or null when it has none yet: the server answers 204 No Content. A 404 means
+ * the session itself is gone and is left to reach the caller's error state.
+ */
 export async function getSessionPlan(sessionId: number, signal?: AbortSignal) {
-  try {
-    return (await api.get<StudyPlan>(`/sessions/${sessionId}/study-plan`, { signal })).data
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) return null
-    throw error
-  }
+  const response = await api.get<StudyPlan | ''>(`/sessions/${sessionId}/study-plan`, { signal })
+  return response.status === 204 || !response.data ? null : response.data
 }
 
 /** Replaces the session's roadmap; the meetings and their length come from the session. */

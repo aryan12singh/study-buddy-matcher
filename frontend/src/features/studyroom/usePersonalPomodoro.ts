@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { RoomTimer } from './api'
 import { projectTimer } from './timer'
 
-export const POMODORO_DEFAULTS = { focusMinutes: 25, breakMinutes: 5 }
+const POMODORO_DEFAULTS = { focusMinutes: 25, breakMinutes: 5 }
 export const POMODORO_LIMITS = { focusMinutes: 180, breakMinutes: 60 }
 export const MINUTE_MILLIS = 60_000
 const TICK_MILLIS = 250

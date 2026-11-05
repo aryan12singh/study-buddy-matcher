@@ -72,4 +72,49 @@ class SessionMeetingFramesTest {
         assertThrows(NoUpcomingMeetingsException.class, () -> frameAt("2026-10-30T00:00:00Z", weekly(2, SessionStatus.CANCELLED)));
         assertThrows(NoUpcomingMeetingsException.class, () -> frameAt("2026-11-09T03:30:00Z", weekly(2, SessionStatus.SCHEDULED)));
     }
+
+    private static RoadmapDraft draftFor(int meetings) {
+        List<RoadmapDraft.Entry> entries = new java.util.ArrayList<>();
+        for (int sequence = 1; sequence <= meetings; sequence++) {
+            entries.add(new RoadmapDraft.Entry(sequence, "Meeting " + sequence, 60, List.of("Task")));
+        }
+        return new RoadmapDraft(List.of("Topic"), entries);
+    }
+
+    @Test
+    void dropsMeetingsThatEndedSincePlanningAndRenumbersTheRest() {
+        StudySession session = weekly(3, SessionStatus.SCHEDULED);
+        RoadmapFrame planned = frameAt("2026-10-30T00:00:00Z", session);
+        // 12:00 Singapore time on 2 November: the first planned meeting has just ended.
+        SessionMeetingFrames later = new SessionMeetingFrames(LIMITS, Clock.fixed(Instant.parse("2026-11-02T04:00:00Z"), ZoneOffset.UTC));
+
+        SessionMeetingFrames.StillUpcoming kept = later.dropEnded(session, planned, draftFor(3));
+
+        assertEquals(List.of(new RoadmapBlock(1, LocalDate.of(2026, 11, 9), 90), new RoadmapBlock(2, LocalDate.of(2026, 11, 16), 90)),
+                kept.frame().blocks());
+        assertEquals(List.of(1, 2), kept.draft().entries().stream().map(RoadmapDraft.Entry::sequence).toList());
+        assertEquals(List.of("Meeting 2", "Meeting 3"), kept.draft().entries().stream().map(RoadmapDraft.Entry::title).toList());
+    }
+
+    @Test
+    void keepsTheWholeRoadmapWhenNoMeetingHasEnded() {
+        StudySession session = weekly(2, SessionStatus.SCHEDULED);
+        RoadmapFrame planned = frameAt("2026-10-30T00:00:00Z", session);
+        RoadmapDraft draft = draftFor(2);
+
+        SessionMeetingFrames.StillUpcoming kept = new SessionMeetingFrames(LIMITS,
+                Clock.fixed(Instant.parse("2026-10-30T00:01:00Z"), ZoneOffset.UTC)).dropEnded(session, planned, draft);
+
+        assertEquals(planned, kept.frame());
+        assertEquals(draft, kept.draft());
+    }
+
+    @Test
+    void refusesWhenEveryPlannedMeetingHasEnded() {
+        StudySession session = weekly(1, SessionStatus.SCHEDULED);
+        RoadmapFrame planned = frameAt("2026-10-30T00:00:00Z", session);
+        SessionMeetingFrames later = new SessionMeetingFrames(LIMITS, Clock.fixed(Instant.parse("2026-11-02T04:00:00Z"), ZoneOffset.UTC));
+
+        assertThrows(NoUpcomingMeetingsException.class, () -> later.dropEnded(session, planned, draftFor(1)));
+    }
 }

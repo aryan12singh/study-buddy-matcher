@@ -51,7 +51,7 @@ public class LoginThrottle {
             previous = null;
         }
         if (previous != null && previous.count() >= maxFailures) {
-            throw new TooManyLoginAttemptsException(minutesRoundedUp(Duration.between(now, previous.last().plus(lockout))));
+            throw new TooManyLoginAttemptsException(Duration.between(now, previous.last().plus(lockout)));
         }
         attemptsByEmail.put(email, new Attempts(previous == null ? 1 : previous.count() + 1, now));
     }
@@ -71,10 +71,5 @@ public class LoginThrottle {
 
     private boolean isExpired(Attempts attempts, Instant now) {
         return !now.isBefore(attempts.last().plus(lockout));
-    }
-
-    private static long minutesRoundedUp(Duration remaining) {
-        long minutes = remaining.toMinutes();
-        return remaining.equals(Duration.ofMinutes(minutes)) ? minutes : minutes + 1;
     }
 }

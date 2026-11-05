@@ -124,8 +124,10 @@ class SessionStudyPlanHttpTest extends PostgresHttpTest {
         long group = acceptedGroup(people);
         long session = session("/groups/" + group + "/sessions", people.leaderToken(), 2);
 
-        JsonNode none = expect(call("GET", "/sessions/" + session + "/study-plan", people.memberToken(), null), 404);
-        assertEquals("NOT_FOUND", none.path("code").asString());
+        // No roadmap yet is a normal state, not an error.
+        Reply none = call("GET", "/sessions/" + session + "/study-plan", people.memberToken(), null);
+        assertEquals(204, none.status(), none.body());
+        assertTrue(none.body().isEmpty());
         expect(planSession(session, people.memberToken(), TOPICS), 403);
         assertTrue(PROMPTS.isEmpty(), "A member who may not plan must not spend an AI call");
 

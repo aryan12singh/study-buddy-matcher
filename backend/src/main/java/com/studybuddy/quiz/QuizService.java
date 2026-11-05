@@ -205,9 +205,10 @@ public class QuizService {
         return assembler.toReview(quiz, attempts.findByQuizIdAndStudentId(quizId, actorId));
     }
 
+    /** The submitted count uses the leaderboard's current-member filter, so the two always agree. */
     private QuizDto toDto(Quiz quiz, Long actorId, boolean canHost, Instant now) {
         return assembler.toDto(quiz, attempts.findByQuizIdAndStudentId(quiz.getId(), actorId),
-                attempts.countByQuizIdAndSubmittedAtIsNotNull(quiz.getId()), canHost, now);
+                currentResults(quiz).size(), canHost, now);
     }
 
     /**

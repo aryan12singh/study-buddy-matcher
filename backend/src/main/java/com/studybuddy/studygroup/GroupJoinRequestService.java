@@ -9,6 +9,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Runs the group join request state machine: apply, accept, reject and withdraw. Each change locks
+ * the applicant, the leader and the group first, so a group never takes more members than its
+ * maximum size, and every change notifies the other side.
+ */
 @Service
 @Transactional
 public class GroupJoinRequestService {

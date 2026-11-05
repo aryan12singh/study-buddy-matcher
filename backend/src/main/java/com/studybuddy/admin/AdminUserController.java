@@ -17,6 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Administrator endpoints under {@code /api/admin/users}: list, summarise, create, view, edit,
+ * deactivate, reactivate and permanently delete accounts. Each handler delegates to
+ * {@link AdminUserService}, which checks that the caller is an active administrator.
+ */
 @RestController
 @RequestMapping("/api/admin/users")
 public class AdminUserController {

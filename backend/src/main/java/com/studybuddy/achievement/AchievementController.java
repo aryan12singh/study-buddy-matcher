@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Serves {@code GET /api/achievements/me}, the signed-in student's level, points, streak and
+ * badges. It only delegates to {@link AchievementService}.
+ */
 @RestController
 @RequestMapping("/api/achievements")
 public class AchievementController {

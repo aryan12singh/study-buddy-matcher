@@ -8,6 +8,10 @@ import com.studybuddy.studygroup.GroupMembershipRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Counts a student's active connections, pending match requests and open group memberships for the
+ * home screen, read-only.
+ */
 @Service
 @Transactional(readOnly = true)
 public class StudentActivityService {

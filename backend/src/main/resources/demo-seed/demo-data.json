@@ -184,33 +184,39 @@
     { "from": "marcus", "to": "priya", "message": "Want to prep for the IS442 midterm together? I'm free Monday nights.", "course": "IS442", "outcome": "PENDING" },
     { "from": "priya", "to": "sofia", "message": "Hi Sofia! Keen to do IS442 concept review on Wednesday evenings?", "course": "IS442", "outcome": "PENDING" },
     { "from": "arjun", "to": "peishan", "message": "Shall we work through ECON101 problem sets?", "course": "ECON101", "outcome": "CONNECTED" },
-    { "from": "bryan", "to": "amelia", "message": "IS111 lab practice on Tuesday afternoons?", "course": "IS111", "outcome": "PENDING" }
+    { "from": "bryan", "to": "amelia", "message": "IS111 lab practice on Tuesday afternoons?", "course": "IS111", "outcome": "PENDING" },
+    { "from": "priya", "to": "meera", "message": "Hi Meera! Want to pair up for IS442 on Monday evenings?", "course": "IS442", "outcome": "DECLINED" },
+    { "from": "priya", "to": "joshua", "message": "Free on Thursday afternoons for some IS442 practice?", "course": "IS442", "outcome": "CANCELLED" }
   ],
   "groups": [
     { "leader": "priya", "name": "IS442 Design Patterns Clinic",
       "description": "Weekly in-person session working through design-pattern questions and past-year OOP problems before the finals.",
       "course": "IS442", "maxSize": 5, "goals": ["CONCEPT_REVIEW", "PROBLEM_SOLVING"], "studyMode": "IN_PERSON", "meets": ["WED_EVE"],
-      "members": ["jamie", "weiming"], "applicants": ["aisyah", "daniel"], "closed": false },
+      "members": ["jamie", "weiming"], "applicants": ["aisyah", "daniel"], "closed": false, "formedWeeksAgo": 4 },
     { "leader": "hannah", "name": "Stats Finals Crunch",
       "description": "Timed practice papers for COR-STAT1202, then we go through every answer together.",
       "course": "COR-STAT1202", "maxSize": 3, "goals": ["EXAM_PREPARATION"], "studyMode": "EITHER", "meets": ["TUE_AFT"],
-      "members": ["siti", "priyanka"], "applicants": [], "closed": false },
+      "members": ["siti", "priyanka"], "applicants": [], "closed": false, "formedWeeksAgo": 0 },
     { "leader": "chloe", "name": "ACCT101 Problem Set Circle",
       "description": "Friday afternoon problem sets in the library. Bring your own calculator!",
       "course": "ACCT101", "maxSize": 4, "goals": ["PROBLEM_SOLVING"], "studyMode": "IN_PERSON", "meets": ["FRI_AFT"],
-      "members": ["meiling"], "applicants": ["natalie"], "closed": false },
+      "members": ["meiling"], "applicants": ["natalie"], "closed": false, "formedWeeksAgo": 0 },
     { "leader": "ethan", "name": "IS212 Sprint Retro",
       "description": "Online sprint retrospectives for our IS212 project teams. Finished for the term.",
       "course": "IS212", "maxSize": 4, "goals": ["PROJECT_DISCUSSION"], "studyMode": "ONLINE", "meets": ["THU_EVE"],
-      "members": ["kenneth"], "applicants": [], "closed": true }
+      "members": ["kenneth"], "applicants": [], "closed": true, "formedWeeksAgo": 0 },
+    { "leader": "xinyi", "name": "IS442 Thursday Exam Drills",
+      "description": "Short timed drills on Java fundamentals every Thursday afternoon, then we swap answers and mark each other's work.",
+      "course": "IS442", "maxSize": 4, "goals": ["EXAM_PREPARATION", "PROBLEM_SOLVING"], "studyMode": "EITHER", "meets": ["THU_AFT"],
+      "members": ["priya", "grace"], "applicants": [], "closed": false, "formedWeeksAgo": 0 }
   ],
   "deactivated": ["ryan"],
   "sessions": [
-    {"organiser": "priya", "group": "IS442 Design Patterns Clinic", "buddy": null, "title": "Design Patterns Clinic", "block": "WED_EVE", "weeks": 8, "timeZone": "Asia/Singapore", "agenda": "Bring one past-year question each. We go through creational patterns first, then behavioural ones.", "location": "SCIS 1 Seminar Room 3-4"},
-    {"organiser": "priya", "group": null, "buddy": "jamie", "title": "IS442 revision with Jamie", "block": "MON_EVE", "weeks": 1, "timeZone": "Asia/Singapore", "agenda": "Go through the interfaces and abstract classes quiz together.", "location": "Li Ka Shing Library, group study room"}
+    {"organiser": "priya", "group": "IS442 Design Patterns Clinic", "buddy": null, "title": "Design Patterns Clinic", "block": "WED_EVE", "weeksAgo": 3, "weeks": 8, "timeZone": "Asia/Singapore", "agenda": "Bring one past-year question each. We go through creational patterns first, then behavioural ones.", "location": "SCIS 1 Seminar Room 3-4"},
+    {"organiser": "priya", "group": null, "buddy": "jamie", "title": "IS442 revision with Jamie", "block": "MON_EVE", "weeksAgo": 0, "weeks": 1, "timeZone": "Asia/Singapore", "agenda": "Go through the interfaces and abstract classes quiz together.", "location": "Li Ka Shing Library, group study room"}
   ],
   "quizzes": [
-    {"by": "priya", "group": "IS442 Design Patterns Clinic", "course": null, "focus": "Design patterns", "notes": "Strategy, Observer, Factory Method, Decorator, Singleton, Adapter, Composite, Builder, Template Method and Facade.",
+    {"by": "priya", "group": "IS442 Design Patterns Clinic", "session": "Design Patterns Clinic", "course": null, "focus": "Design patterns", "notes": "Strategy, Observer, Factory Method, Decorator, Singleton, Adapter, Composite, Builder, Template Method and Facade.",
       "questions": [
         {"prompt": "The matching engine swaps its ranking rule at runtime behind one interface. Which pattern is this?", "options": ["Strategy", "Singleton", "Adapter", "Template Method"], "correctOption": 0, "explanation": "Strategy puts interchangeable algorithms behind a common interface so the caller can switch between them."},
         {"prompt": "Which pattern notifies every registered subscriber when a subject's state changes?", "options": ["Decorator", "Builder", "Observer", "Facade"], "correctOption": 2, "explanation": "Observer lets subjects publish changes to any number of subscribers without knowing their concrete classes."},
@@ -224,12 +230,12 @@
         {"prompt": "Which pattern gives one simple entry point to a complicated subsystem?", "options": ["Visitor", "Memento", "Facade", "Prototype"], "correctOption": 2, "explanation": "A facade offers a small interface that hides how the subsystem's classes work together."}
       ],
       "takers": [
-        {"handle": "priya", "answers": [0, 2, 1, 3, 1, 2, 1, 3, 0, 2]},
-        {"handle": "jamie", "answers": [0, 3, 1, 3, 0, 2, 2, 3, 1, 2]},
-        {"handle": "weiming", "answers": [0, 2, 1, 0, 0, 2, 1, 3, 0, 3]}
+        {"handle": "priya", "answers": [0, 2, 1, 3, 1, 2, 1, 3, 0, 2], "secondsTaken": 312},
+        {"handle": "jamie", "answers": [0, 3, 1, 3, 0, 2, 2, 3, 1, 2], "secondsTaken": 455},
+        {"handle": "weiming", "answers": [0, 2, 1, 0, 0, 2, 1, 3, 0, 3], "secondsTaken": 268}
       ],
       "close": true },
-    {"by": "priya", "group": null, "course": "IS442", "focus": "Interfaces and abstract classes", "notes": "Interfaces, abstract classes, default methods, sealed types and the SOLID principles.",
+    {"by": "priya", "group": null, "session": null, "course": "IS442", "focus": "Interfaces and abstract classes", "notes": "Interfaces, abstract classes, default methods, sealed types and the SOLID principles.",
       "questions": [
         {"prompt": "How many interfaces can one Java class implement?", "options": ["Any number", "Only one", "At most two", "Only functional interfaces"], "correctOption": 0, "explanation": "A class extends one superclass but may implement any number of interfaces."},
         {"prompt": "What can an abstract class have that an interface cannot?", "options": ["Static methods", "Instance fields that hold state", "Default methods", "Constants"], "correctOption": 1, "explanation": "Interfaces hold only constants; an abstract class can keep per-object state in instance fields."},
@@ -243,8 +249,23 @@
         {"prompt": "What does declaring an interface sealed do?", "options": ["Stops it from having methods", "Limits which classes may implement it", "Makes it a functional interface", "Prevents it from being generic"], "correctOption": 1, "explanation": "A sealed interface lists the classes or interfaces permitted to implement or extend it."}
       ],
       "takers": [
-        {"handle": "priya", "answers": [0, 2, 3, 0, 2, 1, 3, 1, 2, 1]}
+        {"handle": "priya", "answers": [0, 2, 3, 0, 2, 1, 3, 1, 2, 1], "secondsTaken": 384}
       ],
+      "close": false },
+    {"by": "priya", "group": null, "session": null, "course": "IS442", "focus": "Exceptions and generics", "notes": "Checked and unchecked exceptions, try-with-resources, custom exceptions, generic methods, bounded types and wildcards.",
+      "questions": [
+        {"prompt": "Which of these is a checked exception that a method must declare or handle?", "options": ["IOException", "NullPointerException", "IllegalArgumentException", "ArithmeticException"], "correctOption": 0, "explanation": "IOException extends Exception but not RuntimeException, so the compiler makes callers deal with it."},
+        {"prompt": "What does try-with-resources guarantee?", "options": ["The block never throws", "Each resource is closed when the block ends, even after an exception", "Resources are reused between calls", "Exceptions are logged automatically"], "correctOption": 1, "explanation": "Every resource declared in the header is closed in reverse order when the block exits, however it exits."},
+        {"prompt": "Where should a custom exception for a broken business rule usually extend from, if callers are not expected to recover?", "options": ["Error", "Throwable", "RuntimeException", "IOException"], "correctOption": 2, "explanation": "An unchecked exception suits programming or rule violations that callers cannot sensibly recover from."},
+        {"prompt": "What does a finally block do?", "options": ["Runs only when no exception is thrown", "Runs only when an exception is caught", "Replaces the catch block", "Runs whether or not the try block throws"], "correctOption": 3, "explanation": "A finally block runs after the try and any catch, whatever happened, unless the JVM stops."},
+        {"prompt": "Why does List<Integer> not count as a subtype of List<Number>?", "options": ["Generics are invariant, so adding a Double to it would break type safety", "Integer does not extend Number", "Generic types are erased to Object", "Lists cannot hold numbers"], "correctOption": 0, "explanation": "If it were a subtype, code could add a Double through the List<Number> reference into a list of integers."},
+        {"prompt": "Which signature accepts a list of Integer, Double or any other Number for reading?", "options": ["List<Number> numbers", "List<? extends Number> numbers", "List<? super Number> numbers", "List<Object> numbers"], "correctOption": 1, "explanation": "An upper-bounded wildcard accepts lists of any subtype of Number and lets you read Numbers from them."},
+        {"prompt": "What does <T extends Comparable<T>> on a generic method allow inside it?", "options": ["Creating new T objects", "Using primitive types for T", "Calling compareTo on values of type T", "Catching exceptions of type T"], "correctOption": 2, "explanation": "The bound promises every T has compareTo, so the method can compare its arguments."},
+        {"prompt": "What does type erasure mean for a List<String> at run time?", "options": ["It becomes a String[]", "It keeps its type argument for reflection on every element", "It cannot be created", "Its type argument is not kept, so it is a plain List"], "correctOption": 3, "explanation": "The compiler checks the type argument and then erases it, so the running code sees only List."},
+        {"prompt": "Which order of catch blocks compiles?", "options": ["catch (FileNotFoundException e) before catch (IOException e)", "catch (IOException e) before catch (FileNotFoundException e)", "catch (Exception e) before catch (IOException e)", "Any order compiles"], "correctOption": 0, "explanation": "A more specific exception must be caught before its superclass, or its catch block could never be reached."},
+        {"prompt": "What does the PECS rule of thumb stand for?", "options": ["Public extends, constant super", "Producer extends, consumer super", "Private extends, class super", "Parameter extends, call super"], "correctOption": 1, "explanation": "Use ? extends T for a collection you read from and ? super T for one you write to."}
+      ],
+      "takers": [],
       "close": false }
   ],
   "plans": [
@@ -262,12 +283,35 @@
       },
       "completed": ["Review the SOLID principles", "Interfaces versus abstract classes"] }
   ],
+  "sessionPlans": [
+    {"organiser": "priya", "session": "Design Patterns Clinic", "goal": "EXAM_PREPARATION", "topics": "Behavioural and structural patterns; exceptions and generics; collections and streams; past-year papers",
+      "roadmap": {
+        "sourceTopics": ["Behavioural patterns", "Structural patterns", "Exceptions and generics", "Collections and streams", "Past-year papers"],
+        "entries": [
+          {"sequence": 1, "title": "Behavioural patterns: Strategy, Observer and Template Method", "plannedMinutes": 75, "tasks": ["Each member explains one pattern with a class diagram", "Spot the pattern in three code snippets"]},
+          {"sequence": 1, "title": "Go through the design patterns quiz", "plannedMinutes": 30, "tasks": ["Revisit the questions most of us missed"]},
+          {"sequence": 2, "title": "Structural patterns: Adapter, Decorator and Composite", "plannedMinutes": 75, "tasks": ["Refactor a small example to use Decorator", "Compare Adapter with Facade"]},
+          {"sequence": 2, "title": "Past-year question on choosing a pattern", "plannedMinutes": 45, "tasks": ["Answer it alone, then compare answers"]},
+          {"sequence": 3, "title": "Exceptions and generics in pattern code", "plannedMinutes": 60, "tasks": ["Design a custom exception hierarchy", "Write a generic repository interface"]},
+          {"sequence": 3, "title": "Past-year exceptions problem set", "plannedMinutes": 60, "tasks": ["Work in pairs and swap solutions"]},
+          {"sequence": 4, "title": "Collections, streams and the Iterator pattern", "plannedMinutes": 75, "tasks": ["Rewrite three loops as streams", "Explain how for-each uses Iterator"]},
+          {"sequence": 4, "title": "Mixed short questions", "plannedMinutes": 45, "tasks": ["Ten minutes per question, then discuss"]},
+          {"sequence": 5, "title": "Timed past-year paper", "plannedMinutes": 90, "tasks": ["Sit the paper under exam conditions"]},
+          {"sequence": 5, "title": "Mark the paper together", "plannedMinutes": 30, "tasks": ["List each member's weakest topic"]},
+          {"sequence": 6, "title": "Weak-topic clinic before the final", "plannedMinutes": 90, "tasks": ["Each member brings one weak topic", "Write one exam-style question on it"]},
+          {"sequence": 6, "title": "Final questions and wrap-up", "plannedMinutes": 30, "tasks": ["Agree what each member revises next"]}
+        ]
+      } }
+  ],
   "forest": [
     { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 1, "startTime": "20:30", "focusedMinutes": 165 },
     { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 2, "startTime": "14:00", "focusedMinutes": 95 },
     { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 3, "startTime": "09:15", "focusedMinutes": 55 },
     { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 5, "startTime": "18:00", "focusedMinutes": 30 },
     { "student": "priya", "group": "IS442 Design Patterns Clinic", "daysAgo": 6, "startTime": "22:10", "focusedMinutes": 12 },
-    { "student": "jamie", "group": "IS442 Design Patterns Clinic", "daysAgo": 1, "startTime": "20:30", "focusedMinutes": 60 }
+    { "student": "jamie", "group": "IS442 Design Patterns Clinic", "daysAgo": 1, "startTime": "20:30", "focusedMinutes": 60 },
+    { "student": "jamie", "group": "IS442 Design Patterns Clinic", "daysAgo": 4, "startTime": "13:00", "focusedMinutes": 100 },
+    { "student": "jamie", "group": "IS442 Design Patterns Clinic", "daysAgo": 8, "startTime": "21:45", "focusedMinutes": 26 },
+    { "student": "weiming", "group": "IS442 Design Patterns Clinic", "daysAgo": 2, "startTime": "07:30", "focusedMinutes": 40 }
   ]
 }

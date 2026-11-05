@@ -244,7 +244,7 @@ class AdminUserServiceTest {
     @Test
     void repeatedDeactivationIsConflict() {
         bobUser.setActive(false);
-        assertThrows(IllegalStateException.class,() -> service.deactivate(BOB_ID,ADMIN_ID));
+        assertThrows(AdminActionNotAllowedException.class,() -> service.deactivate(BOB_ID,ADMIN_ID));
         verifyNoInteractions(connections,applications,memberships);
     }
 
@@ -260,7 +260,7 @@ class AdminUserServiceTest {
 
     @Test
     void repeatedReactivationIsConflict() {
-        assertThrows(IllegalStateException.class,() -> service.reactivate(BOB_ID,ADMIN_ID));
+        assertThrows(AdminActionNotAllowedException.class,() -> service.reactivate(BOB_ID,ADMIN_ID));
     }
 
     @Test

@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+/**
+ * Builds one {@link MatchResultDto} from a scored candidate: the public profile fields, the score
+ * and its per-criterion breakdown, the explanation, the shared weekly slots and the course that
+ * makes the match relevant. It never includes the candidate's contact number.
+ */
 @Component
 public class MatchResultAssembler {
 

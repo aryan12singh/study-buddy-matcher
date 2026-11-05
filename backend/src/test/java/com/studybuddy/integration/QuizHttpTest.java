@@ -199,6 +199,12 @@ class QuizHttpTest extends PostgresHttpTest {
         JsonNode mine = expect(call("GET", "/quizzes/" + quizId, member, null), 200);
         assertEquals("SUBMITTED", mine.path("myAttempt").asString());
         assertEquals(2, mine.path("submittedCount").asInt());
+
+        // A removed member keeps their attempt as history, but neither count shows it any more.
+        expect(call("DELETE", "/groups/" + groupId + "/members/" + memberId, leader, null), 204);
+        assertEquals(1, expect(call("GET", "/quizzes/" + quizId, leader, null), 200).path("submittedCount").asInt());
+        assertEquals(1, expect(call("GET", "/quizzes/" + quizId + "/leaderboard", leader, null), 200).path("entries").size());
+        assertEquals(1, expect(call("GET", "/groups/" + groupId + "/quizzes", leader, null), 200).get(0).path("submittedCount").asInt());
     }
 
     @Test

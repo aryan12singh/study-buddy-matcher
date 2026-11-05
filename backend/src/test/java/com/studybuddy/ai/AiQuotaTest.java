@@ -8,25 +8,21 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** The daily allowance, each student's share of it, the Singapore day boundary and the rate-limit pause. */
 class AiQuotaTest {
     private static final Long STUDENT_ID = 7L;
     private static final ZoneId SINGAPORE = ZoneId.of("Asia/Singapore");
+    private static final Duration COOLDOWN = Duration.ofSeconds(60);
+    private static final Clock MORNING = Clock.fixed(Instant.parse("2026-10-20T02:00:00Z"), SINGAPORE);
 
-    private static AiAssistantProperties limit(int calls) {
-        return limits(calls, calls);
+    private static AiQuota quota(int calls, Clock clock) {
+        return quota(calls, calls, clock);
     }
 
-    private static AiAssistantProperties limits(int calls, int callsPerStudent) {
-        return new AiAssistantProperties(true, "http://localhost", "model", "key", Duration.ofSeconds(1),
-                4000, calls, callsPerStudent, "Asia/Singapore", Duration.ofSeconds(60));
-    }
-
-    private static AiAssistantProperties withKey(boolean enabled, String apiKey) {
-        return new AiAssistantProperties(enabled, "u", "m", apiKey, Duration.ofSeconds(1), 1, 1, 1, "UTC",
-                Duration.ofSeconds(60));
+    private static AiQuota quota(int calls, int callsPerStudent, Clock clock) {
+        return new AiQuota(calls, callsPerStudent, COOLDOWN, clock);
     }
 
     private static final class MovableClock extends Clock {
@@ -47,7 +43,7 @@ class AiQuotaTest {
 
     @Test
     void allowsCallsUpToTheDailyLimit() {
-        AiQuota quota = new AiQuota(limit(2), Clock.fixed(Instant.parse("2026-10-20T02:00:00Z"), SINGAPORE));
+        AiQuota quota = quota(2, MORNING);
 
         assertTrue(quota.tryAcquire(STUDENT_ID));
         assertTrue(quota.tryAcquire(STUDENT_ID));
@@ -57,7 +53,7 @@ class AiQuotaTest {
     @Test
     void resetsAtSingaporeMidnight() {
         MovableClock clock = new MovableClock(Instant.parse("2026-10-20T15:30:00Z")); // 23:30 in Singapore
-        AiQuota quota = new AiQuota(limit(1), clock);
+        AiQuota quota = quota(1, clock);
 
         assertTrue(quota.tryAcquire(STUDENT_ID));
         assertFalse(quota.tryAcquire(STUDENT_ID));
@@ -67,7 +63,7 @@ class AiQuotaTest {
 
     @Test
     void oneStudentCannotUseUpTheWholeDailyAllowance() {
-        AiQuota quota = new AiQuota(limits(5, 2), Clock.fixed(Instant.parse("2026-10-20T02:00:00Z"), SINGAPORE));
+        AiQuota quota = quota(5, 2, MORNING);
 
         assertTrue(quota.tryAcquire(STUDENT_ID));
         assertTrue(quota.tryAcquire(STUDENT_ID));
@@ -77,7 +73,7 @@ class AiQuotaTest {
 
     @Test
     void theSharedDailyLimitStillCapsEveryoneTogether() {
-        AiQuota quota = new AiQuota(limits(2, 2), Clock.fixed(Instant.parse("2026-10-20T02:00:00Z"), SINGAPORE));
+        AiQuota quota = quota(2, 2, MORNING);
 
         assertTrue(quota.tryAcquire(1L));
         assertTrue(quota.tryAcquire(2L));
@@ -85,38 +81,30 @@ class AiQuotaTest {
     }
 
     @Test
+    void eachStudentsAllowanceResetsAtSingaporeMidnight() {
+        MovableClock clock = new MovableClock(Instant.parse("2026-10-20T15:30:00Z")); // 23:30 in Singapore
+        AiQuota quota = quota(10, 1, clock);
+
+        assertTrue(quota.tryAcquire(STUDENT_ID));
+        assertFalse(quota.tryAcquire(STUDENT_ID));
+        clock.advance(Duration.ofHours(1));
+        assertTrue(quota.tryAcquire(STUDENT_ID));
+    }
+
+    @Test
     void aZeroLimitNeverCalls() {
-        assertFalse(new AiQuota(limit(0), Clock.systemUTC()).tryAcquire(STUDENT_ID));
+        assertFalse(quota(0, Clock.systemUTC()).tryAcquire(STUDENT_ID));
     }
 
     @Test
     void pausesAfterARateLimitWithoutSpendingTheDailyAllowance() {
         MovableClock clock = new MovableClock(Instant.parse("2026-10-20T02:00:00Z"));
-        AiQuota quota = new AiQuota(limit(1), clock);
+        AiQuota quota = quota(1, clock);
 
         quota.pauseAfterRateLimit();
 
         assertFalse(quota.tryAcquire(STUDENT_ID));
         clock.advance(Duration.ofSeconds(61));
         assertTrue(quota.tryAcquire(STUDENT_ID));
-    }
-
-    @Test
-    void isReadyOnlyWhenEnabledWithAKey() {
-        assertTrue(withKey(true, "key").ready());
-        assertFalse(withKey(false, "key").ready());
-        assertFalse(withKey(true, null).ready());
-        assertFalse(withKey(true, "  ").ready());
-    }
-
-    @Test
-    void neverPrintsTheKey() {
-        assertFalse(withKey(true, "secret-key").toString().contains("secret-key"));
-    }
-
-    @Test
-    void rejectsATimeoutThatIsNotPositive() {
-        assertThrows(IllegalArgumentException.class, () -> new AiAssistantProperties(true, "u", "m", "key",
-                Duration.ZERO, 1, 1, 1, "UTC", Duration.ofSeconds(60)));
     }
 }

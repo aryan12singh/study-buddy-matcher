@@ -8,6 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Stores the presence leases of open room tabs: finds a tab's lease, the room's live leases from
+ * current members, and the expired ones to clear, and removes leases when a student leaves, is
+ * removed or a group closes.
+ */
 public interface RoomPresenceRepository extends JpaRepository<RoomPresence, Long> {
     Optional<RoomPresence> findByStudyRoomIdAndStudentIdAndClientId(Long roomId, Long studentId, UUID clientId);
     void deleteByStudyRoomIdAndStudentIdAndClientId(Long roomId, Long studentId, UUID clientId);

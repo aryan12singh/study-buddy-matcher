@@ -70,7 +70,7 @@ class NotificationServiceTest {
         Notification older = notification(NOTIFICATION_ID, NotificationType.MATCH_REQUEST_RECEIVED);
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(newer, older));
 
-        List<NotificationDto> notifications = notificationService.list(BOB_ID);
+        List<NotificationDto> notifications = notificationService.list(BOB_ID, NotificationFilter.ALL);
 
         assertEquals(List.of(31L, NOTIFICATION_ID), notifications.stream().map(NotificationDto::id).toList());
         assertEquals(NotificationType.MATCH_REQUEST_ACCEPTED, notifications.get(0).type());
@@ -81,7 +81,7 @@ class NotificationServiceTest {
     void listIsEmptyForStudentWithNoNotifications() {
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of());
 
-        assertTrue(notificationService.list(BOB_ID).isEmpty());
+        assertTrue(notificationService.list(BOB_ID, NotificationFilter.ALL).isEmpty());
         verifyNoInteractions(matchRequestRepository);
     }
 
@@ -167,7 +167,7 @@ class NotificationServiceTest {
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(withdrawal));
         when(matchRequestRepository.findParticipantsByIds(Set.of(10L))).thenReturn(List.of(participants(10L, ALICE_ID, BOB_ID)));
 
-        assertEquals(NotificationRequestDirection.INCOMING, notificationService.list(BOB_ID).get(0).requestDirection());
+        assertEquals(NotificationRequestDirection.INCOMING, notificationService.list(BOB_ID, NotificationFilter.ALL).get(0).requestDirection());
     }
 
     @Test
@@ -181,7 +181,7 @@ class NotificationServiceTest {
                 .thenReturn(List.of(participants(10L, BOB_ID, ALICE_ID), participants(11L, BOB_ID, ALICE_ID)));
 
         assertEquals(List.of(NotificationRequestDirection.OUTGOING, NotificationRequestDirection.OUTGOING),
-                notificationService.list(BOB_ID).stream().map(NotificationDto::requestDirection).toList());
+                notificationService.list(BOB_ID, NotificationFilter.ALL).stream().map(NotificationDto::requestDirection).toList());
     }
 
     @Test
@@ -200,7 +200,7 @@ class NotificationServiceTest {
         when(matchRequestRepository.findParticipantsByIds(Set.of(10L, 11L)))
                 .thenReturn(List.of(participants(11L, ALICE_ID, 99L)));
 
-        assertTrue(notificationService.list(BOB_ID).stream().allMatch(event -> event.requestDirection() == null));
+        assertTrue(notificationService.list(BOB_ID, NotificationFilter.ALL).stream().allMatch(event -> event.requestDirection() == null));
     }
 
     @Test
@@ -214,7 +214,7 @@ class NotificationServiceTest {
         when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(BOB_ID)).thenReturn(List.of(accepted, declined, group));
         when(matchRequestRepository.findParticipantsByIds(Set.of(10L))).thenReturn(List.of(participants(10L, BOB_ID, ALICE_ID)));
 
-        var result = notificationService.list(BOB_ID);
+        var result = notificationService.list(BOB_ID, NotificationFilter.ALL);
 
         assertEquals(NotificationRequestDirection.OUTGOING, result.get(0).requestDirection());
         assertEquals(NotificationRequestDirection.OUTGOING, result.get(1).requestDirection());

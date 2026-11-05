@@ -40,7 +40,7 @@ export function toConfig(form: MatchingSettingsForm): MatchingSettings {
 }
 
 /** The criteria a strategy weights, in display order. */
-export function weightedCriteria(weights: Partial<Record<MatchingCriterion, unknown>>) {
+function weightedCriteria(weights: Partial<Record<MatchingCriterion, unknown>>) {
   return CRITERIA.filter(({ key }) => key in weights)
 }
 

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import Button from '../../shared/components/Button'
-import { ACCEPTED_EXTENSIONS, MAX_FILES, MAX_NOTES_CHARACTERS } from '../quiz/api'
+import { ACCEPTED_EXTENSIONS, MAX_FILES, MAX_NOTES_CHARACTERS } from '../../shared/api/studyMaterial'
 import type { StudyMaterial } from './api'
 
 /**

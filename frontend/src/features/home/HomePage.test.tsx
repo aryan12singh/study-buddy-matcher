@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, within, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, within, waitFor } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
-import { api } from '../../shared/api/client'
-import { renderPage, response } from '../../test/renderApp'
+import { api, refreshResources } from '../../shared/api/client'
+import { deferred, renderPage, response } from '../../test/renderApp'
 import HomePage from './HomePage'
 
 const course = { id: 1, code: 'IS442', name: 'Object Oriented Programming' }
@@ -123,6 +123,22 @@ describe('student home', () => {
     expect(within(finder).getByText('Course aligned and 3 shared hours each week.')).toBeInTheDocument()
     expect(within(finder).getByText('Top 1 of 12 · Course first matching · configuration version 7')).toBeInTheDocument()
     expect(get).toHaveBeenCalledWith('/matches', expect.objectContaining({ params: { courseId: 1 } }))
+  })
+
+  it('keeps the matching preview on screen without a loading flash while it refreshes in the background', async () => {
+    const preview = { strategy: 'BALANCED', configurationVersion: 1, sort: 'BEST_MATCH', limit: 3, totalMatches: 1,
+      matches: [{ studentId: 20, name: 'Sam Ong', quality: 'GOOD', totalScore: 0.6, sharedHoursPerWeek: 3, explanation: 'Course aligned.' }] }
+    const get = serve({ ...activeData, '/matches': preview })
+    renderPage(<HomePage />, '/home', '/home')
+    const finder = screen.getByRole('region', { name: 'Find study buddies' })
+    expect(await within(finder).findByRole('link', { name: 'Sam Ong' })).toBeInTheDocument()
+    const refresh = deferred<unknown>()
+    get.mockImplementation(path => path === '/matches' || path === '/profile/me' ? refresh.promise as never : Promise.resolve(response(activeData[path as string])))
+    act(() => refreshResources())
+    await waitFor(() => expect(get.mock.calls.filter(([url]) => url === '/matches').length).toBeGreaterThan(1))
+    expect(within(finder).getByRole('link', { name: 'Sam Ong' })).toBeInTheDocument()
+    expect(within(finder).queryByText('Loading')).not.toBeInTheDocument()
+    expect(within(finder).queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('uses a saved study goal when there is no target course', async () => {

@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Match request endpoints under {@code /api/match-requests}: send, list incoming and outgoing,
+ * accept, decline and cancel. Each handler delegates to {@link MatchRequestService}.
+ */
 @RestController
 @RequestMapping("/api/match-requests")
 public class MatchRequestController {

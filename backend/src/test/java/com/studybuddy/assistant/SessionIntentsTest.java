@@ -3,7 +3,6 @@ package com.studybuddy.assistant;
 import com.studybuddy.course.CourseDto;
 import com.studybuddy.studygroup.StudyGroupService;
 import com.studybuddy.studygroup.StudyGroupSummaryDto;
-import com.studybuddy.studyplan.SessionPlanNotFoundException;
 import com.studybuddy.studyplan.StudyMaterialSource;
 import com.studybuddy.studyplan.StudyPlanDto;
 import com.studybuddy.studyplan.StudyPlanEntryDto;
@@ -24,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -121,9 +121,9 @@ class SessionIntentsTest {
 
     @Test
     void listsTheTopicsOfTheMeetingOnTheDayAsked() {
-        when(plans.getForSession(12L, ME)).thenReturn(roadmap(12L,
+        when(plans.getForSession(12L, ME)).thenReturn(Optional.of(roadmap(12L,
                 entry(THURSDAY, "Hypothesis testing", 45, true), entry(THURSDAY, "Confidence intervals", 30, false),
-                entry(THURSDAY.plusWeeks(1), "Regression", 60, false)));
+                entry(THURSDAY.plusWeeks(1), "Regression", 60, false))));
 
         AssistantReplyDto reply = topics.reply(ME, asking(AssistantIntentType.SESSION_TOPICS, null, null, THURSDAY));
 
@@ -135,7 +135,7 @@ class SessionIntentsTest {
 
     @Test
     void withoutADayItIsTheSoonestMeeting() {
-        when(plans.getForSession(11L, ME)).thenReturn(roadmap(11L, entry(MONDAY, "Polymorphism", 60, false)));
+        when(plans.getForSession(11L, ME)).thenReturn(Optional.of(roadmap(11L, entry(MONDAY, "Polymorphism", 60, false))));
 
         AssistantReplyDto reply = topics.reply(ME, asking(AssistantIntentType.SESSION_TOPICS, null, "IS442", null));
 
@@ -144,7 +144,7 @@ class SessionIntentsTest {
 
     @Test
     void saysASessionHasNoRoadmapYetAndWhoCanMakeOne() {
-        when(plans.getForSession(anyLong(), anyLong())).thenThrow(new SessionPlanNotFoundException(12L));
+        when(plans.getForSession(anyLong(), anyLong())).thenReturn(Optional.empty());
 
         AssistantReplyDto reply = topics.reply(ME, asking(AssistantIntentType.SESSION_TOPICS, "stats", null, null));
 
@@ -163,7 +163,7 @@ class SessionIntentsTest {
 
     @Test
     void saysSoWhenTheRoadmapNoLongerMatchesTheMeeting() {
-        when(plans.getForSession(11L, ME)).thenReturn(roadmap(11L, entry(MONDAY.minusDays(1), "Polymorphism", 60, false)));
+        when(plans.getForSession(11L, ME)).thenReturn(Optional.of(roadmap(11L, entry(MONDAY.minusDays(1), "Polymorphism", 60, false))));
 
         AssistantReplyDto reply = topics.reply(ME, asking(AssistantIntentType.SESSION_TOPICS, "design patterns", null, null));
 

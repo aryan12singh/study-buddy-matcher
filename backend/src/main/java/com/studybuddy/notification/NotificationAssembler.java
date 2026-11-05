@@ -7,6 +7,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds {@link NotificationDto}s. For a notice about a match request it also says whether the
+ * request was incoming or outgoing for the recipient, looking up all the requests in a list with
+ * one query.
+ */
 @Component
 public class NotificationAssembler {
     private final MatchRequestRepository requests;

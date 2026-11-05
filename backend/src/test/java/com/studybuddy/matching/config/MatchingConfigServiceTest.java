@@ -2,6 +2,7 @@ package com.studybuddy.matching.config;
 
 import com.studybuddy.common.AccountAccess;
 import com.studybuddy.common.error.ForbiddenActionException;
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.matching.MatchingFixtures;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.strategy.*;
@@ -181,7 +182,7 @@ class MatchingConfigServiceTest {
     }
 
     @Test void missingStrategyImplementationFailsAtStartup() {
-        assertThrows(IllegalStateException.class, () -> new MatchingConfigService(weightRows, strategyRows,
+        assertThrows(InternalInvariantException.class, () -> new MatchingConfigService(weightRows, strategyRows,
                 MatchingFixtures.properties(), List.of(new BalancedStrategy()), new MatchingConfigAssembler(), access));
     }
 }

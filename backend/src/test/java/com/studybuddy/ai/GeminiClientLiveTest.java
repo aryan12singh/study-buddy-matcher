@@ -35,7 +35,7 @@ class GeminiClientLiveTest {
         AiAssistantProperties properties = new AiAssistantProperties(true,
                 "https://generativelanguage.googleapis.com/v1beta", model, System.getenv("GEMINI_LIVE_TEST_KEY"),
                 Duration.ofSeconds(30), 4000, 2, 2, "Asia/Singapore", Duration.ofSeconds(60));
-        return new GeminiClient(properties, JSON, new AiQuota(properties));
+        return new GeminiClient(properties.geminiSettings("live test", true), JSON, properties.newQuota());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.studybuddy.matching.strategy;
 
+/** The ranking strategies an administrator can make active, each with its own set of weights. */
 public enum MatchingStrategyType {
     BALANCED("Balanced"),
     AVAILABILITY_FIRST("Availability first"),

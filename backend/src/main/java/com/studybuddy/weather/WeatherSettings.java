@@ -4,6 +4,11 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
+/**
+ * Campus weather settings bound from {@code app.weather}: whether it is on, the location, the
+ * request timeout, and how long a reading is cached, retried and still shown when stale. Startup
+ * fails on values outside sensible bounds.
+ */
 @ConfigurationProperties("app.weather")
 public record WeatherSettings(@DefaultValue("true") boolean enabled,
     @DefaultValue("1.297") double latitude, @DefaultValue("103.849") double longitude,

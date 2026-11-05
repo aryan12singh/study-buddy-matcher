@@ -56,6 +56,14 @@ class StudyGroupFilterTest {
     }
 
     @Test
+    void aGroupWithNoStatedModeMatchesAnyMode() {
+        group.setPreferredStudyMode(null);
+
+        assertTrue(new StudyGroupFilter(null, null, StudyMode.ONLINE).matches(group));
+        assertTrue(new StudyGroupFilter(null, null, StudyMode.IN_PERSON).matches(group));
+    }
+
+    @Test
     void allFiltersMustMatch() {
         assertFalse(new StudyGroupFilter(1L, StudyGoal.EXAM_PREPARATION, StudyMode.ONLINE).matches(group));
         assertTrue(new StudyGroupFilter(1L, StudyGoal.EXAM_PREPARATION, StudyMode.IN_PERSON).matches(group));

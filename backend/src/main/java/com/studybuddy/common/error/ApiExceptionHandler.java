@@ -8,15 +8,23 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+/**
+ * Turns exceptions thrown below the controllers into {@code application/problem+json} responses.
+ * Expected {@link ApiException}s keep their status and code, validation failures list the wrong
+ * fields, and anything unexpected is logged without its message and answered with a generic 500.
+ */
 @RestControllerAdvice
 public class ApiExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
@@ -28,7 +36,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiProblem> api(ApiException error) {
-        return ResponseEntity.status(error.getStatus()).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(ApiProblem.of(error.getStatus(), error.getCode(), error.getMessage(), request.getRequestURI(), error.getFieldErrors()));
+        return ResponseEntity.status(error.getStatus()).headers(error.getHeaders()).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(ApiProblem.of(error.getStatus(), error.getCode(), error.getMessage(), request.getRequestURI(), error.getFieldErrors()));
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -63,11 +71,45 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiProblem> unexpected(Exception error) {
+        if (error instanceof ErrorResponse refusal && refusal.getStatusCode().is4xxClientError()) {
+            return framework(error, refusal);
+        }
         // The stack trace finds the fault; the message is left out because it can carry SQL or user data.
         var trace = new RuntimeException(error.getClass().getName());
         trace.setStackTrace(error.getStackTrace());
         LOG.error("Unexpected failure on {} {}", request.getMethod(), request.getRequestURI(), trace);
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "The action could not be completed; try again later");
+    }
+
+    /**
+     * Spring MVC's own refusals (an unknown route, an unsupported method or media type, a missing
+     * parameter) carry their status. They are the client's mistake, so they keep that status and
+     * any headers such as {@code Allow}, and are not logged as failures.
+     */
+    private ResponseEntity<ApiProblem> framework(Exception error, ErrorResponse refusal) {
+        HttpStatusCode status = refusal.getStatusCode();
+        LOG.debug("Refused {} {}: {}", request.getMethod(), request.getRequestURI(), error.getClass().getSimpleName());
+        if (error instanceof HttpMediaTypeNotAcceptableException) {
+            // The client accepts no format this API writes, so no problem body can be sent either.
+            return ResponseEntity.status(status).headers(refusal.getHeaders()).build();
+        }
+        HttpStatus known = HttpStatus.resolve(status.value());
+        HttpStatus resolved = known == null ? HttpStatus.BAD_REQUEST : known;
+        return ResponseEntity.status(status).headers(refusal.getHeaders()).contentType(MediaType.APPLICATION_PROBLEM_JSON)
+            .body(ApiProblem.of(resolved, frameworkCode(resolved), frameworkMessage(resolved), request.getRequestURI()));
+    }
+
+    private static String frameworkCode(HttpStatus status) {
+        return status == HttpStatus.BAD_REQUEST ? "INVALID_INPUT" : status.name();
+    }
+
+    private static String frameworkMessage(HttpStatus status) {
+        return switch (status) {
+            case NOT_FOUND -> "The requested address does not exist";
+            case METHOD_NOT_ALLOWED -> "This address does not support that request method";
+            case UNSUPPORTED_MEDIA_TYPE -> "The request body is in a format this address does not accept";
+            default -> "The request could not be processed";
+        };
     }
 
     private ResponseEntity<ApiProblem> problem(HttpStatus status, String code, String message) {

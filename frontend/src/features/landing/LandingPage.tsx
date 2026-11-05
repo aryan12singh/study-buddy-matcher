@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import Avatar from '../../shared/components/Avatar'
 import Badge from '../../shared/components/Badge'
+import MenuBar from '../../shared/components/MenuBar'
 import PixelIcon, { type PixelIconKind } from '../../shared/components/PixelIcon'
+import RetroWindow from '../../shared/components/RetroWindow'
 
 const features: { icon: PixelIconKind; title: string; description: string; cta: string; href: string }[] = [
   {
@@ -42,38 +44,20 @@ const sampleScores = [
 
 const previewTags = ['Tue & Thu evenings', 'In person', 'Exam prep']
 
-function LandingWindow({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) {
-  return (
-    <section className={`retro-window ${className}`} aria-label={title}>
-      <div className="window-titlebar">
-        <span className="window-dots" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span>{title}</span>
-      </div>
-      <div className="window-content">{children}</div>
-    </section>
-  )
-}
-
 function LandingPage() {
   return (
     <div className="desktop">
-      <a href="#main-content" className="skip-link">Skip to content</a>
-      <header className="desktop-menubar">
-        <Link to="/" className="desktop-brand"><PixelIcon kind="brand" /><span>Study Buddy Matcher</span></Link>
+      <MenuBar brandTo="/">
         <nav className="landing-menu" aria-label="Landing page">
           <a href="#how-it-works" className="landing-menu-link">How it works</a>
           <a href="#features" className="landing-menu-link">Features</a>
           <Link to="/login" className="retro-button">Log in</Link>
           <Link to="/register" className="retro-button primary">Sign up</Link>
         </nav>
-      </header>
+      </MenuBar>
 
       <main id="main-content" className="landing-layout" tabIndex={-1}>
-        <LandingWindow title="Welcome.exe">
+        <RetroWindow title="Welcome.exe">
           <div className="landing-hero">
             <div className="landing-hero-text">
               <span className="home-eyebrow">Built for SMU students</span>
@@ -113,23 +97,23 @@ function LandingPage() {
               </div>
             </figure>
           </div>
-        </LandingWindow>
+        </RetroWindow>
 
         <div id="features" className="landing-features">
           {features.map(feature => (
-            <LandingWindow key={feature.title} title={feature.title}>
+            <RetroWindow key={feature.title} title={feature.title}>
               <div className="home-tile-icon"><PixelIcon kind={feature.icon} /></div>
               <h2>{feature.title}</h2>
               <p>{feature.description}</p>
               {feature.href.startsWith('#')
                 ? <a href={feature.href} className="home-more">{feature.cta} ›</a>
                 : <Link to={feature.href} className="home-more">{feature.cta} ›</Link>}
-            </LandingWindow>
+            </RetroWindow>
           ))}
         </div>
 
         <div id="how-it-works">
-          <LandingWindow title="How it works">
+          <RetroWindow title="How it works">
             <h2>Three steps to your study buddy</h2>
             <ol className="landing-steps">
               {steps.map((step, index) => (
@@ -142,7 +126,7 @@ function LandingPage() {
                 </li>
               ))}
             </ol>
-          </LandingWindow>
+          </RetroWindow>
         </div>
 
         <div className="home-next">

@@ -28,12 +28,12 @@ function failure(status: number, message: string, code?: string) {
   return new AxiosError(message, 'ERR_BAD_RESPONSE', undefined, undefined,
     { config: { headers: new AxiosHeaders() }, status, statusText: 'Error', headers: {}, data: { message, code } })
 }
-/** Serves the session's roadmap (or 404 for none) and the course list. */
+/** Serves the session's roadmap (or 204 No Content for none) and the course list. */
 function serve(current: () => StudyPlan | null) {
   return vi.spyOn(api, 'get').mockImplementation(async path => {
     if (path === '/courses') return response([course])
     const found = current()
-    if (!found) throw failure(404, 'Study session 11 has no study plan', 'NOT_FOUND')
+    if (!found) return { data: '', status: 204 } as never
     return response(found)
   })
 }
@@ -65,6 +65,25 @@ describe('session roadmap panel', () => {
     open({ ...session, canManage: false })
     expect(await screen.findByText('The group leader can create one for everyone.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Plan these meetings' })).not.toBeInTheDocument()
+  })
+
+  it('treats a 204 No Content answer as a session without a roadmap', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => path === '/courses' ? response([course]) : { data: '', status: 204 } as never)
+    const consoleError = vi.spyOn(console, 'error')
+    open({ ...session, canManage: false })
+    expect(await screen.findByText('The group leader can create one for everyone.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it('shows an error, not the planning form, when the session is gone', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async path => {
+      if (path === '/courses') return response([course])
+      throw failure(404, 'Study session 11 was not found', 'NOT_FOUND')
+    })
+    open()
+    expect(await screen.findByText('Study session 11 was not found')).toBeInTheDocument()
+    expect(screen.queryByText('No roadmap for this session yet')).not.toBeInTheDocument()
   })
 
   it('offers no planning for a cancelled session', async () => {
@@ -127,14 +146,14 @@ describe('session roadmap panel', () => {
     expect((post.mock.calls[0][1] as FormData).get('topicsText')).toBe('Generics')
   })
 
-  it('says plainly when Gemini could not draft the roadmap', async () => {
+  it('says plainly when the AI helper could not draft the roadmap', async () => {
     serve(() => null)
     vi.spyOn(api, 'post').mockRejectedValue(failure(503, 'The AI assistant is unavailable.', 'AI_UNAVAILABLE'))
     open()
     fireEvent.click(await screen.findByRole('button', { name: 'Plan these meetings' }))
     pasteTopics()
     fireEvent.click(screen.getByRole('button', { name: 'Create session roadmap' }))
-    expect(await screen.findByText(/Gemini could not draft the roadmap just now, so nothing changed/)).toBeInTheDocument()
+    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. Nothing changed/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create session roadmap' })).toBeEnabled()
   })
 

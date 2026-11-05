@@ -97,8 +97,9 @@ class LifecycleHttpTest extends PostgresHttpTest {
         expect(call("POST", "/groups/" + group + "/room/join", m, Map.of("clientId", tab)), 403);
         expect(call("PUT", "/groups/" + group + "/room/presence", m, Map.of("clientId", tab, "presence", "FOCUS")), 403);
         expect(call("GET", "/groups/" + group + "/sessions", m, null), 403);
-        expect(call("GET", "/sessions/" + session, m, null), 403);
-        expect(call("GET", "/sessions/" + session + "/calendar", m, null), 403);
+        // Once they have left, the group's sessions are hidden from them like from any outsider.
+        expect(call("GET", "/sessions/" + session, m, null), 404);
+        expect(call("GET", "/sessions/" + session + "/calendar", m, null), 404);
         assertEquals(0, expect(call("GET", "/sessions/mine", m, null), 200).size());
         expect(call("GET", "/groups/" + group + "/room", l, null), 200);
         expect(call("GET", "/sessions/" + session, l, null), 200);

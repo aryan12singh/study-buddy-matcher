@@ -18,6 +18,12 @@ import java.util.function.Function;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Runs the match request state machine: send, accept, decline and cancel. Each change locks both
+ * students and the request first, so two students cannot connect twice or answer a withdrawn
+ * request. Accepting creates the {@link Connection} that makes contact numbers visible, and every
+ * change notifies the other student.
+ */
 @Service
 @Transactional
 public class MatchRequestService {

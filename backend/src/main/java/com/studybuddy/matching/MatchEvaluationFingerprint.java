@@ -1,5 +1,6 @@
 package com.studybuddy.matching;
 
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.course.Course;
 import com.studybuddy.matching.availability.TimeSlot;
 import com.studybuddy.matching.config.MatchingConfigSnapshot;
@@ -54,7 +55,7 @@ public class MatchEvaluationFingerprint {
                     .digest(json.writeValueAsString(input).getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("Every Java runtime provides SHA-256", impossible);
+            throw new InternalInvariantException("Every Java runtime provides SHA-256", impossible);
         }
     }
 

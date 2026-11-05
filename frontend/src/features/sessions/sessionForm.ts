@@ -7,7 +7,7 @@ export type SessionRepeat = 'ONCE' | 'WEEKLY'
 export type SessionForm = Omit<SessionInput, 'occurrenceCount' | 'agenda' | 'location' | 'roomLink' | 'timeZone'> & {
   repeat: SessionRepeat; occurrenceCount: string; agenda: string; location: string; roomLink: string
 }
-export function localDateTime(value: Date, timeZone = CAMPUS_TIMEZONE) {
+function localDateTime(value: Date, timeZone = CAMPUS_TIMEZONE) {
   const values = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(value).map(part => [part.type, part.value]))
   return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`

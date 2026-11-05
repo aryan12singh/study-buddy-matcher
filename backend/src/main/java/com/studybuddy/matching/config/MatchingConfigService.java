@@ -1,6 +1,7 @@
 package com.studybuddy.matching.config;
 
 import com.studybuddy.common.AccountAccess;
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.matching.scoring.MatchingCriterion;
 import com.studybuddy.matching.scoring.MatchingWeights;
 import com.studybuddy.matching.strategy.MatchingStrategy;
@@ -160,7 +161,7 @@ public class MatchingConfigService {
         Map<MatchingStrategyType, MatchingStrategy> indexed = new EnumMap<>(MatchingStrategyType.class);
         implementations.forEach(strategy -> indexed.put(strategy.type(), strategy));
         for (MatchingStrategyType type : MatchingStrategyType.values()) {
-            if (!indexed.containsKey(type)) { throw new IllegalStateException("No MatchingStrategy implementation for " + type); }
+            if (!indexed.containsKey(type)) { throw new InternalInvariantException("No MatchingStrategy implementation for " + type); }
         }
         return indexed;
     }

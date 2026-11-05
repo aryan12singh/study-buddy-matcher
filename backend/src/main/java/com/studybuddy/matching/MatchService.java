@@ -123,8 +123,8 @@ public class MatchService {
                 : courses.findById(search.courseId()).orElseThrow(() -> new CourseNotFoundException(search.courseId())));
         return new MatchEvaluation(settings.strategy().type(), result, self.getPreferredStudyMode(),
                 StudyGoalIntent.effectiveGoals(self.getStudyGoals(), search.studyGoal()), search.studyGoal(),
-                GroupSizePreference.fromRange(self.getPreferredGroupSizeMin(), self.getPreferredGroupSizeMax()),
-                GroupSizePreference.fromRange(other.getPreferredGroupSizeMin(), other.getPreferredGroupSizeMax()),
+                GroupSizePreference.statedRange(self.getPreferredGroupSizeMin(), self.getPreferredGroupSizeMax()),
+                GroupSizePreference.statedRange(other.getPreferredGroupSizeMin(), other.getPreferredGroupSizeMax()),
                 scoringCourse, MatchResultAssembler.sharedCourse(self, other), settings.weights());
     }
 

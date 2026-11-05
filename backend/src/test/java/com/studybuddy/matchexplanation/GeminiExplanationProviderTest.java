@@ -11,18 +11,23 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * E1's provider as the application builds it: its own Gemini client and allowance from
+ * {@code app.ai.explanation.*}, against a stub server. Any failure gives an empty answer.
+ */
 class GeminiExplanationProviderTest {
     private static final Long STUDENT_ID = 7L;
-    private static final String REPLY = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"explanation\\\":\\\"You both take IS442.\\\"}\"}]}}]}";
+    private static final String REPLY = "{\"candidates\":[{\"finishReason\":\"STOP\",\"content\":{\"parts\":[{\"text\":\"{\\\"explanation\\\":\\\"You both take IS442.\\\"}\"}]}}]}";
 
     private HttpServer server;
-    private ExplanationQuota quota;
+    private final AtomicInteger calls = new AtomicInteger();
     private final AtomicReference<String> requestBody = new AtomicReference<>();
     private final AtomicReference<String> requestKey = new AtomicReference<>();
     private final AtomicReference<String> requestPath = new AtomicReference<>();
@@ -34,6 +39,7 @@ class GeminiExplanationProviderTest {
     void startStub() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", exchange -> {
+            calls.incrementAndGet();
             requestPath.set(exchange.getRequestURI().getPath());
             requestKey.set(exchange.getRequestHeaders().getFirst("x-goog-api-key"));
             requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
@@ -57,29 +63,28 @@ class GeminiExplanationProviderTest {
         server.stop(0);
     }
 
-    private GeminiExplanationProvider provider() {
-        return provider("");
+    private ExplanationProvider provider() {
+        return provider(true, "", 10);
     }
 
     /** The real base URL carries a version path, as Gemini's does. */
-    private GeminiExplanationProvider provider(String basePath) {
-        AiExplanationProperties properties = new AiExplanationProperties(true,
+    private ExplanationProvider provider(boolean enabled, String basePath, int dailyLimit) {
+        AiExplanationProperties properties = new AiExplanationProperties(enabled,
                 "http://127.0.0.1:" + server.getAddress().getPort() + basePath, "test-model", "test-key",
-                Duration.ofMillis(500), 200, 600, 10, 10, "UTC", Duration.ofSeconds(60));
-        quota = new ExplanationQuota(properties);
-        return new GeminiExplanationProvider(properties, ExplanationFixtures.JSON, quota);
+                Duration.ofMillis(500), 200, 600, dailyLimit, dailyLimit, "UTC", Duration.ofSeconds(60));
+        return new AiExplanationConfiguration().explanationProvider(properties, ExplanationFixtures.JSON);
     }
 
     @Test
     void keepsTheVersionPathOfTheBaseUrl() {
-        assertTrue(provider("/v1beta").explain("PROMPT").isPresent());
+        assertTrue(provider(true, "/v1beta", 10).explain(STUDENT_ID, "PROMPT").isPresent());
 
         assertEquals("/v1beta/models/test-model:generateContent", requestPath.get());
     }
 
     @Test
     void returnsTheModelsTextAndSendsOnlyThePromptAndSettings() {
-        assertEquals(Optional.of("{\"explanation\":\"You both take IS442.\"}"), provider().explain("PROMPT-TEXT"));
+        assertEquals(Optional.of("{\"explanation\":\"You both take IS442.\"}"), provider().explain(STUDENT_ID, "PROMPT-TEXT"));
 
         assertEquals("/models/test-model:generateContent", requestPath.get());
         assertEquals("test-key", requestKey.get());
@@ -95,31 +100,56 @@ class GeminiExplanationProviderTest {
     void rateLimitReturnsEmptyAndPausesFurtherCalls() {
         status = 429;
 
-        assertTrue(provider().explain("PROMPT").isEmpty());
-        assertFalse(quota.tryAcquire(STUDENT_ID));
+        ExplanationProvider provider = provider();
+
+        assertTrue(provider.explain(STUDENT_ID, "PROMPT").isEmpty());
+        status = 200;
+        assertTrue(provider.explain(8L, "PROMPT").isEmpty());
+        assertEquals(1, calls.get());
+    }
+
+    @Test
+    void switchedOffReturnsEmptyWithoutCallingGemini() {
+        assertTrue(provider(false, "", 10).explain(STUDENT_ID, "PROMPT").isEmpty());
+        assertEquals(0, calls.get());
+    }
+
+    @Test
+    void anExhaustedAllowanceReturnsEmptyWithoutCallingGemini() {
+        ExplanationProvider provider = provider(true, "", 1);
+        assertTrue(provider.explain(STUDENT_ID, "PROMPT").isPresent());
+
+        assertTrue(provider.explain(STUDENT_ID, "PROMPT").isEmpty());
+        assertEquals(1, calls.get());
+    }
+
+    @Test
+    void replyCutOffByTheTokenLimitReturnsEmpty() {
+        reply = "{\"candidates\":[{\"finishReason\":\"MAX_TOKENS\",\"content\":{\"parts\":[{\"text\":\"{\\\"expl\"}]}}]}";
+        assertTrue(provider().explain(STUDENT_ID, "PROMPT").isEmpty());
     }
 
     @Test
     void serverErrorReturnsEmpty() {
         status = 500;
-        assertTrue(provider().explain("PROMPT").isEmpty());
+        assertTrue(provider().explain(STUDENT_ID, "PROMPT").isEmpty());
     }
 
     @Test
     void slowReplyReturnsEmpty() {
         delayMillis = 1500;
-        assertTrue(provider().explain("PROMPT").isEmpty());
+        assertTrue(provider().explain(STUDENT_ID, "PROMPT").isEmpty());
     }
 
     @Test
     void replyWithoutCandidatesReturnsEmpty() {
         reply = "{\"promptFeedback\":{\"blockReason\":\"SAFETY\"}}";
-        assertTrue(provider().explain("PROMPT").isEmpty());
+        assertTrue(provider().explain(STUDENT_ID, "PROMPT").isEmpty());
     }
 
     @Test
     void unreadableReplyReturnsEmpty() {
         reply = "not json";
-        assertTrue(provider().explain("PROMPT").isEmpty());
+        assertTrue(provider().explain(STUDENT_ID, "PROMPT").isEmpty());
     }
 }

@@ -7,18 +7,18 @@ import { getCourses } from '../../shared/api/courses'
 import { useResource } from '../../shared/api/useResource'
 import type { Course } from '../../shared/api/types'
 import { getSessions } from '../sessions/api'
-import { COURSE_CODE, findCourse } from './findCourse'
-import {
-  ACCEPTED_EXTENSIONS, checkFiles, isAiUnavailable, MAX_FILES, MAX_FOCUS_CHARACTERS, MAX_NOTES_CHARACTERS,
-  sessionLabel, startGroupQuiz, startPersonalQuiz, upcomingSessions,
-} from './api'
+import { getMyProfile } from '../profile/api'
+import { COURSE_CODE, findCourse, preferCourses } from './findCourse'
+import { aiUnavailableMessage, isAiUnavailable } from '../../shared/api/aiErrors'
+import { ACCEPTED_EXTENSIONS, checkFiles, MAX_FILES, MAX_NOTES_CHARACTERS } from '../../shared/api/studyMaterial'
+import { MAX_FOCUS_CHARACTERS, sessionLabel, startGroupQuiz, startPersonalQuiz, upcomingSessions } from './api'
 import type { Quiz, QuizHome, QuizMaterial } from './api'
 
 /** What the bot is waiting for next. */
 type Stage = 'material' | 'course' | 'focus' | 'session' | 'writing' | 'done' | 'failed'
 type Message = { id: number; from: 'bot' | 'me'; text: string; files?: string[]; error?: boolean }
 
-const AI_UNAVAILABLE = "I couldn't reach Gemini just now. Give it a minute and say \"try again\", or quiz each other from your notes."
+const AI_UNAVAILABLE = aiUnavailableMessage('You can say "try again" in a minute, or quiz each other from your notes.')
 const SKIP_WORDS = ['skip', 'no', 'nope', 'none', 'nothing', 'everything', 'all', 'cover everything', 'anything']
 const NO_SESSION_WORDS = ['skip', 'no', 'nope', 'none', 'not for a session']
 /**
@@ -35,6 +35,8 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
 }) {
   const personal = home.scope === 'PERSONAL'
   const courses = useResource('quiz-bot-courses', signal => getCourses(signal), personal, false)
+  // Only orders the course suggestions, so a failed load just leaves them in catalogue order.
+  const profile = useResource('quiz-bot-profile', getMyProfile, personal, false)
   const groupId = home.scope === 'GROUP' ? home.groupId : 0
   // A failed or slow load only skips the optional session question; it never blocks a quiz.
   const sessions = useResource(`quiz-bot-sessions-${groupId}`, signal => getSessions({ kind: 'GROUP', id: groupId }, signal), !personal, false)
@@ -185,7 +187,9 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
   }
 
   const writing = stage === 'writing'
-  const courseChoices = (courses.data ?? []).filter(option => !draft.trim()
+  const notesCourse = material?.kind === 'notes' ? findCourse(material.text, courses.data ?? []) : null
+  const suggested = preferCourses(courses.data ?? [], [notesCourse, profile.data?.targetCourse, ...(profile.data?.coursesTaken ?? [])])
+  const courseChoices = suggested.filter(option => !draft.trim()
     || `${option.code} ${option.name}`.toLowerCase().includes(draft.trim().toLowerCase())).slice(0, 6)
   return <div className="quiz-bot-chat">
     <div ref={log} className="quiz-bot-log" role="log" aria-live="polite" aria-label="Conversation with Quiz Buddy">

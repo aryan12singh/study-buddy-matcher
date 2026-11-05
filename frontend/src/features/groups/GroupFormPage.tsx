@@ -15,7 +15,7 @@ import ActionNotice from '../../shared/components/ActionNotice'
 import WeeklySlotEditor from '../../shared/components/WeeklySlotEditor'
 import { finishSlotDrafts } from '../../shared/components/weeklySlotDrafts'
 import type { WeeklySlotDrafts } from '../../shared/components/weeklySlotDrafts'
-import { validateGroupForm } from './validation'
+import { MAX_GROUP_SIZE, validateGroupForm } from './validation'
 import type { GroupForm } from './validation'
 import FormActions from '../../shared/components/FormActions'
 import { useFormExit } from '../../shared/components/useFormExit'
@@ -39,6 +39,7 @@ export default function GroupFormPage() {
   const [baseline, setBaseline] = useState(JSON.stringify(form))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [slotDrafts, setSlotDrafts] = useState<WeeklySlotDrafts>({})
+  const clearAction = action.clear
   useEffect(
     () => {
       if (!id && initialised.current !== null) {
@@ -47,7 +48,7 @@ export default function GroupFormPage() {
         setForm(empty)
         setSlotDrafts({})
         setErrors({})
-        action.clear()
+        clearAction()
         initialised.current = null
       }
       if (group.data && initialised.current !== id) {
@@ -65,11 +66,11 @@ export default function GroupFormPage() {
         setForm(savedForm)
         setSlotDrafts({})
         setErrors({})
-        action.clear()
+        clearAction()
         initialised.current = id || null
       }
     },
-    [group.data, id, action]
+    [group.data, id, clearAction]
   )
   const denied = Boolean(group.data && (!group.data.viewer.leader || !group.data.active))
   const dirty = Object.keys(slotDrafts).length > 0 || JSON.stringify(form) !== baseline
@@ -169,12 +170,13 @@ export default function GroupFormPage() {
               hint={id ?
                 `${group.data?.memberCount} accepted members, including the leader.`
                 :
-                'At least 2 people, including you as the leader.'}
+                `From 2 to ${MAX_GROUP_SIZE} people, including you as the leader.`}
             >
               <input
                 id="group-capacity"
                 type="number"
                 min={Math.max(2, group.data?.memberCount || 1)}
+                max={MAX_GROUP_SIZE}
                 step="1"
                 value={form.maxGroupSize}
                 disabled={action.pending}

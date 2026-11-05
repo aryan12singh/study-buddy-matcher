@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Group join request endpoints: apply to a group, list a group's pending applications (leader
+ * only), list the signed-in student's own applications, withdraw one, and accept or reject one.
+ * Each handler delegates to {@link GroupJoinRequestService}.
+ */
 @RestController
 public class GroupJoinRequestController {
     private final GroupJoinRequestService service;

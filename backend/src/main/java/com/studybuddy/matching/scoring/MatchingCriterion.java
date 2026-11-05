@@ -1,5 +1,9 @@
 package com.studybuddy.matching.scoring;
 
+/**
+ * The criteria a match is scored on, each with the wording used in explanations and on the
+ * administrator screen.
+ */
 public enum MatchingCriterion {
     COURSE("course"),
     AVAILABILITY("availability"),

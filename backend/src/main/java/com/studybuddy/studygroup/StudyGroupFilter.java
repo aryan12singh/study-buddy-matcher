@@ -26,10 +26,10 @@ public record StudyGroupFilter(Long courseId, StudyGoal studyGoal, StudyMode stu
         return studyGoal == null || group.getStudyGoals().contains(studyGoal);
     }
 
-    /** EITHER on the filter or on the group is compatible with any mode. */
+    /** EITHER on the filter or on the group, or a group with no stated mode, is compatible with any mode. */
     private boolean matchesStudyMode(StudyGroup group) {
         StudyMode groupMode = group.getPreferredStudyMode();
         return studyMode == null || studyMode == StudyMode.EITHER
-                || groupMode == StudyMode.EITHER || studyMode == groupMode;
+                || groupMode == null || groupMode == StudyMode.EITHER || studyMode == groupMode;
     }
 }

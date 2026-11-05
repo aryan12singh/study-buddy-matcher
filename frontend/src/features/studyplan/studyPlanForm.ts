@@ -1,6 +1,6 @@
 import type { Course, StudyGoal } from '../../shared/api/types'
 import { STUDY_GOALS } from '../../shared/api/types'
-import { checkFiles, MAX_NOTES_CHARACTERS } from '../quiz/api'
+import { checkFiles, MAX_NOTES_CHARACTERS } from '../../shared/api/studyMaterial'
 import { MAX_HOURS_PER_WEEK, MAX_WEEKS } from './api'
 import type { PersonalPlanInput, SessionPlanInput, StudyMaterial } from './api'
 import { addDays } from './planDates'

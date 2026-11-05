@@ -18,6 +18,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Login, student registration, logout and the current-account lookup. Login costs the same whether
+ * or not the email exists, is throttled per email, and refuses a deactivated account only once the
+ * password is correct. Logout revokes every token issued before it.
+ */
 @Service
 @Transactional
 public class AuthService {

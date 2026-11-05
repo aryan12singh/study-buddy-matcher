@@ -7,6 +7,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * A course students can list on their profile and match on, identified by a unique course code such
+ * as {@code IS442}.
+ */
 @Entity
 @Table(name = "courses")
 public class Course {

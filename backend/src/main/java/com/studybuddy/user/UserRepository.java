@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Finds accounts by email or id, optionally with a write lock, and locks every administrator
+ * account so account lifecycle changes by different administrators run one at a time.
+ */
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);

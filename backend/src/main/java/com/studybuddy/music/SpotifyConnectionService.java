@@ -98,10 +98,6 @@ public class SpotifyConnectionService {
         }
     }
 
-    public void disconnect(Long studentId) {
-        tokens.remove(studentId);
-    }
-
     private void requireConfigured() {
         if (!properties.ready()) {
             throw new SpotifyUnavailableException("Spotify is not set up on this server");

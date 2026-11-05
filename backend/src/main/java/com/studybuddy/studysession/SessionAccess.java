@@ -20,6 +20,19 @@ public class SessionAccess {
     public SessionAccess(AccountAccess accounts, StudyGroupLookup groups, GroupMembershipRepository memberships, ConnectionRepository connections) {
         this.accounts = accounts; this.groups = groups; this.memberships = memberships; this.connections = connections;
     }
+    /**
+     * Whether the student is a member of the session's group or one of its two buddies. A student
+     * with no such tie is told the session does not exist, so session ids reveal nothing; a
+     * member who may not act on it (a closed group, an ended connection) still gets 403.
+     */
+    public boolean isRelated(Long groupId, Long connectionId, Long actorId) {
+        if (groupId != null) {
+            return memberships.existsByStudyGroupIdAndStudentId(groupId, actorId);
+        }
+        return connections.findParticipants(connectionId)
+            .map(pair -> actorId.equals(pair.getStudentAId()) || actorId.equals(pair.getStudentBId()))
+            .orElse(false);
+    }
     public StudyGroup readGroup(Long id, Long actorId) {
         accounts.requireStudent(actorId);
         return requireMember(groups.findGroup(id), actorId);

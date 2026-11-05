@@ -10,6 +10,10 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Lists a student's active connections and lets either participant end one. Ending locks both
+ * students, cancels the connection's planned study sessions and notifies the other student.
+ */
 @Service
 @Transactional
 public class ConnectionService {

@@ -8,6 +8,11 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Queries applications to join study groups: by id with a write lock, the latest application of a
+ * student to one or many groups, a group's pending applications, and the ids needed to lock the
+ * right accounts before a decision.
+ */
 public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinRequest, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from GroupJoinRequest r where r.id=:id")

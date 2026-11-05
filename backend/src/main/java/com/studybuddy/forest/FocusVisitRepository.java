@@ -8,6 +8,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Stores focus visits, the time a student spends focused in a group room that grows their trees.
+ * Opening, crediting and ending a visit are single conditional statements, so two open tabs cannot
+ * create a second visit or count the same seconds twice.
+ */
 public interface FocusVisitRepository extends JpaRepository<FocusVisit, Long> {
     Optional<FocusVisit> findByStudentIdAndStudyGroupIdAndEndedAtIsNull(Long studentId, Long groupId);
 
@@ -42,4 +47,12 @@ public interface FocusVisitRepository extends JpaRepository<FocusVisit, Long> {
     @Modifying(clearAutomatically = true)
     @Query("update FocusVisit v set v.endedAt = :at where v.id = :id and v.endedAt is null")
     void end(@Param("id") Long id, @Param("at") Instant at);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update FocusVisit v set v.endedAt = :at where v.studentId = :studentId and v.endedAt is null")
+    void endAllOfStudent(@Param("studentId") Long studentId, @Param("at") Instant at);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update FocusVisit v set v.endedAt = :at where v.studyGroupId = :groupId and v.endedAt is null")
+    void endAllInGroup(@Param("groupId") Long groupId, @Param("at") Instant at);
 }

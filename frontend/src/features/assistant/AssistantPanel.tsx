@@ -3,7 +3,8 @@ import type { FormEvent, KeyboardEvent } from 'react'
 import Button from '../../shared/components/Button'
 import PixelIcon from '../../shared/components/PixelIcon'
 import { errorMessage } from '../../shared/api/client'
-import { isAiUnavailable } from '../quiz/api'
+import { useAction } from '../../shared/api/useAction'
+import { aiUnavailableMessage, isAiUnavailable } from '../../shared/api/aiErrors'
 import { askAssistant, MAX_MESSAGE_CHARACTERS } from './api'
 import type { AssistantReply } from './api'
 import AssistantReplyView from './AssistantReplyView'
@@ -13,21 +14,23 @@ type Message = { id: number; from: 'me' | 'assistant'; text: string; reply?: Ass
 const GREETING = "Hi! I'm Pixel, your study assistant. I can tell you what's waiting for you, help you find your way around, find you a study buddy, find a time your group can meet, quiz you on your notes, or plan your revision."
 const SUGGESTIONS = ['What do I need to do?', 'Find me an IS442 buddy who prefers small groups', 'When can my group meet for 2 hours?',
   'How do I change my availability?', 'Quiz me on my notes', 'What are we covering next session?']
-const UNAVAILABLE = "I can't reach Gemini right now, so I couldn't read that. Give it a minute, or use the menu on the left in the meantime."
+const UNAVAILABLE = aiUnavailableMessage('You can still use the navigation menu to find your way in the meantime.')
 
 /**
  * Pixel, the study assistant's chat panel. Each message is answered on its own: the AI reads it, and the app
  * answers from its own data. The conversation stays while the student moves between pages.
  */
-export default function AssistantPanel({ onClose, onOpenQuizBuddy }: { onClose: () => void; onOpenQuizBuddy: () => void }) {
+export default function AssistantPanel({ open, onClose, onOpenQuizBuddy }: { open: boolean; onClose: () => void; onOpenQuizBuddy: () => void }) {
   const nextId = useRef(1)
   const log = useRef<HTMLDivElement>(null)
   const composer = useRef<HTMLTextAreaElement>(null)
   const [messages, setMessages] = useState<Message[]>([{ id: 0, from: 'assistant', text: GREETING }])
   const [draft, setDraft] = useState('')
-  const [pending, setPending] = useState(false)
+  // Pixel only reads the student's data, so a reply leaves the other views as they are.
+  const { pending, run } = useAction({ refresh: false })
 
-  useEffect(() => { composer.current?.focus() }, [])
+  // Each time the panel opens, not just the first: it stays mounted while hidden.
+  useEffect(() => { if (open) composer.current?.focus() }, [open])
   useEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight }, [messages, pending])
 
   function add(message: Omit<Message, 'id'>) {
@@ -44,16 +47,11 @@ export default function AssistantPanel({ onClose, onOpenQuizBuddy }: { onClose: 
     }
     add({ from: 'me', text: message })
     setDraft('')
-    setPending(true)
-    try {
-      const reply = await askAssistant(message)
-      add({ from: 'assistant', text: reply.text, reply })
-    } catch (error) {
-      add({ from: 'assistant', text: isAiUnavailable(error) ? UNAVAILABLE : errorMessage(error), error: true })
-    } finally {
-      setPending(false)
-      composer.current?.focus()
-    }
+    const answered = await run(() => askAssistant(message))
+    // Failures are answered in the conversation rather than in a notice.
+    if (answered.ok) add({ from: 'assistant', text: answered.value.text, reply: answered.value })
+    else add({ from: 'assistant', text: isAiUnavailable(answered.failure) ? UNAVAILABLE : errorMessage(answered.failure), error: true })
+    composer.current?.focus()
   }
 
   function submit(event: FormEvent) {

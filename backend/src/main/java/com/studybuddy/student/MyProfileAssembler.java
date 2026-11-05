@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
+/**
+ * Builds the signed-in student's own {@link MyProfileDto}, which is the only profile view that
+ * includes their email, and their availability sorted through the week.
+ */
 @Component
 public class MyProfileAssembler {
     private final CourseAssembler courses;

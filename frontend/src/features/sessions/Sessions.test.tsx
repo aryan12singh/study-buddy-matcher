@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
-import { deferred, renderPage, response } from '../../test/renderApp'
+import { deferred, renderPage, response, studentAccount } from '../../test/renderApp'
+import { AuthContext } from '../../shared/auth/context'
+import RouteNotice from '../../shared/components/RouteNotice'
 import SessionsPage from './SessionsPage'
 import SessionFormPage from './SessionFormPage'
 import SessionDetailPage from './SessionDetailPage'
@@ -243,6 +246,23 @@ describe('dated study session workflows', () => {
     expect(screen.getByLabelText('Session title')).toHaveValue('')
   })
 
+  it('keeps a roadmap draft open when a background refresh of the session fails', async () => {
+    const get = serve()
+    renderPage(<SessionDetailPage />, '/sessions/11', '/sessions/:id')
+    fireEvent.click(await screen.findByRole('button', { name: 'Plan these meetings' }))
+    expect(screen.getByRole('form', { name: 'Plan this session' })).toBeInTheDocument()
+
+    get.mockImplementation(async path => {
+      if (path === '/sessions/11') throw new AxiosError('down', 'ERR_BAD_RESPONSE', undefined, undefined,
+        { config: { headers: new AxiosHeaders() }, status: 503, statusText: 'Error', headers: {}, data: { message: 'Try again soon' } })
+      return response(undefined)
+    })
+    await act(async () => { window.dispatchEvent(new CustomEvent('resources-changed', { detail: { purge: false } })) })
+
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'When and where' })).not.toBeInTheDocument())
+    expect(screen.getByRole('form', { name: 'Plan this session' })).toBeInTheDocument()
+  })
+
   it('confirms whole-plan cancellation and exports the cancelled snapshot', async () => {
     const get = serve()
     const post = vi.spyOn(api, 'post').mockImplementation(async () => {
@@ -257,6 +277,23 @@ describe('dated study session workflows', () => {
     expect(post).toHaveBeenCalledWith('/sessions/11/cancel', { expectedVersion: 3 })
     expect(screen.getByRole('button', { name: 'Download calendar (.ics)' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Edit session' })).not.toBeInTheDocument()
+  })
+
+  it('replaces the arrival notice with the cancellation notice instead of stacking both', async () => {
+    const get = serve()
+    vi.spyOn(api, 'post').mockImplementation(async () => {
+      get.mockImplementation(async path => response(path.endsWith('/study-plan') ? null : { ...session, status: 'CANCELLED', version: 4, canManage: false }))
+      return response({ ...session, status: 'CANCELLED', version: 4 })
+    })
+    const router = createMemoryRouter([{ path: '/sessions/:id', element: <><RouteNotice /><SessionDetailPage /></> }],
+      { initialEntries: [{ pathname: '/sessions/11', state: { notice: 'Study session created.' } }] })
+    render(<AuthContext.Provider value={{ account: studentAccount, loading: false, login: vi.fn(), register: vi.fn(), logout: vi.fn(), retry: vi.fn() }}>
+      <RouterProvider router={router} /></AuthContext.Provider>)
+    expect(await screen.findByText('Study session created.')).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel session' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel for everyone' }))
+    expect(await screen.findByText('Study session cancelled for everyone.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Study session created.')).not.toBeInTheDocument())
   })
 
   it('downloads an authenticated calendar snapshot and releases its temporary URL', async () => {
@@ -279,7 +316,9 @@ describe('dated study session workflows', () => {
     Object.defineProperty(URL, 'createObjectURL', { value: create, configurable: true })
     const delayed = deferred<never>()
     const get = serve()
-    get.mockImplementation(path => path.endsWith('/calendar') ? delayed.promise : Promise.resolve(response(path === '/sessions/11' ? session : { ...session, id: 12, title: 'New session' })))
+    get.mockImplementation(path => path.endsWith('/calendar') ? delayed.promise
+      : path.endsWith('/study-plan') ? Promise.resolve(response(null))
+      : Promise.resolve(response(path === '/sessions/11' ? session : { ...session, id: 12, title: 'New session' })))
     const { router } = renderPage(<SessionDetailPage />, '/sessions/11', '/sessions/:id')
     fireEvent.click(await screen.findByRole('button', { name: 'Download calendar (.ics)' }))
     await router.navigate('/sessions/12')

@@ -1,5 +1,6 @@
 package com.studybuddy.quiz;
 
+import com.studybuddy.common.error.InternalInvariantException;
 import com.studybuddy.student.Student;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +56,6 @@ class QuizAttemptTest {
 
     @Test
     void hasNoTimeTakenUntilSubmitted() {
-        assertThrows(IllegalStateException.class, () -> started().timeTaken());
+        assertThrows(InternalInvariantException.class, () -> started().timeTaken());
     }
 }

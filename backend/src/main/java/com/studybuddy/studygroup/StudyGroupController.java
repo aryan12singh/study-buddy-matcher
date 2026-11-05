@@ -18,6 +18,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Study group endpoints under {@code /api/groups}: browse open groups, list the signed-in student's
+ * groups, create, view, edit, close, leave, and remove a member. Each handler delegates to
+ * {@link StudyGroupService}.
+ */
 @RestController
 @RequestMapping("/api/groups")
 public class StudyGroupController {

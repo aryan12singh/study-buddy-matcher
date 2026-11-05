@@ -77,7 +77,7 @@ export const SEED = standing(['.......ss.......', '......sstt......', '.......tt
  * Three kinds of tree for each size tier. The server draws which one a visit grows, so the size
  * always says how long the visit was while the kind makes every forest different.
  */
-export const TREE_ROWS: Record<TreeSpecies, string[][]> = {
+const TREE_ROWS: Record<TreeSpecies, string[][]> = {
   SPROUT: [SPROUT, CLOVER, TULIP_BUD],
   SAPLING: [SAPLING, BIRCH, ORANGE_SAPLING],
   OAK: [OAK, dotted(OAK, 'a', [[2, 5], [3, 9], [4, 3], [5, 7], [6, 11], [7, 4], [8, 8]]), ACACIA],
@@ -85,7 +85,7 @@ export const TREE_ROWS: Record<TreeSpecies, string[][]> = {
   ANCIENT_BLOSSOM: [ANCIENT_BLOSSOM, swap(swap(ANCIENT_BLOSSOM, /p/g, 'v'), /P/g, 'V'), swap(swap(ANCIENT_BLOSSOM, /p/g, 'y'), /P/g, 'Y')],
 }
 
-export const VARIANT_NAMES: Record<TreeSpecies, string[]> = {
+const VARIANT_NAMES: Record<TreeSpecies, string[]> = {
   SPROUT: ['Sprout', 'Clover', 'Tulip bud'],
   SAPLING: ['Sapling', 'Birch sapling', 'Orange sapling'],
   OAK: ['Oak', 'Apple tree', 'Acacia'],

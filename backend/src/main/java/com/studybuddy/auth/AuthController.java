@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Sign-in endpoints under {@code /api/auth}: log in, register a student, log out every session, and
+ * read the current account. Each handler delegates to {@link AuthService}.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

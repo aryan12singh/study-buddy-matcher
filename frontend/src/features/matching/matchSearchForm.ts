@@ -4,8 +4,6 @@ import type { MatchQuality, MatchSearch, MatchSort } from './api'
 /** Select values are kept as text; an empty string means "any". */
 export type MatchSearchForm = { courseId: string; studyGoal: string; studyMode: string; groupSize: string; minSharedHours: string; minQuality: string; sort: MatchSort }
 
-export const EMPTY_SEARCH: MatchSearchForm = { courseId: '', studyGoal: '', studyMode: '', groupSize: '', minSharedHours: '', minQuality: '', sort: 'BEST_MATCH' }
-
 export const STUDY_MODE_FILTERS = [
   { value: '', label: 'Any study mode' },
   { value: 'IN_PERSON', label: 'In person' },

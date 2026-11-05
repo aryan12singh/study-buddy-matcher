@@ -47,7 +47,7 @@ function PlanView({ plan: loaded }: { plan: StudyPlan }) {
 
   return <>
     <div className="tag-list">
-      <Badge tone={done === plan.entries.length && done > 0 ? 'good' : 'neutral'}>{done} of {plan.entries.length} topics done</Badge>
+      <Badge tone={done === plan.entries.length && done > 0 ? 'good' : 'neutral'}>{done} of {plan.entries.length} steps done</Badge>
       <Badge>{weekCountLabel(plan.blockCount)}</Badge>
       <Badge>{formatMinutes(plan.minutesPerBlock)} a week</Badge>
       {plan.studyGoal && <Badge>{label(plan.studyGoal)}</Badge>}

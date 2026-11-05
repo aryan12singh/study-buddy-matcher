@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { followNotification, getNotifications, notificationLink, readAllNotifications, readNotification } from './api'
+import { followNotification, getNotifications, getUnreadCount, notificationLink, readAllNotifications, readNotification } from './api'
 import type { NotificationFilter } from './api'
 import { useResource } from '../../shared/api/useResource'
 import { useAction } from '../../shared/api/useAction'
@@ -17,13 +17,15 @@ export default function NotificationsPage() {
   const filter: NotificationFilter = search.get('view') === 'requests' ? 'REQUESTS' : search.get('view') === 'groups' ? 'GROUPS' : 'ALL'
   const action = useAction()
   const notifications = useResource(`notifications-${filter}`, signal => getNotifications(filter, signal))
+  // Mark all covers every filter, so it waits on the overall unread count rather than this view's list.
+  const unread = useResource('notifications-unread', getUnreadCount)
   const today = campusDate(new Date().toISOString())
   return (
     <WindowPage
       title="Notifications"
       description="Buddy requests, group and session updates, and account changes."
       actions={<Button
-        disabled={action.pending}
+        disabled={action.pending || unread.data === 0}
         onClick={() => action.run(readAllNotifications, 'All notifications marked as read.')}
       >Mark all as read</Button>}
     >
