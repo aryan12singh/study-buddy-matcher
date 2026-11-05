@@ -28,7 +28,7 @@ opt-in tests, `GeminiClientLiveTest` and `StudyPlanPromptLiveTest`, run only whe
 
 ### Prerequisites
 
-Java 21, Node 22 with npm, Docker, the PostgreSQL client (`psql`) and OpenSSL.
+Java 21, Node 22.22 or later with npm, Docker, the PostgreSQL client (`psql`) and OpenSSL.
 
 ### Full backend suite
 
@@ -199,8 +199,9 @@ this chain.
 
 ## 6. Demo walkthroughs
 
-Use synthetic seeded accounts on a local or disposable database. The seeder needs its
-passwords from `application-local.yml`; none are recorded here. The presenter,
+Use synthetic seeded accounts on a local or disposable database. The seeder takes its
+passwords from `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` (or `app.demo-seed.*` in
+`application-local.yml`). The presenter,
 `priya@demo.example.test`, already has requests, groups, sessions, quizzes, plans, badges and a
 focus forest, so only the steps that create something new need Gemini. Reset and reseed before
 each rehearsal ([DATABASE.md](DATABASE.md#demo-reset)), since the seed dates everything from the
@@ -216,7 +217,7 @@ day it runs.
 | Sessions | The Clinic meets weekly on Wednesday 19:00-21:00 (Singapore): eight meetings that started three weeks ago. A one-off IS442 revision with Jamie is next Monday 19:00-21:00 |
 | Session roadmap | The Clinic's session page has a roadmap for every remaining meeting: two topics each, 120 minutes in all |
 | Quizzes | "Design patterns", a closed group quiz for the Clinic session, with a leaderboard of Weiming (4:28), Priya (5:12) and Jamie (7:35) and a review of every answer. Personal: "Interfaces and abstract classes", submitted, and "Exceptions and generics", open and untaken |
-| Study plan | IS442 up to an exam 20 days away: three weeks, two of six topics ticked off |
+| Study plan | IS442 up to an exam 20 days away: three weeks, two of six steps ticked off |
 | Achievements | Bronze Connector, First Move, Team Player and Founder; Silver Planner and Forester; Grove Keeper at Bronze or Silver from a streak of three or four weeks, depending on the day of the week |
 | Forest | Five trees, one of each species from sprout to ancient blossom; Jamie has three and Weiming one |
 
@@ -337,7 +338,7 @@ before a demo.
    unreadable file is refused before anything is sent.
 3. Ask Pixel to find a buddy for a course: it shows real match cards without contact details.
    Ask when your group is free, what is waiting for you, or to be quizzed (opens Quiz Buddy).
-4. Open Priya's IS442 study plan: three weeks to the exam, two of six topics ticked. Tick
+4. Open Priya's IS442 study plan: three weeks to the exam, two of six steps ticked. Tick
    another, reload and check it stays ticked. Ask Pixel to plan your study for a course and
    exam date: the Study plans form opens with them filled in; with Gemini, create a plan and
    delete it after confirming.

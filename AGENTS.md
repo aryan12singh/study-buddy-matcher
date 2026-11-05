@@ -285,8 +285,8 @@ four things, all load-bearing:
 - **The checks**: no logic in the controller, no entity returned to the API, both authors can
   explain every line, and the empty / invalid / unauthorised cases are handled.
 
-CI runs backend tests and the frontend build on every PR touching those directories. Get it
-green before asking for review.
+CI runs the backend tests and the frontend tests, lint and build on every pull request into `main`
+and every push to `main`. Get it green before asking for review.
 
 ### Reviews
 

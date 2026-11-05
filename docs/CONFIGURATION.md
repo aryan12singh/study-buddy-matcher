@@ -93,7 +93,7 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 
 | Key | Default | Purpose |
 | --- | --- | --- |
-| `app.ai.assistant.enabled` | `false` | Turns on the assistant's Gemini calls; also needs `api-key`. Off means every AI action returns 503 `AI_UNAVAILABLE` and the screen offers the manual path |
+| `app.ai.assistant.enabled` | `false` | Turns on the assistant's Gemini calls; also needs `api-key`. Off means quizzes, study plans and AI-read Pixel messages return 503 `AI_UNAVAILABLE` and the screen offers the manual path; Pixel's rule-answered questions still work |
 | `app.ai.assistant.api-key` | none; set only in `application-local.yml` | Gemini API key from a different Google project than E1's, so the two features do not share a quota. Never committed, logged or sent to the browser |
 | `app.ai.assistant.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `app.ai.assistant.model` | `gemini-3.5-flash` | Gemini model ID, the same as E1 |
@@ -158,7 +158,7 @@ shape and size of a roadmap; they do not prove its advice is good.
 | `ROOM_LEASE_LIFETIME` / `app.study-room.lease-lifetime` | `90s` | How long a browser stays present without a heartbeat; above the one-minute timer limit browsers apply to background tabs |
 | `ROOM_POLL_INTERVAL` / `app.study-room.poll-interval` | `2s` | Shared room refresh interval |
 | `ROOM_REACTION_WINDOW` / `app.study-room.reactions.window` | `8s` | How long a reaction stays in room snapshots; longer than the poll interval so every tab sees it |
-| `ROOM_REACTION_BURST_LIMIT` / `ROOM_REACTION_BURST_WINDOW` | `5` / `10s` | Most reactions one student can send in each window; more return 409 |
+| `ROOM_REACTION_BURST_LIMIT` / `ROOM_REACTION_BURST_WINDOW` | `5` / `10s` | Most reactions one student can send in each window; more return 429 `REACTION_RATE_LIMITED` with `Retry-After` |
 | `app.forest.zone` | `Asia/Singapore` | Zone whose local start time picks a tree's dawn, day, dusk or night colours |
 | `app.forest.light-starts` | `5/11/17/21` | Local hour dawn, daytime, dusk and night begin; a visit's start time picks its tree colours |
 | `app.forest.update-queue-capacity` | `1000` | Forest updates the single forest worker may hold; beyond this one is dropped and logged |

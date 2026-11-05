@@ -369,7 +369,7 @@ contact data. The agenda UI uses saved goals/weekly availability from detail and
 separately loads authorized dated E2 sessions.
 
 `GroupJoinRequestDto`: `{id,groupId,groupName,studentId,studentName,message,status,createdAt,
-respondedAt,groupActive}`. Status is `PENDING`, `ACCEPTED`, `REJECTED`. Message rules match
+respondedAt,groupActive}`. Status is `PENDING`, `ACCEPTED`, `REJECTED` or `WITHDRAWN`. Message rules match
 buddy requests. Creation rejects closed/full groups, membership already present or a pending
 application with 409. Approval rechecks pending state, active applicant/group, membership and
 capacity under locks. A request ID outside the URL's group is 404; a different group's leader
@@ -1060,9 +1060,10 @@ connected-candidate exclusion do not independently restrict this direct operatio
 
 ### Provider evidence and cache policy
 
-Only `ExplanationEvidence` goes to Gemini: rounded total/criterion scores, quality, strategy,
+Only `ExplanationEvidence` goes to Gemini: rounded total/criterion scores, quality,
 enabled/known flags, rounded weekly shared hours, explicit scoring/shared course code and
-name, searched goal/shared effective goals, study modes and categorical group sizes. Never
+name, searched goal/shared effective goals, study modes and categorical group sizes; the
+strategy is part of the cache key but is not sent. Never
 names, student/evaluation IDs, contact details, school, year, messages or schedules.
 
 - `scoringCourse` is the searched course, otherwise the caller's saved target. Null means

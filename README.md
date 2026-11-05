@@ -191,7 +191,7 @@ data. It works on macOS, Linux and Windows.
 | Install | Check it with |
 | --- | --- |
 | JDK 21 | `java -version` shows 21 |
-| Node.js 22 (includes npm) | `node -v` shows v22 |
+| Node.js 22.22 or later (includes npm) | `node -v` shows v22.22 or higher |
 | Docker Desktop, running | `docker info` succeeds |
 
 1. **Get the code:** `git clone https://github.com/aryan12singh/study-buddy-matcher.git`, then
@@ -200,7 +200,7 @@ data. It works on macOS, Linux and Windows.
 
    ```bash
    docker run -d --name studybuddy-db -e POSTGRES_PASSWORD=studybuddy -p 5432:5432 postgres:16
-   docker exec studybuddy-db sh -c 'until pg_isready -q; do sleep 1; done'
+   docker exec studybuddy-db sh -c 'until pg_isready -h 127.0.0.1 -q; do sleep 1; done'
    cat backend/src/main/resources/db/migrations/*.sql | docker exec -i studybuddy-db psql -U postgres -q -v ON_ERROR_STOP=1 --single-transaction
    ```
 
@@ -269,7 +269,7 @@ privately. Put its datasource in `application-local.yml` as above, apply new mig
 `scripts/migrate-database.sh` (it needs `psql` and the `PGHOST`, `PGPORT`, `PGDATABASE`,
 `PGUSER` and `PGPASSWORD` variables), and run steps 4 to 6 without the demo variables. The
 migrations own the schema; the backend validates it at startup and never changes it. See the
-[database guide](docs/DATABASE.md). The full backend test suite also needs Bash and Docker; see
+[database guide](docs/DATABASE.md). The full backend test suite also needs Bash, Docker, the PostgreSQL client (`psql`) and OpenSSL; see
 [Testing](#testing).
 
 > [!IMPORTANT]
@@ -361,10 +361,10 @@ table may be added without team agreement.
 | React / React DOM | 19.3.0 | Component model the team knew; function components and hooks keep screens small | MIT |
 | React Router | 7.18.4 | Route guards per role and a navigation blocker for unsaved drafts | MIT |
 | Axios | 1.20.0 | One shared client with interceptors for the token, sign-out on 401, timeouts and cancellation, which plain `fetch` would need hand-written | MIT |
-| Vite / React plugin | 8.3.0 / 6.1.1 | Fast development server and build; Create React App is deprecated | MIT |
+| Vite / React plugin | 8.3.5 / 6.1.1 | Fast development server and build; Create React App is deprecated | MIT |
 | TypeScript | 6.0.3 | DTO types mirror the API contract, so contract drift fails the build | Apache-2.0 |
 | Oxlint | 1.83.0 | A fast linter that covers our React and TypeScript rules with no plugin setup | MIT |
-| Vitest, jsdom, Testing Library | 5.0.1, 30.1.0, 16.3.3 | Vitest reuses the Vite config instead of a separate Jest and Babel setup; Testing Library tests what a user sees and clicks | MIT |
+| Vitest, jsdom, Testing Library (React, jest-dom) | 5.0.5, 30.1.0, 16.3.3 / 7.0.1 | Vitest reuses the Vite config instead of a separate Jest and Babel setup; Testing Library tests what a user sees and clicks | MIT |
 | Google Gemini API (free tier) | Hosted | Accepts PDFs directly and returns JSON, with a free tier for coursework; only anonymous or student-provided material is sent ([terms](https://ai.google.dev/gemini-api/terms)) | Service terms |
 | Spotify Web API and Web Playback SDK | Hosted | Students play their own music; an embedded playlist works with no account ([terms](https://developer.spotify.com/terms)) | Service terms |
 | Freesound API | Hosted | Ambient sounds filtered to CC0, so no per-sound credit is needed ([terms](https://freesound.org/help/tos_api/)) | CC0 sounds |

@@ -143,8 +143,8 @@ only when `app.demo-seed.enabled` is `true`.
 To seed, set these in the environment or in the git-ignored
 `backend/src/main/resources/application-local.yml`, start the backend once, wait for the
 seed to finish, then set `enabled` back to `false`. Both passwords must satisfy the normal
-password rules or the seed stops. The values are supplied privately by the operator and are
-never recorded in tracked files, frontend env files or pull requests.
+password rules or the seed stops. Choose them yourself. The README's example values are only for a throwaway local Docker
+database; never use them, or record real ones, for the shared database.
 
 What it does, in one transaction under the same advisory lock:
 
