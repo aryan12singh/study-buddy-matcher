@@ -7,13 +7,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Remembers which student started each Spotify sign-in. Spotify's redirect carries no app token,
- * so the random, single-use {@code state} value is what ties the callback back to the student and
- * stops another site from completing a sign-in on their behalf.
+ * Remembers which student started each Spotify sign-in. The random, single-use {@code state} ties
+ * Spotify's redirect to that sign-in, and finishing it also needs the same student signed in, so a
+ * sign-in link sent to someone else can never connect their Spotify account to the sender.
  */
 @Component
 public class SpotifyAuthorizationStore {
@@ -41,12 +40,15 @@ public class SpotifyAuthorizationStore {
         return state;
     }
 
-    /** The student who started this sign-in, if it is known and not expired. Each state works once. */
-    public Optional<Long> finish(String state) {
+    /** Whether this sign-in is known and not expired, without using it up. */
+    public boolean isPending(String state) {
+        Pending entry = state == null ? null : pending.get(state);
+        return entry != null && !entry.expiresAt().isBefore(clock.instant());
+    }
+
+    /** Uses up the sign-in; true only if it is not expired and {@code studentId} started it. */
+    public boolean finish(String state, Long studentId) {
         Pending entry = state == null ? null : pending.remove(state);
-        if (entry == null || entry.expiresAt().isBefore(clock.instant())) {
-            return Optional.empty();
-        }
-        return Optional.of(entry.studentId());
+        return entry != null && !entry.expiresAt().isBefore(clock.instant()) && entry.studentId().equals(studentId);
     }
 }

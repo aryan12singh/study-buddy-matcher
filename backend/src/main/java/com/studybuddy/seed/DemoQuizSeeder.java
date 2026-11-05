@@ -1,20 +1,15 @@
 package com.studybuddy.seed;
 
 import com.studybuddy.quiz.PersonalQuizInput;
-import com.studybuddy.quiz.Quiz;
 import com.studybuddy.quiz.QuizAnswer;
-import com.studybuddy.quiz.QuizAttempt;
-import com.studybuddy.quiz.QuizAttemptRepository;
 import com.studybuddy.quiz.QuizCreationService;
 import com.studybuddy.quiz.QuizDto;
-import com.studybuddy.quiz.QuizQuestion;
-import com.studybuddy.quiz.QuizRepository;
+import com.studybuddy.quiz.QuizQuestionsDto;
 import com.studybuddy.quiz.QuizService;
 import com.studybuddy.quiz.QuizSubmissionInput;
 import com.studybuddy.quiz.StartQuizInput;
 import com.studybuddy.seed.DemoData.QuizEntry;
 import com.studybuddy.seed.DemoData.TakerEntry;
-import com.studybuddy.student.StudentRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -31,8 +26,9 @@ import static com.studybuddy.seed.DemoStudentSeeder.courseIdOf;
 /**
  * Starts the demo's quizzes from questions written in advance, so seeding needs no Gemini key and
  * spends no allowance, then has each taker submit an attempt through the quiz service. The
- * questions pass the same checks as Gemini's reply. Each attempt is opened the taker's time before
- * the seed runs, so the leaderboard shows realistic times rather than everyone finishing at once.
+ * questions pass the same checks as Gemini's reply. Each attempt is opened through the service and
+ * then dated the taker's time back, so the leaderboard shows realistic times rather than everyone
+ * finishing at once.
  */
 @Component
 @ConditionalOnProperty(prefix = "app.demo-seed", name = "enabled", havingValue = "true")
@@ -40,19 +36,15 @@ public class DemoQuizSeeder {
 
     private final QuizCreationService creation;
     private final QuizService quizzes;
-    private final QuizRepository quizRecords;
-    private final QuizAttemptRepository attempts;
-    private final StudentRepository students;
+    private final DemoQuizHistory history;
     private final JsonMapper json;
     private final Clock clock;
 
-    public DemoQuizSeeder(QuizCreationService creation, QuizService quizzes, QuizRepository quizRecords,
-            QuizAttemptRepository attempts, StudentRepository students, JsonMapper json, Clock clock) {
+    public DemoQuizSeeder(QuizCreationService creation, QuizService quizzes, DemoQuizHistory history,
+            JsonMapper json, Clock clock) {
         this.creation = creation;
         this.quizzes = quizzes;
-        this.quizRecords = quizRecords;
-        this.attempts = attempts;
-        this.students = students;
+        this.history = history;
         this.json = json;
         this.clock = clock;
     }
@@ -85,19 +77,17 @@ public class DemoQuizSeeder {
     }
 
     /**
-     * Opens the attempt {@code secondsTaken} ago, as the service would have when the taker asked for
-     * the questions, then submits it now through the service, which marks and ranks it.
+     * Opens the attempt through the quiz service, with its usual checks, dates the start
+     * {@code secondsTaken} back, then submits it now through the service, which marks and ranks it.
      */
     private void take(Long quizId, Long studentId, TakerEntry taker) {
-        Quiz quiz = quizRecords.findById(quizId).orElseThrow();
-        List<QuizQuestion> questions = quiz.getQuestions();
+        List<QuizQuestionsDto.Question> questions = quizzes.startAttempt(quizId, studentId).questions();
         if (taker.answers().size() != questions.size()) {
             throw new IllegalStateException("Demo quiz answers must cover every question");
         }
-        attempts.save(QuizAttempt.start(quiz, students.findById(studentId).orElseThrow(),
-                clock.instant().minusSeconds(taker.secondsTaken())));
+        history.dateStart(quizId, studentId, clock.instant().minusSeconds(taker.secondsTaken()));
         List<QuizAnswer> answers = IntStream.range(0, questions.size())
-                .mapToObj(index -> new QuizAnswer(questions.get(index).getId(), taker.answers().get(index)))
+                .mapToObj(index -> new QuizAnswer(questions.get(index).id(), taker.answers().get(index)))
                 .toList();
         quizzes.submit(quizId, studentId, new QuizSubmissionInput(answers));
     }

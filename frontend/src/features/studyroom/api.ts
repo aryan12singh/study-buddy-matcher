@@ -32,7 +32,11 @@ export function joinRoom(groupId: number, clientId: string) { return snapshot(()
 export function heartbeatRoom(groupId: number, clientId: string, presence: PresenceState, signal?: AbortSignal) {
   return snapshot(() => api.put(`${path(groupId)}/presence`, { clientId, presence }, { signal }))
 }
-export async function leaveRoom(groupId: number, clientId: string) { await api.delete(`${path(groupId)}/presence/${clientId}`) }
+/** The token is passed explicitly when signing out, because the session is cleared before the request goes. */
+export async function leaveRoom(groupId: number, clientId: string, token?: string) {
+  const url = `${path(groupId)}/presence/${clientId}`
+  await (token ? api.delete(url, { headers: { Authorization: `Bearer ${token}` } }) : api.delete(url))
+}
 /** Leaves as the tab closes or reloads; a keepalive fetch can outlive the page, unlike an ordinary request. */
 export async function leaveRoomOnExit(groupId: number, clientId: string) {
   await api.delete(`${path(groupId)}/presence/${clientId}`, { adapter: 'fetch', fetchOptions: { keepalive: true } })

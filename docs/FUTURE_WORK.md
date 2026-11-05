@@ -10,7 +10,6 @@ design already allows it.
 | Leader transfer and reopening a group | A leader can only close a group, and closing is final | Handover and reopen transitions on `StudyGroup` |
 | Re-request cooldown | A declined sender may ask again at once | A configurable cooldown checked by `MatchRequestService` |
 | Group course changes and full groups | A leader can change the course after members join; applications to a full group stay pending | Lock the course once members join; reject or notify leftover applicants |
-| Spotify sign-in is bound by `state` only | The open `/api/spotify/callback` trusts `state` alone, so a student who sends their own sign-in link to someone already signed in to Spotify could receive that person's tokens. Only when Spotify Premium sign-in is configured; the default free playlist needs no sign-in | The callback hands `code` and `state` to the frontend, which completes the sign-in through an authenticated endpoint that checks the state belongs to the caller (or PKCE kept in the starting tab) |
 
 **Matching (Team A)**
 

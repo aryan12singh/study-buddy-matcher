@@ -75,6 +75,16 @@ function RoomPage({ groupId }: { groupId: number }) {
     if (joined.current) void leaveRoom(groupId, clientId).catch(() => {})
     // Closing a browser may interrupt this request; the server lease also expires.
   }, [groupId, clientId])
+  useEffect(() => {
+    // Signing out clears the token before this page unmounts, so leave now with the token that still works.
+    const leaveOnSignOut = (event: Event) => {
+      if (!joined.current) return
+      joined.current = false
+      void leaveRoom(groupId, clientId, (event as CustomEvent<{ token: string }>).detail.token).catch(() => {})
+    }
+    window.addEventListener('signing-out', leaveOnSignOut)
+    return () => window.removeEventListener('signing-out', leaveOnSignOut)
+  }, [groupId, clientId])
   const { markJoined, refresh } = resource
   useEffect(() => {
     // A reload or closed tab skips React cleanup, which would leave this tab listed until its lease expired.
@@ -166,12 +176,13 @@ function RoomPage({ groupId }: { groupId: number }) {
                 <h2 id="group-room-heading">{room.groupName}</h2>
               </div>
               <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
-                { id: 'timer', label: 'Timer', icon: '◷',
+                // Kept after opening, so closing the menu or switching tabs keeps an unsaved draft.
+                { id: 'timer', label: 'Timer', icon: '◷', keepAfterOpen: true,
                   content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
                 { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
                   content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
                 { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
-                { id: 'roles', label: 'Room roles', icon: '★',
+                { id: 'roles', label: 'Room roles', icon: '★', keepAfterOpen: true,
                   content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
               ]} />
             </header>

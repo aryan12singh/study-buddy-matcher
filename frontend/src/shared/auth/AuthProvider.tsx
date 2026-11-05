@@ -55,6 +55,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     () => {
       // Ask the server to end the token, but forget it here at once: signing out never waits on the network.
       const token = getAccessToken()
+      // Pages holding server-side state for this tab (a study room lease) release it while the token still works.
+      if (token) window.dispatchEvent(new CustomEvent('signing-out', { detail: { token } }))
       if (token) pendingLogout.current = api.post('/auth/logout', null, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
       clearSession()
     },

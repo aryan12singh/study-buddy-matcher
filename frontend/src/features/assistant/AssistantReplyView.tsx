@@ -10,7 +10,7 @@ import type { AssistantReply } from './api'
  * step it offers.
  */
 export default function AssistantReplyView({ reply, onOpenQuizBuddy, onNavigate }: {
-  reply: AssistantReply; onOpenQuizBuddy: () => void; onNavigate: () => void
+  reply: AssistantReply; onOpenQuizBuddy: (prefill: Record<string, string>) => void; onNavigate: () => void
 }) {
   const action = reply.action
   return <div className="assistant-reply-extras">
@@ -38,7 +38,7 @@ export default function AssistantReplyView({ reply, onOpenQuizBuddy, onNavigate 
       </li>)}
     </ul>}
     {action && (action.kind === 'OPEN_QUIZ_BUDDY' || !action.link
-      ? <Button variant="primary" onClick={onOpenQuizBuddy}>{action.label}</Button>
+      ? <Button variant="primary" onClick={() => onOpenQuizBuddy(action.prefill ?? {})}>{action.label}</Button>
       : <Link className="retro-button primary" to={action.link} onClick={onNavigate}>{action.label}</Link>)}
   </div>
 }

@@ -95,6 +95,35 @@ describe('private room screen', () => {
     expect(within(screen.getByRole('dialog')).getByText(/You're the last one here, so leaving ends the session/)).toBeInTheDocument()
   })
 
+  it('leaves the room with the still-valid token when the student signs out from inside it', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
+    vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom()))
+    const remove = vi.spyOn(api, 'delete').mockResolvedValue(response(undefined))
+    open()
+    await joinStudyRoom()
+
+    await act(async () => { window.dispatchEvent(new CustomEvent('signing-out', { detail: { token: 'live-token' } })) })
+
+    expect(remove).toHaveBeenCalledTimes(1)
+    expect(remove).toHaveBeenCalledWith(expect.stringMatching(/^\/groups\/5\/room\/presence\//),
+      { headers: { Authorization: 'Bearer live-token' } })
+  })
+
+  it('keeps an unsaved timer draft when the settings menu closes and opens again', async () => {
+    vi.spyOn(api, 'post').mockResolvedValue(response(joinedRoom()))
+    vi.spyOn(api, 'put').mockResolvedValue(response(joinedRoom()))
+    open()
+    await joinStudyRoom()
+    await openSettingsTab('Timer')
+    fireEvent.change(screen.getByLabelText('Focus minutes'), { target: { value: '40' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Timer' }))
+
+    expect(screen.getByLabelText('Focus minutes')).toHaveValue(40)
+  })
+
   it('shows an empty preview and keeps controls inactive before joining', async () => {
     open()
     expect(await screen.findByText('The room is quiet.')).toBeInTheDocument()

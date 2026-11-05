@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { api } from '../../shared/api/client'
@@ -89,6 +89,32 @@ describe('Pixel, the study assistant', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Open Quiz Buddy' }))
 
     expect(screen.getByRole('dialog', { name: 'Quiz Buddy' })).toBeTruthy()
+  })
+
+  it('carries the course and topic told to Pixel into Quiz Buddy, so it does not ask again', async () => {
+    const course = { id: 4, code: 'IS442', name: 'Object Oriented Programming' }
+    const post = vi.spyOn(api, 'post').mockImplementation(async (url: string) => url === '/quizzes'
+      ? response({ id: 9, scope: 'PERSONAL', title: 'interfaces', questionCount: 10, status: 'OPEN', submittedCount: 0, myAttempt: 'NONE' })
+      : response(reply({
+        intent: 'QUIZ_ME', text: 'Quiz Buddy writes quizzes from your own notes.',
+        action: { kind: 'OPEN_QUIZ_BUDDY', label: 'Open Quiz Buddy', link: null, prefill: { courseId: '4', topic: 'interfaces' } },
+      })))
+    vi.spyOn(api, 'get').mockImplementation(async (url: string) => response(url === '/courses' ? [course] : []))
+    openAssistant()
+
+    ask('quiz me on IS442 interfaces')
+    fireEvent.click(await screen.findByRole('button', { name: 'Open Quiz Buddy' }))
+    const quizBuddy = await screen.findByRole('dialog', { name: 'Quiz Buddy' })
+    expect(within(quizBuddy).getByText(/I'll focus on “interfaces”/)).toBeTruthy()
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith('/courses', expect.anything()))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    fireEvent.change(within(quizBuddy).getByRole('textbox'), { target: { value: 'An interface declares methods that implementing classes must define.' } })
+    fireEvent.click(within(quizBuddy).getByRole('button', { name: 'Send' }))
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/quizzes', expect.any(FormData), expect.anything()))
+    const form = post.mock.calls.find(([url]) => url === '/quizzes')![1] as FormData
+    expect(form.get('courseId')).toBe('4')
+    expect(form.get('focus')).toBe('interfaces')
   })
 
   it('lists what is waiting with a link to each', async () => {

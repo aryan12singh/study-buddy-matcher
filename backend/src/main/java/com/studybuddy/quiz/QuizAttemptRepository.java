@@ -2,6 +2,7 @@ package com.studybuddy.quiz;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,4 +10,6 @@ import java.util.Optional;
 public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> {
     Optional<QuizAttempt> findByQuizIdAndStudentId(Long quizId, Long studentId);
     List<QuizAttempt> findByQuizIdAndSubmittedAtIsNotNull(Long quizId);
+    List<QuizAttempt> findByStudentIdAndQuizIdIn(Long studentId, Collection<Long> quizIds);
+    List<QuizAttempt> findByQuizIdInAndSubmittedAtIsNotNull(Collection<Long> quizIds);
 }
