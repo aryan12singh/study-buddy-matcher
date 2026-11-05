@@ -30,8 +30,11 @@ const NO_SESSION_WORDS = ['skip', 'no', 'nope', 'none', 'not for a session']
  * Gemini only writes the questions: understanding the replies is plain code, so the chat never
  * spends the student's AI allowance.
  */
-export default function QuizBotChat({ home, onStarted, onTake }: {
-  home: QuizHome; onStarted: (quiz: Quiz) => void; onTake: (quiz: Quiz) => void
+/** What the student already told Pixel, used for their first set of notes only. */
+export type QuizPrefill = { courseId?: number; topic?: string }
+
+export default function QuizBotChat({ home, prefill, onStarted, onTake }: {
+  home: QuizHome; prefill?: QuizPrefill; onStarted: (quiz: Quiz) => void; onTake: (quiz: Quiz) => void
 }) {
   const personal = home.scope === 'PERSONAL'
   const courses = useResource('quiz-bot-courses', signal => getCourses(signal), personal, false)
@@ -48,8 +51,10 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
   const [messages, setMessages] = useState<Message[]>(() => [{
     id: 0, from: 'bot', text: `Hi! I'm Quiz Buddy. Send me your lecture slides or notes and I'll write a quiz from them`
       + (personal ? ' for you to practise on.' : ' for everyone in the group to take.')
-      + ' Attach files with the paperclip, or paste your notes into the message box.',
+      + ' Attach files with the paperclip, or paste your notes into the message box.'
+      + (prefill?.topic ? ` I'll focus on “${prefill.topic}”.` : ''),
   }])
+  const prefillUsed = useRef(false)
   const [stage, setStage] = useState<Stage>('material')
   const [draft, setDraft] = useState('')
   const [attached, setAttached] = useState<File[]>([])
@@ -112,17 +117,25 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
     }
   }
 
+  /** Pixel's course and topic, offered once, for the first notes after it opened this chat. */
+  function takePrefill() {
+    if (prefillUsed.current || !personal || !prefill) return { course: undefined, topic: undefined }
+    prefillUsed.current = true
+    return { course: (courses.data ?? []).find(option => option.id === prefill.courseId), topic: prefill.topic?.slice(0, MAX_FOCUS_CHARACTERS) }
+  }
+
   /** A new set of notes: files with an optional message, or a pasted message on its own. */
   function receiveMaterial(text: string, files: File[]) {
     let chosen: QuizMaterial
     let chosenFocus: string | undefined
     if (files.length) {
+      const told = takePrefill()
       chosen = { kind: 'files', files }
       // With files attached, the words are instructions: a course and perhaps a focus.
-      const named = personal ? findCourse(text, courses.data ?? []) : null
+      const named = (personal ? findCourse(text, courses.data ?? []) : null) ?? told.course
       const rest = (named ? text.replace(COURSE_CODE, '') : text).replace(/^[\s,.;:-]*(focus on|about|on)?\s*/i, '').trim()
       if (named) setCourse(named)
-      if (rest) chosenFocus = rest.slice(0, MAX_FOCUS_CHARACTERS)
+      chosenFocus = rest ? rest.slice(0, MAX_FOCUS_CHARACTERS) : told.topic
       setMaterial(chosen)
       setFocus(chosenFocus ?? '')
       continueWith(chosen, named ?? undefined, chosenFocus)
@@ -138,7 +151,10 @@ export default function QuizBotChat({ home, onStarted, onTake }: {
     }
     chosen = { kind: 'notes', text }
     setMaterial(chosen)
-    continueWith(chosen, undefined, undefined)
+    const told = takePrefill()
+    if (told.course) setCourse(told.course)
+    if (told.topic) setFocus(told.topic)
+    continueWith(chosen, told.course, told.topic)
   }
 
   function send(text: string, files: File[] = attached) {

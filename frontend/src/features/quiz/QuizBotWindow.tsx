@@ -11,7 +11,7 @@ import { getSessions } from '../sessions/api'
 import type { StudySession } from '../sessions/api'
 import { closeQuiz, listQuizzes } from './api'
 import type { Quiz, QuizHome } from './api'
-import QuizBotChat from './QuizBotChat'
+import QuizBotChat, { type QuizPrefill } from './QuizBotChat'
 import TakeQuizDialog from './TakeQuizDialog'
 import QuizLeaderboardDialog from './QuizLeaderboardDialog'
 import QuizReviewDialog from './QuizReviewDialog'
@@ -24,7 +24,9 @@ type OpenDialog = { kind: 'take' | 'leaderboard' | 'review' | 'close'; quiz: Qui
  * The quiz bot's window: the chat that writes a new quiz from the student's notes (for anyone who
  * may start one), and the quizzes already written, each with what the student can do next.
  */
-export default function QuizBotWindow({ home, canStart, onClose }: { home: QuizHome; canStart: boolean; onClose: () => void }) {
+export default function QuizBotWindow({ home, canStart, prefill, onClose }: {
+  home: QuizHome; canStart: boolean; prefill?: QuizPrefill; onClose: () => void
+}) {
   const key = home.scope === 'GROUP' ? `group-quizzes-${home.groupId}` : 'personal-quizzes'
   const quizzes = useResource(key, signal => listQuizzes(home, signal))
   const groupId = home.scope === 'GROUP' ? home.groupId : 0
@@ -42,7 +44,7 @@ export default function QuizBotWindow({ home, canStart, onClose }: { home: QuizH
   return <Dialog title="Quiz Buddy" onClose={onClose}>
     <div className="quiz-bot-window">
       {canStart
-        ? <QuizBotChat home={home} onStarted={() => quizzes.reload()} onTake={quiz => setDialog({ kind: 'take', quiz })} />
+        ? <QuizBotChat home={home} prefill={prefill} onStarted={() => quizzes.reload()} onTake={quiz => setDialog({ kind: 'take', quiz })} />
         : <p className="quiz-bot-message is-bot"><span>The group leader or the room's host or co-host can ask me to write a quiz from their notes. When they do, it appears below for you to take.</span></p>}
 
       <section className="quiz-bot-history" aria-labelledby="quiz-bot-history-heading">

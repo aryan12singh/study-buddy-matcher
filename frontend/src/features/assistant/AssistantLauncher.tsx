@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import PixelIcon from '../../shared/components/PixelIcon'
 import QuizBotWindow from '../quiz/QuizBotWindow'
+import type { QuizPrefill } from '../quiz/QuizBotChat'
 import AssistantPanel from './AssistantPanel'
 import '../quiz/quiz.css'
 import './assistant.css'
@@ -12,7 +13,7 @@ import './assistant.css'
 export default function AssistantLauncher() {
   const [open, setOpen] = useState(false)
   const [started, setStarted] = useState(false)
-  const [quizBuddy, setQuizBuddy] = useState(false)
+  const [quizBuddy, setQuizBuddy] = useState<QuizPrefill>()
   const fab = useRef<HTMLButtonElement>(null)
 
   function toggle() {
@@ -28,12 +29,16 @@ export default function AssistantLauncher() {
 
   return <div className="assistant-launcher">
     {started && <div hidden={!open}>
-      <AssistantPanel open={open} onClose={close} onOpenQuizBuddy={() => { setOpen(false); setQuizBuddy(true) }} />
+      <AssistantPanel open={open} onClose={close} onOpenQuizBuddy={prefill => {
+        setOpen(false)
+        // What the student told Pixel ("quiz me on IS442 interfaces") carries into Quiz Buddy.
+        setQuizBuddy({ courseId: Number(prefill.courseId) || undefined, topic: prefill.topic || undefined })
+      }} />
     </div>}
     <button ref={fab} type="button" className={`assistant-fab${open ? ' is-open' : ''}`} aria-expanded={open}
       aria-label={open ? 'Close Pixel, your study assistant' : 'Open Pixel, your study assistant'} title={open ? undefined : 'Ask Pixel'} onClick={toggle}>
       {open ? <span aria-hidden="true">×</span> : <PixelIcon kind="robot" />}
     </button>
-    {quizBuddy && <QuizBotWindow home={{ scope: 'PERSONAL' }} canStart onClose={() => setQuizBuddy(false)} />}
+    {quizBuddy && <QuizBotWindow home={{ scope: 'PERSONAL' }} canStart prefill={quizBuddy} onClose={() => setQuizBuddy(undefined)} />}
   </div>
 }
