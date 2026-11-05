@@ -8,9 +8,10 @@ import TreeSprite from './TreeSprite'
 import { treeName } from './treeSprites'
 import { LIGHT_NAMES, SPECIES_NAMES, formatMinutes, getMyForest } from './api'
 import './forest.css'
+import { CAMPUS_TIMEZONE } from '../../shared/api/types'
 
 const MAX_TREES = 60
-const dates = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short' })
+const dates = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short', timeZone: CAMPUS_TIMEZONE })
 
 export default function ForestPage() {
   const { account } = useAuth()

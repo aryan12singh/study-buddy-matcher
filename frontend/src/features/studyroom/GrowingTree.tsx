@@ -27,8 +27,9 @@ export default function GrowingTree({ groupId, accountId }: { groupId: number; a
             ? `${formatMinutes(tree.minutesToNext)} more to grow into ${withArticle(treeName(tree.next, tree.variant).toLowerCase())}.`
             : 'The grandest tree there is. Keep going!'}</p>
         </> : <p>Grows while you stay and the focus timer runs. It is planted in your forest when you leave.</p>}
-        {/* A new tab, because leaving this page would also leave the room and end the visit early. */}
-        <Link className="retro-button" to="/forest" target="_blank" rel="noopener">
+        {/* A new tab, because leaving this page would also leave the room and end the visit early.
+            rel="opener" keeps the sign-in: browsers give a noopener tab an empty sessionStorage. */}
+        <Link className="retro-button" to="/forest" target="_blank" rel="opener">
           View my forest{' '}<span className="visually-hidden">(opens in a new tab)</span>
         </Link>
       </div>

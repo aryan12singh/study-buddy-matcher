@@ -16,6 +16,7 @@ import TakeQuizDialog from './TakeQuizDialog'
 import QuizLeaderboardDialog from './QuizLeaderboardDialog'
 import QuizReviewDialog from './QuizReviewDialog'
 import './quiz.css'
+import { CAMPUS_TIMEZONE } from '../../shared/api/types'
 
 type OpenDialog = { kind: 'take' | 'leaderboard' | 'review' | 'close'; quiz: Quiz }
 
@@ -82,7 +83,7 @@ function QuizRow({ quiz, session, onOpen }: { quiz: Quiz; session?: StudySession
       {session && <> · for {session.title}</>}
       {group && <> · {quiz.submittedCount} submitted</>}
       {submitted && <> · you submitted</>}
-      {open && !submitted && quiz.closesAt && <> · closes {new Date(quiz.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</>}
+      {open && !submitted && quiz.closesAt && <> · closes {new Date(quiz.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZone: CAMPUS_TIMEZONE })}</>}
       {open && !group && quiz.myAttempt === 'STARTED' && <> · in progress</>}
     </p>
     <div className="actions">

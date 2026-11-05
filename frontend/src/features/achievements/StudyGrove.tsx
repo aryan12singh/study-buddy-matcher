@@ -1,6 +1,7 @@
 import type { Streak } from './api'
 import { PixelRects } from './pixelArt'
 import { Link } from 'react-router-dom'
+import { CAMPUS_TIMEZONE } from '../../shared/api/types'
 
 const LEAVES = { l: '#9fd36f', m: '#4f9a4a', d: '#2f6b3a', t: '#6b4426', s: '#c9a46a' }
 const GROUND = { g: '#5aa83e', h: '#7cc457', s: '#8a5a32', r: '#6b4426' }
@@ -18,7 +19,7 @@ const SOIL = ['hghghghghghg', 'gggggggggggg', 'ssrssssrssss', 'srssrssssrss']
 const SEED = ['.....ss.....', '....sstt....', '.....tt.....']
 
 const MAX_TREES = 12
-const formatter = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short' })
+const formatter = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short', timeZone: CAMPUS_TIMEZONE })
 
 function stageFor(weeksOld: number) {
   if (weeksOld === 0) return { rows: SAPLING, name: 'sapling' }

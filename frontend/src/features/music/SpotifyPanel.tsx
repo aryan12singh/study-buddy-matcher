@@ -7,7 +7,8 @@ import StatePanel from '../../shared/components/StatePanel'
 export default function SpotifyPanel() {
   const { status, mode, chooseMode: choose } = useSpotify()
 
-  if (status.loading) return <StatePanel loading />
+  // Only the first load shows a spinner: a refresh after a room action must not unmount the player.
+  if (status.loading && !status.data) return <StatePanel loading />
   if (status.error || !status.data) return <StatePanel error={status.error} onRetry={() => status.reload(true)} />
 
   return (

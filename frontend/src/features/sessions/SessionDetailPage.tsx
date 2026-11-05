@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { cancelSession, getSession } from './api'
+import { cancelSession, getSession, type StudySession } from './api'
 import { displayedOccurrence, nextSessionOccurrence, occurrenceLabel, sessionParent, sessionStatusLabel } from './sessionPresentation'
 import { useSessionClock } from './useSessionClock'
 import SessionRoomLink from './SessionRoomLink'
@@ -26,11 +26,16 @@ function SessionDetail({ id }: { id: number }) {
   const { account } = useAuth()
   const valid = Number.isSafeInteger(id) && id > 0
   const session = useResource(`session-${account?.id}-${id}`, signal => getSession(id, signal), valid)
+  const [planning, setPlanning] = useState(false)
+  const [lastShown, setLastShown] = useState<StudySession>()
   const action = useAction()
   const [confirm, setConfirm] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const data = session.data
+  if (data && data !== lastShown) setLastShown(data)
+  // A failed background refresh hides the session, but must not unmount a roadmap being drafted.
+  const roadmapSession = data ?? (planning ? lastShown : undefined)
   const clockSessions = useMemo(() => data ? [data] : [], [data])
   const now = useSessionClock(clockSessions)
   async function cancel() {
@@ -45,28 +50,26 @@ function SessionDetail({ id }: { id: number }) {
     actions={<Link className="retro-button" to={data ? sessionParent(data) : '/sessions'}>Back to sessions</Link>}>
     <ActionNotice error={action.error} success={action.success} />
     <StatePanel loading={session.loading && !data} error={valid ? session.error : 'This session link is invalid.'} onRetry={valid ? () => session.reload() : undefined} />
-    {data && <>
-      <section className="detail-panel">
-        <div className="tag-list"><Badge tone={nextSessionOccurrence(data, now) ? 'good' : 'neutral'}>{sessionStatusLabel(data, now)}</Badge>
-          <Badge>{data.scope === 'GROUP' ? 'Group session' : 'Buddy session'}</Badge></div>
-        <h2>When and where</h2>
-        <p>{occurrenceLabel(displayedOccurrence(data, now))}</p>
-        <p><strong>Location:</strong> {data.location || 'To be agreed'}</p>
-        <h3>Agenda</h3><p className="message-text">{data.agenda || 'No agenda saved yet.'}</p>
-        <div className="actions">
-          {data.canManage && data.status === 'SCHEDULED' && <><Link className="retro-button primary" to={`/sessions/${id}/edit`}>Edit session</Link>
-            <Button variant="danger" disabled={action.pending} onClick={() => setConfirm(true)}>Cancel session</Button></>}
-          <SessionRoomLink session={data} now={now} />
-          <CalendarButton sessionId={id} />
-        </div>
-        <p className="privacy-note">Calendar downloads are snapshots. Re-export after edits or cancellation, and check your calendar for duplicates. Each weekly date is exported as a separate event. No contacts or participant emails are included.</p>
-        {data.status === 'CANCELLED' && <p className="muted">This plan is cancelled. Download the cancellation snapshot to update your calendar.</p>}
-      </section>
-      <SessionRoadmapPanel session={data} />
-      <section className="detail-panel"><h2>{data.occurrenceCount > 1 ? `${data.occurrenceCount} weekly dates` : 'Session date'}</h2>
-        <ul className="session-times">{data.occurrences.map(item => <li key={item.startAt}>{occurrenceLabel(item)}</li>)}</ul>
-      </section>
-    </>}
+    {data && <section className="detail-panel">
+      <div className="tag-list"><Badge tone={nextSessionOccurrence(data, now) ? 'good' : 'neutral'}>{sessionStatusLabel(data, now)}</Badge>
+        <Badge>{data.scope === 'GROUP' ? 'Group session' : 'Buddy session'}</Badge></div>
+      <h2>When and where</h2>
+      <p>{occurrenceLabel(displayedOccurrence(data, now))}</p>
+      <p><strong>Location:</strong> {data.location || 'To be agreed'}</p>
+      <h3>Agenda</h3><p className="message-text">{data.agenda || 'No agenda saved yet.'}</p>
+      <div className="actions">
+        {data.canManage && data.status === 'SCHEDULED' && <><Link className="retro-button primary" to={`/sessions/${id}/edit`}>Edit session</Link>
+          <Button variant="danger" disabled={action.pending} onClick={() => setConfirm(true)}>Cancel session</Button></>}
+        <SessionRoomLink session={data} now={now} />
+        <CalendarButton sessionId={id} />
+      </div>
+      <p className="privacy-note">Calendar downloads are snapshots. Re-export after edits or cancellation, and check your calendar for duplicates. Each weekly date is exported as a separate event. No contacts or participant emails are included.</p>
+      {data.status === 'CANCELLED' && <p className="muted">This plan is cancelled. Download the cancellation snapshot to update your calendar.</p>}
+    </section>}
+    {roadmapSession && <SessionRoadmapPanel session={roadmapSession} onEditingChange={setPlanning} />}
+    {data && <section className="detail-panel"><h2>{data.occurrenceCount > 1 ? `${data.occurrenceCount} weekly dates` : 'Session date'}</h2>
+      <ul className="session-times">{data.occurrences.map(item => <li key={item.startAt}>{occurrenceLabel(item)}</li>)}</ul>
+    </section>}
     {confirm && data?.canManage && <ConfirmDialog title="Cancel study session?" confirmLabel="Cancel for everyone" cancelLabel="Keep session"
       pending={action.pending} error={action.error} onConfirm={() => void cancel()} onClose={() => setConfirm(false)}>
       <p>This cancels {data.occurrenceCount > 1 ? `all ${data.occurrenceCount} weekly dates` : 'the session'} for everyone. Participants will be notified.</p>

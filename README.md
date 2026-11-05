@@ -355,7 +355,7 @@ table may be added without team agreement.
 | Spring Boot (Web MVC, Data JPA, Security, Validation, Test) | 4.1.1 | Recommended by the brief; one framework gives layering, transactions, validation and security without wiring them by hand | Apache-2.0 |
 | Hibernate ORM | 7.4.5.Final | Spring Boot's JPA provider; we use it in `validate` mode so the SQL migrations stay the source of truth | Apache-2.0 |
 | PostgreSQL JDBC, on Supabase | 42.7.13 | Real constraints, partial unique indexes, row locks and row-level security, which an in-memory database would not test honestly; Supabase gives the team one shared managed instance | BSD-2-Clause |
-| JJWT | 0.12.6 | We issue our own HS256 tokens with role and version claims; JJWT does exactly that, where an OAuth2 resource server expects a separate authorisation server | Apache-2.0 |
+| JJWT | 0.12.6 | We issue our own HMAC-signed tokens (HS256 to HS512, chosen by JJWT from the secret's length) with role and version claims; JJWT does exactly that, where an OAuth2 resource server expects a separate authorisation server | Apache-2.0 |
 | Jackson 3 / 2 | 3.1.5 / 2.21.5 | Spring's JSON mapper; JJWT uses Jackson 2 | Apache-2.0 |
 | JUnit Jupiter / Mockito | 6.0.3 / 5.23.0 | The Spring Boot test starter's defaults | EPL-2.0 / MIT |
 | React / React DOM | 19.3.0 | Component model the team knew; function components and hooks keep screens small | MIT |

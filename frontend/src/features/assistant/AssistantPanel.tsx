@@ -20,7 +20,7 @@ const UNAVAILABLE = aiUnavailableMessage('You can still use the navigation menu 
  * Pixel, the study assistant's chat panel. Each message is answered on its own: the AI reads it, and the app
  * answers from its own data. The conversation stays while the student moves between pages.
  */
-export default function AssistantPanel({ onClose, onOpenQuizBuddy }: { onClose: () => void; onOpenQuizBuddy: () => void }) {
+export default function AssistantPanel({ open, onClose, onOpenQuizBuddy }: { open: boolean; onClose: () => void; onOpenQuizBuddy: () => void }) {
   const nextId = useRef(1)
   const log = useRef<HTMLDivElement>(null)
   const composer = useRef<HTMLTextAreaElement>(null)
@@ -29,7 +29,8 @@ export default function AssistantPanel({ onClose, onOpenQuizBuddy }: { onClose: 
   // Pixel only reads the student's data, so a reply leaves the other views as they are.
   const { pending, run } = useAction({ refresh: false })
 
-  useEffect(() => { composer.current?.focus() }, [])
+  // Each time the panel opens, not just the first: it stays mounted while hidden.
+  useEffect(() => { if (open) composer.current?.focus() }, [open])
   useEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight }, [messages, pending])
 
   function add(message: Omit<Message, 'id'>) {

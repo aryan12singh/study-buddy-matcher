@@ -389,7 +389,7 @@ Every route rechecks eligibility. Room payloads omit contacts, emails and tokens
 | GET | `/api/groups/{groupId}/room` | Current `StudyRoomDto`, 200 |
 | POST | `/api/groups/{groupId}/room/join` | `{clientId: UUID}`; idempotent lease, DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/presence` | `{clientId: UUID, presence: PRESENT / FOCUS / BREAK}`; renewed DTO, 200 |
-| DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204 |
+| DELETE | `/api/groups/{groupId}/room/presence/{clientId}` | Delete only the actor's matching tab lease; idempotent, 204. Only a live tab counts as a departure, so a repeated, unknown or expired tab never ends the session or moves the host |
 | POST | `/api/groups/{groupId}/room/timer` | `{command: START / PAUSE / RESUME / RESET, expectedVersion}`; DTO, 200 |
 | PUT | `/api/groups/{groupId}/room/settings` | `{focusMinutes, breakMinutes, participantLimit, hostId?, coHostId?, expectedVersion}`; DTO, 200 |
 | POST | `/api/groups/{groupId}/room/reactions` | `{type: CLAP / HEART / FIRE / LIGHTBULB / COFFEE / SPROUT}`; the saved `{id, type, studentId, senderName, sentAt}`, 201, so the sender can show it at once. 409 unless the actor has a live lease in this room; 429 `REACTION_RATE_LIMITED` with a `Retry-After` header (seconds) after the per-student burst limit |

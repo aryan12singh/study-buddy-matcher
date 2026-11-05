@@ -36,6 +36,17 @@ describe('Pixel, the study assistant', () => {
     expect(screen.getByText(/I'm Pixel, your study assistant/)).toBeTruthy()
   })
 
+  it('moves focus to the message box on every open and back to the corner button on close', () => {
+    openAssistant()
+    expect(document.activeElement).toBe(screen.getByLabelText('Message Pixel'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close Pixel' }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open Pixel, your study assistant' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Pixel, your study assistant' }))
+    expect(document.activeElement).toBe(screen.getByLabelText('Message Pixel'))
+  })
+
   it('shows real match cards and the filters it understood', async () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(reply({
       intent: 'FIND_BUDDIES', text: 'I found 1 match for IS442. Here they are.', filters: ['IS442 Object Oriented Programming', 'Small group'],

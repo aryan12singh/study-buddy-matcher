@@ -246,6 +246,23 @@ describe('dated study session workflows', () => {
     expect(screen.getByLabelText('Session title')).toHaveValue('')
   })
 
+  it('keeps a roadmap draft open when a background refresh of the session fails', async () => {
+    const get = serve()
+    renderPage(<SessionDetailPage />, '/sessions/11', '/sessions/:id')
+    fireEvent.click(await screen.findByRole('button', { name: 'Plan these meetings' }))
+    expect(screen.getByRole('form', { name: 'Plan this session' })).toBeInTheDocument()
+
+    get.mockImplementation(async path => {
+      if (path === '/sessions/11') throw new AxiosError('down', 'ERR_BAD_RESPONSE', undefined, undefined,
+        { config: { headers: new AxiosHeaders() }, status: 503, statusText: 'Error', headers: {}, data: { message: 'Try again soon' } })
+      return response(undefined)
+    })
+    await act(async () => { window.dispatchEvent(new CustomEvent('resources-changed', { detail: { purge: false } })) })
+
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'When and where' })).not.toBeInTheDocument())
+    expect(screen.getByRole('form', { name: 'Plan this session' })).toBeInTheDocument()
+  })
+
   it('confirms whole-plan cancellation and exports the cancelled snapshot', async () => {
     const get = serve()
     const post = vi.spyOn(api, 'post').mockImplementation(async () => {

@@ -31,7 +31,7 @@ export default function MusicPlayer() {
           <Button variant="primary" disabled={!categories.data?.length}
             onClick={() => mixer.remix(categories.data?.map(category => category.id) ?? [])}>Remix sounds</Button>
         </div>
-        {categories.loading ? (
+        {categories.loading && !categories.data ? (
           <StatePanel loading />
         ) : categories.error ? (
           <StatePanel error={categories.error} onRetry={() => categories.reload(true)} />

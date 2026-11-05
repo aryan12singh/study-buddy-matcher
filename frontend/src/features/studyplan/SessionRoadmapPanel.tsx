@@ -17,9 +17,17 @@ import './studyplan.css'
  * A study session's roadmap, on the session's page: what each upcoming meeting covers. Whoever
  * manages the session creates, replaces, ticks and deletes it; other participants read it.
  */
-export default function SessionRoadmapPanel({ session }: { session: StudySession }) {
+export default function SessionRoadmapPanel({ session, onEditingChange }: {
+  session: StudySession
+  /** Lets the page pause its background refresh, so a failed poll cannot unmount a draft in progress. */
+  onEditingChange?: (editing: boolean) => void
+}) {
   const plan = useResource(`session-plan-${session.id}`, signal => getSessionPlan(session.id, signal))
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditingState] = useState(false)
+  function setEditing(next: boolean) {
+    setEditingState(next)
+    onEditingChange?.(next)
+  }
   const [notice, setNotice] = useState<string>()
   const canPlan = session.canManage && session.status === 'SCHEDULED' && session.nextOccurrence !== null
 

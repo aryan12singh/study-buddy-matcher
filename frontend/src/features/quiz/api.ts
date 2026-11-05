@@ -1,5 +1,5 @@
 import { api } from '../../shared/api/client'
-import type { Course } from '../../shared/api/types'
+import { CAMPUS_TIMEZONE, type Course } from '../../shared/api/types'
 import type { StudySession } from '../sessions/api'
 
 export type QuizScope = 'GROUP' | 'PERSONAL'
@@ -67,7 +67,7 @@ export function upcomingSessions(sessions: StudySession[]) {
 /** "Week 4 revision · Thu 30 Oct", so two sessions with the same title can be told apart. */
 export function sessionLabel(session: StudySession) {
   const next = session.nextOccurrence
-  return next ? `${session.title} · ${new Date(next.startAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}` : session.title
+  return next ? `${session.title} · ${new Date(next.startAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', timeZone: CAMPUS_TIMEZONE })}` : session.title
 }
 
 export async function startPersonalQuiz(courseId: number, material: QuizMaterial, focus: string) {

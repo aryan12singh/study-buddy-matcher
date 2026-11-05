@@ -16,6 +16,7 @@ describe('growing tree in a room', () => {
     expect(screen.getByText('20 min more to grow into an apple tree.')).toBeInTheDocument()
     const forest = screen.getByRole('link', { name: 'View my forest (opens in a new tab)' })
     expect(forest).toHaveAttribute('target', '_blank')
+    expect(forest).toHaveAttribute('rel', 'opener')
     expect(forest).toHaveAttribute('href', '/forest')
   })
 
