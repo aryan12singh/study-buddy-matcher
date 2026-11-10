@@ -164,7 +164,7 @@ sequenceDiagram
     Service->>Access: recheck current parent eligibility
     Service->>Calendar: export authorized session
     Calendar-->>UI: private single/bounded UTC event snapshot
-    Note over UI,Calendar: Stable occurrence UIDs; no contact payload or automatic client sync
+    Note over UI,Calendar: Stable occurrence UIDs, no contact payload or automatic client sync
     Note over Service,DB: Notification failure rolls back the saved session change
 ```
 
@@ -236,7 +236,7 @@ stateDiagram-v2
 stateDiagram-v2
     direction LR
     [*] --> Member : application approved
-    Member --> [*] : member leaves (after confirming),<br/>leader removes them, or<br/>member deactivated (open<br/>groups only; closed groups<br/>keep members as history)
+    Member --> [*] : member leaves (after confirming),<br/>leader removes them, or<br/>member deactivated (open<br/>groups only, closed groups<br/>keep members as history)
 ```
 
 ```mermaid
@@ -513,9 +513,9 @@ sequenceDiagram
     participant Assembler as ProfileViewAssembler
     Receiver->>Controller: POST /match-requests/id/accept + JWT
     Controller->>Service: accept(id, principal.id)
-    Service->>Access: shared lifecycle guard; receiver check; sorted account locks
-    Access->>DB: lock participant users; recheck active account/version
-    Service->>DB: lock request; read current status/active connection
+    Service->>Access: shared lifecycle guard, receiver check, sorted account locks
+    Access->>DB: lock participant users, recheck active account/version
+    Service->>DB: lock request, read current status/active connection
     Service->>Service: MatchRequest.accept()
     Service->>DB: insert one symmetric Connection
     Service->>Events: notify sender, stable event key
@@ -523,7 +523,7 @@ sequenceDiagram
     Service->>DB: commit request + connection + notification
     Service-->>Controller: assembled MatchRequestDto
     Controller-->>Receiver: 200 ACCEPTED
-    Note over Service,DB: Repeated/racing decisions conflict; any failure rolls back all writes
+    Note over Service,DB: Repeated/racing decisions conflict, any failure rolls back all writes
     Receiver->>ProfileAPI: GET student's profile + JWT
     ProfileAPI->>Profiles: view(subject, principal.id)
     Profiles->>DB: active viewer and subject
@@ -556,7 +556,7 @@ sequenceDiagram
     Service->>Access: shared guard + sorted leader/applicant account locks
     Access->>DB: recheck account eligibility/version
     Service->>DB: lock group, then request
-    Service->>Service: group leader/open; request belongs here and pending
+    Service->>Service: group leader/open, request belongs here and pending
     Service->>DB: recheck no membership and count accepted members
     alt accepted count below capacity
         Service->>Service: request.accept()
@@ -566,7 +566,7 @@ sequenceDiagram
         Service->>DB: commit all
         Service-->>Leader: accepted request DTO
     else full / closed / stale / unauthorised
-        Service-->>Leader: safe 400/403/404/409; rollback
+        Service-->>Leader: safe 400/403/404/409, rollback
     end
     Note over Service,DB: Approval, capacity edits, removal and closure serialize on the same group row
 ```
@@ -588,18 +588,18 @@ sequenceDiagram
     Admin->>API: deactivate or DELETE account + JWT
     API->>Service: lifecycle(targetId, principal.id)
     Service->>Access: exclusive lifecycle guard
-    Access->>DB: lock administrators and target; recheck actor/version
+    Access->>DB: lock administrators and target, recheck actor/version
     Service->>Service: block removing own account
     alt deactivate
         Service->>Cleanup: StudentDeactivation.apply()
-        Cleanup->>DB: end connections; cancel pending buddy requests
-        Cleanup->>DB: close led groups; withdraw own pending applications; leave open groups
-        Cleanup->>DB: revoke room leases and roles; cancel affected future sessions
+        Cleanup->>DB: end connections, cancel pending buddy requests
+        Cleanup->>DB: close led groups, withdraw own pending applications, leave open groups
+        Cleanup->>DB: revoke room leases and roles, cancel affected future sessions
         Service->>DB: inactive + increment token version
     else delete permanently
         Service->>Cleanup: StudentDeletion.apply()
         Cleanup->>DB: remove unsafe linked notifications and account dependencies
-        Cleanup->>DB: remove led groups and their dependencies; remove profile
+        Cleanup->>DB: remove led groups and their dependencies, remove profile
         Service->>DB: remove user
     end
     Cleanup->>Events: safe survivor events within same transaction
@@ -607,7 +607,7 @@ sequenceDiagram
     Service->>DB: commit or roll back everything
     Service-->>Admin: updated DTO or 204
     Note over Access,DB: Shared writes cannot introduce a relationship during exclusive cleanup
-    Note over Service,DB: Reactivation enables fresh login only; no relationship/token restoration
+    Note over Service,DB: Reactivation enables fresh login only, no relationship/token restoration
 ```
 
 Read/read-all operations check the authenticated recipient, persist `read=true`, and are

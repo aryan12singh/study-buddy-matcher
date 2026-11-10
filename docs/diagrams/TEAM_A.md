@@ -271,12 +271,12 @@ sequenceDiagram
     API->>Service: search(typed criteria, actorId)
     Service->>Access: require active student
     Access->>DB: validate account and viewer
-    Service->>Service: require context; validate filters/limit
+    Service->>Service: require context, validate filters/limit
     Service->>Config: snapshot()
     Config->>DB: read version, strategy, enabled criteria, weights and threshold
     Config-->>Service: one immutable settings snapshot
     Service->>DB: active candidates, saved availability and relationships
-    Service->>Service: exclude self/connections; canonicalise weekly slots
+    Service->>Service: exclude self/connections, canonicalise weekly slots
     loop eligible candidate matching filters
         Service->>Scoring: score enabled criteria with configured weights
         Scoring-->>Service: immutable score, quality, unknown criteria and shared session hours
@@ -316,24 +316,24 @@ sequenceDiagram
     API->>Service: update(request, actorId)
     Service->>Access: lock and recheck active admin
     Service->>Service: validate all three weight sets, enabled set and threshold
-    Service->>DB: initialize singleton if missing; lock settings row
+    Service->>DB: initialize singleton if missing, lock settings row
     alt expectedVersion equals current version
-        Service->>DB: replace weights/criteria/strategy/threshold; increment version
+        Service->>DB: replace weights/criteria/strategy/threshold, increment version
         DB-->>Service: stored override
         Service-->>API: assembled saved config, usingDefaults=false
         API-->>UI: 200 config with newer version
         UI-->>Admin: saved state from response
     else stale version or invalid input
-        Service-->>API: 409 stale or 400 invalid; rollback
+        Service-->>API: 409 stale or 400 invalid, rollback
         API-->>UI: field/conflict error
-        UI-->>Admin: preserve edits; offer reload/correction
+        UI-->>Admin: preserve edits, offer reload/correction
     end
     Admin->>UI: confirm Restore defaults
     UI->>API: POST restore-defaults + expectedVersion
     API->>Service: restore(request, actorId)
     Service->>Access: lock and recheck active admin
-    Service->>DB: same singleton lock; expected-version check
-    Service->>DB: remove overrides; increment version, retain row
+    Service->>DB: same singleton lock, expected-version check
+    Service->>DB: remove overrides, increment version, retain row
     Service->>Defaults: current external defaults
     Defaults-->>Service: default strategy, weights, criteria and threshold
     Service-->>API: assembled defaults config, usingDefaults=true
