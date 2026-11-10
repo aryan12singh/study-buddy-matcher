@@ -152,45 +152,65 @@ class Canvas:
 
 
 def architecture():
-    c = Canvas("architecture", "Architecture and privacy boundaries", "The browser reaches application data only through the authenticated Spring API.", height=1130)
-    c.panel(455,170,720,795,"SPRING BOOT BACKEND",fill="#eff4f7")
-    c.box(45,260,330,205,"React + Vite",[
-        "Screens and route guards", "Shared authenticated API client", "Local drafts and music player", "Calendar snapshot download", "No database access"
+    c = Canvas("architecture", "Architecture: layers, boundaries and privacy",
+        "Requests pass down through the layers; services return DTOs back up. The browser never reaches the database.", height=1270)
+    c.panel(430,150,750,910,"SPRING BOOT BACKEND",fill="#eff4f7")
+    # Left column: the browser, configuration and the database
+    c.box(45,200,330,185,"React + Vite",[
+        "Feature folders per screen", "One shared Axios API client", "Route guards = UI only", "No database access"
     ])
-    c.box(45,560,330,150,"Spotify Web Playback",["SDK script from sdk.scdn.co", "Premium: token from the API", "Free: embedded playlist player"],color=AMBER,fill=WARM,size=17)
-    c.box(505,230,620,105,"Spring Security",["JWT signature · active account · role · token version"])
-    c.box(505,390,280,110,"Controllers",["Validate typed input", "Delegate one service call"])
-    c.box(845,390,280,110,"Services",["Authorize current actor", "Coordinate domain rules"])
-    c.box(505,580,280,140,"Domain and values",["Entities retain state rules", "Scorers / strategies", "Immutable value objects"])
-    c.box(845,580,280,140,"JPA repositories",["Read and persist entities", "Ordered transition locks", "Database constraints"])
-    c.box(505,800,620,126,"DTO assemblers",["ProfileViewAssembler picks the permitted response shape.", "PublicProfileDto omits the contact; ConnectedProfileDto has it."],color=TEAL)
-    externals=[
-        ("Google Gemini",["Explanations, quizzes, study", "plans and the Pixel assistant"]),
-        ("Spotify Accounts",["Sign-in and token refresh", "for the browser player"]),
-        ("Freesound",["CC0 ambient sound search;", "the browser plays previews"]),
-        ("Open-Meteo",["Campus weather at fixed", "coordinates; cached, fallback"]),
-    ]
-    for n,(title,rows) in enumerate(externals):
-        y=175+n*136
-        c.box(1240,y,315,118,title,rows,color=AMBER,fill=WARM,size=17)
-        c.line([(1125,445),(1190,445),(1190,y+59),(1240,y+59)],end="arrow")
-    c.label(1190,318,"HTTPS",15)
-    c.box(1240,770,315,150,"PostgreSQL",["Managed by Supabase", "Backend JDBC access", "RLS; browser grants revoked"],color=TEAL)
-    c.line([(375,285),(425,285),(425,280),(505,280)],end="arrow")
-    c.label(393,251,"JWT + JSON",15)
-    c.line([(210,465),(210,560)],end="arrow")
-    c.label(210,518,"loads script",15)
-    c.line([(650,335),(650,390)],end="arrow")
-    c.line([(785,445),(845,445)],end="arrow")
-    c.line([(930,500),(930,580)],end="arrow")
-    c.line([(845,480),(805,480),(805,540),(645,540),(645,580)],end="arrow")
-    c.line([(1125,700),(1205,700),(1205,845),(1240,845)],end="arrow")
-    c.label(1205,790,"JDBC",16)
-    c.line([(865,500),(865,555),(825,555),(825,800)],end="arrow")
-    c.label(825,766,"assemble",15)
-    c.line([(505,862),(420,862),(420,430),(375,430)],end="arrow",color=TEAL)
-    c.label(420,650,["JSON","DTOs"],15,color=TEAL)
-    c.note(45,990,1510,["Contact is returned only to its owner or an active accepted buddy. Group membership and admin authority do not grant it.", "Provider keys and the Spotify client secret stay on the backend; the browser receives only a Spotify access token for its own player."],fill="#edf3f6")
+    c.box(45,440,330,120,"In-browser media",["Spotify SDK and playlist embed", "Freesound previews play here"],color=AMBER,fill=WARM,size=17)
+    c.box(45,620,330,165,"Configuration",["application.yml + env vars", "21 @ConfigurationProperties", "Admin matching overrides (DB)"],size=17)
+    c.box(45,880,330,170,"PostgreSQL",["Hosted by Supabase", "SQL migrations own the schema", "Hibernate only validates it", "RLS; browser grants revoked"],color=TEAL,size=17)
+    # The layers, top to bottom
+    c.box(455,200,700,110,"Spring Security",["JWT signature · active account · role · token version", "Loads the user through UserRepository on every request"],size=17)
+    c.box(455,340,330,140,"Controllers",["Validate typed input", "Call one service method", "Return the DTO as JSON"])
+    c.box(825,340,330,140,"ApiExceptionHandler",["@RestControllerAdvice", "Exceptions → error JSON", "Rollback already done by Spring"],size=17)
+    c.box(455,515,700,140,"Services",[
+        "@Transactional business rules; notifications saved in the same transaction",
+        "AccountAccess: checks who may act, locks accounts in a fixed order",
+        "Call the assemblers and return DTOs, so entities never leave the backend"
+    ],size=17)
+    c.box(455,695,190,170,"Entities",["Own state rules", "Change via methods:", "accept(), close(),", "deactivate()"],size=17)
+    c.box(665,695,210,170,"Matching",["CriterionScorer ×5", "MatchingStrategy ×3", "Strategy + Template", "Method patterns"],size=17)
+    c.box(895,695,260,170,"Client interfaces",["AiClient", "WeatherClient", "SoundSearchClient", "ExplanationProvider (E1)"],size=17)
+    c.box(455,905,330,140,"JPA repositories",["Spring Data JPA", "Row locks for transitions", "Also read by some assemblers"],size=17)
+    c.box(825,905,330,140,"DTO assemblers",["sealed ProfileDto:", "Public = no contact", "Connected = has contact"],color=TEAL,size=17)
+    # Right column: services outside the system
+    c.box(1240,515,315,145,"Spotify Accounts",["Sign-in and token refresh", "Direct concrete client:", "SpotifyAccountsClient"],color=AMBER,fill=WARM,size=17)
+    c.box(1240,695,315,170,"External APIs",["Google Gemini (AI features)", "Freesound (ambient sounds)", "Open-Meteo (cached, fallback)"],color=AMBER,fill=WARM,size=17)
+    # Calls (grey)
+    c.line([(375,242),(455,242)],end="arrow")
+    c.label(415,226,"JWT + JSON",15)
+    c.line([(620,310),(620,340)],end="arrow")
+    c.line([(620,480),(620,515)],end="arrow")
+    c.line([(550,655),(550,695)],end="arrow")
+    c.line([(770,655),(770,695)],end="arrow")
+    c.line([(1025,655),(1025,695)],end="arrow")
+    c.line([(655,655),(655,905)],end="arrow")
+    c.label(655,885,"query",14)
+    c.line([(885,655),(885,905)],end="arrow")
+    c.label(885,885,"build",14)
+    c.line([(550,865),(550,905)],end="arrow",start="arrow")
+    c.line([(825,975),(785,975)],end="arrow")
+    c.line([(455,975),(375,975)],end="arrow")
+    c.label(415,1000,"JDBC",15)
+    c.line([(375,700),(415,700),(415,585),(455,585)],end="arrow")
+    c.label(415,645,"binds",15)
+    c.line([(210,385),(210,440)],end="arrow")
+    c.line([(1155,587),(1240,587)],end="arrow")
+    c.line([(1155,780),(1240,780)],end="arrow")
+    c.label(1198,760,"HTTPS",15)
+    # DTOs returned (teal)
+    c.line([(740,515),(740,480)],end="arrow",color=TEAL)
+    c.label(778,503,"DTO",15,color=TEAL)
+    c.line([(455,440),(405,440),(405,330),(375,330)],end="arrow",color=TEAL)
+    c.label(405,392,["DTO","JSON"],15,color=TEAL)
+    c.note(45,1080,1510,[
+        "20 feature packages (studygroup/, matching/, profile/ …) each hold their own controller and service, plus repositories where they store data; shared: common, security, ai, user, seed.",
+        "Contact goes only to its owner or an active accepted buddy; group membership and admin rights never grant it. Keys and secrets stay on the backend.",
+        "Arrows: grey = calls or depends on · teal = DTO returned towards the browser."
+    ],fill="#edf3f6")
     return c
 
 
