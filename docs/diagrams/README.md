@@ -17,7 +17,7 @@ detailed, editable Mermaid views behind them.
 | [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability` / `TimeSlot` value composition and the sealed `ProfileDto` response shapes chosen by `ProfileViewAssembler` | [TEAM_A.md](TEAM_A.md), [TEAM_C.md](TEAM_C.md) |
 | [matching-sequence.svg](exports/matching-sequence.svg) | UML sequence for `GET /api/matches`: authentication and validation failures, scoring loop, thresholds, ordering, limit and empty result | [TEAM_A.md](TEAM_A.md) |
 | [collaborative-study.svg](exports/collaborative-study.svg) | E2 collaborators: `StudyRoomService`, `RoomReactionService`, `ForestService`, `StudySessionService`, `WeatherService` and their domain and value classes (`StudyRoom`, `RoomPresence`, `RoomReaction`, `FocusVisit`, `StudySession`, `SessionSchedule`) | [TEAM_C.md](TEAM_C.md) |
-| [ai-study-tools.svg](exports/ai-study-tools.svg) | Quizzes, personal and session study plans, and Pixel: creation services, writers, reply validators, `Quiz` / `StudyPlan`, the rules-first intent reading and the shared `AiClient` / `GeminiClient` / `AiQuota` | [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md#study-assistant-ai-shared) |
+| [ai-study-tools.svg](exports/ai-study-tools.svg) | Quizzes, personal and session study plans, and Pixel: creation services, writers, reply validators, `Quiz` / `StudyPlan`, the rules-first intent reading and the shared `AiClient` / `GeminiClient` / `AiQuota` | [TEAM_B.md](TEAM_B.md), [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md#study-assistant-ai-shared) |
 | [e1-explanation.svg](exports/e1-explanation.svg) | E1 match explanation: freshness check, evidence reduction, cache, quota, Gemini call and the AI / STANDARD / problem outcomes | [E1.md](E1.md) |
 
 The architecture panel and the matching sequence carry the main narrative; the class panels
@@ -56,6 +56,7 @@ browser or slide editor when a fixed size is needed.
 | --- | --- |
 | [PLATFORM.md](PLATFORM.md) | Capability map, runtime layers, E2 and external-service boundaries, identity/profile domain, authentication and profile flows |
 | [TEAM_A.md](TEAM_A.md) | Matching classes, configuration storage, search sequence and versioned save/restore |
+| [TEAM_B.md](TEAM_B.md) | AI study tools use cases, collaborators, persisted domain, lifecycles, the quiz request sequence and privacy/fallback constraints |
 | [TEAM_C.md](TEAM_C.md) | E2 room, reaction, forest and session design, request/group/notification lifecycles, domain and ER views, transaction sequences |
 | [E1.md](E1.md) | Match explanation identities, collaborators, request sequence and privacy constraints |
 
