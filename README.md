@@ -107,9 +107,11 @@ extension and one collaboration extension, each built as a set of parts on a sha
 
 AI that explains and supports studying, grounded in the app's own data. Four parts share one
 AI layer: an `AiClient` interface, per-feature `AiQuota` allowances, versioned `PromptTemplate`
-files and an output validator per feature. Every Gemini reply is checked before it is saved or
-shown, every part has a path that works without AI, and Gemini never receives names, emails or
-contact numbers. Disclosure and data handling are in [AI usage](docs/AI_USAGE.md).
+files and an output validator per feature. Every AI reply is checked before it is saved or
+shown, every part has a path that works without AI, and the AI provider never receives names,
+emails or contact numbers. Google Gemini is the default provider; Anthropic Claude is an optional
+second one that can be asked first or only when Gemini cannot answer
+([switching AI provider](docs/CONFIGURATION.md#switching-ai-provider)). Disclosure and data handling are in [AI usage](docs/AI_USAGE.md).
 
 | Part | What it adds |
 | --- | --- |
@@ -216,6 +218,7 @@ inside it.
 | External service | Called by | Used for |
 | --- | --- | --- |
 | Google Gemini | Backend | Match explanations, quizzes, study plans and Pixel |
+| Anthropic Claude (optional, off by default) | Backend | The same four AI features, as the first provider or as the backup when Gemini cannot answer |
 | Spotify accounts service | Backend | Sign-in and token refresh only |
 | Spotify Web Playback SDK | Browser | Premium playback in the study room; free mode uses Spotify's embedded player |
 | Freesound | Backend (search), browser (preview audio) | CC0 ambient sounds |
@@ -348,7 +351,10 @@ a prompt builder fills a versioned `PromptTemplate`, the client calls Gemini, an
 validator (`QuizOutputValidator`, `StudyPlanOutputValidator`, `AssistantOutputValidator`,
 `ExplanationOutputValidator`) rejects a reply before anything is saved or shown. A study-tool
 failure becomes `AiUnavailableException` (`503`) and the screen offers the manual path; a
-failed explanation returns the standard wording instead.
+failed explanation returns the standard wording instead. `ClaudeClient` is a second `AiClient`
+implementation: `AiProviders` puts it and the feature's `GeminiClient` into a
+`FallbackAiClient` in the order `app.ai.primary-provider` sets, so the second provider is asked
+only when the first cannot answer, and prompts and validators are the same for both.
 
 [![UML collaborators: quizzes, study plans and Pixel](docs/diagrams/exports/ai-study-tools.svg)](docs/diagrams/exports/ai-study-tools.svg)
 
@@ -536,9 +542,10 @@ data. It works on macOS, Linux and Windows.
 
 To stop: `Ctrl+C` in both terminals, then `docker stop studybuddy-db`. To start again later,
 run `docker start studybuddy-db` and repeat steps 4 to 6. Everything works without AI keys: the
-AI screens say the helper is unavailable and fall back to standard wording. To try Gemini, add
-the keys from [configuration](docs/CONFIGURATION.md#ai-match-explanations) to
-`application-local.yml` and restart the backend:
+AI screens say the helper is unavailable and fall back to standard wording, Pixel still answers
+its suggested questions, and the Music tab's ambient sounds say they are not set up. To switch
+them on, add the keys from [configuration](docs/CONFIGURATION.md#ai-match-explanations) to
+`application-local.yml` and restart the backend. Each block is optional and independent:
 
 ```yaml
 app:
@@ -549,7 +556,17 @@ app:
     assistant:
       enabled: true
       api-key: <Gemini API key, ideally from a second Google project>
+    # Optional second AI provider; see "Switching AI provider" in docs/CONFIGURATION.md.
+    claude:
+      enabled: true
+      api-key: <Anthropic API key>
+  ambient:
+    api-key: <Freesound API key from https://freesound.org/apiv2/apply>
 ```
+
+Pixel's typed questions, Quiz Buddy and study plans need the `assistant` block (or `claude`);
+"Explain this match" needs `explanation` (or `claude`); rain and the other ambient sounds need
+`ambient`. The Spotify playlist needs no key.
 
 ### Team setup (shared Supabase)
 
@@ -601,7 +618,8 @@ Contacts use the fictional +1 202-555-01xx range. Seeding and demo reset are in 
 | Backend cannot connect, or a mapped column is missing | Check the datasource and that the database has every migration |
 | Tests cannot connect after `./mvnw clean install` | Local YAML does not provision tests; use `scripts/test-backend.sh` |
 | Browser requests fail | Check `VITE_API_BASE_URL`, backend startup and CORS; restart Vite after editing `.env` |
-| AI screens say the helper is unavailable | Expected without Gemini keys; see [configuration](docs/CONFIGURATION.md#ai-study-assistant) |
+| AI screens or Pixel say the helper is unavailable | Expected without AI keys in your own `application-local.yml`; see [configuration](docs/CONFIGURATION.md#ai-study-assistant). Pixel's suggested questions still work |
+| Rain or another ambient sound says it is not set up | Expected without `app.ambient.api-key`; see [configuration](docs/CONFIGURATION.md#study-room-music-spotify-and-freesound) |
 
 </details>
 
@@ -666,6 +684,7 @@ without team agreement.
 | PostgreSQL JDBC, on Supabase | 42.7.13 | Real constraints, partial unique indexes, row locks and row-level security, which an in-memory database would not test honestly; Supabase gives the team one shared managed instance | BSD-2-Clause |
 | JJWT | 0.12.6 | We issue our own HMAC-signed tokens (HS256 to HS512, chosen by JJWT from the secret's length) with role and version claims; JJWT does exactly that, where an OAuth2 resource server expects a separate authorisation server | Apache-2.0 |
 | Jackson 3 / 2 | 3.1.5 / 2.21.5 | Spring's JSON mapper; JJWT uses Jackson 2 | Apache-2.0 |
+| Anthropic Java SDK (`anthropic-java`) | 3.3.0 | Official client for the optional Claude provider, used when Gemini's free quota or service is unavailable or when Claude is set as the primary provider; typed requests, errors and PDF input instead of hand-written HTTP | MIT |
 | JUnit Jupiter / Mockito | 6.0.3 / 5.23.0 | The Spring Boot test starter's defaults | EPL-2.0 / MIT |
 | React / React DOM | 19.3.0 | Component model the team knew; function components and hooks keep screens small | MIT |
 | React Router | 7.18.4 | Route guards per role and a navigation blocker for unsaved drafts | MIT |
@@ -674,6 +693,7 @@ without team agreement.
 | TypeScript | 6.0.3 | DTO types mirror the API contract, so contract drift fails the build | Apache-2.0 |
 | Oxlint | 1.83.0 | A fast linter that covers our React and TypeScript rules with no plugin setup | MIT |
 | Vitest, jsdom, Testing Library (React, jest-dom) | 5.0.5, 30.1.0, 16.3.3 / 7.0.1 | Vitest reuses the Vite config instead of a separate Jest and Babel setup; Testing Library tests what a user sees and clicks | MIT |
+| Anthropic API (optional, off by default) | Hosted | Second AI provider behind the same `AiClient` interface, so AI features keep working when Gemini's free tier runs out; receives the same minimal data as Gemini ([terms](https://www.anthropic.com/legal/commercial-terms)) | Service terms |
 | Google Gemini API (free tier) | Hosted | Accepts PDFs directly and returns JSON, with a free tier for coursework; only anonymous or student-provided material is sent ([terms](https://ai.google.dev/gemini-api/terms)) | Service terms |
 | Spotify Web API and Web Playback SDK | Hosted | Students play their own music; an embedded playlist works with no account ([terms](https://developer.spotify.com/terms)) | Service terms |
 | Freesound API | Hosted | Ambient sounds filtered to CC0, so no per-sound credit is needed ([terms](https://freesound.org/help/tos_api/)) | CC0 sounds |
