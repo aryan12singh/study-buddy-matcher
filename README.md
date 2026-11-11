@@ -19,7 +19,7 @@
 
 <table>
   <tr>
-    <td><video src="https://github.com/user-attachments/assets/d5dc27c5-f99f-490d-8b04-82a4cff53efa" width="100%" controls muted></video></td>
+    <td><video src="https://github.com/user-attachments/assets/b61562f1-9b3e-4dad-9248-62ebdade1c34" width="100%" controls muted></video></td>
   </tr>
   <tr>
     <td align="center"><strong>▶ The 1-minute launch film</strong> · a student's lonely exam week, then the app that fixes it. Turn the sound on.</td>
@@ -46,7 +46,7 @@ the real app with the seeded demo data.
 
 <table>
   <tr>
-    <td width="64%"><video src="https://github.com/user-attachments/assets/7285be44-89f5-4510-bcfc-613bdcee8a6f" width="100%" controls muted></video></td>
+    <td width="64%"><video src="https://github.com/user-attachments/assets/36b07fa6-ba35-4e16-8216-f65f12789976" width="100%" controls muted></video></td>
     <td>
       <strong>Chapters</strong><br /><br />
       <code>0:00</code> Welcome<br />
