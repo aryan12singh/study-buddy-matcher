@@ -76,6 +76,8 @@ class QuickIntentReaderTest {
         assertEquals(AppPage.BUDDY_REQUESTS, read("where are my requests").page());
         assertEquals(AppPage.FIND_BUDDIES, read("how do I find a buddy?").page());
         assertEquals(AppPage.NOTIFICATIONS, read("open notifications").page());
+        assertEquals(AppPage.FOREST, read("take me to my forest").page());
+        assertEquals(AppPage.STUDY_ROOM, read("open quiz buddy").page());
     }
 
     @Test
@@ -88,6 +90,17 @@ class QuickIntentReaderTest {
     void keepsAQuizTopicButNotMyNotes() {
         assertEquals("polymorphism", read("quiz me on polymorphism").topic());
         assertNull(read("quiz me on my slides").topic());
+        assertNull(read("Quiz me on My Notes").topic());
+    }
+
+    @Test
+    void keepsAQuizTopicAsTypedAndLeavesTheCourseOutOfIt() {
+        AssistantRequest request = read("Quiz me on IS442 Interfaces");
+
+        assertEquals("IS442", request.courseCode());
+        assertEquals("Interfaces", request.topic());
+        assertEquals("the Strategy pattern", read("quiz me on the Strategy pattern for IS442?").topic());
+        assertNull(read("quiz me on IS442").topic());
     }
 
     @Test

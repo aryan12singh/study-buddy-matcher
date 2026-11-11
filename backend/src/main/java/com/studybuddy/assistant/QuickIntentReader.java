@@ -26,7 +26,10 @@ public class QuickIntentReader {
     private static final Pattern TO_DO = Pattern.compile("\\b(what do i (need|have) to do|to-?dos?|to do list|pending|waiting (for|on) me|action items?"
             + "|anything (new|waiting|pending)|what'?s (new|next|waiting|pending)|catch me up)\\b");
     private static final Pattern QUIZ = Pattern.compile("\\b(quiz me|test me|practice questions|make (me )?a quiz)\\b");
-    private static final Pattern QUIZ_TOPIC = Pattern.compile("\\b(?:on|about)\\s+(.+?)[?.!]*$");
+    private static final Pattern QUIZ_TOPIC = Pattern.compile("\\b(?:on|about)\\s+(.+?)[?.!]*$", Pattern.CASE_INSENSITIVE);
+    /** A course code inside a quiz topic, with the "for" or "in" that leads to it. */
+    private static final Pattern TOPIC_COURSE = Pattern.compile("\\b(?:(?:for|in|from)\\s+)?[a-z]{2,4}\\s?\\d{3}[a-z]?\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern OWN_NOTES = Pattern.compile("(my|the|these|those) (notes|slides|lecture|lectures|readings)", Pattern.CASE_INSENSITIVE);
     private static final Pattern FIND = Pattern.compile("\\b(find|looking for|need|want|get)\\b.*\\b(buddy|buddies|partner|partners|study mate)\\b");
     private static final Pattern MEET = Pattern.compile("\\bwhen (can|could|should|do) (my|our|the|we)\\b.*\\bmeet\\b");
     private static final Pattern MEETING_GROUP = Pattern.compile("\\b(?:my|our|the)\\s+(.+?)\\s+group\\b");
@@ -52,7 +55,8 @@ public class QuickIntentReader {
         PAGE_WORDS.put(Pattern.compile("\\b(find|search for)\\s+(a\\s+)?(study\\s+)?(buddy|buddies|partner)\\b|\\bmatch(es|ing)?\\b"), AppPage.FIND_BUDDIES);
         PAGE_WORDS.put(Pattern.compile("\\bgroups?\\b"), AppPage.STUDY_GROUPS);
         PAGE_WORDS.put(Pattern.compile("\\b(sessions?|calendar)\\b"), AppPage.STUDY_SESSIONS);
-        PAGE_WORDS.put(Pattern.compile("\\b(study room|timer|pomodoro|focus|music)\\b"), AppPage.STUDY_ROOM);
+        PAGE_WORDS.put(Pattern.compile("\\b(forest|trees?)\\b"), AppPage.FOREST);
+        PAGE_WORDS.put(Pattern.compile("\\b(study room|timer|pomodoro|focus|music|quiz buddy)\\b"), AppPage.STUDY_ROOM);
         PAGE_WORDS.put(Pattern.compile("\\b(achievements?|badges?|streaks?)\\b"), AppPage.ACHIEVEMENTS);
         PAGE_WORDS.put(Pattern.compile("\\b(notifications?|alerts?)\\b"), AppPage.NOTIFICATIONS);
         PAGE_WORDS.put(Pattern.compile("\\b(connections?|my buddies|contacts?|contact numbers?)\\b"), AppPage.CONNECTIONS);
@@ -75,7 +79,7 @@ public class QuickIntentReader {
             return Optional.of(request(AssistantIntentType.MY_TO_DO).build());
         }
         if (QUIZ.matcher(text).find()) {
-            return Optional.of(request(AssistantIntentType.QUIZ_ME).courseCode(courseCodeIn(text)).topic(quizTopicIn(text)).build());
+            return Optional.of(request(AssistantIntentType.QUIZ_ME).courseCode(courseCodeIn(text)).topic(quizTopicIn(message.strip())).build());
         }
         if (MEET.matcher(text).find()) {
             return Optional.of(request(AssistantIntentType.WHEN_TO_MEET).groupName(groupNameIn(text)).durationMinutes(minutesIn(text)).build());
@@ -107,12 +111,15 @@ public class QuickIntentReader {
         return code.find() ? (code.group(1) + code.group(2)).toUpperCase(Locale.ROOT) : null;
     }
 
-    /** "quiz me on polymorphism" gives "polymorphism"; "quiz me on my notes" gives no topic. */
-    private static String quizTopicIn(String text) {
-        Matcher topic = QUIZ_TOPIC.matcher(text);
+    /**
+     * "Quiz me on Polymorphism" gives "Polymorphism", as the student typed it; "quiz me on my notes"
+     * gives no topic. The course is carried separately, so "IS442 interfaces" gives "interfaces".
+     */
+    private static String quizTopicIn(String message) {
+        Matcher topic = QUIZ_TOPIC.matcher(message);
         if (!topic.find()) return null;
-        String words = topic.group(1).strip();
-        return words.matches("(my|the|these|those) (notes|slides|lecture|lectures|readings)") ? null : words;
+        String words = TOPIC_COURSE.matcher(topic.group(1)).replaceAll(" ").strip().replaceAll("\\s+", " ");
+        return words.isEmpty() || OWN_NOTES.matcher(words).matches() ? null : words;
     }
 
     /** "my design patterns group" gives "design patterns"; "my group" gives no name. */
