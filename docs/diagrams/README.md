@@ -1,54 +1,55 @@
 # Diagram index
 
-Design diagrams for Study Buddy Matcher. Each SVG in [`exports/`](exports/) is a scalable,
-self-contained vector panel for slides or review; the companion Markdown documents hold the
-detailed, editable Mermaid views behind them.
+The diagram panels for Study Buddy Matcher and the pipeline that generates them. Each SVG in
+[`exports/`](exports/) is a scalable, self-contained vector panel for slides or review. The
+[design diagrams](../DESIGN_DIAGRAMS.md) document walks through the whole design, pairing each
+panel with the detailed, editable Mermaid views behind it.
 
 ## Exported panels
 
 ### System views
 
-| Panel | What it shows | Owner |
-| --- | --- | --- |
-| [tech-stack.svg](exports/tech-stack.svg) | Every library, tool and hosted service with its brand mark, grouped by tier: browser, Spring Boot API, external services, database, and the frontend and backend tooling | Whole team |
-| [architecture.svg](exports/architecture.svg) | Browser, the Spring layers top to bottom (security, controllers, services, entities, matching, client interfaces, repositories), the DTO response path, configuration, error handling, PostgreSQL and the external services, with the contact-privacy boundary | Whole team |
-| [package-layers.svg](exports/package-layers.svg) | UML package diagram: the 25 packages under `com.studybuddy` grouped by owning team, and one feature package opened up to show controller, service, entity, repository, assembler and DTO with the two layering rules | Whole team |
-| [deployment.svg](exports/deployment.svg) | UML deployment diagram: client browser, application host (JVM and Vite), database host, external services and the CI runner, with the protocol on each communication path | Whole team |
-| [database-core.svg](exports/database-core.svg) | Entity-relationship diagram (crow's-foot) of the 17 tables behind the compulsory features | Teams A, B, C |
-| [database-extras.svg](exports/database-extras.svg) | Entity-relationship diagram of the 17 tables added by the two extras: rooms, sessions, forest, badges, explanation cache, study plans and quizzes | Teams B, C |
+| Panel | What it shows |
+| --- | --- |
+| [tech-stack.svg](exports/tech-stack.svg) | Every library, tool and hosted service with its brand mark, grouped by tier: browser, Spring Boot API, external services, database, and the frontend and backend tooling |
+| [architecture.svg](exports/architecture.svg) | Browser, the Spring layers top to bottom (security, controllers, services, entities, matching, client interfaces, repositories), the DTO response path, configuration, error handling, PostgreSQL and the external services, with the contact-privacy boundary |
+| [package-layers.svg](exports/package-layers.svg) | UML package diagram: the 25 packages under `com.studybuddy` grouped by owning team, and one feature package opened up to show controller, service, entity, repository, assembler and DTO with the two layering rules |
+| [deployment.svg](exports/deployment.svg) | UML deployment diagram: client browser, application host (JVM and Vite), database host, external services and the CI runner, with the protocol on each communication path |
+| [database-core.svg](exports/database-core.svg) | Entity-relationship diagram (crow's-foot) of the 17 tables behind the compulsory features |
+| [database-extras.svg](exports/database-extras.svg) | Entity-relationship diagram of the 17 tables added by the two extras: rooms, sessions, forest, badges, explanation cache, study plans and quizzes |
 
 ### Use cases
 
-| Panel | What it shows | Owner |
-| --- | --- | --- |
-| [use-cases.svg](exports/use-cases.svg) | UML use cases for the compulsory requirements: Student, Study Group Leader (a kind of Student) and System Administrator, with the optional match explanation as an «extend» | Whole team |
-| [e2-use-cases.svg](exports/e2-use-cases.svg) | UML use cases for collaborative study (E2): rooms, Pomodoro, room reactions, the focus forest, music, dated sessions, mutual availability and weather | Team C, music by Team A |
+| Panel | What it shows |
+| --- | --- |
+| [use-cases.svg](exports/use-cases.svg) | UML use cases for the compulsory requirements: Student, Study Group Leader (a kind of Student) and System Administrator, with the optional match explanation as an «extend» |
+| [e2-use-cases.svg](exports/e2-use-cases.svg) | UML use cases for collaborative study (E2): rooms, Pomodoro, room reactions, the focus forest, music, dated sessions, mutual availability and weather |
 
 ### Class diagrams
 
-| Panel | What it shows | Owner |
-| --- | --- | --- |
-| [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course` and `AvailabilitySlot`, with the `@MapsId` association and multiplicities | Team B |
-| [matching-design.svg](exports/matching-design.svg) | The five `CriterionScorer` implementations, `MatchingStrategy`, the abstract `PriorityTierStrategy` template method and its two subclasses, `MatchScore` and the coordinating services | Team A |
-| [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability` / `TimeSlot` value composition and the sealed `ProfileDto` response shapes chosen by `ProfileViewAssembler` | Teams A, C |
-| [relationship-domain.svg](exports/relationship-domain.svg) | `MatchRequest`, `Connection`, `StudyGroup`, `GroupMembership`, `GroupJoinRequest`, their status enumerations and `GroupClosure`, with one association per field | Team C |
-| [collaborative-study.svg](exports/collaborative-study.svg) | E2 collaborators: `StudyRoomService`, `RoomReactionService`, `ForestService`, `StudySessionService`, `WeatherService` and their domain and value classes | Team C |
-| [ai-study-tools.svg](exports/ai-study-tools.svg) | Quizzes, personal and session study plans, and Pixel: creation services, writers, reply validators, the rules-first intent reading and the shared `AiClient` / `GeminiClient` / `AiQuota` | Team B |
+| Panel | What it shows |
+| --- | --- |
+| [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course` and `AvailabilitySlot`, with the `@MapsId` association and multiplicities |
+| [matching-design.svg](exports/matching-design.svg) | The five `CriterionScorer` implementations, `MatchingStrategy`, the abstract `PriorityTierStrategy` template method and its two subclasses, `MatchScore` and the coordinating services |
+| [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability` / `TimeSlot` value composition and the sealed `ProfileDto` response shapes chosen by `ProfileViewAssembler` |
+| [relationship-domain.svg](exports/relationship-domain.svg) | `MatchRequest`, `Connection`, `StudyGroup`, `GroupMembership`, `GroupJoinRequest`, their status enumerations and `GroupClosure`, with one association per field |
+| [collaborative-study.svg](exports/collaborative-study.svg) | E2 collaborators: `StudyRoomService`, `RoomReactionService`, `ForestService`, `StudySessionService`, `WeatherService` and their domain and value classes |
+| [ai-study-tools.svg](exports/ai-study-tools.svg) | Quizzes, personal and session study plans, and Pixel: creation services, writers, reply validators, the rules-first intent reading and the shared `AiClient` / `GeminiClient` / `AiQuota` |
 
 ### Sequence diagrams and state machines
 
-| Panel | What it shows | Owner |
-| --- | --- | --- |
-| [matching-sequence.svg](exports/matching-sequence.svg) | `MatchService.search`: account check, settings snapshot, the scoring loop through `CriterionScorer`, threshold, ranking and DTO assembly | Team A |
-| [matching-config-sequence.svg](exports/matching-config-sequence.svg) | `MatchingConfigService.update` with its version check, then the next search reading the snapshot and ranking through the chosen `MatchingStrategy` | Team A |
-| [match-request-sequence.svg](exports/match-request-sequence.svg) | `MatchRequestService.send` and `accept`: locks, the new `MatchRequest`, `respond(ACCEPTED)`, the new `Connection` and both notifications | Team C |
-| [contact-privacy-sequence.svg](exports/contact-privacy-sequence.svg) | `ProfileViewService.view`: `ProfileViewAssembler` creates a `ConnectedProfileDto` or a `PublicProfileDto` from the relationship state | Team C |
-| [group-join-sequence.svg](exports/group-join-sequence.svg) | `GroupJoinRequestService.accept`: leader check, capacity check, `respond(ACCEPTED)` and the new `GroupMembership` | Team C |
-| [request-lifecycles.svg](exports/request-lifecycles.svg) | UML state machines for `MatchRequest`, `Connection`, `GroupJoinRequest` and `StudyGroup`, labelled event [guard] / action | Team C |
-| [e1-explanation.svg](exports/e1-explanation.svg) | E1 match explanation: freshness check, evidence reduction, cache, quota, Gemini call and the AI / STANDARD / problem outcomes | Team C |
+| Panel | What it shows |
+| --- | --- |
+| [matching-sequence.svg](exports/matching-sequence.svg) | `MatchService.search`: account check, settings snapshot, the scoring loop through `CriterionScorer`, threshold, ranking and DTO assembly |
+| [matching-config-sequence.svg](exports/matching-config-sequence.svg) | `MatchingConfigService.update` with its version check, then the next search reading the snapshot and ranking through the chosen `MatchingStrategy` |
+| [match-request-sequence.svg](exports/match-request-sequence.svg) | `MatchRequestService.send` and `accept`: locks, the new `MatchRequest`, `respond(ACCEPTED)`, the new `Connection` and both notifications |
+| [contact-privacy-sequence.svg](exports/contact-privacy-sequence.svg) | `ProfileViewService.view`: `ProfileViewAssembler` creates a `ConnectedProfileDto` or a `PublicProfileDto` from the relationship state |
+| [group-join-sequence.svg](exports/group-join-sequence.svg) | `GroupJoinRequestService.accept`: leader check, capacity check, `respond(ACCEPTED)` and the new `GroupMembership` |
+| [request-lifecycles.svg](exports/request-lifecycles.svg) | UML state machines for `MatchRequest`, `Connection`, `GroupJoinRequest` and `StudyGroup`, labelled event [guard] / action |
+| [e1-explanation.svg](exports/e1-explanation.svg) | E1 match explanation: freshness check, evidence reduction, cache, quota, Gemini call and the AI / STANDARD / problem outcomes |
 
 For a twelve-minute presentation, the technology stack, the architecture panel, one class
-panel per team and one sequence diagram carry the narrative. Use one panel per slide.
+panel per feature area and one sequence diagram carry the narrative. Use one panel per slide.
 
 ## Rebuilding the exports
 
@@ -84,7 +85,8 @@ exists. It cannot judge whether a diagram is semantically correct, so review the
 panel after any model or API change.
 
 `e1-explanation.svg` is not generated by the script: it is a standalone, hand-edited SVG and
-`--check` does not cover it. Edit it directly and keep it consistent with the [match explanation diagrams](MATCH_EXPLANATION_DIAGRAMS.md).
+`--check` does not cover it. Edit it directly and keep it consistent with the
+[match explanations section](../DESIGN_DIAGRAMS.md#match-explanations) of the design diagrams.
 
 All SVGs use native text and shapes with an accessible title and description, and no
 embedded raster images, so a browser opens them directly. `export_png.sh` needs only a Chrome
@@ -101,18 +103,12 @@ used only to name the technologies the project depends on. Freesound, Open-Meteo
 have no mark in that set: the first two are drawn with a neutral glyph and Mockito shares the
 JUnit tile.
 
-## Companion documents
+## Design document
 
-| Document | Contents |
-| --- | --- |
-| [System overview](SYSTEM_OVERVIEW_DIAGRAMS.md) | Capability map, runtime layers, E2 and external-service boundaries, identity/profile domain, authentication and profile flows |
-| [Matching engine](MATCHING_ENGINE_DIAGRAMS.md) | Matching classes, configuration storage, search sequence and versioned save/restore |
-| [AI study tools](AI_STUDY_TOOLS_DIAGRAMS.md) | AI study tools use cases, collaborators, persisted domain, lifecycles, the quiz request sequence and privacy/fallback constraints |
-| [Connections, groups and rooms](CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md) | E2 room, reaction, forest and session design, request/group/notification lifecycles, domain and ER views, transaction sequences |
-| [Match explanation](MATCH_EXPLANATION_DIAGRAMS.md) | Match explanation identities, collaborators, request sequence and privacy constraints |
-
-The Markdown flowcharts are capability maps rather than formal UML use-case diagrams; the
-SVG use-case panels use actors, associations, ellipses and a system boundary.
+[DESIGN_DIAGRAMS.md](../DESIGN_DIAGRAMS.md) is the one document that uses these panels. It is
+organised by the application: system overview, core requirements, the two extras, then data and
+behaviour. Its Markdown flowcharts are capability maps rather than formal UML use-case diagrams;
+the SVG use-case panels use actors, associations, ellipses and a system boundary.
 
 ## Notation
 

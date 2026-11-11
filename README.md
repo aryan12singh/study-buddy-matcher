@@ -189,7 +189,8 @@ docs/       API contract, design decisions, coverage, testing, database, configu
 
 Open a section for its UML diagrams and the reasoning behind them. Every panel is an SVG in
 [`docs/diagrams/exports/`](docs/diagrams/exports/); click one to open it full size. Notation,
-editable sources and further views are in the [diagram index](docs/diagrams/README.md).
+editable sources are in the [diagram index](docs/diagrams/README.md); the full set of views,
+in one document, is in the [design diagrams](docs/DESIGN_DIAGRAMS.md).
 
 <details>
 <summary><strong>System structure:</strong> use cases, packages and deployment</summary>
@@ -221,12 +222,12 @@ inside it.
 | Open-Meteo | Backend | Cached campus weather for fixed coordinates; no student data is sent |
 
 API keys and the Spotify client secret are configured only on the backend; none reaches the
-browser. More views: [system overview diagrams](docs/diagrams/SYSTEM_OVERVIEW_DIAGRAMS.md).
+browser. More views: [design diagrams, system overview](docs/DESIGN_DIAGRAMS.md#system-overview).
 
 </details>
 
 <details>
-<summary><strong>Identity and profile</strong> (Team B): class diagram</summary>
+<summary><strong>Identity and profile:</strong> class diagram</summary>
 
 <br />
 
@@ -242,7 +243,7 @@ response never mixes two concurrent edits.
 </details>
 
 <details>
-<summary><strong>Matching engine</strong> (Team A): class and sequence diagrams</summary>
+<summary><strong>Matching engine:</strong> class and sequence diagrams</summary>
 
 <br />
 
@@ -272,12 +273,12 @@ the new snapshot. Defaults come from `application.yml`; stored overrides survive
 
 [![UML sequence diagram: administrator retunes the matching engine](docs/diagrams/exports/matching-config-sequence.svg)](docs/diagrams/exports/matching-config-sequence.svg)
 
-More views: [matching engine diagrams](docs/diagrams/MATCHING_ENGINE_DIAGRAMS.md).
+More views: [design diagrams, matching engine](docs/DESIGN_DIAGRAMS.md#matching-engine).
 
 </details>
 
 <details>
-<summary><strong>Requests, connections, privacy and groups</strong> (Team C): class and sequence diagrams</summary>
+<summary><strong>Requests, connections, privacy and groups:</strong> class and sequence diagrams</summary>
 
 <br />
 
@@ -308,7 +309,8 @@ place.
 
 [![UML sequence diagram: group leader approves a join request](docs/diagrams/exports/group-join-sequence.svg)](docs/diagrams/exports/group-join-sequence.svg)
 
-More views: [connections, groups and rooms diagrams](docs/diagrams/CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md).
+More views: [design diagrams, requests, connections and contact privacy](docs/DESIGN_DIAGRAMS.md#requests-connections-and-contact-privacy)
+and [study groups](docs/DESIGN_DIAGRAMS.md#study-groups).
 
 </details>
 
@@ -363,8 +365,7 @@ miss falls back to the deterministic `TemplateMatchExplainer` wording.
 
 [![E1 match explanation: freshness, cache, quota and provider flow](docs/diagrams/exports/e1-explanation.svg)](docs/diagrams/exports/e1-explanation.svg)
 
-More views: [AI study tools diagrams](docs/diagrams/AI_STUDY_TOOLS_DIAGRAMS.md) and
-[match explanation diagrams](docs/diagrams/MATCH_EXPLANATION_DIAGRAMS.md).
+More views: [design diagrams, E1 AI study assistance](docs/DESIGN_DIAGRAMS.md#e1-ai-study-assistance).
 
 </details>
 
@@ -386,7 +387,7 @@ fixed campus coordinates through the `WeatherClient` interface.
 
 [![UML collaborators: rooms, reactions, forest, sessions and weather](docs/diagrams/exports/collaborative-study.svg)](docs/diagrams/exports/collaborative-study.svg)
 
-More views: [connections, groups and rooms diagrams](docs/diagrams/CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md).
+More views: [design diagrams, E2 collaborative study](docs/DESIGN_DIAGRAMS.md#e2-collaborative-study).
 
 </details>
 
@@ -632,7 +633,8 @@ The [documentation index](docs/README.md) lists every document with one line eac
 | [Testing](docs/TESTING.md) | Test strategy, coverage by area and demo walkthroughs |
 | [Database](docs/DATABASE.md) | Access model, migrations, schema, seeding and the release runbook |
 | [Configuration](docs/CONFIGURATION.md) | Every configuration key, its default and purpose |
-| [Diagrams](docs/diagrams/README.md) | All 21 panels with notation and editable sources, plus the detailed views per area |
+| [Design diagrams](docs/DESIGN_DIAGRAMS.md) | The whole design in one document: system, core requirements, extras, database and state machines |
+| [Diagram index](docs/diagrams/README.md) | All 21 panels with notation, editable sources and how to rebuild them |
 | [Known limitations and future work](docs/LIMITATIONS_AND_FUTURE_WORK.md) | Deliberate boundaries and how the design extends |
 | [AI usage](docs/AI_USAGE.md) | The application's own AI use and the AI tools used to build the project |
 | [AGENTS.md](AGENTS.md), [UI guide](docs/UI_GUIDE.md), [team workflow](docs/TEAM_WORKFLOW.md) | Repository rules for people and coding assistants, the visual direction and shared components, milestones and reviews |

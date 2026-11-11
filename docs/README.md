@@ -17,12 +17,8 @@ project [README](../README.md) for the overview and setup.
 | Document | Contents |
 | --- | --- |
 | [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) | The team's choices where the brief is open, with the reason and the alternative for each |
+| [DESIGN_DIAGRAMS.md](DESIGN_DIAGRAMS.md) | The whole design in one document: system overview, core requirements, the two extras, database and state machines, each with its panel and detailed Mermaid views |
 | [diagrams/README.md](diagrams/README.md) | Index of the 21 diagram panels, the notation used and how to rebuild them |
-| [diagrams/SYSTEM_OVERVIEW_DIAGRAMS.md](diagrams/SYSTEM_OVERVIEW_DIAGRAMS.md) | Whole system: capability map, runtime layers, external services, identity and profile, sign-in flows |
-| [diagrams/MATCHING_ENGINE_DIAGRAMS.md](diagrams/MATCHING_ENGINE_DIAGRAMS.md) | Team A: scorer and strategy classes, matching configuration tables, search and save sequences |
-| [diagrams/AI_STUDY_TOOLS_DIAGRAMS.md](diagrams/AI_STUDY_TOOLS_DIAGRAMS.md) | Team B: Quiz Buddy, study plans and Pixel on the shared AI client; quiz lifecycle and sequence |
-| [diagrams/CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md](diagrams/CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md) | Team C: requests, connections, groups and notifications (state machines, sequences, ER) and the E2 rooms, forest and sessions |
-| [diagrams/MATCH_EXPLANATION_DIAGRAMS.md](diagrams/MATCH_EXPLANATION_DIAGRAMS.md) | E1 match explanation: freshness, evidence, cache, quota and the Gemini call |
 | [diagrams/exports/](diagrams/exports/) | The diagram panels as SVG files, ready for slides |
 
 ## How do I use, run or change it?
