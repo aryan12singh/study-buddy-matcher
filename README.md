@@ -513,6 +513,12 @@ data. It works on macOS, Linux and Windows.
    `$env:DEMO_SEED_ENABLED="true"; $env:DEMO_STUDENT_PASSWORD="demo-pass-123"; $env:DEMO_ADMIN_PASSWORD="admin-pass-123"; .\mvnw.cmd spring-boot:run`
 
    Wait for `Started StudyBuddyApplication`. The first run downloads dependencies and takes a few minutes.
+
+   Do not also put the demo passwords in `application-local.yml`: an
+   `app.demo-seed.student-password` or `admin-password` set there overrides the `DEMO_`
+   variables, so the passwords typed here would be silently ignored. If the file must keep
+   them, pass `APP_DEMOSEED_STUDENTPASSWORD` and `APP_DEMOSEED_ADMINPASSWORD` instead, which do
+   override it.
 5. **Start the frontend** in a second terminal, from the project folder:
 
    ```bash

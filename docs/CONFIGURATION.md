@@ -184,6 +184,13 @@ shape and size of a roadmap; they do not prove its advice is good.
 | `VITE_API_BASE_URL` | `/api` when unset | Backend API base URL |
 | `VITE_REFRESH_INTERVAL_MS` | `30000` (`15000` to `300000`) | Background refresh for lists and details |
 
+Keep the demo passwords out of `application-local.yml`. A value set there for
+`app.demo-seed.student-password` or `app.demo-seed.admin-password` overrides `DEMO_STUDENT_PASSWORD`
+and `DEMO_ADMIN_PASSWORD`, because the profile file beats the `${...}` placeholder in
+`application.yml`, so the passwords given at seed time are silently ignored. If the file must
+hold them, set `APP_DEMOSEED_STUDENTPASSWORD` and `APP_DEMOSEED_ADMINPASSWORD` instead: Spring's
+relaxed-binding environment variables do override the profile file.
+
 The test profile reads `STUDYBUDDY_TEST_DATABASE_URL`, `_USERNAME`, `_PASSWORD` and
 `STUDYBUDDY_TEST_JWT_SECRET`, and the migration runner reads the standard `PG*` variables.
 `scripts/test-backend.sh` sets all of them itself.
