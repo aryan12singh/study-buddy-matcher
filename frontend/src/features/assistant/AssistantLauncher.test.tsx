@@ -139,6 +139,6 @@ describe('Pixel, the study assistant', () => {
 
     ask('hello')
 
-    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. You can still use the navigation menu/)).toBeTruthy()
+    expect(await screen.findByText(/The AI helper isn't available right now — it may be switched off on this server or busy. You can still use the navigation menu, and the suggested questions such as “What do I need to do\?” still work\./)).toBeTruthy()
   })
 })

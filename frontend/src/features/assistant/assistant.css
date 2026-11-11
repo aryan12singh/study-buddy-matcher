@@ -28,6 +28,8 @@
 .assistant-match { padding: .45rem .55rem; background: #fff; border: 2px solid #414a40; border-radius: 6px; }
 .assistant-match-heading { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
 .assistant-match p { margin: .15rem 0 0; font-size: .75rem; color: #56634f; }
+/* The card's detail line is not a chat bubble, so it drops the bubble's border, fill and padding. */
+.assistant-log .quiz-bot-message .assistant-match p { max-width: none; padding: 0; border: 0; background: none; font-size: .75rem; }
 .assistant-todos { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; }
 .assistant-todos li { display: grid; gap: .2rem; padding: .45rem .55rem; background: #fff; border: 2px solid #414a40; border-left-width: 5px; border-radius: 6px; font-size: .88rem; }
 .assistant-todos a { justify-self: start; font-weight: 700; color: #2d459d; }
