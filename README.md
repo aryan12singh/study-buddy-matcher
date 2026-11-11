@@ -34,7 +34,8 @@
 
 ---
 
-**Contents:** [Walkthrough](#walkthrough) · [Features](#features) · [Two extensions](#two-extensions) · [Architecture](#architecture) ·
+**Contents:** [Walkthrough](#walkthrough) · [Features](#features) · [Two extensions](#two-extensions) ·
+[Architecture](#architecture) · [Design in detail](#design-in-detail) (UML, sequence, state and ER diagrams) ·
 [Matching engine](#matching-engine) · [Privacy](#privacy-and-relationships) ·
 [Getting started](#getting-started) · [Testing](#testing) · [Documentation](#documentation) ·
 [Libraries](#libraries) · [Team](#team-and-workflow)
@@ -143,25 +144,39 @@ checked again on every request, so leaving a group ends access at once.
 
 ## Architecture
 
-Feature packages follow a layered design. Controllers validate input and call one service
-method; services apply domain rules and return DTOs built by assemblers. Controllers never touch
-repositories and entities never leave the service layer. This is also the privacy mechanism: a
-contact number is withheld by choosing a DTO, never hidden in React.
+The backend is 25 feature packages under `com.studybuddy`, each layered the same way. Two rules
+are checked on every pull request:
+
+1. **Controllers never touch repositories.** A controller validates input, calls one service
+   method and returns a DTO.
+2. **Services never return entities to the API.** Entities stay behind the service; an
+   assembler builds the DTO.
 
 ```text
 Controller -> DTO / Assembler -> Service -> Domain model -> Repository -> PostgreSQL
 ```
 
+Rule 2 is also the privacy mechanism: a contact number is withheld by choosing a DTO on the
+server, never hidden in React.
+
 [![Application architecture and privacy boundaries](docs/diagrams/exports/architecture.svg)](docs/diagrams/exports/architecture.svg)
 
-| Design principle | How it is applied |
+[![Technology stack by tier](docs/diagrams/exports/tech-stack.svg)](docs/diagrams/exports/tech-stack.svg)
+
+### How the design meets the marking criteria
+
+| The brief asks for | Where to see it |
 | --- | --- |
-| Single responsibility | One class per job: five `CriterionScorer`s, separate assemblers, access checks, prompt builders and validators |
-| Polymorphism over `switch` | `CriterionScorer`, `MatchingStrategy` (with the `PriorityTierStrategy` template method), `AssistantIntent`, `AiClient`, `WeatherClient` |
-| Immutable values | `TimeSlot`, `MatchScore`, `MatchingWeights` and `PomodoroTimer` are validated records with no setters |
-| Composition over inheritance | `Student` shares its key with `User` (`@MapsId`); a group leader is an ordinary student |
-| Externalised configuration | Weights, limits, timings and provider settings bind to typed `@ConfigurationProperties`; see [configuration](docs/CONFIGURATION.md) |
-| Consistency under concurrency | Transitions lock accounts before their parent row and check observed versions; races are covered by tests |
+| Modular code | One package per feature (`matching`, `matchrequest`, `studygroup`, `quiz`, `studyroom` and 20 more), each with its own controller, service, entities, repository, assembler and DTOs. Frontend screens mirror them in `frontend/src/features/` |
+| Layered design | The two rules above, in every package. Access checks are their own classes (`RoomAccess`, `SessionAccess`, `QuizAccess`, `StudyPlanAccess`), and one `ApiExceptionHandler` turns domain exceptions into HTTP problems |
+| Single responsibility | One class per job: five `CriterionScorer`s, assemblers apart from services, separate prompt builders and output validators per AI feature, `StudentDeactivation` apart from `StudentDeletion` |
+| Polymorphism over `switch` | `CriterionScorer`, `MatchingStrategy` (with the `PriorityTierStrategy` template method), `AssistantIntent`, `AiClient`, `ExplanationProvider`, `WeatherClient`, `SoundSearchClient` |
+| Encapsulation | Entities own their state machines: `MatchRequest`, `Connection`, `GroupJoinRequest`, `StudyGroup` and `Quiz` expose `accept()`, `decline()`, `end()`, `close()` and no status setter. `TimeSlot`, `MatchScore`, `MatchingWeights` and `PomodoroTimer` are immutable records |
+| Composition over inheritance | `Student` shares its key with `User` (`@MapsId`) instead of extending it; a group leader is an ordinary student that a `StudyGroup` refers to |
+| Externalised configuration | Weights, thresholds, limits, timings and provider settings live in `application.yml`, bound to typed objects such as `MatchingProperties`, `AuthProperties` and `QuizProperties`. Every key is in [configuration](docs/CONFIGURATION.md); secrets stay in a git-ignored file |
+| Consistency under concurrency | Transitions lock accounts before their parent row and check observed versions (`DatabaseMutationLock`, `AccountAccess`); the races are covered by tests |
+| Java conventions and clean code | Standard naming, constructor injection only, no magic numbers, names that say what the class is (`AvailabilityOverlapScorer`). The rules are in [AGENTS.md](AGENTS.md) |
+| Tested | Over 130 backend test classes and 60 frontend test files, run by CI on every pull request. See [Testing](#testing) |
 
 ```text
 backend/    Spring Boot feature packages, SQL migrations and tests
@@ -170,9 +185,243 @@ scripts/    Migration runner and disposable PostgreSQL test harness
 docs/       API contract, design decisions, coverage, testing, database, configuration, diagrams
 ```
 
-The [diagram index](docs/diagrams/README.md) holds the UML use cases, class diagrams, package
-and deployment views, the sequence diagrams and state machines for the key flows, the database
-diagrams and the AI and collaborative-study views.
+## Design in detail
+
+Open a section for its UML diagrams and the reasoning behind them. Every panel is an SVG in
+[`docs/diagrams/exports/`](docs/diagrams/exports/); click one to open it full size. Notation,
+editable sources and further views are in the [diagram index](docs/diagrams/README.md).
+
+<details>
+<summary><strong>System structure:</strong> use cases, packages and deployment</summary>
+
+<br />
+
+**Use cases.** Three actors: Student, Study Group Leader and System Administrator. A leader is
+the student a group refers to, not a third account role; the only roles are `STUDENT` and
+`ADMIN`. Every permission is checked on the server, so a hidden button grants nothing.
+
+[![UML use cases for the compulsory requirements](docs/diagrams/exports/use-cases.svg)](docs/diagrams/exports/use-cases.svg)
+
+**Packages.** The 25 packages grouped by owning team, with one opened up to show the layers
+inside it.
+
+[![UML package diagram with the layers inside a feature package](docs/diagrams/exports/package-layers.svg)](docs/diagrams/exports/package-layers.svg)
+
+**Deployment.** The browser talks only to the Spring API. The database denies browser roles
+(row-level security with no browser policies), so backend JDBC is the single access path.
+
+[![UML deployment diagram](docs/diagrams/exports/deployment.svg)](docs/diagrams/exports/deployment.svg)
+
+| External service | Called by | Used for |
+| --- | --- | --- |
+| Google Gemini | Backend | Match explanations, quizzes, study plans and Pixel |
+| Spotify accounts service | Backend | Sign-in and token refresh only |
+| Spotify Web Playback SDK | Browser | Premium playback in the study room; free mode uses Spotify's embedded player |
+| Freesound | Backend (search), browser (preview audio) | CC0 ambient sounds |
+| Open-Meteo | Backend | Cached campus weather for fixed coordinates; no student data is sent |
+
+API keys and the Spotify client secret are configured only on the backend; none reaches the
+browser. More views: [system overview diagrams](docs/diagrams/SYSTEM_OVERVIEW_DIAGRAMS.md).
+
+</details>
+
+<details>
+<summary><strong>Identity and profile</strong> (Team B): class diagram</summary>
+
+<br />
+
+`Student` composes an identity rather than inheriting `User`, so an administrator is a `User`
+with no student fields. Registration creates `User` and `Student` in one transaction and can
+only produce the `STUDENT` role. Each protected request checks the JWT's account, role, expiry
+and version against the live account, so deactivation ends existing tokens at once. Saving
+availability replaces the whole week in one write (`AvailabilityRules` validates it), so a
+response never mixes two concurrent edits.
+
+[![UML class diagram: identity and study profile](docs/diagrams/exports/identity-profile.svg)](docs/diagrams/exports/identity-profile.svg)
+
+</details>
+
+<details>
+<summary><strong>Matching engine</strong> (Team A): class and sequence diagrams</summary>
+
+<br />
+
+**Classes.** Each criterion is one `CriterionScorer` (`CourseScorer`,
+`AvailabilityOverlapScorer`, `StudyModeScorer`, `StudyGoalScorer`, `GroupSizeScorer`). Scorers
+are pure: no repository or controller access. `WeightedMatchScorer` combines them into an
+immutable `MatchScore`. Ranking is a `MatchingStrategy`; the two priority strategies share
+their banding through the `PriorityTierStrategy` template method and only name their criterion.
+Adding a criterion or a strategy means adding a class, not editing a `switch`.
+
+[![UML class diagram: scoring and ranking](docs/diagrams/exports/matching-design.svg)](docs/diagrams/exports/matching-design.svg)
+
+**Values.** `WeeklyAvailability` canonicalises `TimeSlot` intervals, and the sealed `ProfileDto`
+has exactly two shapes, so a third, unchecked response cannot appear.
+
+[![UML class diagram: immutable values and private response shapes](docs/diagrams/exports/values-and-privacy.svg)](docs/diagrams/exports/values-and-privacy.svg)
+
+**Search.** `MatchService.search` checks the account, reads one settings snapshot, scores each
+candidate through the scorers, applies the threshold, ranks with the chosen strategy and hands
+`MatchResultAssembler` the result. Discovery DTOs never carry a contact, email or entity.
+
+[![UML sequence diagram: ranked match search](docs/diagrams/exports/matching-sequence.svg)](docs/diagrams/exports/matching-sequence.svg)
+
+**Configuration.** `MatchingConfigService.update` checks the version the administrator loaded,
+so a stale save is rejected instead of overwriting a colleague's change. The next search reads
+the new snapshot. Defaults come from `application.yml`; stored overrides survive a restart.
+
+[![UML sequence diagram: administrator retunes the matching engine](docs/diagrams/exports/matching-config-sequence.svg)](docs/diagrams/exports/matching-config-sequence.svg)
+
+More views: [matching engine diagrams](docs/diagrams/MATCHING_ENGINE_DIAGRAMS.md).
+
+</details>
+
+<details>
+<summary><strong>Requests, connections, privacy and groups</strong> (Team C): class and sequence diagrams</summary>
+
+<br />
+
+**Classes.** Services coordinate transactions and authorisation; entities own their one-way
+state transitions; assemblers choose the response fields. Group membership and connection are
+separate consent relationships, and neither inherits from the other.
+
+[![UML class diagram: requests, connections and study groups](docs/diagrams/exports/relationship-domain.svg)](docs/diagrams/exports/relationship-domain.svg)
+
+**Send and accept a request.** `MatchRequestService` rejects a request to yourself, to a
+current buddy or over an existing pending request in either direction. Accepting and creating
+the `Connection` happen in one transaction with the request row locked, so a double accept, or
+an accept racing a decline, has exactly one outcome. Both notifications are written in the same
+transaction.
+
+[![UML sequence diagram: send and accept a match request](docs/diagrams/exports/match-request-sequence.svg)](docs/diagrams/exports/match-request-sequence.svg)
+
+**Who receives the contact number.** `ProfileViewService.view` asks `ProfileViewAssembler` for
+a `ConnectedProfileDto` only when the viewer is the owner or an active accepted buddy;
+everyone else, including group members and administrators, gets a `PublicProfileDto` with no
+contact field. It is recomputed on every read, so the number disappears when a connection ends.
+
+[![UML sequence diagram: who receives the contact number](docs/diagrams/exports/contact-privacy-sequence.svg)](docs/diagrams/exports/contact-privacy-sequence.svg)
+
+**Approve a group application.** `GroupJoinRequestService.accept` checks the caller leads this
+group, locks the group row and checks capacity, so two approvals cannot both take the last
+place.
+
+[![UML sequence diagram: group leader approves a join request](docs/diagrams/exports/group-join-sequence.svg)](docs/diagrams/exports/group-join-sequence.svg)
+
+More views: [connections, groups and rooms diagrams](docs/diagrams/CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md).
+
+</details>
+
+<details>
+<summary><strong>State machines:</strong> match request, connection, join request and study group</summary>
+
+<br />
+
+Each lifecycle is owned by its entity. The classes expose intention-revealing methods
+(`accept()`, `decline()`, `cancel()`, `reject()`, `withdraw()`, `end()`, `close()`) and no
+status setter, so an illegal transition cannot be written from outside the class. A transition
+out of a final state throws, and the API reports it as `409`.
+
+[![UML state machines: requests, connections and groups](docs/diagrams/exports/request-lifecycles.svg)](docs/diagrams/exports/request-lifecycles.svg)
+
+| Lifecycle | Rules worth knowing |
+| --- | --- |
+| Match request | Only the receiver accepts or declines; only the sender withdraws. A declined or withdrawn request frees the pair to ask again |
+| Connection | Either participant can end it. It keeps `endedAt` for history, and the pair may send a new request afterwards |
+| Group join request | Pending applicants take no seat. Closing a group rejects its pending applications |
+| Study group | A leader cannot leave their own group; they close it. A closed group rejects edits, approvals, removals and leaving |
+
+</details>
+
+<details>
+<summary><strong>E1 AI study assistance:</strong> class and flow diagrams</summary>
+
+<br />
+
+**Shared AI layer.** Features depend on the `AiClient` interface, not on `GeminiClient`, so
+tests supply a fake. Each feature holds its own `GeminiSettings` and `AiQuota`, so a quiz never
+spends the allowance of Pixel or of match explanations. Every feature follows the same shape:
+a prompt builder fills a versioned `PromptTemplate`, the client calls Gemini, and an output
+validator (`QuizOutputValidator`, `StudyPlanOutputValidator`, `AssistantOutputValidator`,
+`ExplanationOutputValidator`) rejects a reply before anything is saved or shown. A study-tool
+failure becomes `AiUnavailableException` (`503`) and the screen offers the manual path; a
+failed explanation returns the standard wording instead.
+
+[![UML collaborators: quizzes, study plans and Pixel](docs/diagrams/exports/ai-study-tools.svg)](docs/diagrams/exports/ai-study-tools.svg)
+
+| Part | Design point |
+| --- | --- |
+| Quiz Buddy | `QuizCreationService` runs a short checking read, the AI call, then a short write, so no database connection is held while Gemini answers. Answers stay on the server until the quiz closes |
+| Study plans | `StudyPlanCalendar` frames the weeks or meetings on the server; Gemini plans only inside those blocks |
+| Pixel | `QuickIntentReader` answers common questions by rules with no AI call. Otherwise `IntentParser` asks the AI only to classify; each `AssistantIntent` builds its reply from the app's own services, so the model cannot invent a buddy, time or task |
+
+**Match explanation.** Java still calculates every score and rank; Gemini only words them, and
+only when a student asks. `MatchExplanationService` first confirms the card is current (a
+changed profile or configuration gives `409`), then `AiExplanationWriter` reduces it to
+anonymous `ExplanationEvidence`, checks the cache and the quota, and calls the provider. Any
+miss falls back to the deterministic `TemplateMatchExplainer` wording.
+
+[![E1 match explanation: freshness, cache, quota and provider flow](docs/diagrams/exports/e1-explanation.svg)](docs/diagrams/exports/e1-explanation.svg)
+
+More views: [AI study tools diagrams](docs/diagrams/AI_STUDY_TOOLS_DIAGRAMS.md) and
+[match explanation diagrams](docs/diagrams/MATCH_EXPLANATION_DIAGRAMS.md).
+
+</details>
+
+<details>
+<summary><strong>E2 collaborative study:</strong> use case and class diagrams</summary>
+
+<br />
+
+[![UML use cases: collaborative study](docs/diagrams/exports/e2-use-cases.svg)](docs/diagrams/exports/e2-use-cases.svg)
+
+Rooms, reactions, the forest, sessions and weather are separate services with separate
+lifecycles. `RoomAccess` and `SessionAccess` recheck membership on every request, so leaving a
+group, closing it, ending a connection or deactivating an account ends access at once.
+`PomodoroTimer` is an immutable server-time value. The forest stays outside the room code:
+`StudyRoomService` publishes `RoomVisitTicked` and `RoomVisitEnded`, and `ForestVisitListener`
+credits focus time after the room transaction commits. `SessionAvailability` reuses the
+matching engine's `WeeklyAvailability` maths to suggest times. `WeatherService` sends only
+fixed campus coordinates through the `WeatherClient` interface.
+
+[![UML collaborators: rooms, reactions, forest, sessions and weather](docs/diagrams/exports/collaborative-study.svg)](docs/diagrams/exports/collaborative-study.svg)
+
+More views: [connections, groups and rooms diagrams](docs/diagrams/CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md).
+
+</details>
+
+<details>
+<summary><strong>Database:</strong> entity-relationship diagrams (34 tables)</summary>
+
+<br />
+
+Ordered SQL migrations own the schema; Hibernate runs in `validate` mode and never changes it.
+`students` shares its primary key with `users`. Unique partial indexes allow one pending
+request per pair of students, one active connection per pair and one pending application per
+student and group, while keeping history. A `study_sessions` row belongs to exactly one group
+or one connection (a database check).
+
+**Compulsory features (17 tables)**
+
+[![Entity-relationship diagram: compulsory schema](docs/diagrams/exports/database-core.svg)](docs/diagrams/exports/database-core.svg)
+
+**Added by the two extras (17 tables)**
+
+[![Entity-relationship diagram: tables added by the two extras](docs/diagrams/exports/database-extras.svg)](docs/diagrams/exports/database-extras.svg)
+
+| Area | Tables |
+| --- | --- |
+| Accounts and profiles | `users`, `students`, `courses`, `student_courses`, `student_study_goals`, `availability_slots` |
+| Buddies | `match_requests`, `connections` |
+| Groups | `study_groups`, `study_group_goals`, `group_availability_slots`, `group_memberships`, `group_join_requests` |
+| Notifications | `notifications` |
+| Matching configuration | `matching_configs`, `matching_strategy_settings`, `matching_enabled_criteria` |
+| Collaborative study | `study_rooms`, `room_presences`, `room_reactions`, `study_sessions`, `focus_visits`, `earned_badges` |
+| AI features | `match_explanations`; `study_plans` and its four child tables; `quizzes`, `quiz_questions`, `quiz_question_options`, `quiz_attempts`, `quiz_attempt_answers` |
+
+Migrations, access model and the demo seed are in the [database guide](docs/DATABASE.md).
+
+</details>
 
 ## Matching engine
 
@@ -355,12 +604,25 @@ scripts/test-backend.sh                              # backend: disposable Postg
 cd frontend && npm test && npm run lint && npm run build   # frontend: interactions, lint, type check, build
 ```
 
-The backend harness checks fresh, repeated and legacy migrations, runs the unit, HTTP, JWT and
-database suites, then removes its container. CI runs both on every pull request into `main`.
-The [testing guide](docs/TESTING.md) covers the strategy, what each area's tests check and
-step-by-step demo walkthroughs.
+Each kind of rule is tested at the boundary where it can break. CI runs everything on every
+pull request into `main`.
+
+| Layer | What it proves |
+| --- | --- |
+| Unit tests | Pure rules with no I/O: scorers, `TimeSlot` interval maths, strategies, the entity state machines, the Pomodoro timer, session schedules, AI prompt builders and output validators |
+| HTTP integration tests | The real Spring web, security, JWT and JPA stack on a real PostgreSQL: ownership and role checks, contact privacy, concurrency (last group place, simultaneous accept and decline), transactional rollback |
+| Context-load test | Every bean wires, every configuration property binds and every entity matches the migrated schema |
+| Migration tests | Fresh, legacy-upgrade, failed-preflight and repeated migrations |
+| Frontend interaction tests | Rendered screens with Vitest and Testing Library: empty, loading and error states, form validation, unsaved-draft guards, confirmation dialogs |
+
+External providers (Gemini, Open-Meteo, Spotify, Freesound) are never called by the default
+suites; tests replace them through their interfaces. The brief's Appendix A example is a test
+(`AppendixAMatchingTest`). The [testing guide](docs/TESTING.md) lists what each area's tests
+check and gives step-by-step demo walkthroughs.
 
 ## Documentation
+
+The [documentation index](docs/README.md) lists every document with one line each.
 
 | Document | Contents |
 | --- | --- |
@@ -370,19 +632,23 @@ step-by-step demo walkthroughs.
 | [Testing](docs/TESTING.md) | Test strategy, coverage by area and demo walkthroughs |
 | [Database](docs/DATABASE.md) | Access model, migrations, schema, seeding and the release runbook |
 | [Configuration](docs/CONFIGURATION.md) | Every configuration key, its default and purpose |
-| [Diagrams](docs/diagrams/README.md) | Technology stack, architecture, UML use cases, classes, packages, deployment, sequences, state machines and the database, with editable sources |
+| [Diagrams](docs/diagrams/README.md) | All 21 panels with notation and editable sources, plus the detailed views per area |
 | [Known limitations and future work](docs/LIMITATIONS_AND_FUTURE_WORK.md) | Deliberate boundaries and how the design extends |
-| [AI usage](docs/AI_USAGE.md) | Development assistance and the application's own AI use |
-| [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |
+| [AI usage](docs/AI_USAGE.md) | The application's own AI use and the AI tools used to build the project |
+| [AGENTS.md](AGENTS.md), [UI guide](docs/UI_GUIDE.md), [team workflow](docs/TEAM_WORKFLOW.md) | Repository rules for people and coding assistants, the visual direction and shared components, milestones and reviews |
 
 <a id="libraries"></a>
 
 ## Libraries and services
 
-[![Technology stack by tier](docs/diagrams/exports/tech-stack.svg)](docs/diagrams/exports/tech-stack.svg)
+The [technology stack diagram](#architecture) shows what runs where. Versions match the
+resolved Maven dependencies and the npm lockfile. No library outside this table may be added
+without team agreement.
 
-Versions match the resolved Maven dependencies and the npm lockfile. No library outside this
-table may be added without team agreement.
+<details>
+<summary><strong>Full library and service table:</strong> version, why we chose it, licence</summary>
+
+<br />
 
 | Library or service | Version | Why we chose it | Licence |
 | --- | --- | --- | --- |
@@ -403,6 +669,8 @@ table may be added without team agreement.
 | Spotify Web API and Web Playback SDK | Hosted | Students play their own music; an embedded playlist works with no account ([terms](https://developer.spotify.com/terms)) | Service terms |
 | Freesound API | Hosted | Ambient sounds filtered to CC0, so no per-sound credit is needed ([terms](https://freesound.org/help/tos_api/)) | CC0 sounds |
 | Open-Meteo | Hosted | Free campus weather with no key or account ([terms](https://open-meteo.com/en/terms)) | CC BY 4.0 data |
+
+</details>
 
 <details>
 <summary><strong>Visual assets</strong></summary>
@@ -432,6 +700,6 @@ guide, achievements, reactions and the focus forest. Aryan built requests, conne
 privacy, notifications and admin accounts, and the E2 rooms and sessions. Each member can explain
 the implementation of their part.
 
-**Contributing.** Read [AGENTS.md](AGENTS.md), branch from an up-to-date `main`, keep commits
-focused, open a pull request with test evidence, get a review from another team, then **Squash
-and merge**.
+**Contributing.** Read [AGENTS.md](AGENTS.md) and the [team workflow](docs/TEAM_WORKFLOW.md),
+branch from an up-to-date `main`, keep commits focused, open a pull request with test evidence,
+get a review from another team, then **Squash and merge**.
