@@ -1,5 +1,6 @@
 package com.studybuddy.matchexplanation;
 
+import com.studybuddy.ai.AiProviders;
 import com.studybuddy.ai.GeminiClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,8 +18,8 @@ public class AiExplanationConfiguration {
 
     /** Wording a known score needs no reasoning step, so the model's thinking is turned off. */
     @Bean
-    ExplanationProvider explanationProvider(AiExplanationProperties properties, JsonMapper json) {
-        return new GeminiExplanationProvider(
-                new GeminiClient(properties.geminiSettings("explanation", true), json, properties.newQuota()));
+    ExplanationProvider explanationProvider(AiExplanationProperties properties, JsonMapper json, AiProviders providers) {
+        GeminiClient gemini = new GeminiClient(properties.geminiSettings("explanation", true), json, properties.newQuota());
+        return new GeminiExplanationProvider(providers.forShortReplies(gemini, "explanation"));
     }
 }
