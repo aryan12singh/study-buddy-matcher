@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2090" height="1240" viewBox="0 0 2090 1240" role="img" aria-labelledby="title description">
+<title id="title">UML deployment — demo and team setup</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2090" height="1240" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2090" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1942" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1955" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1976" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1989" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2010" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2023" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<polygon points="60,250 76,234 486,234 470,250" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<polygon points="470,250 486,234 486,614 470,630" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<rect x="60" y="250" width="410" height="380" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<text x="265.0" y="276" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«device»</text>
+<text x="265.0" y="302" font-size="21" fill="#254e73" font-weight="700" text-anchor="middle">Client laptop</text>
+<polygon points="90,345 100,335 450,335 440,345" fill="#dfe8ee" stroke="#176c63" stroke-width="1.5"/>
+<polygon points="440,345 450,335 450,585 440,595" fill="#dfe8ee" stroke="#176c63" stroke-width="1.5"/>
+<rect x="90" y="345" width="350" height="250" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<text x="265.0" y="371" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«execution environment»</text>
+<text x="265.0" y="397" font-size="21" fill="#176c63" font-weight="700" text-anchor="middle">Web browser</text>
+<polygon points="730,250 746,234 1366,234 1350,250" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<polygon points="1350,250 1366,234 1366,794 1350,810" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<rect x="730" y="250" width="620" height="560" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<text x="1040.0" y="276" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«device»</text>
+<text x="1040.0" y="302" font-size="21" fill="#254e73" font-weight="700" text-anchor="middle">Application host</text>
+<polygon points="765,345 775,335 1325,335 1315,345" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<polygon points="1315,345 1325,335 1325,535 1315,545" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<rect x="765" y="345" width="550" height="200" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<text x="1040.0" y="371" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«execution environment»</text>
+<text x="1040.0" y="397" font-size="21" fill="#254e73" font-weight="700" text-anchor="middle">JVM 21</text>
+<polygon points="765,600 775,590 1325,590 1315,600" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<polygon points="1315,600 1325,590 1325,770 1315,780" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<rect x="765" y="600" width="550" height="180" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<text x="1040.0" y="626" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«execution environment»</text>
+<text x="1040.0" y="652" font-size="21" fill="#254e73" font-weight="700" text-anchor="middle">Node.js 22</text>
+<polygon points="1560,250 1576,234 2046,234 2030,250" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<polygon points="2030,250 2046,234 2046,504 2030,520" fill="#dfe8ee" stroke="#254e73" stroke-width="1.5"/>
+<rect x="1560" y="250" width="470" height="270" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<text x="1795.0" y="276" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«device»</text>
+<text x="1795.0" y="302" font-size="21" fill="#254e73" font-weight="700" text-anchor="middle">Database host</text>
+<polygon points="1560,610 1576,594 2046,594 2030,610" fill="#dfe8ee" stroke="#8a5a1a" stroke-width="1.5"/>
+<polygon points="2030,610 2046,594 2046,894 2030,910" fill="#dfe8ee" stroke="#8a5a1a" stroke-width="1.5"/>
+<rect x="1560" y="610" width="470" height="300" rx="0" fill="#fff5e5" stroke="#8a5a1a" stroke-width="1.5" />
+<text x="1795.0" y="636" font-size="15" fill="#8a5a1a" font-weight="400" text-anchor="middle">«external system»</text>
+<text x="1795.0" y="662" font-size="21" fill="#8a5a1a" font-weight="700" text-anchor="middle">External services</text>
+<polygon points="60,830 76,814 486,814 470,830" fill="#dfe8ee" stroke="#506474" stroke-width="1.5"/>
+<polygon points="470,830 486,814 486,1004 470,1020" fill="#dfe8ee" stroke="#506474" stroke-width="1.5"/>
+<rect x="60" y="830" width="410" height="190" rx="0" fill="white" stroke="#506474" stroke-width="1.5" />
+<text x="265.0" y="856" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">«device»</text>
+<text x="265.0" y="882" font-size="21" fill="#506474" font-weight="700" text-anchor="middle">GitHub Actions runner</text>
+<polyline points="44,1186 2046,1186" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="440,420 765,420" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="440,560 608,560 608,690 765,690" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="1315,420 1560,420" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="1315,500 1463,500 1463,760 1560,760" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<rect x="115" y="430" width="300" height="118" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="795" y="425" width="490" height="94" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="795" y="675" width="490" height="94" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1585" y="335" width="420" height="142" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="60" y="1055" width="1970" height="99" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML deployment — demo and team setup</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Three tiers and four outside services. For the demo the first two nodes are the same laptop (localhost); the team shares one hosted database.</text>
+<text x="2044" y="1213" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/deployment.svg</text>
+<text x="265.0" y="454" font-size="14" fill="#176c63" font-weight="400" text-anchor="middle">«artifact»</text>
+<text x="265.0" y="478" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">React application</text>
+<text x="265.0" y="506" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">index.html, JavaScript, CSS</text>
+<text x="265.0" y="530" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">token kept in sessionStorage</text>
+<text x="1040.0" y="449" font-size="14" fill="#254e73" font-weight="400" text-anchor="middle">«artifact»</text>
+<text x="1040.0" y="473" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">study-buddy-matcher-backend.jar</text>
+<text x="1040.0" y="501" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">Spring Boot with embedded Tomcat, port 8080</text>
+<text x="1040.0" y="699" font-size="14" fill="#254e73" font-weight="400" text-anchor="middle">«process»</text>
+<text x="1040.0" y="723" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">Vite development server</text>
+<text x="1040.0" y="751" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">serves frontend/ on port 5173</text>
+<text x="1795.0" y="359" font-size="14" fill="#176c63" font-weight="400" text-anchor="middle">«database»</text>
+<text x="1795.0" y="383" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">PostgreSQL database</text>
+<text x="1795.0" y="411" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">Supabase for the team</text>
+<text x="1795.0" y="435" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">Docker container for the local demo</text>
+<text x="1795.0" y="459" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">34 tables created by SQL migrations</text>
+<text x="1795" y="700" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Google Gemini API</text>
+<text x="1795" y="744" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Spotify Accounts and Web API</text>
+<text x="1795" y="788" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Freesound API</text>
+<text x="1795" y="832" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Open-Meteo API</text>
+<text x="265" y="915" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">backend: ./mvnw test with postgres:17</text>
+<text x="265" y="945" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">frontend: test, lint, build</text>
+<text x="265" y="975" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">runs on every pull request</text>
+<rect x="526.56" y="368" width="162.88" height="47" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="608" y="384" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">«HTTP» JSON + JWT</text>
+<text x="608" y="405" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">port 8080</text>
+<rect x="517.92" y="714" width="180.16000000000003" height="47" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="608" y="730" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">«HTTP» static files</text>
+<text x="608" y="751" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">port 5173</text>
+<rect x="1390.2" y="368" width="145.60000000000002" height="47" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1463" y="384" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">«JDBC» over TLS</text>
+<text x="1463" y="405" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">port 5432</text>
+<rect x="1385.88" y="784" width="154.24" height="47" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1463" y="800" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">«HTTPS»</text>
+<text x="1463" y="821" font-size="16" fill="#172d3b" font-weight="400" text-anchor="middle">server-side keys</text>
+<text x="77" y="1083" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Solid line = communication path with its protocol. The browser talks only to the API; it has no database driver, key or connection string.</text>
+<text x="77" y="1108" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Spotify playback and Freesound previews also stream straight to the browser, after the backend has exchanged the token or chosen the sound.</text>
+<text x="77" y="1133" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Demo passwords, the JWT secret and provider keys come from application-local.yml or the environment and are never committed.</text>
+</g></svg>
