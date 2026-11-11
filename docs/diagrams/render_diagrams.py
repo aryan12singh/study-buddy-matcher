@@ -1,579 +1,64 @@
 #!/usr/bin/env python3
-"""Rebuild the presentation SVGs with Python 3's standard library.
+"""Rebuild the design-panel SVGs with Python 3's standard library.
 
-The named functions below are the editable diagram source. Coordinates are deliberate:
+The panel modules beside this script are the editable diagram source:
+baseline_panels.py (architecture, use cases, class and collaborator panels),
+structure_panels.py (technology stack, packages, deployment, database) and
+behaviour_panels.py (sequence diagrams and state machines). Coordinates are deliberate:
 UML roles, labels and routed links stay readable without a graph-layout dependency.
 Run from any directory; --check verifies source names, XML and committed exports.
-Detailed Mermaid views in PLATFORM.md / TEAM_A.md / TEAM_C.md supplement these panels.
 """
 
-from html import escape
 from pathlib import Path
 import argparse
 import sys
 import xml.etree.ElementTree as ET
 
+import baseline_panels
+import behaviour_panels
+import structure_panels
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-INK = "#172d3b"
-MUTED = "#506474"
-LINE = "#647b88"
-BLUE = "#254e73"
-TEAL = "#176c63"
-AMBER = "#8a5a1a"
-BG = "#f6f8f9"
-PALE = "#eaf1f7"
-GREEN = "#eaf5f1"
-WARM = "#fff5e5"
+BUILDERS = baseline_panels.BUILDERS + structure_panels.BUILDERS + behaviour_panels.BUILDERS
 
 
-class Canvas:
-    def __init__(self, slug, title, subtitle, width=1600, height=1100):
-        self.slug, self.title = slug, title
-        self.width, self.height = width, height
-        self.back, self.edges, self.nodes, self.labels = [], [], [], []
-        self.rect(0, 0, width, height, fill=BG, stroke="none", layer=self.back)
-        self.rect(0, 0, width, 128, fill=INK, stroke="none", layer=self.back)
-        self.text(46, 45, "STUDY BUDDY MATCHER  /  DESIGN REFERENCE", 15, "#a8d4ca", weight=700)
-        self.text(46, 85, title, 31, "#ffffff", weight=700)
-        self.text(46, 110, subtitle, 17, "#d9e5ea")
-        self.line([(44, height-54), (width-44, height-54)], color="#c5d2da")
-        self.text(width-46, height-27, f"docs/diagrams/exports/{slug}.svg", 14, MUTED, anchor="end")
-
-    def rect(self, x, y, w, h, fill="white", stroke="#c5d2da", radius=0, layer=None, extra=""):
-        (self.nodes if layer is None else layer).append(
-            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{radius}" '
-            f'fill="{fill}" stroke="{stroke}" stroke-width="1.5" {extra}/>')
-
-    def text(self, x, y, value, size=19, color=INK, weight=400, anchor="start", layer=None):
-        (self.labels if layer is None else layer).append(
-            f'<text x="{x}" y="{y}" font-size="{size}" fill="{color}" '
-            f'font-weight="{weight}" text-anchor="{anchor}">{escape(str(value))}</text>')
-
-    def lines(self, x, y, rows, size=19, color=INK, gap=27, weight=400, anchor="start"):
-        for n, row in enumerate(rows):
-            self.text(x, y+n*gap, row, size, color, weight, anchor)
-
-    def panel(self, x, y, w, h, label, color=BLUE, fill=PALE):
-        self.rect(x, y, w, h, fill, "#bdccd5", 12, self.back)
-        self.text(x+22, y+31, label, 18, color, 700)
-
-    def box(self, x, y, w, h, title, rows, color=BLUE, fill="white", stereotype=None, size=19):
-        self.rect(x, y, w, h, fill, color, 6, extra='data-node="box"')
-        self.rect(x, y, w, 6, color, "none")
-        top = y+35
-        if stereotype:
-            self.text(x+18, y+29, f"«{stereotype}»", 15, color)
-            top = y+57
-        self.text(x+18, top, title, 23, color, 700)
-        self.lines(x+18, top+34, rows, size, gap=27)
-
-    def cls(self, x, y, w, name, attrs=(), methods=(), stereotype=None, color=BLUE, size=18):
-        header = 70 if stereotype else 49
-        h = header + (len(attrs)*26+20 if attrs else 0) + (len(methods)*26+20 if methods else 0)
-        self.rect(x, y, w, h, "white", color, 0, extra=f'data-class="{escape(name)}"')
-        self.rect(x, y, w, header, PALE if color == BLUE else GREEN, "none")
-        if stereotype:
-            self.text(x+w/2, y+25, f"«{stereotype}»", 15, color, anchor="middle")
-        self.text(x+w/2, y+header-16, name, 22, color, 700, "middle")
-        cursor = y+header
-        for rows in (attrs, methods):
-            if not rows:
-                continue
-            self.line([(x, cursor), (x+w, cursor)], color=color, layer=self.nodes)
-            self.lines(x+16, cursor+29, rows, size, gap=26)
-            cursor += len(rows)*26+20
-        return h
-
-    def line(self, points, color=LINE, dashed=False, end=None, start=None, layer=None, width=2):
-        attrs = ' stroke-dasharray="7 6"' if dashed else ""
-        if end:
-            attrs += f' marker-end="url(#{end})"'
-        if start:
-            attrs += f' marker-start="url(#{start})"'
-        (self.edges if layer is None else layer).append(
-            f'<polyline points="{" ".join(f"{x},{y}" for x,y in points)}" fill="none" '
-            f'stroke="{color}" stroke-width="{width}" stroke-linejoin="round"{attrs}/>')
-
-    def label(self, x, y, rows, size=17, color=MUTED, anchor="middle"):
-        if isinstance(rows, str):
-            rows = [rows]
-        width = max(len(row) for row in rows)*size*.54+16
-        left = x-width/2 if anchor == "middle" else x-7
-        self.rect(left, y-size, width, len(rows)*(size+5)+5, BG, "none", 3, self.labels)
-        self.lines(x, y, rows, size, color, gap=size+5, anchor=anchor)
-
-    def note(self, x, y, w, rows, title=None, fill=WARM):
-        h = len(rows)*25+24+(30 if title else 0)
-        self.rect(x, y, w, h, fill, "#d6c7a8" if fill == WARM else "#c5d2da", 6)
-        offset = 28
-        if title:
-            self.text(x+17, y+28, title, 19, AMBER if fill == WARM else BLUE, 700)
-            offset += 30
-        self.lines(x+17, y+offset, rows, 18, gap=25)
-
-    def actor(self, x, y, title, note=None):
-        self.nodes.append(f'<circle cx="{x}" cy="{y}" r="19" fill="white" stroke="{INK}" stroke-width="2.5"/>')
-        self.line([(x,y+19),(x,y+84)], color=INK, layer=self.nodes, width=2.5)
-        self.line([(x-38,y+45),(x+38,y+45)], color=INK, layer=self.nodes, width=2.5)
-        self.line([(x-34,y+120),(x,y+84),(x+34,y+120)], color=INK, layer=self.nodes, width=2.5)
-        self.text(x,y+150,title,22,INK,700,"middle")
-        if note:
-            self.text(x,y+176,note,16,MUTED,anchor="middle")
-
-    def usecase(self, x, y, w, rows, e2=False):
-        self.nodes.append(f'<ellipse cx="{x}" cy="{y}" rx="{w/2}" ry="37" fill="{GREEN if e2 else PALE}" stroke="{TEAL if e2 else BLUE}" stroke-width="1.7"/>')
-        self.lines(x, y-(len(rows)-1)*12+6, rows, 18, gap=24, anchor="middle")
-
-    def fragment(self, x, y, w, h, kind, guard):
-        self.rect(x,y,w,h,"#ffffff","#a7bac5",0,self.back)
-        self.rect(x,y,80,29,PALE,"#a7bac5",0,self.back)
-        self.text(x+12,y+21,kind,16,BLUE,700)
-        self.text(x+96,y+21,guard,17,MUTED)
-
-    def svg(self):
-        return '\n'.join([
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.width}" height="{self.height}" '
-            f'viewBox="0 0 {self.width} {self.height}" role="img" aria-labelledby="title description">',
-            f'<title id="title">{escape(self.title)}</title>',
-            '<desc id="description">Study Buddy Matcher design diagram. Editable source: '
-            'docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>',
-            '<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
-            f'<path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="{LINE}" stroke-width="1.6"/></marker>',
-            '<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse">'
-            f'<path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="{LINE}" stroke-width="1.4"/></marker>',
-            '<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse">'
-            f'<path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="{LINE}" stroke="{LINE}"/></marker></defs>',
-            '<g font-family="Tahoma, Verdana, Arial, sans-serif">',
-            *self.back, *self.edges, *self.nodes, *self.labels, '</g></svg>', ''
-        ])
-
-
-def architecture():
-    c = Canvas("architecture", "Architecture: layers, boundaries and privacy",
-        "Requests pass down through the layers; services return DTOs back up. The browser never reaches the database.", height=1270)
-    c.panel(430,150,750,910,"SPRING BOOT BACKEND",fill="#eff4f7")
-    # Left column: the browser, configuration and the database
-    c.box(45,200,330,185,"React + Vite",[
-        "Feature folders per screen", "One shared Axios API client", "Route guards = UI only", "No database access"
-    ])
-    c.box(45,440,330,120,"In-browser media",["Spotify SDK and playlist embed", "Freesound previews play here"],color=AMBER,fill=WARM,size=17)
-    c.box(45,620,330,165,"Configuration",["application.yml + env vars", "21 @ConfigurationProperties", "Admin matching overrides (DB)"],size=17)
-    c.box(45,880,330,170,"PostgreSQL",["Hosted by Supabase", "SQL migrations own the schema", "Hibernate only validates it", "RLS; browser grants revoked"],color=TEAL,size=17)
-    # The layers, top to bottom
-    c.box(455,200,700,110,"Spring Security",["JWT signature · active account · role · token version", "Loads the user through UserRepository on every request"],size=17)
-    c.box(455,340,330,140,"Controllers",["Validate typed input", "Call one service method", "Return the DTO as JSON"])
-    c.box(825,340,330,140,"ApiExceptionHandler",["@RestControllerAdvice", "Exceptions → error JSON", "Rollback already done by Spring"],size=17)
-    c.box(455,515,700,140,"Services",[
-        "@Transactional business rules; notifications saved in the same transaction",
-        "AccountAccess: checks who may act, locks accounts in a fixed order",
-        "Call the assemblers and return DTOs, so entities never leave the backend"
-    ],size=17)
-    c.box(455,695,190,170,"Entities",["Own state rules", "Change via methods:", "accept(), close(),", "deactivate()"],size=17)
-    c.box(665,695,210,170,"Matching",["CriterionScorer ×5", "MatchingStrategy ×3", "Strategy + Template", "Method patterns"],size=17)
-    c.box(895,695,260,170,"Client interfaces",["AiClient", "WeatherClient", "SoundSearchClient", "ExplanationProvider (E1)"],size=17)
-    c.box(455,905,330,140,"JPA repositories",["Spring Data JPA", "Row locks for transitions", "Also read by some assemblers"],size=17)
-    c.box(825,905,330,140,"DTO assemblers",["sealed ProfileDto:", "Public = no contact", "Connected = has contact"],color=TEAL,size=17)
-    # Right column: services outside the system
-    c.box(1240,515,315,145,"Spotify Accounts",["Sign-in and token refresh", "Direct concrete client:", "SpotifyAccountsClient"],color=AMBER,fill=WARM,size=17)
-    c.box(1240,695,315,170,"External APIs",["Google Gemini (AI features)", "Freesound (ambient sounds)", "Open-Meteo (cached, fallback)"],color=AMBER,fill=WARM,size=17)
-    # Calls (grey)
-    c.line([(375,242),(455,242)],end="arrow")
-    c.label(415,226,"JWT + JSON",15)
-    c.line([(620,310),(620,340)],end="arrow")
-    c.line([(620,480),(620,515)],end="arrow")
-    c.line([(550,655),(550,695)],end="arrow")
-    c.line([(770,655),(770,695)],end="arrow")
-    c.line([(1025,655),(1025,695)],end="arrow")
-    c.line([(655,655),(655,905)],end="arrow")
-    c.label(655,885,"query",14)
-    c.line([(885,655),(885,905)],end="arrow")
-    c.label(885,885,"build",14)
-    c.line([(550,865),(550,905)],end="arrow",start="arrow")
-    c.line([(825,975),(785,975)],end="arrow")
-    c.line([(455,975),(375,975)],end="arrow")
-    c.label(415,1000,"JDBC",15)
-    c.line([(375,700),(415,700),(415,585),(455,585)],end="arrow")
-    c.label(415,645,"binds",15)
-    c.line([(210,385),(210,440)],end="arrow")
-    c.line([(1155,587),(1240,587)],end="arrow")
-    c.line([(1155,780),(1240,780)],end="arrow")
-    c.label(1198,760,"HTTPS",15)
-    # DTOs returned (teal)
-    c.line([(740,515),(740,480)],end="arrow",color=TEAL)
-    c.label(778,503,"DTO",15,color=TEAL)
-    c.line([(455,440),(405,440),(405,330),(375,330)],end="arrow",color=TEAL)
-    c.label(405,392,["DTO","JSON"],15,color=TEAL)
-    c.note(45,1080,1510,[
-        "20 feature packages (studygroup/, matching/, profile/ …) each hold their own controller and service, plus repositories where they store data; shared: common, security, ai, user, seed.",
-        "Contact goes only to its owner or an active accepted buddy; group membership and admin rights never grant it. Keys and secrets stay on the backend.",
-        "Arrows: grey = calls or depends on · teal = DTO returned towards the browser."
-    ],fill="#edf3f6")
-    return c
-
-
-def use_cases():
-    c = Canvas("use-cases", "UML use cases — compulsory baseline", "Actors are account capabilities; group leadership is a relationship with one particular group.",height=1350)
-    c.rect(230,165,1120,1050,"white","#93a9b6",8,c.back)
-    c.text(255,200,"STUDY BUDDY MATCHER",19,BLUE,700)
-    c.actor(102,500,"Student")
-    c.actor(1485,500,"Administrator")
-    student = [
-        (260,["Register student account"]),
-        (345,["Sign in"]),
-        (430,["Edit own profile", "and study preferences"]),
-        (515,["Replace / clear", "weekly availability"]),
-        (600,["Find and compare", "ranked buddies"]),
-        (685,["Read student profile"]),
-        (770,["Send / answer requests", "and view / end connections"]),
-        (855,["Browse, create and", "apply to study groups"]),
-        (940,["Manage a led group", "and membership requests"]),
-        (1050,["Read / mark own", "notifications"]),
-    ]
-    for y, rows in student:
-        c.usecase(535,y,470,rows)
-        c.line([(140,545),(300,y)])
-    # Shared sign-in use case: two explicit actor associations, no invented include/extend.
-    c.line([(1447,545),(1290,345),(770,345)])
-    for y, rows in [
-        (520,["Create / edit / delete", "and activate / deactivate accounts"]),
-        (700,["View account status", "and basic usage"]),
-        (880,["Configure matching criteria,", "weights and active strategy"]),
-    ]:
-        c.usecase(1090,y,435,rows)
-        c.line([(1447,545),(1307,y)])
-    c.note(835,990,470,["Leader operations require group.leader.id", "to equal the current student. No leader", "subclass or global leader role exists."],title="Group-scoped authority",fill=GREEN)
-    c.note(275,1130,1015,["Profile reads enforce contact privacy.", "Registration and sign-in are public; other actions need an active account."],fill="#edf3f6")
-    c.note(45,1240,1510,["Notation: actor association = solid line; ellipse = use case; rectangle = application boundary. E2 use cases are a separate panel."],fill="#edf3f6")
-    return c
-
-
-def e2_use_cases():
-    c = Canvas("e2-use-cases", "UML use cases — collaborative study (E2)", "Second course-required extra; this panel supplements the compulsory use cases.",height=1220)
-    c.rect(230,170,1280,870,"white","#93a9b6",8,c.back)
-    c.text(255,206,"STUDY BUDDY MATCHER / E2",19,TEAL,700)
-    c.actor(100,530,"Student")
-    items=[
-        (275,["Join / leave private room", "and view current participants"],["Accepted active group member;", "distinct students count toward capacity."]),
-        (375,["Control Pomodoro", "and room configuration"],["Group leader or present assigned host/co-host;", "only the leader assigns host roles."]),
-        (475,["Send room reactions"],["Only while present in the room; a burst limit", "applies. Everyone there sees it float briefly."]),
-        (575,["Grow a focus forest"],["One tree per continuous room visit, sized by", "focused time on the shared timer."]),
-        (675,["Play Spotify and", "ambient sounds"],["Music tab in room settings;", "heard only in this browser."]),
-        (775,["Plan / edit / cancel", "group or buddy sessions"],["Group leader or active buddy participant;", "other accepted group members may view."]),
-        (875,["View mutual availability", "and export calendar snapshot"],["Current parent relationship required;", "suggestions do not confirm attendance."]),
-        (975,["Choose room atmosphere", "and view campus weather"],["Selectable original scenes; optional", "cached Open-Meteo campus conditions."]),
-    ]
-    for y,rows,note in items:
-        c.usecase(595,y,590,rows,True)
-        c.line([(138,575),(300,y)])
-        c.lines(955,y-8,note,18,MUTED,gap=25)
-        c.line([(890,y),(935,y)],dashed=True)
-    c.note(45,1068,1510,["No global online status, public room, chat, calendar synchronisation or RSVP workflow is implied. Calendar files are private snapshots.", "E1 match explanations have a separate companion view (E1.md)."],fill="#edf3f6")
-    return c
-
-
-def identity_profile():
-    c=Canvas("identity-profile", "UML classes — identity and study profile", "Concrete account and profile entities are associated through a shared identifier; there is no User inheritance tree.",height=1130)
-    c.cls(60,210,350,"User",["- id: Long", "- email: String", "- passwordHash: String", "- role: Role", "- active: boolean", "- tokenVersion: long", "- lastLoginAt: Instant"])
-    c.cls(610,180,480,"Student",["- id: Long", "- user: User", "- name, school, programme: String", "- yearOfStudy: Integer", "- contactNumber: String", "- coursesTaken: Set<Course>", "- targetCourse: Course", "- preferredStudyMode: StudyMode", "- preferredGroupSizeMin/Max: Integer", "- studyGoals: Set<StudyGoal>"])
-    c.cls(1260,210,280,"Course",["- id: Long", "- code: String", "- name: String"])
-    c.cls(610,720,480,"AvailabilitySlot",["- student: Student", "- dayOfWeek: DayOfWeek", "- startTime, endTime: LocalTime"])
-    c.cls(60,720,350,"Role",["STUDENT", "ADMIN"],stereotype="enumeration")
-    c.line([(610,310),(410,310)])
-    c.label(510,270,["user", "@OneToOne / @MapsId"],17)
-    c.label(442,336,"1",18)
-    c.label(577,336,"0..1",18)
-    c.line([(215,461),(215,720)],dashed=True,end="arrow")
-    c.label(215,637,"role",17)
-    c.line([(1090,275),(1260,275)])
-    c.label(1175,241,"coursesTaken",17)
-    c.label(1117,299,"0..*",18)
-    c.label(1232,299,"0..*",18)
-    c.line([(1090,391),(1160,391),(1160,346),(1260,346)])
-    c.label(1190,420,"targetCourse",17)
-    c.label(1120,374,"0..*",18)
-    c.label(1225,371,"0..1",18)
-    c.line([(850,509),(850,720)])
-    c.label(873,565,"1",18)
-    c.label(883,694,"0..*",18)
-    c.label(850,632,"student",17)
-    c.note(1160,555,380,["Student ID = account ID.", "An administrator need not have", "a Student profile.", "Empty optional preferences are", "unknown to the matching engine."],title="Association, not inheritance")
-    c.note(45,980,1510,["Multiplicity is written at each endpoint. Plain associations do not imply cascade deletion; SQL migrations and lifecycle services define cleanup.", "Selected attributes are shown; ordinary constructors/getters/setters are omitted. Weekly slots are recurring Asia/Singapore civil times."],fill="#edf3f6")
-    return c
-
-
-def relationships():
-    c=Canvas("relationship-domain", "UML classes — relationships and group authority", "Requests hold decision history; active connections and accepted memberships are distinct domain objects.",height=1390)
-    c.cls(60,200,410,"MatchRequest",["- sender, receiver: Student", "- message: String", "- status: MatchRequestStatus", "- respondedAt: Instant"],["+ accept(): void", "+ decline(): void", "+ cancel(): void"])
-    c.cls(1130,200,410,"Connection",["- studentA, studentB: Student", "- endedAt: Instant"],["+ isActive(): boolean", "+ involves(studentId: Long): boolean", "+ otherStudent(studentId: Long): Student", "+ end(): void"],size=16)
-    c.cls(600,585,400,"Student",["- id: Long", "- name: String"])
-    c.cls(60,665,410,"GroupMembership",["- studyGroup: StudyGroup", "- student: Student", "- joinedAt: Instant"])
-    c.cls(1130,665,410,"GroupJoinRequest",["- studyGroup: StudyGroup", "- student: Student", "- status: GroupJoinRequestStatus"],["+ accept(): void", "+ reject(): void"])
-    c.cls(600,950,400,"StudyGroup",["- leader: Student", "- course: Course [1]", "- maxGroupSize: Integer", "- active: boolean"],["+ isLeader(studentId: Long): boolean", "+ close(): void"],size=17)
-    # Distinct sender/receiver and studentA/studentB roles are deliberately separate links.
-    c.line([(175,451),(175,515),(600,620)])
-    c.line([(365,451),(365,490),(600,654)])
-    c.label(160,490,"0..*",17)
-    c.label(370,474,"0..*",17)
-    c.label(405,540,"sender",17)
-    c.label(475,584,"receiver",17)
-    c.label(575,617,"1",17)
-    c.label(575,656,"1",17)
-    c.line([(1235,425),(1235,500),(1000,620)])
-    c.line([(1445,425),(1445,545),(1000,654)])
-    c.label(1215,472,"0..*",17)
-    c.label(1455,495,"0..*",17)
-    c.label(1135,541,"studentA",17)
-    c.label(1175,595,"studentB",17)
-    c.label(1024,617,"1",17)
-    c.label(1024,658,"1",17)
-    c.line([(470,725),(600,690)])
-    c.label(505,704,"0..*",17)
-    c.label(578,713,"1",17)
-    c.line([(1130,725),(1000,690)])
-    c.label(1092,704,"0..*",17)
-    c.label(1022,714,"1",17)
-    c.line([(800,706),(800,950)])
-    c.label(825,744,"1",18)
-    c.label(833,921,"0..*",18)
-    c.label(800,815,"leader",18)
-    c.line([(265,812),(265,1060),(600,1060)])
-    c.label(290,857,"0..*",17)
-    c.label(565,1043,"1",17)
-    c.label(403,1043,"studyGroup",17)
-    c.line([(1335,884),(1335,1060),(1000,1060)])
-    c.label(1360,976,"0..*",17)
-    c.label(1030,1043,"1",17)
-    c.label(1195,1043,"studyGroup",17)
-    c.note(45,1240,1510,["Each group has exactly one student leader who also has an accepted membership. The capacity rule counts the leader.", "Each request/connection has two distinct students. Connections are active exactly while endedAt is null; accepted group membership has no request status."],fill="#edf3f6")
-    return c
-
-
-def matching_design():
-    c=Canvas("matching-design", "UML classes — scoring and ranking", "Independent scoring, ordering and wording responsibilities keep the matching engine explainable.",width=1800,height=1330)
-    c.panel(45,170,840,780,"SCORING: PURE COLLABORATORS")
-    c.panel(915,170,840,780,"RANKING: STRATEGY + TEMPLATE METHOD")
-    c.cls(75,245,350,"WeightedMatchScorer",[],["+ score(searcher, candidate, search,", "  weights, enabled): MatchScore"],size=17)
-    c.cls(485,225,370,"CriterionScorer",[],["+ criterion(): MatchingCriterion", "+ score(searcher, candidate,", "  search): CriterionResult"],stereotype="interface",size=17)
-    c.cls(75,520,350,"MatchScore",["breakdown:", "  Map<MatchingCriterion, Double>", "total: double", "sharedHoursPerWeek: double", "quality: MatchQuality", "unknownCriteria:", "  Set<MatchingCriterion>"],stereotype="record",size=17)
-    implementations=["CourseScorer","AvailabilityOverlapScorer","StudyModeScorer","StudyGoalScorer","GroupSizeScorer"]
-    for i,name in enumerate(implementations):
-        c.cls(485,490+i*82,370,name,[],[],size=18)
-        c.line([(485,515+i*82),(455,515+i*82)],dashed=True)
-    c.line([(455,843),(455,415),(655,415),(655,393)],dashed=True,end="triangle")
-    c.line([(425,315),(485,315)],end="arrow")
-    c.label(454,282,"uses",15)
-    c.line([(248,366),(248,520)],dashed=True,end="arrow")
-    c.label(248,450,"creates",17)
-    c.cls(1125,225,430,"MatchingStrategy",[],["+ type(): MatchingStrategyType", "+ ranking(enabled): Comparator<MatchScore>"],stereotype="interface",size=17)
-    c.cls(945,495,340,"BalancedStrategy",[],["+ ranking(enabled)"])
-    c.cls(1355,465,365,"PriorityTierStrategy",[],["+ tierOf(score): int", "+ ranking(enabled)", "# priority(): MatchingCriterion", "# priorityValue(score): double"],stereotype="abstract",size=17)
-    c.line([(1115,495),(1115,430),(1240,430),(1240,367)],dashed=True,end="triangle")
-    c.line([(1538,465),(1538,430),(1440,430),(1440,367)],dashed=True,end="triangle")
-    c.cls(955,790,350,"AvailabilityFirstStrategy",[],[])
-    c.cls(1370,790,350,"CourseFirstStrategy",[],[])
-    c.line([(1130,790),(1130,735),(1480,735),(1480,659)],end="triangle")
-    c.line([(1545,790),(1545,659)],end="triangle")
-    c.note(945,875,775,["Priority bands first, then total; a disabled priority falls back to total."],fill="#edf3f6")
-    c.box(45,990,530,165,"MatchService",["search(criteria, actorId): MatchSearchResultDto", "One configuration snapshot; filter, score,", "threshold, order, limit and assemble."],size=18)
-    c.box(635,990,510,165,"MatchingConfigService",["snapshot(): MatchingConfigSnapshot", "Strategy + weights + enabled criteria", "+ minimum score + persistent version"],size=18)
-    c.box(1205,990,550,165,"MatchResultAssembler",["toDto(...): MatchResultDto", "Uses MatchExplainer / TemplateMatchExplainer", "for deterministic text; exposes no contact."],color=TEAL,size=18)
-    c.line([(575,1070),(635,1070)],end="arrow")
-    c.line([(310,990),(310,973),(1480,973),(1480,990)],end="arrow")
-    c.note(45,1190,1710,["Dashed line + hollow triangle = interface implementation; solid line + hollow triangle = class inheritance. Ordinary arrows are dependencies.", "Signatures omit repeated generic/parameter types for readability. CriterionResult records score + known; immutable interval values appear in the detailed matching source."],fill="#edf3f6")
-    return c
-
-
-def matching_sequence():
-    c=Canvas("matching-sequence", "UML sequence — deterministic match discovery", "GET /api/matches: source-ordered filtering and ranking, safe DTO output, explicit failure and empty-result paths.",width=1800,height=1390)
-    xs=[150,440,760,1085,1390,1660]
-    names=[["Find buddies /", "Home preview"],["Security +", "MatchController"],["MatchService"],["AccountAccess / config", "/ repositories"],["WeightedMatchScorer"],["MatchResultAssembler"]]
-    for x,name in zip(xs,names):
-        c.rect(x-122,170,244,70,"white",BLUE,4)
-        c.lines(x,198 if len(name)>1 else 211,name,18,BLUE,gap=25,anchor="middle")
-        c.line([(x,240),(x,1225)],dashed=True,color="#8ca1ad")
-    def msg(a,b,y,rows,dashed=False):
-        c.line([(xs[a],y),(xs[b],y)],dashed=dashed,end="arrow")
-        c.label((xs[a]+xs[b])/2,y-13,rows,17)
-    msg(0,1,285,"course / goal + filters + JWT")
-    c.fragment(45,310,1710,94,"break","[missing / invalid authentication or wrong role]")
-    msg(1,0,375,"401 / 403; no matching evaluation",True)
-    msg(1,2,440,"search(criteria, actorId)")
-    c.fragment(45,462,1710,95,"break","[invalid context / limit / filter or unknown course; active student rechecked]")
-    msg(2,1,515,"400 / 404 (or revoked-account 401)",True)
-    msg(1,0,545,"safe problem response",True)
-    c.label(900,586,["requireStudent; eligible profiles + slots;", "config.snapshot(); relationships.of(actor)"],17)
-    c.line([(760,627),(1085,627)],end="arrow")
-    c.line([(1085,650),(760,650)],end="arrow",dashed=True)
-    c.label(916,684,"one repeatable-read database snapshot",16)
-    c.fragment(45,715,1710,155,"loop","[each active candidate except self / current buddies, accepted by MatchSearchFilter]")
-    msg(2,4,785,"score(searcher, candidate, search, weights, enabled)")
-    msg(4,2,842,"MatchScore: total, quality, unknown criteria, shared hours",True)
-    c.rect(565,900,605,118,PALE,BLUE,5)
-    c.lines(585,930,["Keep total ≥ admin minScore and quality ≥ minQuality.", "Sort: chosen order → strategy → shared hours → name → ID.", "Record totalMatches, then apply the result limit."],17,gap=29)
-    msg(2,5,1060,"toDto(public profile, score, shared time, request state)")
-    msg(5,2,1110,"MatchResultDto list; template explanation added",True)
-    msg(2,1,1160,"MatchSearchResultDto + configurationVersion",True)
-    msg(1,0,1210,"200: ordered matches, or [] with totalMatches=0",True)
-    c.note(45,1250,1710,["No contact, email, credential, token or persistence entity is returned in discovery. The card renders scores, bars and shared time; wording is fetched on request (E1).", "Grouped lifelines are named collaborators, not additional classes. The optional E1 explanation request has a separate companion view."],fill="#edf3f6")
-    return c
-
-
-def values_privacy():
-    c=Canvas("values-and-privacy", "UML classes — immutable values and private response shapes", "Value objects protect interval rules; a sealed DTO boundary keeps contact disclosure on the server.",width=1800,height=1240)
-    c.panel(45,170,830,850,"IMMUTABLE WEEKLY TIME VALUES")
-    c.panel(905,170,850,850,"PROFILE RESPONSE POLICY",color=TEAL,fill=GREEN)
-    c.cls(100,240,720,"WeeklyAvailability",["slots: List<TimeSlot>"],["+ totalMinutes(): long", "+ sharedMinutesWith(other: WeeklyAvailability): long", "+ sharedSlotsWith(other: WeeklyAvailability): List<TimeSlot>", "+ sharedSessionsWith(other, minimumSessionMinutes): List<TimeSlot>"],stereotype="record",size=18)
-    c.cls(100,650,720,"TimeSlot",["day: DayOfWeek", "start, end: LocalTime"],["+ durationMinutes(): long", "+ overlapMinutes(other: TimeSlot): long", "+ intersection(other: TimeSlot): Optional<TimeSlot>"],stereotype="record",size=18)
-    c.nodes.append(f'<polygon points="460,480 452,492 460,504 468,492" fill="{LINE}" stroke="{LINE}"/>')
-    c.line([(460,504),(460,650)])
-    c.label(485,525,"1",18)
-    c.label(502,625,"0..*",18)
-    c.label(460,575,"slots (value composition)",17)
-    c.cls(955,235,750,"ProfileViewAssembler",[],["+ assemble(subject: Student, viewerId: Long): ProfileDto"],color=TEAL,size=19)
-    c.cls(1090,465,480,"ProfileDto",[],["+ id(): Long"],stereotype="sealed interface",color=TEAL)
-    c.line([(1330,330),(1330,465)],dashed=True,end="arrow")
-    c.label(1330,405,"creates one permitted response shape",17)
-    c.cls(935,720,385,"PublicProfileDto",["id: Long", "name: String", "availability: List<...>", "relationship: ProfileRelationshipDto"],stereotype="record",color=TEAL,size=16)
-    c.cls(1350,720,385,"ConnectedProfileDto",["id: Long", "name: String", "contactNumber: String", "availability: List<...>", "relationship: ProfileRelationshipDto"],stereotype="record",color=TEAL,size=16)
-    c.line([(1128,720),(1128,660),(1220,660),(1220,581)],dashed=True,end="triangle")
-    c.line([(1543,720),(1543,660),(1440,660),(1440,581)],dashed=True,end="triangle")
-    c.label(1050,636,"otherwise",17)
-    c.label(1600,636,["SELF /","CONNECTED"],17)
-    c.note(45,1060,1710,["WeeklyAvailability canonicalizes duplicate/overlapping/adjacent blocks, then intersects unique time. Half-open intervals that only touch share no minutes.", "PublicProfileDto has no contactNumber field. ConnectedProfileDto includes it only for the owner or an active accepted buddy; groups/admin status do not qualify.", "Selected members are shown. Both profile records implement ProfileDto independently; ConnectedProfileDto does not inherit PublicProfileDto."],fill="#edf3f6")
-    return c
-
-
-def collaborative_study():
-    c=Canvas("collaborative-study", "UML collaborators — rooms, reactions, forest, sessions and weather", "Four bounded E2 responsibilities; room presence, short-lived reactions, focus visits and dated plans have separate lifecycles.",width=2380,height=1380)
-    c.panel(45,170,560,1000,"PRIVATE GROUP ROOM",color=TEAL,fill=GREEN)
-    c.panel(625,170,560,1000,"ROOM REACTIONS AND FOCUS FOREST",color=TEAL,fill=GREEN)
-    c.panel(1205,170,560,1000,"DATED GROUP / BUDDY SESSIONS",color=TEAL,fill=GREEN)
-    c.panel(1785,170,550,1000,"OPTIONAL CAMPUS WEATHER",color=TEAL,fill=GREEN)
-    c.cls(85,235,480,"StudyRoomService",[],["+ state(groupId, actorId): StudyRoomDto", "+ join(...), heartbeat(...): StudyRoomDto", "+ leave(...): void", "+ controlTimer(...),", "  configure(...): StudyRoomDto"],color=TEAL,size=17)
-    c.cls(85,505,480,"StudyRoom",["- studyGroup: StudyGroup [1]", "- host, coHost: Student [0..1 each]", "- version: long"],["+ timer(): PomodoroTimer", "+ applyTimer(timer): void"],color=TEAL,size=18)
-    c.cls(85,795,480,"RoomPresence",["- studyRoom: StudyRoom [1]", "- student: Student [1]", "- clientId: UUID", "- expiresAt, observedAt: Instant"],["+ renew(presence, now, expiresAt): void"],color=TEAL,size=17)
-    c.line([(325,435),(325,505)],end="arrow")
-    c.label(325,477,"coordinates",17)
-    c.line([(325,724),(325,795)])
-    c.label(349,748,"1",17)
-    c.label(361,779,"0..*",17)
-    c.note(75,1065,500,["Read / renew: membership check; no group lock.", "Join / control: account locks → group lock."],fill="white")
-    c.cls(665,225,480,"RoomReactionService",[],["+ send(groupId, actorId, type): RoomReactionDto", "+ recent(room, now): List<RoomReaction>"],color=TEAL,size=17)
-    c.cls(665,400,480,"RoomReaction",["- studyRoom: StudyRoom [1]", "- student: Student [1]", "- type: RoomReactionType", "- sentAt: Instant"],[],color=TEAL,size=17)
-    c.line([(905,346),(905,400)],end="arrow")
-    c.label(905,380,"saves / lists",17)
-    c.line([(565,300),(665,300)],end="arrow")
-    c.label(615,286,"recent",15)
-    c.cls(665,665,480,"ForestService",[],["+ recordTick(tick): void", "+ endVisit(ended): void", "+ forestOf(studentId): ForestDto"],color=TEAL,size=17)
-    c.cls(665,885,480,"FocusVisit",["- studentId, studyGroupId: Long", "- startedAt, lastSeenAt: Instant", "- focusedMillis: long", "- variant, plot: int"],["+ isOver(now, leaseLifetime): boolean", "+ plantedAt(): Instant"],color=TEAL,size=17)
-    c.line([(905,812),(905,885)],end="arrow")
-    c.label(905,856,"one per room visit",17)
-    c.line([(565,400),(615,400),(615,720),(665,720)],end="arrow",dashed=True)
-    c.label(905,610,["RoomVisitTicked / RoomVisitEnded after commit,", "via ForestVisitListener"],15)
-    c.cls(1245,235,480,"StudySessionService",[],["+ createGroup(...), createBuddy(...)", "+ edit(...), cancel(...): SessionDto", "+ calendar(id, actorId): CalendarExportDto"],color=TEAL,size=17)
-    c.cls(1245,460,480,"StudySession",["- group: StudyGroup [0..1]", "- connection: Connection [0..1]", "- version: long", "- status: SessionStatus"],["+ schedule(): SessionSchedule", "+ edit(details, now): void", "+ cancel(now): void"],color=TEAL,size=18)
-    c.cls(1245,825,480,"SessionSchedule",["startLocal, endLocal: LocalDateTime", "timeZone: String", "occurrenceCount: int"],["+ occurrences(): List<SessionOccurrenceDto>"],stereotype="record",color=TEAL,size=17)
-    c.line([(1485,362),(1485,460)],end="arrow")
-    c.label(1485,416,"authorizes via SessionAccess",17)
-    c.line([(1485,711),(1485,825)],end="arrow",dashed=True)
-    c.label(1485,786,"constructs immutable value",17)
-    c.note(1235,1090,500,["Exactly one parent: group XOR connection.", "SessionCalendar emits private UTC snapshots."],fill="white")
-    c.cls(1825,235,470,"WeatherService",[],["+ current(): WeatherDto"],color=TEAL,size=18)
-    c.cls(1825,455,470,"WeatherClient",[],["+ fetch(): WeatherSample"],stereotype="interface",color=TEAL,size=18)
-    c.cls(1825,685,470,"OpenMeteoClient",[],["+ fetch(): WeatherSample"],color=TEAL,size=18)
-    c.line([(2060,330),(2060,455)],end="arrow")
-    c.label(2060,401,"bounded cache / retry",17)
-    c.line([(2060,685),(2060,571)],end="triangle",dashed=True)
-    c.box(1825,915,470,135,"Open-Meteo API",["Fixed campus coordinates and weather fields.", "No student identity, location or schedule."],color=AMBER,fill=WARM,size=18)
-    c.line([(2060,780),(2060,915)],end="arrow")
-    c.label(2060,856,"Java HTTP client + timeout",17)
-    c.note(45,1210,2290,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler / ForestAssembler return DTOs.", "PomodoroTimer is an immutable server-time value; FocusCredit measures focus time from it and TreeGrowth maps minutes to a TreeSpecies. SessionAvailability reuses WeeklyAvailability.", "SessionEvents writes recipient notifications transactionally. Detailed E2 transaction and ER diagrams are in TEAM_C.md; E1 match explanations are in E1.md."],fill="#edf3f6")
-    return c
-
-
-def ai_study_tools():
-    c=Canvas("ai-study-tools", "UML collaborators — quizzes, study plans and Pixel", "Three student features share one Gemini client; each checks the model's reply before anything is saved or shown.",width=1800,height=1560)
-    c.panel(45,170,560,1010,"QUIZZES (GROUP / PERSONAL)",color=AMBER,fill=WARM)
-    c.panel(625,170,560,1010,"STUDY PLANS (PERSONAL / SESSION)",color=AMBER,fill=WARM)
-    c.panel(1205,170,550,1010,"PIXEL STUDY ASSISTANT",color=AMBER,fill=WARM)
-    c.cls(85,230,480,"QuizCreationService",[],["+ startForGroup(groupId, actorId,", "  input, files): QuizDto", "+ startPersonal(actorId, input,", "  files): QuizDto"],size=17)
-    c.cls(85,470,480,"QuizWriter",[],["+ write(studentId, course, focus,", "  material): QuizDraft"],size=17)
-    c.cls(85,650,480,"QuizOutputValidator",[],["+ validate(raw): Optional<QuizDraft>"],size=17)
-    c.cls(85,800,480,"Quiz",["- scope: QuizScope", "- group: StudyGroup [0..1]", "- session: StudySession [0..1]"],["+ statusAt(now): QuizStatus", "+ close(now): void"],size=17)
-    c.line([(325,413),(325,470)],end="arrow")
-    c.line([(325,589),(325,650)],end="arrow")
-    c.label(325,628,"checks reply",15)
-    c.cls(665,230,480,"StudyPlanCreationService",[],["+ createPersonal(actorId, input,", "  files): StudyPlanDto", "+ createForSession(actorId,", "  sessionId, input, files)"],size=17)
-    c.cls(665,470,480,"RoadmapWriter",[],["+ write(studentId, course, goal,", "  frame, material): RoadmapDraft"],size=17)
-    c.cls(665,650,480,"StudyPlanOutputValidator",[],["+ validate(raw, frame):", "  Optional<RoadmapDraft>"],size=17)
-    c.cls(665,800,480,"StudyPlan",["- scope: StudyPlanScope", "- student: Student [0..1]", "- session: StudySession [0..1]"],["+ markEntry(entryId, completed,", "  now): boolean"],size=17)
-    c.line([(905,413),(905,470)],end="arrow")
-    c.line([(905,589),(905,650)],end="arrow")
-    c.label(905,628,"checks reply",15)
-    c.cls(1245,230,470,"AssistantService",[],["+ reply(actorId, input):", "  AssistantReplyDto"],size=17)
-    c.cls(1245,410,470,"QuickIntentReader",[],["+ read(message):", "  Optional<AssistantRequest>"],size=17)
-    c.cls(1245,590,470,"IntentParser",[],["+ parse(studentId, message):", "  AssistantRequest"],size=17)
-    c.cls(1245,770,470,"AssistantIntent",[],["+ type(): AssistantIntentType", "+ reply(actorId, request)"],stereotype="interface",size=17)
-    c.line([(1480,365),(1480,410)],end="arrow")
-    c.label(1480,393,"rules first",15)
-    c.line([(1715,300),(1735,300),(1735,650),(1715,650)],end="arrow",dashed=True)
-    c.label(1700,520,["else","AI"],15)
-    c.line([(1260,365),(1260,385),(1225,385),(1225,830),(1245,830)],end="arrow")
-    c.label(1225,700,"answers",15)
-    c.note(1235,985,490,["Nine intents (find buddies, meet times,", "to-dos, plan a session, ...) answer from", "existing services; Gemini only classifies."],fill="white")
-    c.note(75,1030,500,["QuizMarker scores; QuizLeaderboard ranks.", "Group answers stay on the server until", "the quiz closes."],fill="white")
-    c.note(655,1030,500,["StudyMaterialReader checks file types.", "StudyPlanCalendar / SessionMeetingFrames", "build the frame the reply must fill."],fill="white")
-    c.cls(85,1225,520,"AiClient",[],["+ generateJson(studentId, prompt,", "  attachments): String"],stereotype="interface",color=BLUE,size=17)
-    c.cls(665,1225,420,"GeminiClient",[],["+ generateJson(...): String"],color=BLUE,size=17)
-    c.cls(1145,1225,420,"AiQuota",[],["+ tryAcquire(studentId): boolean", "+ pauseAfterRateLimit(): void"],color=BLUE,size=17)
-    c.line([(665,1275),(605,1275)],end="triangle",dashed=True)
-    c.line([(1085,1275),(1145,1275)],end="arrow")
-    c.line([(325,1180),(325,1225)],end="arrow")
-    c.line([(905,1180),(905,1205),(345,1205),(345,1225)],end="arrow")
-    c.line([(1480,1180),(1480,1195),(365,1195),(365,1225)],end="arrow")
-    c.note(45,1400,1710,["QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.", "Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts."],fill="#edf3f6")
-    return c
-
-
-BUILDERS = [architecture,use_cases,e2_use_cases,identity_profile,relationships,matching_design,values_privacy,matching_sequence,collaborative_study,ai_study_tools]
-
-
-def verify_classes(svg):
-    """Catch renamed/nonexistent Java classes in the presentation class panels."""
-    root=ET.fromstring(svg)
-    source_names={path.stem for path in (ROOT/"backend/src/main/java").rglob("*.java")}
-    missing={element.attrib["data-class"] for element in root.iter() if "data-class" in element.attrib} - source_names
+def verify_names(svg):
+    """Catch renamed or removed Java classes and database tables named in a panel."""
+    root = ET.fromstring(svg)
+    classes = {path.stem for path in (ROOT/"backend/src/main/java").rglob("*.java")}
+    migrations = "\n".join(path.read_text() for path in sorted((ROOT/"backend/src/main/resources/db/migrations").glob("*.sql")))
+    named_classes = {element.attrib["data-class"] for element in root.iter() if "data-class" in element.attrib}
+    named_tables = {element.attrib["data-table"] for element in root.iter() if "data-table" in element.attrib}
+    missing = sorted(named_classes-classes) + sorted(table for table in named_tables if table not in migrations)
     if missing:
-        raise ValueError("Diagram references absent Java classes: "+", ".join(sorted(missing)))
+        raise ValueError("Diagram references absent Java classes or tables: "+", ".join(missing))
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check",action="store_true",help="Validate SVGs and fail if committed exports differ from source")
-    args=parser.parse_args()
-    changed=[]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Validate SVGs and fail if committed exports differ from source")
+    args = parser.parse_args()
+    changed = []
     for builder in BUILDERS:
-        diagram=builder()
-        svg=diagram.svg()
-        verify_classes(svg)
-        output=HERE/"exports"/(diagram.slug+".svg")
+        diagram = builder()
+        svg = diagram.svg()
+        verify_names(svg)
+        output = HERE/"exports"/(diagram.slug+".svg")
         if args.check:
-            if not output.exists() or output.read_text()!=svg:
+            if not output.exists() or output.read_text() != svg:
                 changed.append(str(output.relative_to(ROOT)))
         else:
             output.parent.mkdir(exist_ok=True)
             output.write_text(svg)
             print(output.relative_to(ROOT))
     if changed:
-        print("Stale or missing exports:\n"+"\n".join(changed),file=sys.stderr)
+        print("Stale or missing exports:\n"+"\n".join(changed), file=sys.stderr)
         return 1
     if args.check:
-        print(f"Verified {len(BUILDERS)} deterministic SVG exports, XML syntax and referenced Java class names.")
+        print(f"Verified {len(BUILDERS)} deterministic SVG exports, XML syntax and referenced Java class and table names.")
     return 0
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     raise SystemExit(main())
