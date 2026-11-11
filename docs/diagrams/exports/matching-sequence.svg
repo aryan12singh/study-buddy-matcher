@@ -1,96 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1390" viewBox="0 0 1800 1390" role="img" aria-labelledby="title description">
-<title id="title">UML sequence — deterministic match discovery</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1400" viewBox="0 0 2100 1400" role="img" aria-labelledby="title description">
+<title id="title">UML sequence — ranked match search</title>
 <desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
 <g font-family="Tahoma, Verdana, Arial, sans-serif">
-<rect x="0" y="0" width="1800" height="1390" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<rect x="0" y="0" width="1800" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
-<rect x="45" y="310" width="1710" height="94" rx="0" fill="#ffffff" stroke="#a7bac5" stroke-width="1.5" />
-<rect x="45" y="310" width="80" height="29" rx="0" fill="#eaf1f7" stroke="#a7bac5" stroke-width="1.5" />
-<rect x="45" y="462" width="1710" height="95" rx="0" fill="#ffffff" stroke="#a7bac5" stroke-width="1.5" />
-<rect x="45" y="462" width="80" height="29" rx="0" fill="#eaf1f7" stroke="#a7bac5" stroke-width="1.5" />
-<rect x="45" y="715" width="1710" height="155" rx="0" fill="#ffffff" stroke="#a7bac5" stroke-width="1.5" />
-<rect x="45" y="715" width="80" height="29" rx="0" fill="#eaf1f7" stroke="#a7bac5" stroke-width="1.5" />
-<polyline points="44,1336 1756,1336" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="150,240 150,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
-<polyline points="440,240 440,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
-<polyline points="760,240 760,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
-<polyline points="1085,240 1085,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
-<polyline points="1390,240 1390,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
-<polyline points="1660,240 1660,1225" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
-<polyline points="150,285 440,285" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
-<polyline points="440,375 150,375" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="440,440 760,440" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
-<polyline points="760,515 440,515" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="440,545 150,545" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="760,627 1085,627" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
-<polyline points="1085,650 760,650" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="760,785 1390,785" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
-<polyline points="1390,842 760,842" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="760,1060 1660,1060" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
-<polyline points="1660,1110 760,1110" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="760,1160 440,1160" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<polyline points="440,1210 150,1210" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
-<rect x="28" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
-<rect x="318" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
-<rect x="638" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
-<rect x="963" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
-<rect x="1268" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
-<rect x="1538" y="170" width="244" height="70" rx="4" fill="white" stroke="#254e73" stroke-width="1.5" />
-<rect x="565" y="900" width="605" height="118" rx="5" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
-<rect x="45" y="1250" width="1710" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="0" y="0" width="2100" height="1400" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2100" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1952" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1965" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1986" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1999" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2020" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2033" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="143" width="2010" height="1094" rx="0" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polygon points="45,143 285.4,143 285.4,161 273.4,173 45,173" fill="#eaf1f7" stroke="#93a9b6" stroke-width="1.5"/>
+<text x="57" y="164" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">sd  MatchService.search</text>
+<polyline points="44,1346 2056,1346" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="110,273 110,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="330,263 330,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="580,263 580,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="820,263 820,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1080,263 1080,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1360,263 1360,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1650,263 1650,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1910,263 1910,1215" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="117,310 323,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="337,355 573,355" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="587,400 813,400" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="813,435 587,435" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="587,480 813,480" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="813,515 587,515" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="587,560 1073,560" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1073,600 587,600" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="587,700 1353,700" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1367,785 1643,785" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1643,815 1367,815" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1353,860 587,860" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="587,925 631,925 631,955 594,955" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="587,1070 1903,1070" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1903,1098 587,1098" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="573,1140 337,1140" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="323,1180 117,1180" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<circle cx="110" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="110,207 110,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="94,215 126,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="97,245 110,229 123,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="229.8" y="205" width="200.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchController"/>
+<rect x="495.4" y="205" width="169.20000000000002" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchService"/>
+<rect x="730.2" y="205" width="179.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AccountAccess"/>
+<rect x="948.6" y="205" width="262.8" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchingConfigService"/>
+<rect x="1239.0" y="205" width="242.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="WeightedMatchScorer"/>
+<rect x="1549.8" y="205" width="200.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="CriterionScorer"/>
+<rect x="1783.8" y="205" width="252.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchResultAssembler"/>
+<rect x="323" y="310" width="14" height="870" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="573" y="355" width="14" height="785" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="813" y="400" width="14" height="35" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="813" y="480" width="14" height="35" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1073" y="560" width="14" height="40" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="470" y="635" width="1565" height="265" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="470,635 536,635 536,653 526,663 470,663" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="1353" y="700" width="14" height="160" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1270" y="725" width="520" height="110" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="1270,725 1336,725 1336,743 1326,753 1270,753" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="1643" y="785" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="580" y="955" width="14" height="35" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="470" y="1015" width="1565" height="95" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="470,1015 536,1015 536,1033 526,1043 470,1043" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="1903" y="1070" width="14" height="28" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="45" y="1255" width="2010" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
-<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — deterministic match discovery</text>
-<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">GET /api/matches: source-ordered filtering and ranking, safe DTO output, explicit failure and empty-result paths.</text>
-<text x="1754" y="1363" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/matching-sequence.svg</text>
-<text x="150" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Find buddies /</text>
-<text x="150" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Home preview</text>
-<text x="440" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">Security +</text>
-<text x="440" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">MatchController</text>
-<text x="760" y="211" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">MatchService</text>
-<text x="1085" y="198" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">AccountAccess / config</text>
-<text x="1085" y="223" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">/ repositories</text>
-<text x="1390" y="211" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">WeightedMatchScorer</text>
-<text x="1660" y="211" font-size="18" fill="#254e73" font-weight="400" text-anchor="middle">MatchResultAssembler</text>
-<rect x="153.89" y="255" width="282.22" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="295.0" y="272" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">course / goal + filters + JWT</text>
-<text x="57" y="331" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">break</text>
-<text x="141" y="331" font-size="17" fill="#506474" font-weight="400" text-anchor="start">[missing / invalid authentication or wrong role]</text>
-<rect x="135.53" y="345" width="318.94" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="295.0" y="362" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">401 / 403; no matching evaluation</text>
-<rect x="477.25" y="410" width="245.50000000000003" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="600.0" y="427" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">search(criteria, actorId)</text>
-<text x="57" y="483" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">break</text>
-<text x="141" y="483" font-size="17" fill="#506474" font-weight="400" text-anchor="start">[invalid context / limit / filter or unknown course; active student rechecked]</text>
-<rect x="435.94" y="485" width="328.12" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="600.0" y="502" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">400 / 404 (or revoked-account 401)</text>
-<rect x="190.61" y="515" width="208.78" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="295.0" y="532" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">safe problem response</text>
-<rect x="699.22" y="569" width="401.56" height="49" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="900" y="586" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">requireStudent; eligible profiles + slots;</text>
-<text x="900" y="608" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">config.snapshot(); relationships.of(actor)</text>
-<rect x="748.16" y="668" width="335.68" height="26" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="916" y="684" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">one repeatable-read database snapshot</text>
-<text x="57" y="736" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">loop</text>
-<text x="141" y="736" font-size="17" fill="#506474" font-weight="400" text-anchor="start">[each active candidate except self / current buddies, accepted by MatchSearchFilter]</text>
-<rect x="828.3199999999999" y="755" width="493.36" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="1075.0" y="772" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">score(searcher, candidate, search, weights, enabled)</text>
-<rect x="800.78" y="812" width="548.44" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="1075.0" y="829" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchScore: total, quality, unknown criteria, shared hours</text>
-<text x="585" y="930" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Keep total ≥ admin minScore and quality ≥ minQuality.</text>
-<text x="585" y="959" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Sort: chosen order → strategy → shared hours → name → ID.</text>
-<text x="585" y="988" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Record totalMatches, then apply the result limit.</text>
-<rect x="944.96" y="1030" width="530.08" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="1210.0" y="1047" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">toDto(public profile, score, shared time, request state)</text>
-<rect x="986.27" y="1080" width="447.46000000000004" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="1210.0" y="1097" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchResultDto list; template explanation added</text>
-<rect x="394.63" y="1130" width="410.74" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="600.0" y="1147" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">MatchSearchResultDto + configurationVersion</text>
-<rect x="71.26999999999998" y="1180" width="447.46000000000004" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="295.0" y="1197" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">200: ordered matches, or [] with totalMatches=0</text>
-<text x="62" y="1278" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No contact, email, credential, token or persistence entity is returned in discovery. The card renders scores, bars and shared time; wording is fetched on request (E1).</text>
-<text x="62" y="1303" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Grouped lifelines are named collaborators, not additional classes. The optional E1 explanation request has a separate companion view.</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — ranked match search</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">GET /api/matches: MatchService.search scores every eligible candidate with the admin&#x27;s current settings.</text>
+<text x="2054" y="1373" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/matching-sequence.svg</text>
+<text x="110" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
+<text x="330" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchController</text>
+<text x="580" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchService</text>
+<text x="820" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:AccountAccess</text>
+<text x="1080" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchingConfigService</text>
+<text x="1360" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:WeightedMatchScorer</text>
+<text x="1650" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:CriterionScorer</text>
+<text x="1910" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchResultAssembler</text>
+<rect x="129.92" y="283" width="180.16000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="220.0" y="299" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">1: GET /api/matches</text>
+<rect x="326.03999999999996" y="328" width="257.92" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="455.0" y="344" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">2: search(criteria, actorId)</text>
+<rect x="579.68" y="373" width="240.64000000000001" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="700.0" y="389" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">3: requireStudent(actorId)</text>
+<rect x="631.52" y="408" width="136.96" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="700.0" y="424" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">self : Student</text>
+<rect x="592.64" y="453" width="214.72000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="700.0" y="469" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">4: eligibleStudentIds()</text>
+<rect x="622.88" y="488" width="154.24" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="700.0" y="504" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">ids : List&lt;Long&gt;</text>
+<rect x="765.84" y="533" width="128.32" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="830.0" y="549" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">5: snapshot()</text>
+<rect x="523.92" y="573" width="612.1600000000001" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="830.0" y="589" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchingConfigSnapshot (strategy, weights, enabledCriteria, minScore)</text>
+<text x="480" y="655" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">loop</text>
+<rect x="545" y="640" width="499.84000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="552" y="656" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[each eligible candidate that MatchSearchFilter accepts]</text>
+<rect x="724.4" y="673" width="491.20000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="970.0" y="689" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">6: score(searcher, candidate, search, weights, enabled)</text>
+<text x="1280" y="745" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">loop</text>
+<rect x="1345" y="730" width="223.36" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1352" y="746" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[each enabled criterion]</text>
+<rect x="1337.16" y="758" width="335.68" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1505.0" y="774" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">7: score(searcher, candidate, search)</text>
+<rect x="1432.2" y="788" width="145.60000000000002" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1505.0" y="804" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">CriterionResult</text>
+<rect x="711.44" y="833" width="517.12" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="970.0" y="849" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchScore (total, breakdown, quality, sharedHoursPerWeek)</text>
+<rect x="638" y="929.0" width="448.0" height="47" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="645" y="945.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">8: keep total ≥ minScore and minQuality, sort with</text>
+<text x="645" y="966.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">strategy.ranking(enabledCriteria)</text>
+<text x="480" y="1035" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">loop</text>
+<rect x="545" y="1020" width="404.8" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="552" y="1036" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[each of the first `limit` ranked candidates]</text>
+<rect x="943.24" y="1043" width="603.52" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1245.0" y="1059" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">9: toDto(searcher, candidate, score, search, settings, relationship)</text>
+<rect x="1090.12" y="1071" width="309.76" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1245.0" y="1087" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchResultDto (no contact number)</text>
+<rect x="360.6" y="1113" width="188.8" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="455.0" y="1129" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchSearchResultDto</text>
+<rect x="129.92" y="1153" width="180.16000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="220.0" y="1169" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">200 OK: ranked list</text>
+<text x="62" y="1283" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">:CriterionScorer stands for the five injected implementations (course, availability, study mode, study goal, group size); WeightedMatchScorer calls each through the interface.</text>
+<text x="62" y="1308" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">An invalid filter or limit ends the call with 400 before any scoring, and no match is an ordinary 200 with an empty list. Solid arrow = call, dashed arrow = return.</text>
 </g></svg>

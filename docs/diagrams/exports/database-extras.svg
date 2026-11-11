@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2130" height="1500" viewBox="0 0 2130 1500" role="img" aria-labelledby="title description">
+<title id="title">Entity-relationship diagram — tables added by the two extras</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2130" height="1500" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2130" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1982" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1995" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="2016" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2029" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2050" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2063" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<polyline points="44,1446 2086,1446" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="390,260 480,260" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="390,400 435,400 435,510 480,510" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1230,300 1320,300" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1065,506 1065,640" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1650,260 1740,260" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1905,410 1905,480" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1485,458 1485,520" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1320,400 1285,400 1285,770 1320,770" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1230,900 1275,900 1275,950 1320,950" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1065,932 1065,1010" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1650,950 1740,950" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1230,1200 1320,1200" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<polyline points="1485,1086 1485,1150" fill="none" stroke="#172d3b" stroke-width="1.8" stroke-linejoin="round"/>
+<rect x="60" y="190" width="330" height="268" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-table="study_rooms"/>
+<rect x="60" y="190" width="330" height="40" rx="0" fill="#176c63" stroke="#176c63" stroke-width="1.5" />
+<rect x="480" y="190" width="330" height="196" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-table="room_presences"/>
+<rect x="480" y="190" width="330" height="40" rx="0" fill="#176c63" stroke="#176c63" stroke-width="1.5" />
+<rect x="480" y="440" width="330" height="172" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-table="room_reactions"/>
+<rect x="480" y="440" width="330" height="40" rx="0" fill="#176c63" stroke="#176c63" stroke-width="1.5" />
+<rect x="60" y="520" width="330" height="244" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-table="focus_visits"/>
+<rect x="60" y="520" width="330" height="40" rx="0" fill="#176c63" stroke="#176c63" stroke-width="1.5" />
+<rect x="60" y="840" width="330" height="172" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-table="earned_badges"/>
+<rect x="60" y="840" width="330" height="40" rx="0" fill="#176c63" stroke="#176c63" stroke-width="1.5" />
+<rect x="480" y="690" width="330" height="196" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-table="match_explanations"/>
+<rect x="480" y="690" width="330" height="40" rx="0" fill="#254e73" stroke="#254e73" stroke-width="1.5" />
+<rect x="900" y="190" width="330" height="316" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-table="study_sessions"/>
+<rect x="900" y="190" width="330" height="40" rx="0" fill="#176c63" stroke="#176c63" stroke-width="1.5" />
+<rect x="1320" y="190" width="330" height="268" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="study_plans"/>
+<rect x="1320" y="190" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1740" y="190" width="330" height="220" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="study_plan_entries"/>
+<rect x="1740" y="190" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1740" y="480" width="330" height="124" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="study_plan_entry_tasks"/>
+<rect x="1740" y="480" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1320" y="520" width="330" height="124" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="study_plan_source_files"/>
+<rect x="1320" y="520" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1320" y="710" width="330" height="124" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="study_plan_source_topics"/>
+<rect x="1320" y="710" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="900" y="640" width="330" height="292" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="quizzes"/>
+<rect x="900" y="640" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1320" y="890" width="330" height="196" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="quiz_questions"/>
+<rect x="1320" y="890" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1740" y="890" width="330" height="124" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="quiz_question_options"/>
+<rect x="1740" y="890" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="900" y="1010" width="330" height="220" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="quiz_attempts"/>
+<rect x="900" y="1010" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1320" y="1150" width="330" height="124" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" data-table="quiz_attempt_answers"/>
+<rect x="1320" y="1150" width="330" height="40" rx="0" fill="#8a5a1a" stroke="#8a5a1a" stroke-width="1.5" />
+<polyline points="398.0,251.0 398.0,269.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="405.0,251.0 405.0,269.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="464.0,260.0 480.0,269.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="464.0,260.0 480.0,260.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="464.0,260.0 480.0,251.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="455.0" cy="260.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="398.0,391.0 398.0,409.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="405.0,391.0 405.0,409.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="464.0,510.0 480.0,519.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="464.0,510.0 480.0,510.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="464.0,510.0 480.0,501.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="455.0" cy="510.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1238.0,291.0 1238.0,309.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1255.0" cy="300.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1304.0,300.0 1320.0,309.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,300.0 1320.0,300.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,300.0 1320.0,291.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1295.0" cy="300.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1074.0,514.0 1056.0,514.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1065.0" cy="531.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1065.0,624.0 1056.0,640.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1065.0,624.0 1065.0,640.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1065.0,624.0 1074.0,640.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1065.0" cy="615.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1658.0,251.0 1658.0,269.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1665.0,251.0 1665.0,269.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1724.0,260.0 1740.0,269.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1724.0,260.0 1740.0,260.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1724.0,260.0 1740.0,251.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1715.0" cy="260.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1914.0,418.0 1896.0,418.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1914.0,425.0 1896.0,425.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1905.0,464.0 1896.0,480.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1905.0,464.0 1905.0,480.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1905.0,464.0 1914.0,480.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1905.0" cy="455.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1494.0,466.0 1476.0,466.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1494.0,473.0 1476.0,473.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1485.0,504.0 1476.0,520.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1485.0,504.0 1485.0,520.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1485.0,504.0 1494.0,520.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1485.0" cy="495.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1312.0,409.0 1312.0,391.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1305.0,409.0 1305.0,391.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,770.0 1320.0,779.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,770.0 1320.0,770.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,770.0 1320.0,761.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1295.0" cy="770.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1238.0,891.0 1238.0,909.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1245.0,891.0 1245.0,909.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,950.0 1320.0,959.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,950.0 1320.0,950.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,950.0 1320.0,941.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1295.0" cy="950.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1074.0,940.0 1056.0,940.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1074.0,947.0 1056.0,947.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1065.0,994.0 1056.0,1010.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1065.0,994.0 1065.0,1010.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1065.0,994.0 1074.0,1010.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1065.0" cy="985.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1658.0,941.0 1658.0,959.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1665.0,941.0 1665.0,959.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1724.0,950.0 1740.0,959.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1724.0,950.0 1740.0,950.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1724.0,950.0 1740.0,941.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1715.0" cy="950.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1238.0,1191.0 1238.0,1209.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1245.0,1191.0 1245.0,1209.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,1200.0 1320.0,1209.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,1200.0 1320.0,1200.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1304.0,1200.0 1320.0,1191.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1295.0" cy="1200.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="1494.0,1094.0 1476.0,1094.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1494.0,1101.0 1476.0,1101.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1485.0,1134.0 1476.0,1150.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1485.0,1134.0 1485.0,1150.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1485.0,1134.0 1494.0,1150.0" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1485.0" cy="1125.0" r="6" fill="white" stroke="#172d3b" stroke-width="2"/>
+<rect x="60" y="1090" width="750" height="129" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="60" y="1320" width="2010" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">Entity-relationship diagram — tables added by the two extras</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">E2 collaborative study (rooms, sessions, forest, badges) and E1 AI study tools (explanation cache, study plans, quizzes).</text>
+<text x="2084" y="1473" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/database-extras.svg</text>
+<text x="225.0" y="217" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_rooms</text>
+<text x="69" y="253" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="122" y="253" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="380" y="253" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="69" y="277" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="122" y="277" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">study_group_id</text>
+<text x="380" y="277" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→study_groups (unique)</text>
+<text x="69" y="301" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="122" y="301" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">host_id</text>
+<text x="380" y="301" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="69" y="325" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="122" y="325" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">co_host_id</text>
+<text x="380" y="325" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="69" y="349" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="349" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">version</text>
+<text x="380" y="349" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="69" y="373" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="373" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">phase</text>
+<text x="380" y="373" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="69" y="397" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="397" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">timer_status</text>
+<text x="380" y="397" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="69" y="421" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="421" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">remaining_millis</text>
+<text x="380" y="421" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="69" y="445" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="445" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">participant_limit</text>
+<text x="380" y="445" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="645.0" y="217" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">room_presences</text>
+<text x="489" y="253" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="542" y="253" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="800" y="253" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="489" y="277" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="542" y="277" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">study_room_id</text>
+<text x="800" y="277" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="489" y="301" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="542" y="301" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="800" y="301" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="489" y="325" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="325" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">client_id</text>
+<text x="800" y="325" font-size="15" fill="#506474" font-weight="400" text-anchor="end">uuid</text>
+<text x="489" y="349" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="349" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">expires_at</text>
+<text x="800" y="349" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="489" y="373" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="373" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">presence</text>
+<text x="800" y="373" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="645.0" y="467" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">room_reactions</text>
+<text x="489" y="503" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="542" y="503" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="800" y="503" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="489" y="527" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="542" y="527" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">study_room_id</text>
+<text x="800" y="527" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="489" y="551" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="542" y="551" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="800" y="551" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="489" y="575" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="575" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">type</text>
+<text x="800" y="575" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="489" y="599" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="599" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">sent_at</text>
+<text x="800" y="599" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="225.0" y="547" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">focus_visits</text>
+<text x="69" y="583" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="122" y="583" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="380" y="583" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="69" y="607" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="122" y="607" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="380" y="607" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="69" y="631" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="122" y="631" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">study_group_id</text>
+<text x="380" y="631" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→study_groups</text>
+<text x="69" y="655" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="655" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">group_name</text>
+<text x="380" y="655" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="69" y="679" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="679" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">started_at</text>
+<text x="380" y="679" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="69" y="703" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="703" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">last_seen_at</text>
+<text x="380" y="703" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="69" y="727" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="727" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">focused_millis</text>
+<text x="380" y="727" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="69" y="751" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="751" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">ended_at</text>
+<text x="380" y="751" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="225.0" y="867" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">earned_badges</text>
+<text x="69" y="903" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="122" y="903" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="380" y="903" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="69" y="927" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="122" y="927" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="380" y="927" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="69" y="951" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="951" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">badge</text>
+<text x="380" y="951" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="69" y="975" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="975" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">best_tier</text>
+<text x="380" y="975" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="69" y="999" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="122" y="999" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">first_earned_at</text>
+<text x="380" y="999" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="645.0" y="717" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">match_explanations</text>
+<text x="489" y="753" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="542" y="753" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="800" y="753" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="489" y="777" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">UQ</text>
+<text x="542" y="777" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">evidence_hash</text>
+<text x="800" y="777" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar(64)</text>
+<text x="489" y="801" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="801" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">prompt_version</text>
+<text x="800" y="801" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="489" y="825" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="825" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">model</text>
+<text x="800" y="825" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="489" y="849" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="849" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">explanation_text</text>
+<text x="800" y="849" font-size="15" fill="#506474" font-weight="400" text-anchor="end">text</text>
+<text x="489" y="873" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="542" y="873" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">created_at</text>
+<text x="800" y="873" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="1065.0" y="217" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_sessions</text>
+<text x="909" y="253" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="962" y="253" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="1220" y="253" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="909" y="277" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="277" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">study_group_id</text>
+<text x="1220" y="277" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→study_groups</text>
+<text x="909" y="301" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="301" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">connection_id</text>
+<text x="1220" y="301" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→connections</text>
+<text x="909" y="325" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="325" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">created_by</text>
+<text x="1220" y="325" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→users</text>
+<text x="909" y="349" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="349" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">title</text>
+<text x="1220" y="349" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="909" y="373" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="373" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">start_at</text>
+<text x="1220" y="373" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="909" y="397" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="397" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">end_at</text>
+<text x="1220" y="397" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="909" y="421" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="421" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">time_zone</text>
+<text x="1220" y="421" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="909" y="445" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="445" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">occurrence_count</text>
+<text x="1220" y="445" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="909" y="469" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="469" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">status</text>
+<text x="1220" y="469" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="909" y="493" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="493" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">version</text>
+<text x="1220" y="493" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1485.0" y="217" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_plans</text>
+<text x="1329" y="253" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1382" y="253" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="1640" y="253" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="277" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="277" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">scope</text>
+<text x="1640" y="277" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1329" y="301" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="1382" y="301" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="1640" y="301" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="1329" y="325" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="1382" y="325" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">session_id</text>
+<text x="1640" y="325" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="349" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="1382" y="349" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">course_id</text>
+<text x="1640" y="349" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→courses</text>
+<text x="1329" y="373" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="1382" y="373" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">created_by</text>
+<text x="1640" y="373" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→users</text>
+<text x="1329" y="397" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="397" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">first_block_date</text>
+<text x="1640" y="397" font-size="15" fill="#506474" font-weight="400" text-anchor="end">date</text>
+<text x="1329" y="421" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="421" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">block_count</text>
+<text x="1640" y="421" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1329" y="445" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="445" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">exam_date</text>
+<text x="1640" y="445" font-size="15" fill="#506474" font-weight="400" text-anchor="end">date</text>
+<text x="1905.0" y="217" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_plan_entries</text>
+<text x="1749" y="253" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1802" y="253" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="2060" y="253" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1749" y="277" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="1802" y="277" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">plan_id</text>
+<text x="2060" y="277" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1749" y="301" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="301" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">position</text>
+<text x="2060" y="301" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1749" y="325" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="325" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">scheduled_date</text>
+<text x="2060" y="325" font-size="15" fill="#506474" font-weight="400" text-anchor="end">date</text>
+<text x="1749" y="349" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="349" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">title</text>
+<text x="2060" y="349" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1749" y="373" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="373" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">planned_minutes</text>
+<text x="2060" y="373" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1749" y="397" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="397" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">completed</text>
+<text x="2060" y="397" font-size="15" fill="#506474" font-weight="400" text-anchor="end">boolean</text>
+<text x="1905.0" y="507" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_plan_entry_tasks</text>
+<text x="1749" y="543" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK FK</text>
+<text x="1802" y="543" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">entry_id</text>
+<text x="2060" y="543" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1749" y="567" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1802" y="567" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">position</text>
+<text x="2060" y="567" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1749" y="591" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="591" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">description</text>
+<text x="2060" y="591" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1485.0" y="547" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_plan_source_files</text>
+<text x="1329" y="583" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK FK</text>
+<text x="1382" y="583" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">plan_id</text>
+<text x="1640" y="583" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="607" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1382" y="607" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">position</text>
+<text x="1640" y="607" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1329" y="631" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="631" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">filename</text>
+<text x="1640" y="631" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1485.0" y="737" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">study_plan_source_topics</text>
+<text x="1329" y="773" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK FK</text>
+<text x="1382" y="773" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">plan_id</text>
+<text x="1640" y="773" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="797" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1382" y="797" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">position</text>
+<text x="1640" y="797" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1329" y="821" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="821" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">title</text>
+<text x="1640" y="821" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1065.0" y="667" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">quizzes</text>
+<text x="909" y="703" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="962" y="703" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="1220" y="703" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="909" y="727" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="727" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">scope</text>
+<text x="1220" y="727" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="909" y="751" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="751" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">group_id</text>
+<text x="1220" y="751" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→study_groups</text>
+<text x="909" y="775" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="775" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="1220" y="775" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="909" y="799" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="799" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">session_id</text>
+<text x="1220" y="799" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="909" y="823" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="823" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">created_by</text>
+<text x="1220" y="823" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="909" y="847" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="847" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">course_id</text>
+<text x="1220" y="847" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→courses</text>
+<text x="909" y="871" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="871" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">title</text>
+<text x="1220" y="871" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="909" y="895" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="895" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">status</text>
+<text x="1220" y="895" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="909" y="919" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="919" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">closes_at</text>
+<text x="1220" y="919" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="1485.0" y="917" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">quiz_questions</text>
+<text x="1329" y="953" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1382" y="953" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="1640" y="953" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="977" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="1382" y="977" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">quiz_id</text>
+<text x="1640" y="977" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="1001" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="1001" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">position</text>
+<text x="1640" y="1001" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1329" y="1025" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="1025" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">prompt</text>
+<text x="1640" y="1025" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1329" y="1049" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="1049" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">correct_option</text>
+<text x="1640" y="1049" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1329" y="1073" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="1073" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">explanation</text>
+<text x="1640" y="1073" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1905.0" y="917" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">quiz_question_options</text>
+<text x="1749" y="953" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK FK</text>
+<text x="1802" y="953" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">question_id</text>
+<text x="2060" y="953" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1749" y="977" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="1802" y="977" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">position</text>
+<text x="2060" y="977" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1749" y="1001" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1802" y="1001" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">text</text>
+<text x="2060" y="1001" font-size="15" fill="#506474" font-weight="400" text-anchor="end">varchar</text>
+<text x="1065.0" y="1037" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">quiz_attempts</text>
+<text x="909" y="1073" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK</text>
+<text x="962" y="1073" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">id</text>
+<text x="1220" y="1073" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="909" y="1097" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="1097" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">quiz_id</text>
+<text x="1220" y="1097" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="909" y="1121" font-size="13" fill="#176c63" font-weight="700" text-anchor="start">FK</text>
+<text x="962" y="1121" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">student_id</text>
+<text x="1220" y="1121" font-size="15" fill="#506474" font-weight="400" text-anchor="end">→students</text>
+<text x="909" y="1145" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="1145" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">started_at</text>
+<text x="1220" y="1145" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="909" y="1169" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="1169" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">submitted_at</text>
+<text x="1220" y="1169" font-size="15" fill="#506474" font-weight="400" text-anchor="end">timestamp</text>
+<text x="909" y="1193" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="1193" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">score</text>
+<text x="1220" y="1193" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="909" y="1217" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="962" y="1217" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">total</text>
+<text x="1220" y="1217" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="1485.0" y="1177" font-size="18" fill="#ffffff" font-weight="700" text-anchor="middle">quiz_attempt_answers</text>
+<text x="1329" y="1213" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK FK</text>
+<text x="1382" y="1213" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">attempt_id</text>
+<text x="1640" y="1213" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="1237" font-size="13" fill="#8a5a1a" font-weight="700" text-anchor="start">PK FK</text>
+<text x="1382" y="1237" font-size="16" fill="#172d3b" font-weight="700" text-anchor="start">question_id</text>
+<text x="1640" y="1237" font-size="15" fill="#506474" font-weight="400" text-anchor="end">bigint</text>
+<text x="1329" y="1261" font-size="13" fill="#176c63" font-weight="700" text-anchor="start"></text>
+<text x="1382" y="1261" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">chosen_option</text>
+<text x="1640" y="1261" font-size="15" fill="#506474" font-weight="400" text-anchor="end">int</text>
+<text x="77" y="1118" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">Reading the arrows in the type column</text>
+<text x="77" y="1148" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">→ names a table in the compulsory schema.</text>
+<text x="77" y="1173" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Those links are listed, not drawn, to keep</text>
+<text x="77" y="1198" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">this panel readable.</text>
+<text x="77" y="1348" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Teal = collaborative study (E2) and its forest and badges; amber = AI study tools; blue = the E1 explanation cache, keyed only by an evidence hash, so it stores no student identity.</text>
+<text x="77" y="1373" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">study_sessions belongs to exactly one group or one connection (a database check). A plan or quiz may be attached to a session; deleting the parent cascades.</text>
+</g></svg>

@@ -6,10 +6,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.MethodParameter;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,4 +60,24 @@ class ApiExceptionHandlerTest {
         assertEquals(HttpStatus.NOT_ACCEPTABLE, reply.getStatusCode());
         assertNull(reply.getBody());
     }
+
+    @Test
+    void aFormValueOfTheWrongTypeIsReportedWithoutJavaClassNames() throws NoSuchMethodException {
+        var binding = new BeanPropertyBindingResult(new Object(), "input");
+        binding.addError(new FieldError("input", "examDate", "garbage", true, null, null,
+                "Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'"));
+        binding.addError(new FieldError("input", "courseId", "Choose a course"));
+        var parameter = new MethodParameter(getClass().getDeclaredMethod("formEndpoint", Object.class), 0);
+
+        ResponseEntity<ApiProblem> reply = handler.validation(new MethodArgumentNotValidException(parameter, binding));
+
+        assertEquals(HttpStatus.BAD_REQUEST, reply.getStatusCode());
+        assertEquals("VALIDATION_FAILED", reply.getBody().code());
+        assertEquals("Enter a valid value", reply.getBody().fieldErrors().get("examDate"));
+        assertEquals("Choose a course", reply.getBody().fieldErrors().get("courseId"));
+    }
+
+    /** Stands in for a controller method; the exception only needs a parameter to point at. */
+    @SuppressWarnings("unused")
+    private void formEndpoint(Object input) { }
 }

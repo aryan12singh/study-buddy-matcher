@@ -56,4 +56,4 @@ export STUDYBUDDY_TEST_DATABASE_USERNAME=studybuddy_test
 export STUDYBUDDY_TEST_DATABASE_PASSWORD="$task_database_password"
 export STUDYBUDDY_TEST_JWT_SECRET="$task_jwt_secret"
 cd "$task_repo_root/backend"
-./mvnw -B test "$@"
+./mvnw -B clean test "$@"

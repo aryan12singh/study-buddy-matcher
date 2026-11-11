@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2310" height="1235" viewBox="0 0 2310 1235" role="img" aria-labelledby="title description">
+<title id="title">UML sequence — who receives the contact number</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2310" height="1235" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2310" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="2162" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2175" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="2196" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2209" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2230" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2243" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="143" width="2220" height="919" rx="0" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polygon points="45,143 323.79999999999995,143 323.79999999999995,161 311.79999999999995,173 45,173" fill="#eaf1f7" stroke="#93a9b6" stroke-width="1.5"/>
+<text x="57" y="164" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">sd  ProfileViewService.view</text>
+<polyline points="44,1181 2266,1181" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="110,273 110,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="390,263 390,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="710,263 710,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="960,263 960,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1230,263 1230,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1570,263 1570,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="117,310 383,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="397,355 703,355" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="717,400 953,400" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="717,445 953,445" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="953,480 717,480" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="717,525 1223,525" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1237,570 1563,570" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1563,610 1237,610" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1870,759 1870,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1237,730 1749.0,730" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="2090,884 2090,1040" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1237,855 1984.6,855" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1223,925 717,925" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="703,965 397,965" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="383,1005 117,1005" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<circle cx="110" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="110,207 110,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="94,215 126,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="97,245 110,229 123,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="258.6" y="205" width="262.8" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="ProfileViewController"/>
+<rect x="594.2" y="205" width="231.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="ProfileViewService"/>
+<rect x="870.2" y="205" width="179.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AccountAccess"/>
+<rect x="1103.8" y="205" width="252.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="ProfileViewAssembler"/>
+<rect x="1402.2" y="205" width="335.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="ProfileRelationshipAssembler"/>
+<rect x="383" y="310" width="14" height="695" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="703" y="355" width="14" height="610" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="953" y="400" width="14" height="80" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1223" y="525" width="14" height="400" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1563" y="570" width="14" height="40" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1090" y="645" width="1155" height="255" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="1090,645 1156,645 1156,663 1146,673 1090,673" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="1749.0" y="701" width="242.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="ConnectedProfileDto"/>
+<polyline points="1090,780 2245,780" fill="none" stroke="#7f96a3" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="1984.6" y="826" width="210.8" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="PublicProfileDto"/>
+<rect x="45" y="1080" width="2220" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — who receives the contact number</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">GET /api/students/{id}/profile: the assembler chooses the DTO type on the server, so a stranger&#x27;s response has no contact field at all.</text>
+<text x="2264" y="1208" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/contact-privacy-sequence.svg</text>
+<text x="110" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
+<text x="390" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:ProfileViewController</text>
+<text x="710" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:ProfileViewService</text>
+<text x="960" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:AccountAccess</text>
+<text x="1230" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:ProfileViewAssembler</text>
+<text x="1570" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:ProfileRelationshipAssembler</text>
+<rect x="99.44" y="283" width="301.12" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="250.0" y="299" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">1: GET /api/students/{id}/profile</text>
+<rect x="421.03999999999996" y="328" width="257.92" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="550.0" y="344" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">2: view(subjectId, viewerId)</text>
+<rect x="710.36" y="373" width="249.28000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="835.0" y="389" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">3: requireStudent(viewerId)</text>
+<rect x="701.72" y="418" width="266.56" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="835.0" y="434" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">4: eligibleStudent(subjectId)</text>
+<rect x="753.56" y="453" width="162.88" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="835.0" y="469" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">subject : Student</text>
+<rect x="832.4" y="498" width="275.20000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="970.0" y="514" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">5: assemble(subject, viewerId)</text>
+<rect x="1253.76" y="543" width="292.48" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1400.0" y="559" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">6: assemble(subjectId, viewerId)</text>
+<rect x="1232.16" y="583" width="335.68" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1400.0" y="599" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">relationship : ProfileRelationshipDto</text>
+<text x="1100" y="665" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">alt</text>
+<rect x="1165" y="650" width="387.52000000000004" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1172" y="666" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[relationship.state() is SELF or CONNECTED]</text>
+<text x="1870" y="737" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:ConnectedProfileDto</text>
+<rect x="1338.12" y="703" width="309.76" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1493.0" y="719" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">7a: «create» (…, contactNumber, …)</text>
+<rect x="1101" y="786" width="422.08000000000004" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1108" y="802" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[else: STRANGER, or a request is still pending]</text>
+<text x="2090" y="862" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:PublicProfileDto</text>
+<rect x="1408.3999999999999" y="828" width="404.8" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1610.8" y="844" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">7b: «create» (… no contactNumber component …)</text>
+<rect x="918.8" y="898" width="102.4" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="970.0" y="914" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">ProfileDto</text>
+<rect x="498.8" y="938" width="102.4" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="550.0" y="954" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">ProfileDto</text>
+<rect x="155.6" y="978" width="188.8" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="250.0" y="994" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">200 OK, never cached</text>
+<text x="62" y="1108" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ProfileDto is a sealed interface that permits exactly these two records. PublicProfileDto has no contactNumber component, so the value cannot be serialised by mistake.</text>
+<text x="62" y="1133" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">CONNECTED means an active Connection exists between viewer and subject. Group membership and administrator rights never select ConnectedProfileDto.</text>
+</g></svg>

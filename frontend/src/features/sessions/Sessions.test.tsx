@@ -144,6 +144,14 @@ describe('dated study session workflows', () => {
     expect(post.mock.calls[0][1]).not.toHaveProperty('suggestionDuration')
   })
 
+  it('does not claim nobody saved availability when the participants only have no time in common', async () => {
+    serve({ '/groups/5/sessions/availability': { ...availability, participantCount: 4, sharedMinutes: 0, sharedSlots: [] } })
+    renderPage(<SessionFormPage kind="GROUP" />, '/groups/5/sessions/new', '/groups/:id/sessions/new')
+    expect(await screen.findByText('4 participants · 0 shared minutes each week')).toBeInTheDocument()
+    expect(screen.getByText(/No shared weekly time is saved/)).toBeInTheDocument()
+    expect(screen.queryByText('No weekly availability saved.')).not.toBeInTheDocument()
+  })
+
   it('keeps manual saving available when a suggestion duration is invalid or no shared window fits', async () => {
     serve()
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(session))

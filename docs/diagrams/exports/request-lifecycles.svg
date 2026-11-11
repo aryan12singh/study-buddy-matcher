@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1300" viewBox="0 0 1900 1300" role="img" aria-labelledby="title description">
+<title id="title">UML state machines — requests, connections and groups</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="1900" height="1300" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1900" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1752" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1765" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1786" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1799" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="1820" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1833" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="170" width="1150" height="460" rx="10" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<text x="67" y="204" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">MatchRequest  (status : MatchRequestStatus)</text>
+<rect x="1215" y="170" width="640" height="460" rx="10" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<text x="1237" y="204" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">Connection  (active while endedAt is null)</text>
+<rect x="45" y="660" width="1150" height="460" rx="10" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<text x="67" y="694" font-size="19" fill="#176c63" font-weight="700" text-anchor="start">GroupJoinRequest  (status : GroupJoinRequestStatus)</text>
+<rect x="1215" y="660" width="640" height="460" rx="10" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<text x="1237" y="694" font-size="19" fill="#176c63" font-weight="700" text-anchor="start">StudyGroup  (active : boolean)</text>
+<polyline points="44,1246 1856,1246" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="111,425 360,425" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="560,400.0 610,400.0 610,275 930,275" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1130,275 1153,275" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="560,425.0 930,425" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1130,425 1153,425" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="560,450.0 610,450.0 610,575 930,575" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1130,575 1153,575" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1400,243 1400,270" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1400,380 1400,460" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1400,570 1400,590" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="111,915 360,915" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="560,890.0 610,890.0 610,765 930,765" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1130,765 1153,765" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="560,915.0 930,915" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1130,915 1153,915" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="560,940.0 610,940.0 610,1065 930,1065" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1130,1065 1153,1065" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1400,733 1400,760" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1400,870 1400,950" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1400,1060 1400,1080" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1530,795 1575,795 1575,840 1530,840" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="100" cy="425" r="11" fill="#172d3b"/>
+<rect x="360" y="385" width="200" height="80" rx="18" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<rect x="930" y="240" width="200" height="70" rx="18" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<circle cx="1170" cy="275" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1170" cy="275" r="8" fill="#172d3b"/>
+<rect x="930" y="390" width="200" height="70" rx="18" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<circle cx="1170" cy="425" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1170" cy="425" r="8" fill="#172d3b"/>
+<rect x="930" y="540" width="200" height="70" rx="18" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<circle cx="1170" cy="575" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1170" cy="575" r="8" fill="#172d3b"/>
+<circle cx="1400" cy="232" r="11" fill="#172d3b"/>
+<rect x="1270" y="270" width="260" height="110" rx="18" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<polyline points="1270,320 1530,320" fill="none" stroke="#254e73" stroke-width="1.5" stroke-linejoin="round"/>
+<rect x="1270" y="460" width="260" height="110" rx="18" fill="#eaf1f7" stroke="#254e73" stroke-width="1.5" />
+<polyline points="1270,510 1530,510" fill="none" stroke="#254e73" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="1400" cy="607" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1400" cy="607" r="8" fill="#172d3b"/>
+<circle cx="100" cy="915" r="11" fill="#172d3b"/>
+<rect x="360" y="875" width="200" height="80" rx="18" fill="#eaf5f1" stroke="#176c63" stroke-width="1.5" />
+<rect x="930" y="730" width="200" height="70" rx="18" fill="#eaf5f1" stroke="#176c63" stroke-width="1.5" />
+<circle cx="1170" cy="765" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1170" cy="765" r="8" fill="#172d3b"/>
+<rect x="930" y="880" width="200" height="70" rx="18" fill="#eaf5f1" stroke="#176c63" stroke-width="1.5" />
+<circle cx="1170" cy="915" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1170" cy="915" r="8" fill="#172d3b"/>
+<rect x="930" y="1030" width="200" height="70" rx="18" fill="#eaf5f1" stroke="#176c63" stroke-width="1.5" />
+<circle cx="1170" cy="1065" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1170" cy="1065" r="8" fill="#172d3b"/>
+<circle cx="1400" cy="722" r="11" fill="#172d3b"/>
+<rect x="1270" y="760" width="260" height="110" rx="18" fill="#eaf5f1" stroke="#176c63" stroke-width="1.5" />
+<polyline points="1270,810 1530,810" fill="none" stroke="#176c63" stroke-width="1.5" stroke-linejoin="round"/>
+<rect x="1270" y="950" width="260" height="110" rx="18" fill="#eaf5f1" stroke="#176c63" stroke-width="1.5" />
+<polyline points="1270,1000 1530,1000" fill="none" stroke="#176c63" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="1400" cy="1097" r="15" fill="white" stroke="#172d3b" stroke-width="2.5"/><circle cx="1400" cy="1097" r="8" fill="#172d3b"/>
+<rect x="45" y="1150" width="1810" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML state machines — requests, connections and groups</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Each entity changes state only through named methods (accept, decline, cancel, reject, withdraw, end, close); there is no status setter.</text>
+<text x="1854" y="1273" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/request-lifecycles.svg</text>
+<text x="460.0" y="433.0" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">PENDING</text>
+<rect x="112.24999999999999" y="338" width="245.50000000000003" height="71" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="235" y="355" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">send()</text>
+<text x="235" y="377" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">[not self, not connected,</text>
+<text x="235" y="399" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">no pending request]</text>
+<text x="1030.0" y="283.0" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">ACCEPTED</text>
+<rect x="605.94" y="219" width="328.12" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="770" y="236" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">accept()  [actor is receiver]</text>
+<text x="770" y="258" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">/ create Connection, notify sender</text>
+<text x="1030.0" y="433.0" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">DECLINED</text>
+<rect x="624.3" y="369" width="291.40000000000003" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="770" y="386" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">decline()  [actor is receiver]</text>
+<text x="770" y="408" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">/ notify sender</text>
+<text x="1030.0" y="583.0" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">CANCELLED</text>
+<rect x="638.0699999999999" y="519" width="263.86" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="770" y="536" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">cancel()  [actor is sender]</text>
+<text x="770" y="558" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">/ notify receiver</text>
+<text x="1400.0" y="304" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">ACTIVE</text>
+<text x="1400.0" y="348" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">endedAt = null</text>
+<text x="1400.0" y="372" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">contact number visible</text>
+<text x="1400.0" y="494" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">ENDED</text>
+<text x="1400.0" y="538" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">endedAt set, row kept</text>
+<text x="1400.0" y="562" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">contact hidden again</text>
+<rect x="1415" y="235" width="208.78" height="27" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1422" y="252" font-size="17" fill="#506474" font-weight="400" text-anchor="start">MatchRequest accepted</text>
+<rect x="1415" y="391" width="300.58000000000004" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1422" y="408" font-size="17" fill="#506474" font-weight="400" text-anchor="start">end()  [actor is a participant]</text>
+<text x="1422" y="430" font-size="17" fill="#506474" font-weight="400" text-anchor="start">/ notify the other student</text>
+<text x="460.0" y="923.0" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">PENDING</text>
+<rect x="112.24999999999999" y="828" width="245.50000000000003" height="71" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="235" y="845" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">request()</text>
+<text x="235" y="867" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">[group open, has room,</text>
+<text x="235" y="889" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">not member, none pending]</text>
+<text x="1030.0" y="773.0" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">ACCEPTED</text>
+<rect x="605.94" y="709" width="328.12" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="770" y="726" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">accept()  [leader; open, not full]</text>
+<text x="770" y="748" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">/ create GroupMembership, notify</text>
+<text x="1030.0" y="923.0" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">REJECTED</text>
+<rect x="624.3" y="859" width="291.40000000000003" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="770" y="876" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">reject()  [leader; group open]</text>
+<text x="770" y="898" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">/ notify applicant</text>
+<text x="1030.0" y="1073.0" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">WITHDRAWN</text>
+<rect x="615.12" y="1009" width="309.76" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="770" y="1026" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">withdraw()  [actor is applicant]</text>
+<text x="770" y="1048" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">/ notify leader</text>
+<text x="1400.0" y="794" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">OPEN</text>
+<text x="1400.0" y="838" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">active = true</text>
+<text x="1400.0" y="862" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">leader is the first member</text>
+<text x="1400.0" y="984" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">CLOSED</text>
+<text x="1400.0" y="1028" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">active = false</text>
+<text x="1400.0" y="1052" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">members kept as history</text>
+<rect x="1415" y="725" width="172.06" height="27" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1422" y="742" font-size="17" fill="#506474" font-weight="400" text-anchor="start">new StudyGroup(…)</text>
+<rect x="1415" y="881" width="263.86" height="49" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1422" y="898" font-size="17" fill="#506474" font-weight="400" text-anchor="start">close()  [actor is leader]</text>
+<text x="1422" y="920" font-size="17" fill="#506474" font-weight="400" text-anchor="start">/ GroupClosure.close(group)</text>
+<rect x="1583" y="795" width="172.06" height="27" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1590" y="812" font-size="17" fill="#506474" font-weight="400" text-anchor="start">setters  [leader]</text>
+<text x="62" y="1178" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Label format: event [guard] / action. A transition out of a final state throws IllegalStateException, which the API reports as 409 STATE_CONFLICT.</text>
+<text x="62" y="1203" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Deactivating an account also cancels its pending match requests, withdraws its applications, ends its connections and closes the groups it leads (StudentDeactivation).</text>
+</g></svg>

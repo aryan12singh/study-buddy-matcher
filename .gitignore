@@ -23,6 +23,7 @@ dist/
 # Local diagram tooling
 __pycache__/
 *.pyc
+docs/diagrams/exports/png/
 
 # ---------------------------------------------------------------------------
 # Environment (never commit real credentials)

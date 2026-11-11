@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2430" height="1600" viewBox="0 0 2430 1600" role="img" aria-labelledby="title description">
+<title id="title">UML sequence — send and accept a match request</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2430" height="1600" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2430" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="2282" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2295" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="2316" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2329" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2350" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2363" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="143" width="2340" height="1284" rx="0" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polygon points="45,143 419.8,143 419.8,161 407.8,173 45,173" fill="#eaf1f7" stroke="#93a9b6" stroke-width="1.5"/>
+<text x="57" y="164" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">sd  MatchRequestService.send / accept</text>
+<polyline points="44,1546 2386,1546" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="110,273 110,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="250,273 250,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="500,263 500,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="850,263 850,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1110,263 1110,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1690,263 1690,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1990,263 1990,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="2260,263 2260,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="117,310 493,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="507,355 843,355" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,400 1103,400" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,445 1103,445" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1103,480 857,480" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="857,525 1983,525" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1983,555 857,555" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="857,600 1683,600" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1683,630 857,630" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1390,709 1390,1405" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="857,680 1269.0,680" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="857,735 1683,735" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,790 2253,790" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="843,825 507,825" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="493,860 117,860" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="257,910 493,910" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="507,955 843,955" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,990 901,990 901,1034 864,1034" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,1150 1383,1150" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1397,1160 1441,1160 1441,1190 1404,1190" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,1230 1983,1230" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="857,1270 2253,1270" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="843,1300 507,1300" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="493,1318 257,1318" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="843,1362 507,1362" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<circle cx="110" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="110,207 110,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="94,215 126,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="97,245 110,229 123,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="250" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="250,207 250,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="234,215 266,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="237,245 250,229 263,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="363.4" y="205" width="273.20000000000005" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchRequestController"/>
+<rect x="729.0" y="205" width="242.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchRequestService"/>
+<rect x="1020.2" y="205" width="179.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AccountAccess"/>
+<rect x="1553.4" y="205" width="273.20000000000005" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchRequestRepository"/>
+<rect x="1863.8" y="205" width="252.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="ConnectionRepository"/>
+<rect x="2139.0" y="205" width="242.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="NotificationService"/>
+<rect x="493" y="310" width="14" height="550" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="843" y="355" width="14" height="470" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1103" y="400" width="14" height="18" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1103" y="445" width="14" height="35" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1983" y="525" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1683" y="600" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1269.0" y="651" width="242.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchRequest"/>
+<rect x="1683" y="735" width="14" height="18" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="2253" y="790" width="14" height="18" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="493" y="910" width="14" height="460" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="843" y="955" width="14" height="380" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="850" y="1034" width="14" height="32" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="200" y="1090" width="2165" height="295" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="200,1090 266,1090 266,1108 256,1118 200,1118" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="1383" y="1150" width="14" height="55" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1390" y="1190" width="14" height="15" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1983" y="1230" width="14" height="18" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="2253" y="1270" width="14" height="18" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<polyline points="200,1330 2365,1330" fill="none" stroke="#7f96a3" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="45" y="1445" width="2340" height="99" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — send and accept a match request</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Student A sends a request; Student B accepts it. Accepting creates the Connection that makes each contact number visible.</text>
+<text x="2384" y="1573" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/match-request-sequence.svg</text>
+<text x="110" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Student A</text>
+<text x="250" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Student B</text>
+<text x="500" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchRequestController</text>
+<text x="850" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchRequestService</text>
+<text x="1110" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:AccountAccess</text>
+<text x="1690" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchRequestRepository</text>
+<text x="1990" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:ConnectionRepository</text>
+<text x="2260" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:NotificationService</text>
+<rect x="180.35999999999999" y="283" width="249.28000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="305.0" y="299" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">1: POST /api/match-requests</text>
+<rect x="502.84" y="328" width="344.32000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="675.0" y="344" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">2: send(senderId, receiverId, message)</text>
+<rect x="885.6" y="373" width="188.8" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="980.0" y="389" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">3: lockStudents(ids)</text>
+<rect x="842.4" y="418" width="275.20000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="980.0" y="434" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">4: eligibleStudent(receiverId)</text>
+<rect x="894.24" y="453" width="171.52" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="980.0" y="469" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">receiver : Student</text>
+<rect x="1230.56" y="498" width="378.88" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1420.0" y="514" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">5: findActiveBetween(senderId, receiverId)</text>
+<rect x="1390.4" y="528" width="59.2" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1420.0" y="544" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">empty</text>
+<rect x="1076.24" y="573" width="387.52000000000004" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1270.0" y="589" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">6: findPendingBetween(senderId, receiverId)</text>
+<rect x="1240.4" y="603" width="59.2" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1270.0" y="619" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">empty</text>
+<text x="1390" y="687" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">request:MatchRequest</text>
+<rect x="1007.48" y="653" width="111.04" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1063.0" y="669" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">7: «create»</text>
+<rect x="1523" y="670" width="154.24" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1530" y="686" font-size="16" fill="#506474" font-weight="400" text-anchor="start">status = PENDING</text>
+<rect x="1192.88" y="708" width="154.24" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1270.0" y="724" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">8: save(request)</text>
+<rect x="1361.24" y="763" width="387.52000000000004" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1555.0" y="779" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">9: notify(receiver, MATCH_REQUEST_RECEIVED)</text>
+<rect x="559.0" y="798" width="232.0" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="675.0" y="814" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchRequestDto (PENDING)</text>
+<rect x="249.48" y="833" width="111.04" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="305.0" y="849" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">201 Created</text>
+<rect x="271.96" y="883" width="206.08" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="375.0" y="899" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">10: POST …/{id}/accept</text>
+<rect x="537.4" y="928" width="275.20000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="675.0" y="944" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">11: accept(requestId, actorId)</text>
+<rect x="908" y="1001.0" width="240.64000000000001" height="47" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="915" y="1017.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">12: forDecision(requestId,</text>
+<text x="915" y="1038.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">actorId)</text>
+<text x="210" y="1110" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">alt</text>
+<rect x="275" y="1095" width="560.32" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="282" y="1111" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[request is PENDING and the two students are not yet connected]</text>
+<rect x="1060.16" y="1123" width="119.68" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1120.0" y="1139" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">13: accept()</text>
+<rect x="1448" y="1164.0" width="214.72000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1455" y="1180.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">13.1: respond(ACCEPTED)</text>
+<rect x="1230.56" y="1203" width="378.88" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1420.0" y="1219" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">14: save(new Connection(sender, receiver))</text>
+<rect x="1365.56" y="1243" width="378.88" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1555.0" y="1259" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">15: notify(sender, MATCH_REQUEST_ACCEPTED)</text>
+<rect x="554.68" y="1273" width="240.64000000000001" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="675.0" y="1289" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchRequestDto (ACCEPTED)</text>
+<rect x="341.08" y="1291" width="67.84" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="375.0" y="1307" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">200 OK</text>
+<rect x="211" y="1336" width="67.84" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="218" y="1352" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[else]</text>
+<rect x="615.16" y="1335" width="119.68" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="675.0" y="1351" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">409 Conflict</text>
+<rect x="993" y="1350" width="499.84000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1000" y="1366" font-size="16" fill="#506474" font-weight="400" text-anchor="start">IllegalStateException or MatchRequestNotAllowedException</text>
+<text x="62" y="1473" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">forDecision() runs first: it checks that the actor is the receiver (otherwise 403), locks both student rows in a fixed order through AccountAccess, then loads the request for update.</text>
+<text x="62" y="1498" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">MatchRequest owns its state machine: accept(), decline() and cancel() all go through the private respond(), which throws once the request has left PENDING. There is no status setter.</text>
+<text x="62" y="1523" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Nothing here returns a contact number. The next profile read picks ConnectedProfileDto because an active Connection now exists (see the contact-privacy sequence).</text>
+</g></svg>

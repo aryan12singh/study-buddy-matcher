@@ -3,11 +3,18 @@
 <title id="title">UML classes — identity and study profile</title>
 <desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
 <g font-family="Tahoma, Verdana, Arial, sans-serif">
 <rect x="0" y="0" width="1600" height="1130" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1452" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1465" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1486" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1499" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="1520" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1533" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
 <polyline points="44,1076 1556,1076" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="610,310 410,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="215,461 215,720" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
@@ -36,32 +43,32 @@
 <text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Concrete account and profile entities are associated through a shared identifier; there is no User inheritance tree.</text>
 <text x="1554" y="1103" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/identity-profile.svg</text>
 <text x="235.0" y="243" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">User</text>
-<text x="76" y="288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id: Long</text>
-<text x="76" y="314" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- email: String</text>
-<text x="76" y="340" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- passwordHash: String</text>
-<text x="76" y="366" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- role: Role</text>
-<text x="76" y="392" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- active: boolean</text>
-<text x="76" y="418" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- tokenVersion: long</text>
-<text x="76" y="444" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- lastLoginAt: Instant</text>
+<text x="76" y="288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id : Long</text>
+<text x="76" y="314" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- email : String</text>
+<text x="76" y="340" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- passwordHash : String</text>
+<text x="76" y="366" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- role : Role</text>
+<text x="76" y="392" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- active : boolean</text>
+<text x="76" y="418" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- tokenVersion : long</text>
+<text x="76" y="444" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- lastLoginAt : Instant</text>
 <text x="850.0" y="213" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Student</text>
-<text x="626" y="258" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id: Long</text>
-<text x="626" y="284" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- user: User</text>
-<text x="626" y="310" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- name, school, programme: String</text>
-<text x="626" y="336" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- yearOfStudy: Integer</text>
-<text x="626" y="362" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- contactNumber: String</text>
-<text x="626" y="388" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- coursesTaken: Set&lt;Course&gt;</text>
-<text x="626" y="414" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- targetCourse: Course</text>
-<text x="626" y="440" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- preferredStudyMode: StudyMode</text>
-<text x="626" y="466" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- preferredGroupSizeMin/Max: Integer</text>
-<text x="626" y="492" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- studyGoals: Set&lt;StudyGoal&gt;</text>
+<text x="626" y="258" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id : Long</text>
+<text x="626" y="284" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- user : User</text>
+<text x="626" y="310" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- name, school, programme : String</text>
+<text x="626" y="336" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- yearOfStudy : Integer</text>
+<text x="626" y="362" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- contactNumber : String</text>
+<text x="626" y="388" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- coursesTaken : Set&lt;Course&gt;</text>
+<text x="626" y="414" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- targetCourse : Course</text>
+<text x="626" y="440" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- preferredStudyMode : StudyMode</text>
+<text x="626" y="466" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- preferredGroupSizeMin/Max : Integer</text>
+<text x="626" y="492" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- studyGoals : Set&lt;StudyGoal&gt;</text>
 <text x="1400.0" y="243" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Course</text>
-<text x="1276" y="288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id: Long</text>
-<text x="1276" y="314" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- code: String</text>
-<text x="1276" y="340" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- name: String</text>
+<text x="1276" y="288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id : Long</text>
+<text x="1276" y="314" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- code : String</text>
+<text x="1276" y="340" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- name : String</text>
 <text x="850.0" y="753" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">AvailabilitySlot</text>
-<text x="626" y="798" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- student: Student</text>
-<text x="626" y="824" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- dayOfWeek: DayOfWeek</text>
-<text x="626" y="850" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- startTime, endTime: LocalTime</text>
+<text x="626" y="798" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- student : Student</text>
+<text x="626" y="824" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- dayOfWeek : DayOfWeek</text>
+<text x="626" y="850" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- startTime, endTime : LocalTime</text>
 <text x="235.0" y="745" font-size="15" fill="#254e73" font-weight="400" text-anchor="middle">«enumeration»</text>
 <text x="235.0" y="774" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Role</text>
 <text x="76" y="819" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">STUDENT</text>

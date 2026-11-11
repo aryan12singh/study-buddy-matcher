@@ -45,7 +45,7 @@ The script:
 2. waits until the published TCP port accepts SQL (not just the container's internal socket);
 3. creates `studybuddy_migration_test` and runs `scripts/test-migrations.sh` against it;
 4. applies the ordered migrations to `studybuddy_test` with `scripts/migrate-database.sh`;
-5. exports the test-profile variables and runs `./mvnw -B test` in `backend/`;
+5. exports the test-profile variables and runs `./mvnw -B clean test` in `backend/`, as CI does, so classes left in `target/` by removed sources cannot fail the run;
 6. removes the container and its credentials file on exit.
 
 Arguments are passed to Maven, so a focused run still gets a fresh database:

@@ -91,7 +91,9 @@ Errors use `application/problem+json` with RFC 9457 fields and stable form/appli
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | A request body in a format the address does not accept |
 | 500 | `INTERNAL_ERROR` | Safe generic failure, including a broken internal rule; no SQL, internal exception, credential or private data is returned |
 
-Body and service field validation errors have `fieldErrors`; other errors use an empty object. Authentication
+Body and service field validation errors have `fieldErrors`; other errors use an empty object. A multipart form
+value that cannot be read as its field's type, such as text for a date or a whole number, is keyed
+by that field with the message "Enter a valid value"; Java type names are never returned. Authentication
 and permission errors share the same shape. All security responses include `Cache-Control:
 no-store`; the profile controller sets no-store explicitly as well.
 

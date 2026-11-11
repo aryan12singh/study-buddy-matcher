@@ -3,11 +3,18 @@
 <title id="title">UML use cases — collaborative study (E2)</title>
 <desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
 <g font-family="Tahoma, Verdana, Arial, sans-serif">
 <rect x="0" y="0" width="1600" height="1220" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1452" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1465" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1486" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1499" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="1520" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1533" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
 <rect x="230" y="170" width="1280" height="870" rx="8" fill="white" stroke="#93a9b6" stroke-width="1.5" />
 <polyline points="44,1166 1556,1166" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="138,575 300,275" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
@@ -76,5 +83,5 @@
 <text x="955" y="967" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Selectable original scenes; optional</text>
 <text x="955" y="992" font-size="18" fill="#506474" font-weight="400" text-anchor="start">cached Open-Meteo campus conditions.</text>
 <text x="62" y="1096" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No global online status, public room, chat, calendar synchronisation or RSVP workflow is implied. Calendar files are private snapshots.</text>
-<text x="62" y="1121" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">E1 match explanations have a separate companion view (E1.md).</text>
+<text x="62" y="1121" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">E1 match explanations have their own section in docs/DESIGN_DIAGRAMS.md.</text>
 </g></svg>
