@@ -684,7 +684,7 @@ without team agreement.
 | PostgreSQL JDBC, on Supabase | 42.7.13 | Real constraints, partial unique indexes, row locks and row-level security, which an in-memory database would not test honestly; Supabase gives the team one shared managed instance | BSD-2-Clause |
 | JJWT | 0.12.6 | We issue our own HMAC-signed tokens (HS256 to HS512, chosen by JJWT from the secret's length) with role and version claims; JJWT does exactly that, where an OAuth2 resource server expects a separate authorisation server | Apache-2.0 |
 | Jackson 3 / 2 | 3.1.5 / 2.21.5 | Spring's JSON mapper; JJWT uses Jackson 2 | Apache-2.0 |
-| Anthropic Java SDK (`anthropic-java`) | 3.3.0 | Official client for the optional Claude provider, used when Gemini's free quota or service is unavailable or when Claude is set as the primary provider; typed requests, errors and PDF input instead of hand-written HTTP | MIT |
+| Anthropic Java SDK (`anthropic-java`) | 3.3.0 | Official client for the optional Claude provider, used when Gemini's free quota or service is unavailable or when Claude is set as the primary provider; typed requests, errors and PDF input instead of hand-written HTTP | Apache-2.0 |
 | JUnit Jupiter / Mockito | 6.0.3 / 5.23.0 | The Spring Boot test starter's defaults | EPL-2.0 / MIT |
 | React / React DOM | 19.3.0 | Component model the team knew; function components and hooks keep screens small | MIT |
 | React Router | 7.18.4 | Route guards per role and a navigation blocker for unsaved drafts | MIT |
