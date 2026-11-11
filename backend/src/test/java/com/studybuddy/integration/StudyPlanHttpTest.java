@@ -228,6 +228,19 @@ class StudyPlanHttpTest extends PostgresHttpTest {
     }
 
     @Test
+    void aValueOfTheWrongTypeIsNamedWithoutJavaDetails() {
+        student("priya@example.org", "Priya", "+6591234567");
+        String priya = login("priya@example.org");
+
+        JsonNode errors = expect(createPlan(priya, Map.of("courseId", course, "hoursPerWeek", "two", "examDate", "next week",
+                "topicsText", "Polymorphism")), 400).path("fieldErrors");
+
+        assertEquals("Enter a valid value", errors.path("hoursPerWeek").asString());
+        assertEquals("Enter a valid value", errors.path("examDate").asString());
+        assertTrue(AI_CALLS.isEmpty());
+    }
+
+    @Test
     void onlySignedInStudentsCanPlan() {
         account("admin@example.org", "ADMIN");
         String admin = login("admin@example.org");

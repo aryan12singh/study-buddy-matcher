@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,8 +53,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiProblem> validation(MethodArgumentNotValidException error) {
         var fields = new LinkedHashMap<String, String>();
-        error.getBindingResult().getFieldErrors().forEach(field -> fields.putIfAbsent(field.getField(), field.getDefaultMessage()));
+        error.getBindingResult().getFieldErrors().forEach(field -> fields.putIfAbsent(field.getField(), fieldMessage(field)));
         return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_PROBLEM_JSON).body(ApiProblem.validation(fields, request.getRequestURI()));
+    }
+
+    /**
+     * A form value that could not be read as its field's type (text for a date or a number) gets a
+     * plain message; Spring's own text for it names Java classes, which a client should not see.
+     */
+    private static String fieldMessage(FieldError field) {
+        return field.isBindingFailure() ? "Enter a valid value" : field.getDefaultMessage();
     }
 
     @ExceptionHandler({
