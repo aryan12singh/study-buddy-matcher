@@ -83,5 +83,5 @@
 <text x="955" y="967" font-size="18" fill="#506474" font-weight="400" text-anchor="start">Selectable original scenes; optional</text>
 <text x="955" y="992" font-size="18" fill="#506474" font-weight="400" text-anchor="start">cached Open-Meteo campus conditions.</text>
 <text x="62" y="1096" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">No global online status, public room, chat, calendar synchronisation or RSVP workflow is implied. Calendar files are private snapshots.</text>
-<text x="62" y="1121" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">E1 match explanations have a separate companion view (MATCH_EXPLANATION_DIAGRAMS.md).</text>
+<text x="62" y="1121" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">E1 match explanations have their own section in docs/DESIGN_DIAGRAMS.md.</text>
 </g></svg>
