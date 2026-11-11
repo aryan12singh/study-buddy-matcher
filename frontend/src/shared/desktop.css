@@ -161,7 +161,8 @@
 .copy-feedback { color: #315b35; font-size: .84rem; }
 .copy-control > p { width: 100%; margin: .2rem 0; }
 .copy-fallback { display: block; padding: .5rem; margin-top: .4rem; border: 1px solid #aebfc8; background: white; color: #304c6d; overflow-wrap: anywhere; user-select: all; }
-.form-actions { position: sticky; bottom: .75rem; z-index: 2; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: .8rem; border: 1px solid #9fb2bf; padding: .85rem 1rem; background: #f0f4f0; box-shadow: 3px 3px 0 #263c5145; margin-top: .5rem; }
+/* The save bar closes its form: it sits in the page flow under the last field, never stuck over the fields or the window frame. */
+.form-actions { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: .8rem; border: 1px solid #9fb2bf; padding: .85rem 1rem; background: #f0f4f0; box-shadow: 3px 3px 0 #263c5145; margin-top: .5rem; }
 .form-save-state { font-size: .8rem; color: #425d69; display: flex; align-items: center; gap: .45rem; margin: 0 !important; }
 .form-save-state > span { width: 8px; height: 8px; background: #677e98; box-shadow: 1px 1px #d4dee8; }
 .fieldset { border-color: #adbec6; background: #fafcfc; padding: 1.15rem; }
@@ -216,7 +217,7 @@
   .detail-facts dt { font-size: .8rem; }
   .filters { padding: 1rem; }
   .tab-bar button { padding: .6rem .75rem; font-size: .8rem; }
-  .form-actions { bottom: .5rem; padding: .75rem; gap: .65rem; }
+  .form-actions { padding: .75rem; gap: .65rem; }
   .form-actions .actions { width: 100%; }
   .form-actions .actions > * { flex: 1; }
   .dialog-window .window-content { padding: 1rem; }
