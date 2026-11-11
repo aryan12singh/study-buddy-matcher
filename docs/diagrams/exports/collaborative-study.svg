@@ -21,7 +21,7 @@
 <rect x="1785" y="170" width="550" height="1000" rx="12" fill="#eaf5f1" stroke="#bdccd5" stroke-width="1.5" />
 <polyline points="44,1326 2336,1326" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="325,435 325,505" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
-<polyline points="325,724 325,795" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="325,748 325,795" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="905,346 905,400" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
 <polyline points="565,300 665,300" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
 <polyline points="905,812 905,885" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
@@ -42,6 +42,7 @@
 <rect x="85" y="795" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
 <polyline points="85,844 565,844" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="85,968 565,968" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="325,724 317,736 325,748 333,736" fill="#647b88" stroke="#647b88"/>
 <rect x="75" y="1065" width="500" height="74" rx="6" fill="white" stroke="#c5d2da" stroke-width="1.5" />
 <rect x="665" y="225" width="480" height="121" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="RoomReactionService"/>
 <rect x="665" y="225" width="480" height="49" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />

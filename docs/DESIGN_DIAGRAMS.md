@@ -237,7 +237,7 @@ classDiagram
     class StudyRoom
     class RoomPresence
     class StudySession
-    Student "0..1" --> "1" User : shared MapsId identity
+    User "1" *-- "0..1" Student : owns profile, shared MapsId identity
     Student "*" --> "*" Course : courses taken
     Student "*" --> "0..1" Course : target course
     AvailabilitySlot "*" --> "1" Student : own weekly blocks
@@ -251,8 +251,8 @@ classDiagram
     GroupJoinRequest "*" --> "1" StudyGroup
     GroupJoinRequest "*" --> "1" Student : applicant
     Notification "*" --> "1" Student : recipient
-    StudyGroup "1" --> "0..1" StudyRoom : private room
-    StudyRoom "1" --> "0..*" RoomPresence : tab leases
+    StudyGroup "1" *-- "0..1" StudyRoom : private room
+    StudyRoom "1" *-- "0..*" RoomPresence : tab leases
     RoomPresence "*" --> "1" Student : authenticated owner
     StudySession "*" --> "0..1" StudyGroup : group parent
     StudySession "*" --> "0..1" Connection : buddy parent
@@ -260,9 +260,11 @@ classDiagram
     MatchingConfigService ..> MatchingConfig : weights per strategy and criterion
 ```
 
-`Student` composes an identity rather than inheriting `User`: it has a one-to-one `User`
-association with a shared `@MapsId` identity, and administrators have no mandatory student
-fields. There is no Student/Leader inheritance either; `StudyGroup.leader` refers to an
+`Student` is a one-to-one extension of `User` rather than a subclass: it shares the account's
+identity (`@OneToOne` with `@MapsId`), so the account owns the profile (composition, filled
+diamond at `User`) and an administrator is a `User` with no student profile. The other filled
+diamonds follow the schema: a `StudyRoom` row is deleted with its `StudyGroup`, and its
+`RoomPresence` leases with the room (`ON DELETE CASCADE`). There is no Student/Leader inheritance either; `StudyGroup.leader` refers to an
 ordinary student. Group membership and connection are separate consent relationships. Matching
 reads active profiles and canonical weekly intervals but owns neither account lifecycle nor
 contact visibility. Matching settings above are persistent admin configuration, not a student
@@ -830,7 +832,7 @@ classDiagram
     class StudentDeactivation
     class StudentDeletion
     class GroupClosure
-    Student "0..1" --> "1" User : shared account primary key
+    User "1" *-- "0..1" Student : owns profile, shared account primary key
     MatchRequest "*" --> "1" Student : sender
     MatchRequest "*" --> "1" Student : receiver
     Connection "*" --> "1" Student : studentA
@@ -1602,9 +1604,9 @@ calendar copies cannot be revoked.
 
 ```mermaid
 classDiagram
-    StudyGroup "1" --> "0..1" StudyRoom
+    StudyGroup "1" *-- "0..1" StudyRoom
     StudyRoom --> PomodoroTimer : reconstructs immutable value
-    StudyRoom "1" --> "0..*" RoomPresence
+    StudyRoom "1" *-- "0..*" RoomPresence
     RoomPresence --> Student : authenticated owner
     StudyRoom --> Student : optional host and coHost
     StudyRoomController --> StudyRoomService
@@ -1621,7 +1623,7 @@ classDiagram
     StudentDeactivation --> RoomLifecycle : revoke account leases and roles
     RoomLifecycle --> RoomPresenceRepository
     RoomLifecycle --> StudyRoomRepository
-    StudyRoom "1" --> "0..*" RoomReaction
+    StudyRoom "1" *-- "0..*" RoomReaction
     RoomReaction --> Student : sender
     StudyRoomController --> RoomReactionService
     RoomReactionService --> RoomAccess

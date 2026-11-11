@@ -231,8 +231,9 @@ browser. More views: [design diagrams, system overview](docs/DESIGN_DIAGRAMS.md#
 
 <br />
 
-`Student` composes an identity rather than inheriting `User`, so an administrator is a `User`
-with no student fields. Registration creates `User` and `Student` in one transaction and can
+`Student` is a one-to-one extension of `User` that shares its identity (`@MapsId`) rather than
+a subclass: the account owns the profile (composition), so an administrator is a `User` with no
+student profile. Registration creates `User` and `Student` in one transaction and can
 only produce the `STUDENT` role. Each protected request checks the JWT's account, role, expiry
 and version against the live account, so deactivation ends existing tokens at once. Saving
 availability replaces the whole week in one write (`AvailabilityRules` validates it), so a

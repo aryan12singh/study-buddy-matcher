@@ -101,7 +101,7 @@ real services; [DATABASE.md](DATABASE.md#demo-seed) lists what it creates.
 
 | Decision | Choice and reason | Alternative rejected |
 | --- | --- | --- |
-| Identity and profile model | `Student` composes `User` through a shared `@MapsId` identity; administrators have no student profile | User inheritance would mix account and security concerns with student-only preferences |
+| Identity and profile model | `Student` is a one-to-one extension of `User` that shares its identity (`@MapsId`); the account owns the profile (composition), and administrators have no student profile | User inheritance would mix account and security concerns with student-only preferences |
 | Authentication | Spring Security, JJWT and BCrypt; the server checks role, active account and token version on every request | Browser route guards alone cannot enforce authorisation |
 | Own profile boundary | `MyProfileAssembler` returns self-only profile and contact fields; other students' profiles go through the privacy assembler | Reusing the own-profile DTO for discovery would expose contact and email |
 | Saved buddy target | Independent of course enrolments; Home uses it for the matching preview. Find buddies still needs a current course or goal | Treating it as the finder's default would contradict the screen |
