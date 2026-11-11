@@ -37,9 +37,11 @@ Specific pieces of work:
   screenshots) was prepared with Claude and reviewed by the team.
 - **Demo videos.** Claude scripted, animated and edited the launch film and walkthrough in
   `docs/assets/video/` from screen captures of the seeded app. The narration is a synthetic voice
-  (Kokoro text-to-speech, voice "Bella"); the music and sound effects were synthesised in code,
-  so no third-party audio is used. The match explanation on screen is a real Gemini reply from a
-  live test, and the AI features shown were run with a real key.
+  (Chatterbox text-to-speech by Resemble AI, using a synthetic Kokoro reference voice, so no real
+  person's voice was used); the music and sound effects were synthesised in code, so no
+  third-party audio is used. Every AI result on screen (match explanation, quiz, study plan,
+  session roadmap and Pixel) is a real Gemini reply produced while recording, and the demo data is
+  fictional. Speech-to-text (faster-whisper) was used to check the narration was clear.
 
 Every member reviewed the work they retained and explained it to the team in physical meetings
 and demos.

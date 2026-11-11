@@ -27,7 +27,7 @@
 </table>
 
 <p align="center">
-  <a href="#walkthrough"><strong>Watch the 2-minute walkthrough</strong></a> ·
+  <a href="#walkthrough"><strong>Watch the 4-minute walkthrough</strong></a> ·
   <a href="#run-it-locally-about-5-minutes"><strong>Run it in 5 minutes</strong></a> ·
   <a href="#two-extensions"><strong>The two extensions</strong></a>
 </p>
@@ -50,17 +50,18 @@ the real app with the seeded demo data.
     <td>
       <strong>Chapters</strong><br /><br />
       <code>0:00</code> Welcome<br />
-      <code>0:10</code> Sign in<br />
-      <code>0:16</code> Study profile<br />
-      <code>0:27</code> Home<br />
-      <code>0:30</code> Matching and AI explanation<br />
-      <code>0:49</code> Privacy of contact numbers<br />
-      <code>1:00</code> Groups and sessions<br />
-      <code>1:13</code> Study room<br />
-      <code>1:19</code> Quiz Buddy, plans and Pixel<br />
-      <code>1:33</code> Notifications<br />
-      <code>1:35</code> Admin<br />
-      <code>1:46</code> Design and tests
+      <code>0:12</code> Study profile<br />
+      <code>0:25</code> Matching and AI explanation<br />
+      <code>0:58</code> Requests and privacy<br />
+      <code>1:21</code> Study sessions<br />
+      <code>1:46</code> Study groups<br />
+      <code>1:59</code> Quiz Buddy<br />
+      <code>2:13</code> Study plans and Pixel<br />
+      <code>2:26</code> Group study room<br />
+      <code>2:54</code> Personal Study Room<br />
+      <code>3:04</code> Notifications<br />
+      <code>3:11</code> Administration<br />
+      <code>3:37</code> Design and tests
     </td>
   </tr>
 </table>
