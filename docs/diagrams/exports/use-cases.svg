@@ -1,88 +1,120 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1350" viewBox="0 0 1600 1350" role="img" aria-labelledby="title description">
-<title id="title">UML use cases — compulsory baseline</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1420" viewBox="0 0 1600 1420" role="img" aria-labelledby="title description">
+<title id="title">UML use cases — compulsory requirements</title>
 <desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
 <marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
 <marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
 <g font-family="Tahoma, Verdana, Arial, sans-serif">
-<rect x="0" y="0" width="1600" height="1350" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="1600" height="1420" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <rect x="0" y="0" width="1600" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
-<rect x="230" y="165" width="1120" height="1050" rx="8" fill="white" stroke="#93a9b6" stroke-width="1.5" />
-<polyline points="44,1296 1556,1296" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,260" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,345" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,430" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,515" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,600" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,685" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,770" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,855" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,940" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="140,545 300,1050" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="1447,545 1290,345 770,345" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="1447,545 1307,520" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="1447,545 1307,700" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="1447,545 1307,880" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="102" cy="500" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
-<polyline points="102,519 102,584" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
-<polyline points="64,545 140,545" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
-<polyline points="68,620 102,584 136,620" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
-<circle cx="1485" cy="500" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
-<polyline points="1485,519 1485,584" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
-<polyline points="1447,545 1523,545" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
-<polyline points="1451,620 1485,584 1519,620" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
-<ellipse cx="535" cy="260" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="345" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="430" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="515" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="600" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="685" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="770" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="855" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="940" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="535" cy="1050" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="1090" cy="520" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="1090" cy="700" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<ellipse cx="1090" cy="880" rx="217.5" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
-<rect x="835" y="990" width="470" height="129" rx="6" fill="#eaf5f1" stroke="#c5d2da" stroke-width="1.5" />
-<rect x="275" y="1130" width="1015" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
-<rect x="45" y="1240" width="1510" height="49" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="1452" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1465" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1486" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1499" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="1520" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1533" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="250" y="165" width="1100" height="1085" rx="8" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polyline points="44,1366 1556,1366" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="105,941 105,600" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#triangle)"/>
+<polyline points="143,475 325,245" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,321" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,397" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,473" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,549" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,625" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,701" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,777" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,475 325,853" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,1005 325,955" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,1005 325,1031" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,1005 325,1107" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="143,1005 325,1183" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1457,515 795,321" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1457,515 1300,665" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1457,515 1300,759" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1457,515 1300,853" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="870,549 795,549" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<circle cx="105" cy="430" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
+<polyline points="105,449 105,514" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="67,475 143,475" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="71,550 105,514 139,550" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="105" cy="960" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
+<polyline points="105,979 105,1044" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="67,1005 143,1005" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="71,1080 105,1044 139,1080" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="1495" cy="470" r="19" fill="white" stroke="#172d3b" stroke-width="2.5"/>
+<polyline points="1495,489 1495,554" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="1457,515 1533,515" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<polyline points="1461,590 1495,554 1529,590" fill="none" stroke="#172d3b" stroke-width="2.5" stroke-linejoin="round"/>
+<ellipse cx="560" cy="245" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="321" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="397" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="473" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="549" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="625" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="701" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="777" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="853" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="955" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="1031" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="1107" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="560" cy="1183" rx="235.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1085" cy="665" rx="215.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1085" cy="759" rx="215.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1085" cy="853" rx="215.0" ry="37" fill="#eaf1f7" stroke="#254e73" stroke-width="1.7"/>
+<ellipse cx="1085" cy="549" rx="215.0" ry="37" fill="#eaf5f1" stroke="#176c63" stroke-width="1.7"/>
+<rect x="830" y="960" width="480" height="129" rx="6" fill="#eaf5f1" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="830" y="1120" width="480" height="104" rx="6" fill="#fff5e5" stroke="#d6c7a8" stroke-width="1.5" />
+<rect x="45" y="1275" width="1510" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
-<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML use cases — compulsory baseline</text>
-<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Actors are account capabilities; group leadership is a relationship with one particular group.</text>
-<text x="1554" y="1323" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/use-cases.svg</text>
-<text x="255" y="200" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER</text>
-<text x="102" y="650" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
-<text x="1485" y="650" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Administrator</text>
-<text x="535" y="266" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Register student account</text>
-<text x="535" y="351" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Sign in</text>
-<text x="535" y="424" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Edit own profile</text>
-<text x="535" y="448" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and study preferences</text>
-<text x="535" y="509" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Replace / clear</text>
-<text x="535" y="533" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">weekly availability</text>
-<text x="535" y="594" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Find and compare</text>
-<text x="535" y="618" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">ranked buddies</text>
-<text x="535" y="691" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Read student profile</text>
-<text x="535" y="764" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Send / answer requests</text>
-<text x="535" y="788" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and view / end connections</text>
-<text x="535" y="849" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Browse, create and</text>
-<text x="535" y="873" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">apply to study groups</text>
-<text x="535" y="934" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Manage a led group</text>
-<text x="535" y="958" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and membership requests</text>
-<text x="535" y="1044" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Read / mark own</text>
-<text x="535" y="1068" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">notifications</text>
-<text x="1090" y="514" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Create / edit / delete</text>
-<text x="1090" y="538" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and activate / deactivate accounts</text>
-<text x="1090" y="694" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">View account status</text>
-<text x="1090" y="718" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and basic usage</text>
-<text x="1090" y="874" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Configure matching criteria,</text>
-<text x="1090" y="898" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">weights and active strategy</text>
-<text x="852" y="1018" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">Group-scoped authority</text>
-<text x="852" y="1048" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Leader operations require group.leader.id</text>
-<text x="852" y="1073" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">to equal the current student. No leader</text>
-<text x="852" y="1098" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">subclass or global leader role exists.</text>
-<text x="292" y="1158" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Profile reads enforce contact privacy.</text>
-<text x="292" y="1183" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Registration and sign-in are public; other actions need an active account.</text>
-<text x="62" y="1268" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Notation: actor association = solid line; ellipse = use case; rectangle = application boundary. E2 use cases are a separate panel.</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML use cases — compulsory requirements</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">The brief&#x27;s three user groups. A study group leader is a student, so the leader actor specialises Student.</text>
+<text x="1554" y="1393" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/use-cases.svg</text>
+<text x="275" y="200" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER</text>
+<text x="105" y="580" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
+<text x="105" y="1110" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Study Group</text>
+<text x="105" y="1136" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Leader</text>
+<text x="1495" y="620" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">System</text>
+<text x="1495" y="646" font-size="22" fill="#172d3b" font-weight="700" text-anchor="middle">Administrator</text>
+<text x="560" y="251" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Register an account</text>
+<text x="560" y="327" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Sign in</text>
+<text x="560" y="391" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Manage profile and</text>
+<text x="560" y="415" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">study preferences</text>
+<text x="560" y="479" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Set weekly availability</text>
+<text x="560" y="543" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Search and filter</text>
+<text x="560" y="567" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">ranked study buddies</text>
+<text x="560" y="631" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">View a student&#x27;s public profile</text>
+<text x="560" y="695" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Send, accept or decline</text>
+<text x="560" y="719" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">match requests</text>
+<text x="560" y="771" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">View and end</text>
+<text x="560" y="795" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">buddy connections</text>
+<text x="560" y="847" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Browse groups and</text>
+<text x="560" y="871" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">request to join</text>
+<text x="560" y="949" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Create a study group</text>
+<text x="560" y="973" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">for a course</text>
+<text x="560" y="1037" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Update or close the group</text>
+<text x="560" y="1101" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Accept or reject</text>
+<text x="560" y="1125" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">join requests</text>
+<text x="560" y="1189" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Remove a member</text>
+<text x="1085" y="659" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Create, update and</text>
+<text x="1085" y="683" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">delete user accounts</text>
+<text x="1085" y="753" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">View account status</text>
+<text x="1085" y="777" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">and basic usage</text>
+<text x="1085" y="847" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Configure matching criteria,</text>
+<text x="1085" y="871" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">weights and strategy</text>
+<text x="1085" y="543" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Explain this match</text>
+<text x="1085" y="567" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">(extra E1, on request)</text>
+<rect x="791.6" y="513" width="80.80000000000001" height="25" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="832" y="528" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">«extend»</text>
+<text x="847" y="988" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">Leader = Student + one group</text>
+<text x="847" y="1018" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">A leader is the student a group references</text>
+<text x="847" y="1043" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">(group.isLeader); there is no leader subclass</text>
+<text x="847" y="1068" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">or global leader role in the code.</text>
+<text x="847" y="1148" font-size="19" fill="#8a5a1a" font-weight="700" text-anchor="start">Contact privacy</text>
+<text x="847" y="1178" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Viewing a profile hides the contact number</text>
+<text x="847" y="1203" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">until a match request has been accepted.</text>
+<text x="62" y="1303" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Notation: stick figure = actor, ellipse = use case, rectangle = system boundary, solid line = association, hollow arrow = the leader actor is a kind of Student.</text>
+<text x="62" y="1328" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">«extend»: the optional explanation adds to the search only when a student asks for it. The collaborative-study use cases (extra E2) are a separate panel.</text>
 </g></svg>

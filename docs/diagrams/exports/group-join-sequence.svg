@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2140" height="1360" viewBox="0 0 2140 1360" role="img" aria-labelledby="title description">
+<title id="title">UML sequence — group leader approves a join request</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2140" height="1360" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2140" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1992" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2005" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="2026" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2039" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2060" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2073" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="143" width="2050" height="1059" rx="0" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polygon points="45,143 391.0,143 391.0,161 379.0,173 45,173" fill="#eaf1f7" stroke="#93a9b6" stroke-width="1.5"/>
+<text x="57" y="164" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">sd  GroupJoinRequestService.accept</text>
+<polyline points="44,1306 2096,1306" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="120,273 120,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="400,263 400,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="770,263 770,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1110,263 1110,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1380,263 1380,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1670,263 1670,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1960,263 1960,1180" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="127,310 393,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="407,355 763,355" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="777,395 821,395 821,439 784,439" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="777,575 1103,575" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="777,620 1373,620" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="777,665 1663,665" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1663,695 777,695" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="777,740 1373,740" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1373,770 777,770" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="777,815 1103,815" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1117,825 1161,825 1161,855 1124,855" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="777,905 1663,905" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="777,950 1953,950" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="763,1000 407,1000" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="393,1022 127,1022" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="763,1080 407,1080" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<circle cx="120" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="120,207 120,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="104,215 136,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="107,245 120,229 133,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="242.6" y="205" width="314.8" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupJoinRequestController"/>
+<rect x="628.2" y="205" width="283.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupJoinRequestService"/>
+<rect x="968.2" y="205" width="283.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupJoinRequest"/>
+<rect x="1279.8" y="205" width="200.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="StudyGroup"/>
+<rect x="1517.8" y="205" width="304.40000000000003" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="GroupMembershipRepository"/>
+<rect x="1839.0" y="205" width="242.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="NotificationService"/>
+<rect x="393" y="310" width="14" height="770" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="763" y="355" width="14" height="725" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="770" y="439" width="14" height="36" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="50" y="505" width="2025" height="595" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="50,505 116,505 116,523 106,533 50,533" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="1103" y="575" width="14" height="20" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1373" y="620" width="14" height="20" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1663" y="665" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1373" y="740" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1103" y="815" width="14" height="60" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1110" y="855" width="14" height="20" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1663" y="905" width="14" height="20" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1953" y="950" width="14" height="20" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<polyline points="50,1035 2075,1035" fill="none" stroke="#7f96a3" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="45" y="1220" width="2050" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — group leader approves a join request</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">POST /api/groups/{id}/join-requests/{requestId}/accept: leader check, capacity check and the new membership in one transaction.</text>
+<text x="2094" y="1333" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/group-join-sequence.svg</text>
+<text x="120" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Group leader</text>
+<text x="400" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:GroupJoinRequestController</text>
+<text x="770" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:GroupJoinRequestService</text>
+<text x="1110" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">request:GroupJoinRequest</text>
+<text x="1380" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">group:StudyGroup</text>
+<text x="1670" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:GroupMembershipRepository</text>
+<text x="1960" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:NotificationService</text>
+<rect x="131.04" y="283" width="257.92" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="260.0" y="299" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">1: POST …/{requestId}/accept</text>
+<rect x="412.84" y="328" width="344.32000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="585.0" y="344" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">2: accept(groupId, requestId, actorId)</text>
+<rect x="828" y="406.0" width="214.72000000000003" height="47" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="835" y="422.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">3: forDecision(groupId,</text>
+<text x="835" y="443.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">requestId, actorId)</text>
+<text x="60" y="525" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">alt</text>
+<rect x="125" y="510" width="378.88" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="132" y="526" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[request PENDING; group open and not full]</text>
+<rect x="849.92" y="548" width="180.16000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="940.0" y="564" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">4: requirePending()</text>
+<rect x="1010.84" y="593" width="128.32" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1075.0" y="609" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">5: isActive()</text>
+<rect x="1078.08" y="638" width="283.84000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1220.0" y="654" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">6: countByStudyGroupId(groupId)</text>
+<rect x="1164.48" y="668" width="111.04" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1220.0" y="684" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">memberCount</text>
+<rect x="954.68" y="713" width="240.64000000000001" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1075.0" y="729" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">7: hasRoomFor(memberCount)</text>
+<rect x="1049.72" y="743" width="50.56" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1075.0" y="759" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">true</text>
+<rect x="884.48" y="788" width="111.04" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="940.0" y="804" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">8: accept()</text>
+<rect x="1168" y="829.0" width="206.08" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1175" y="845.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">8.1: respond(ACCEPTED)</text>
+<rect x="1013.28" y="878" width="413.44000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1220.0" y="894" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">9: save(new GroupMembership(group, applicant))</text>
+<rect x="1141.0" y="923" width="448.0" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1365.0" y="939" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">10: notify(applicant, GROUP_JOIN_REQUEST_ACCEPTED)</text>
+<rect x="447.4" y="973" width="275.20000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="585.0" y="989" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">GroupJoinRequestDto (ACCEPTED)</text>
+<rect x="226.07999999999998" y="995" width="67.84" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="260.0" y="1011" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">200 OK</text>
+<rect x="61" y="1041" width="67.84" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="68" y="1057" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[else]</text>
+<rect x="412.84" y="1053" width="344.32000000000005" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="585.0" y="1069" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">409 Conflict: answered, closed or full</text>
+<text x="62" y="1248" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">forDecision() confirms the actor leads this group (otherwise 403), locks the leader and applicant accounts, then locks the group row before loading the request for update.</text>
+<text x="62" y="1273" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Because approvals queue on the group row, two approvals can never both take the last place. Leadership is a relationship with one group (group.isLeader), not a role or subclass.</text>
+</g></svg>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1440" viewBox="0 0 2100 1440" role="img" aria-labelledby="title description">
+<title id="title">UML packages — feature packages and the layers inside each</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2100" height="1440" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2100" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="1952" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1965" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="1986" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="1999" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2020" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2033" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="183" width="193.6" height="32" rx="0" fill="#fbfcfd" stroke="#254e73" stroke-width="1.5" />
+<rect x="45" y="215" width="2010" height="560" rx="0" fill="#fbfcfd" stroke="#254e73" stroke-width="1.5" />
+<text x="61" y="205" font-size="19" fill="#254e73" font-weight="700" text-anchor="start">com.studybuddy</text>
+<rect x="70" y="240" width="420" height="400" rx="10" fill="#eaf1f7" stroke="#bdccd5" stroke-width="1.5" />
+<text x="88" y="270" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">TEAM A  ·  matching engine and music</text>
+<rect x="510" y="240" width="660" height="400" rx="10" fill="#fff5e5" stroke="#bdccd5" stroke-width="1.5" />
+<text x="528" y="270" font-size="16" fill="#8a5a1a" font-weight="700" text-anchor="start">TEAM B  ·  platform, identity and AI study tools</text>
+<rect x="1190" y="240" width="840" height="400" rx="10" fill="#eaf5f1" stroke="#bdccd5" stroke-width="1.5" />
+<text x="1208" y="270" font-size="16" fill="#176c63" font-weight="700" text-anchor="start">TEAM C  ·  requests, groups, admin, notifications, E1 and E2</text>
+<rect x="45" y="838" width="729.4" height="32" rx="0" fill="#fbfcfd" stroke="#176c63" stroke-width="1.5" />
+<rect x="45" y="870" width="2010" height="380" rx="0" fill="#fbfcfd" stroke="#176c63" stroke-width="1.5" />
+<text x="61" y="860" font-size="19" fill="#176c63" font-weight="700" text-anchor="start">com.studybuddy.matchrequest  (one feature package, opened up)</text>
+<polyline points="44,1386 2056,1386" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="280,640 280,723 880,723" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1050,640 1050,692" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1610,640 1610,723 1220,723" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="400,980 560,980" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="880,980 1040,980" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1360,980 1520,980" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="640,1015 640,1110" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="800,1015 800,1062 1200,1062 1200,1110" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1040,1145 880,1145" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1680,945 1680,908 240,908 240,945" fill="none" stroke="#176c63" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="240,1015 240,1215 1200,1215 1200,1180" fill="none" stroke="#9f2828" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="95" y="303" width="110" height="24" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="95" y="327" width="370" height="205" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="110" y="350" width="74" height="22" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="110" y="372" width="162" height="46" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="288" y="350" width="74" height="22" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="288" y="372" width="162" height="46" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="110" y="434" width="74" height="22" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="110" y="456" width="162" height="46" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="288" y="434" width="74" height="22" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="288" y="456" width="162" height="46" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="95" y="558" width="74" height="22" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="95" y="580" width="185" height="46" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="535" y="298" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="320" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="747" y="298" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="747" y="320" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="959" y="298" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="959" y="320" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="382" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="404" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="747" y="382" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="747" y="404" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="959" y="382" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="959" y="404" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="466" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="488" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="747" y="466" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="747" y="488" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="959" y="466" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="959" y="488" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="550" width="74" height="22" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="535" y="572" width="185" height="46" rx="0" fill="white" stroke="#8a5a1a" stroke-width="1.5" />
+<rect x="1212" y="298" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1212" y="320" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1416" y="298" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1416" y="320" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1620" y="298" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1620" y="320" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1824" y="298" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1824" y="320" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1212" y="382" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1212" y="404" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1416" y="382" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1416" y="404" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1620" y="382" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1620" y="404" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1824" y="382" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1824" y="404" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1212" y="466" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1212" y="488" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1416" y="466" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1416" y="488" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1620" y="466" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1620" y="488" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1824" y="466" width="74" height="22" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="1824" y="488" width="190" height="46" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" />
+<rect x="880" y="668" width="90" height="24" rx="0" fill="white" stroke="#172d3b" stroke-width="1.5" />
+<rect x="880" y="692" width="340" height="62" rx="0" fill="white" stroke="#172d3b" stroke-width="1.5" />
+<rect x="80" y="945" width="320" height="70" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="MatchRequestController"/>
+<rect x="80" y="945" width="320" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<rect x="560" y="945" width="320" height="70" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="MatchRequestService"/>
+<rect x="560" y="945" width="320" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<rect x="1040" y="945" width="320" height="70" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="MatchRequestAssembler"/>
+<rect x="1040" y="945" width="320" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<rect x="1520" y="945" width="320" height="70" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="MatchRequestDto"/>
+<rect x="1520" y="945" width="320" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<rect x="560" y="1110" width="320" height="70" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="MatchRequest"/>
+<rect x="560" y="1110" width="320" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<rect x="1040" y="1110" width="320" height="70" rx="0" fill="white" stroke="#176c63" stroke-width="1.5" data-class="MatchRequestRepository"/>
+<rect x="1040" y="1110" width="320" height="70" rx="0" fill="#eaf5f1" stroke="none" stroke-width="1.5" />
+<rect x="45" y="1280" width="2010" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML packages — feature packages and the layers inside each</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">25 packages under com.studybuddy, grouped by owning team; feature packages repeat the same controller → service → domain → repository layering.</text>
+<text x="2054" y="1413" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/package-layers.svg</text>
+<text x="105" y="321" font-size="17" fill="#254e73" font-weight="700" text-anchor="start">matching</text>
+<text x="191.0" y="402" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">availability</text>
+<text x="369.0" y="402" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">scoring</text>
+<text x="191.0" y="486" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">strategy</text>
+<text x="369.0" y="486" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">config</text>
+<text x="187.5" y="610" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">music</text>
+<text x="627.5" y="350" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">auth</text>
+<text x="839.5" y="350" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">user</text>
+<text x="1051.5" y="350" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">student</text>
+<text x="627.5" y="434" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">course</text>
+<text x="839.5" y="434" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">security</text>
+<text x="1051.5" y="434" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">seed</text>
+<text x="627.5" y="518" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">ai</text>
+<text x="839.5" y="518" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">quiz</text>
+<text x="1051.5" y="518" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">studyplan</text>
+<text x="627.5" y="602" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="middle">assistant</text>
+<text x="1307.0" y="350" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">matchrequest</text>
+<text x="1511.0" y="350" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">connection</text>
+<text x="1715.0" y="350" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">profile</text>
+<text x="1919.0" y="350" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">studygroup</text>
+<text x="1307.0" y="434" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">notification</text>
+<text x="1511.0" y="434" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">admin</text>
+<text x="1715.0" y="434" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">matchexplanation</text>
+<text x="1919.0" y="434" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">studyroom</text>
+<text x="1307.0" y="518" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">studysession</text>
+<text x="1511.0" y="518" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">weather</text>
+<text x="1715.0" y="518" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">achievement</text>
+<text x="1919.0" y="518" font-size="18" fill="#176c63" font-weight="700" text-anchor="middle">forest</text>
+<text x="890" y="686" font-size="17" fill="#172d3b" font-weight="700" text-anchor="start">common</text>
+<text x="1050" y="731" font-size="17" fill="#172d3b" font-weight="400" text-anchor="middle">AccountAccess · error · http</text>
+<rect x="517.44" y="692" width="85.12" height="26" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="560" y="708" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">«import»</text>
+<rect x="1057.44" y="648" width="85.12" height="26" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1100" y="664" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">«import»</text>
+<rect x="1397.44" y="692" width="85.12" height="26" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1440" y="708" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">«import»</text>
+<text x="240.0" y="970" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«RestController»</text>
+<text x="240.0" y="999" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">MatchRequestController</text>
+<text x="720.0" y="970" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«Service»</text>
+<text x="720.0" y="999" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">MatchRequestService</text>
+<text x="1200.0" y="970" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«Component»</text>
+<text x="1200.0" y="999" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">MatchRequestAssembler</text>
+<text x="1680.0" y="970" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«record»</text>
+<text x="1680.0" y="999" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">MatchRequestDto</text>
+<text x="720.0" y="1135" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«Entity»</text>
+<text x="720.0" y="1164" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">MatchRequest</text>
+<text x="1200.0" y="1135" font-size="15" fill="#176c63" font-weight="400" text-anchor="middle">«Repository»</text>
+<text x="1200.0" y="1164" font-size="22" fill="#176c63" font-weight="700" text-anchor="middle">MatchRequestRepository</text>
+<rect x="407.2" y="943" width="145.60000000000002" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="480" y="958" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">calls one method</text>
+<rect x="895.3" y="943" width="129.4" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="960" y="958" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">toDto(request)</text>
+<rect x="1399.6" y="943" width="80.80000000000001" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1440" y="958" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">«create»</text>
+<rect x="599.6" y="1053" width="80.80000000000001" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="640" y="1068" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">accept()</text>
+<rect x="931.25" y="1037" width="137.5" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="1000" y="1052" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">loads and saves</text>
+<rect x="919.6" y="1153" width="80.80000000000001" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="960" y="1168" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">persists</text>
+<rect x="616.93" y="896" width="686.1400000000001" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="960" y="913" font-size="17" fill="#176c63" font-weight="400" text-anchor="middle">✓  Rule 2: only the DTO travels back; the entity never leaves the service</text>
+<rect x="482.5" y="1203" width="475.00000000000006" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="720" y="1220" font-size="17" fill="#9f2828" font-weight="400" text-anchor="middle">✗  Rule 1: a controller never touches a repository</text>
+<text x="62" y="1308" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Packages are organised by feature, so one folder holds everything a marker needs to follow a use case. Shared packages: common, security, user, ai and seed.</text>
+<text x="62" y="1333" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">The lower package shows the roles a feature package repeats. Open arrows are dependencies; the green path is what a response may carry, the red line a dependency the code forbids.</text>
+</g></svg>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2440" height="1500" viewBox="0 0 2440 1500" role="img" aria-labelledby="title description">
+<title id="title">UML sequence — administrator retunes the matching engine</title>
+<desc id="description">Study Buddy Matcher design diagram. Editable source: docs/diagrams/render_diagrams.py. Supplementary text and notation are in docs/diagrams/README.md.</desc>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#647b88" stroke-width="1.6"/></marker>
+<marker id="solid" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 1 1 L 11 6 L 1 11 Z" fill="#647b88" stroke="#647b88" stroke-width="1"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke="#647b88" stroke-width="1.4"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M 1 6 L 8 1 L 15 6 L 8 11 Z" fill="#647b88" stroke="#647b88"/></marker></defs>
+<g font-family="Tahoma, Verdana, Arial, sans-serif">
+<rect x="0" y="0" width="2440" height="1500" rx="0" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<rect x="0" y="0" width="2440" height="128" rx="0" fill="#172d3b" stroke="none" stroke-width="1.5" />
+<rect x="2292" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2305" y="43" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">_</text>
+<rect x="2326" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2339" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">□</text>
+<rect x="2360" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
+<text x="2373" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
+<rect x="45" y="143" width="2350" height="1169" rx="0" fill="white" stroke="#93a9b6" stroke-width="1.5" />
+<polygon points="45,143 621.4,143 621.4,161 609.4,173 45,173" fill="#eaf1f7" stroke="#93a9b6" stroke-width="1.5"/>
+<text x="57" y="164" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">sd  MatchingConfigService.update, then MatchService.search</text>
+<polyline points="44,1446 2396,1446" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="120,273 120,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="280,273 280,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="560,263 560,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="930,263 930,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1180,263 1180,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1480,263 1480,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="1790,263 1790,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="2030,263 2030,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="2270,263 2270,1290" fill="none" stroke="#8ca1ad" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<polyline points="127,310 553,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="567,355 923,355" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="937,400 1173,400" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="937,440 981,440 981,470 944,470" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="937,520 981,520 981,550 944,550" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="937,665 981,665 981,695 944,695" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="937,760 1473,760" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1487,770 1531,770 1531,800 1494,800" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="923,832 567,832" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="553,852 127,852" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="923,898 567,898" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="287,990 1783,990" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="1797,1030 2023,1030" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="2023,1070 937,1070" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="937,1110 2023,1110" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="2037,1155 2263,1155" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" marker-end="url(#solid)"/>
+<polyline points="2263,1185 2037,1185" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="2023,1220 1797,1220" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<polyline points="1783,1255 287,1255" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<circle cx="120" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="120,207 120,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="104,215 136,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="107,245 120,229 133,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="280" cy="197" r="10" fill="white" stroke="#172d3b" stroke-width="2"/>
+<polyline points="280,207 280,229" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="264,215 296,215" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="267,245 280,229 293,245" fill="none" stroke="#172d3b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="387.0" y="205" width="346.0" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AdminMatchingConfigController"/>
+<rect x="798.6" y="205" width="262.8" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchingConfigService"/>
+<rect x="1090.2" y="205" width="179.6" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AccountAccess"/>
+<rect x="1301.8" y="205" width="356.40000000000003" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchingStrategySetting"/>
+<rect x="1689.8" y="205" width="200.4" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchController"/>
+<rect x="1945.4" y="205" width="169.20000000000002" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchService"/>
+<rect x="2164.6" y="205" width="210.8" height="58" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="MatchingStrategy"/>
+<rect x="553" y="310" width="14" height="590" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="923" y="355" width="14" height="510" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1173" y="400" width="14" height="20" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="930" y="470" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="930" y="550" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="60" y="605" width="2315" height="310" rx="0" fill="none" stroke="#7f96a3" stroke-width="1.5" />
+<polygon points="60,605 126,605 126,623 116,633 60,633" fill="#eaf1f7" stroke="#7f96a3" stroke-width="1.5"/>
+<rect x="930" y="695" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1473" y="760" width="14" height="55" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="1480" y="800" width="14" height="15" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<polyline points="60,862 2375,862" fill="none" stroke="#7f96a3" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<rect x="1783" y="990" width="14" height="265" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="2023" y="1030" width="14" height="190" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="923" y="1070" width="14" height="40" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="2263" y="1155" width="14" height="30" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" />
+<rect x="45" y="1330" width="2350" height="99" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
+<text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML sequence — administrator retunes the matching engine</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">PUT /api/admin/matching-config saves a new version; the next search reads it and ranks through the chosen strategy.</text>
+<text x="2394" y="1473" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/matching-config-sequence.svg</text>
+<text x="120" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Administrator</text>
+<text x="280" y="265" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">Student</text>
+<text x="560" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:AdminMatchingConfigController</text>
+<text x="930" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchingConfigService</text>
+<text x="1180" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:AccountAccess</text>
+<text x="1480" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">setting:MatchingStrategySetting</text>
+<text x="1790" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchController</text>
+<text x="2030" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchService</text>
+<text x="2270" y="241" font-size="18" fill="#254e73" font-weight="700" text-anchor="middle">:MatchingStrategy</text>
+<rect x="189.44" y="283" width="301.12" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="340.0" y="299" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">1: PUT /api/admin/matching-config</text>
+<rect x="620.36" y="328" width="249.28000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="745.0" y="344" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">2: update(request, actorId)</text>
+<rect x="956.28" y="373" width="197.44" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1055.0" y="389" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">3: lockAdmin(actorId)</text>
+<rect x="988" y="444.0" width="387.52000000000004" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="995" y="460.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">4: validWeights(request.weights(), enabled)</text>
+<rect x="988" y="524.0" width="378.88" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="995" y="540.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">5: lockSettings(request.expectedVersion())</text>
+<text x="70" y="625" font-size="16" fill="#254e73" font-weight="700" text-anchor="start">alt</text>
+<rect x="135" y="610" width="456.64000000000004" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="142" y="626" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[expectedVersion equals setting.getConfigVersion()]</text>
+<rect x="988" y="669.0" width="430.72" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="995" y="685.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">6: saveWeights(type, weights)  for each strategy</text>
+<rect x="1006.92" y="733" width="396.16" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1205.0" y="749" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">7: saveOverride(strategy, enabled, minScore)</text>
+<rect x="1538" y="774.0" width="301.12" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1545" y="790.0" font-size="16" fill="#506474" font-weight="400" text-anchor="start">7.1: changed()  (configVersion++)</text>
+<rect x="603.0799999999999" y="805" width="283.84000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="745.0" y="821" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchingConfigDto (new version)</text>
+<rect x="306.08" y="825" width="67.84" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="340.0" y="841" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">200 OK</text>
+<rect x="71" y="868" width="67.84" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="78" y="884" font-size="16" fill="#172d3b" font-weight="400" text-anchor="start">[else]</text>
+<rect x="629.0" y="871" width="232.0" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="745.0" y="887" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">409 STALE_MATCHING_CONFIG</text>
+<rect x="944.92" y="963" width="180.16000000000003" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1035.0" y="979" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">8: GET /api/matches</text>
+<rect x="1781.04" y="1003" width="257.92" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1910.0" y="1019" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">9: search(criteria, actorId)</text>
+<rect x="1411.52" y="1043" width="136.96" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1480.0" y="1059" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">10: snapshot()</text>
+<rect x="1135.04" y="1083" width="689.9200000000001" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1480.0" y="1099" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchingConfigSnapshot (strategy, weights, enabledCriteria, minScore, version)</text>
+<rect x="2021.04" y="1128" width="257.92" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="2150.0" y="1144" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">11: ranking(enabledCriteria)</text>
+<rect x="2046.96" y="1158" width="206.08" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="2150.0" y="1174" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">Comparator&lt;MatchScore&gt;</text>
+<rect x="1815.6" y="1193" width="188.8" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1910.0" y="1209" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">MatchSearchResultDto</text>
+<rect x="836.92" y="1228" width="396.16" height="26" rx="3" fill="white" stroke="none" stroke-width="1.5" />
+<text x="1035.0" y="1244" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">200 OK: results ranked with the new settings</text>
+<text x="62" y="1358" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">:MatchingStrategy is whichever implementation the administrator chose: BalancedStrategy, AvailabilityFirstStrategy or CourseFirstStrategy. MatchService only knows the interface.</text>
+<text x="62" y="1383" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">validWeights() builds a MatchingWeights per strategy (each weight 0..1, sum 1); validEnabled() and validThreshold() run just before it. After saveOverride() the setting row is saved through its repository.</text>
+<text x="62" y="1408" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">lockSettings() takes the row lock and compares versions, so when two administrators save at once the second gets 409 and reloads. Each search reads one snapshot of the settings.</text>
+</g></svg>
