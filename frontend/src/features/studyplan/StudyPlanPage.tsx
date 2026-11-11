@@ -26,7 +26,7 @@ export default function StudyPlanPage() {
     <StatePanel loading={plans.loading && !plans.data} error={plans.error} onRetry={() => plans.reload()} />
     {plans.data && <>
       <StatePanel empty={!plans.data.length} emptyTitle="No study plans yet" emptyKind="clock"
-        emptyMessage="Upload your lecture slides or paste the topics, and Gemini drafts a week-by-week roadmap up to your exam."
+        emptyMessage="Upload your lecture slides or paste the topics, and the AI drafts a week-by-week roadmap up to your exam."
         emptyAction={create} />
       {!!plans.data.length && <ul className="data-list study-plan-list" aria-label="Study plans">
         {plans.data.map(plan => <StudyPlanRow key={plan.id} plan={plan} />)}

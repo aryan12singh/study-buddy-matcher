@@ -87,7 +87,7 @@ export const FAQS: Faq[] = [
   },
   {
     id: 'explain', question: 'What does “Explain this match” do?',
-    answer: 'It can ask Gemini to describe the evidence behind the selected score. AI wording is labelled and may be inaccurate; it does not change the deterministic score or ranking. A labelled standard explanation appears when AI is disabled, its allowance is exhausted or wording is unavailable. A changed match needs a refresh before another explanation.'
+    answer: 'It can ask an AI provider (Google Gemini or, when the server enables it, Anthropic Claude) to describe the evidence behind the selected score. AI wording is labelled and may be inaccurate; it does not change the deterministic score or ranking. A labelled standard explanation appears when AI is disabled, its allowance is exhausted or wording is unavailable. A changed match needs a refresh before another explanation.'
   },
   {
     id: 'ai-data', question: 'What data is sent for an AI explanation?',

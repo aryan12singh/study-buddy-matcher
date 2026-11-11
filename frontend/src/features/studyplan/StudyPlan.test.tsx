@@ -215,7 +215,7 @@ describe('a study plan’s roadmap', () => {
     expect(within(screen.getByRole('list', { name: 'Tasks for Inheritance' })).getByText('Re-read the Inheritance slides')).toBeInTheDocument()
     expect(screen.getByText('1 of 3 steps done')).toBeInTheDocument()
     expect(screen.getByText(/Drafted from week1.pdf, week2.pdf/)).toBeInTheDocument()
-    expect(screen.getByText('Roadmap written by Gemini; it may be inaccurate.')).toBeInTheDocument()
+    expect(screen.getByText('Roadmap written by AI (Gemini or Claude); it may be inaccurate.')).toBeInTheDocument()
   })
 
   it('ticks a topic off and shows the saved plan', async () => {

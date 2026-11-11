@@ -37,7 +37,7 @@ describe('MatchExplanationPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Explain this match' }))
 
     expect(await screen.findByText('AI')).toBeTruthy()
-    expect(screen.getByText('Written by Gemini; may be inaccurate. Scores unchanged.')).toBeTruthy()
+    expect(screen.getByText('Written by AI (Gemini or Claude); may be inaccurate. Scores unchanged.')).toBeTruthy()
   })
 
   it('shows the labelled standard explanation when AI is unavailable, since the card no longer shows it', async () => {

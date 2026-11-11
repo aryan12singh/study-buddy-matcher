@@ -55,7 +55,7 @@ describe('session roadmap panel', () => {
       'Meeting 1 · on 2 Nov 2026 · 45 min of 1 h planned', 'Meeting 2 · on 9 Nov 2026 · 50 min of 1 h planned',
     ])
     expect(screen.getByRole('checkbox', { name: /Polymorphism/ })).toBeDisabled()
-    expect(screen.getByText('Roadmap written by Gemini; it may be inaccurate.')).toBeInTheDocument()
+    expect(screen.getByText('Roadmap written by AI (Gemini or Claude); it may be inaccurate.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Replace roadmap' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete roadmap' })).not.toBeInTheDocument()
   })
