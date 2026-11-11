@@ -1,4 +1,4 @@
-# E1: match explanation design
+# Match explanation diagrams (E1, Team C)
 
 This companion describes the E1 match explanation. It supplements the compulsory matching
 design: Java still calculates every score and rank; the optional provider (Google Gemini)

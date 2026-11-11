@@ -1,4 +1,4 @@
-# Team C implementation diagrams
+# Connections, groups and study rooms diagrams (Team C)
 
 These diagrams describe the implemented composition, DTO and transaction model. There is no
 Student/Leader inheritance: `Student` has a one-to-one `User` association with a shared
@@ -132,7 +132,7 @@ the relevant buddy pair manage their own series; current parent eligibility gate
 detail, suggestions and calendar export. `SessionSchedule` generates bounded UTC
 occurrences from local civil time and an IANA zone; missing/ambiguous DST endpoints
 are rejected. Assemblers expose no private contact/email/token fields. E1 match
-explanations are described separately in [E1.md](E1.md).
+explanations are described separately in the [match explanation diagrams](MATCH_EXPLANATION_DIAGRAMS.md).
 
 ## Session changes, events and calendar export
 

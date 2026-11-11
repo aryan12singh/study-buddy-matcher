@@ -371,7 +371,7 @@ step-by-step demo walkthroughs.
 | [Database](docs/DATABASE.md) | Access model, migrations, schema, seeding and the release runbook |
 | [Configuration](docs/CONFIGURATION.md) | Every configuration key, its default and purpose |
 | [Diagrams](docs/diagrams/README.md) | Technology stack, architecture, UML use cases, classes, packages, deployment, sequences, state machines and the database, with editable sources |
-| [Known limitations and future work](docs/FUTURE_WORK.md) | Deliberate boundaries and how the design extends |
+| [Known limitations and future work](docs/LIMITATIONS_AND_FUTURE_WORK.md) | Deliberate boundaries and how the design extends |
 | [AI usage](docs/AI_USAGE.md) | Development assistance and the application's own AI use |
 | [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |
 

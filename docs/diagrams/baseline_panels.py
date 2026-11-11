@@ -139,7 +139,7 @@ def e2_use_cases():
         c.line([(138,575),(300,y)])
         c.lines(955,y-8,note,18,MUTED,gap=25)
         c.line([(890,y),(935,y)],dashed=True)
-    c.note(45,1068,1510,["No global online status, public room, chat, calendar synchronisation or RSVP workflow is implied. Calendar files are private snapshots.", "E1 match explanations have a separate companion view (E1.md)."],fill="#edf3f6")
+    c.note(45,1068,1510,["No global online status, public room, chat, calendar synchronisation or RSVP workflow is implied. Calendar files are private snapshots.", "E1 match explanations have a separate companion view (MATCH_EXPLANATION_DIAGRAMS.md)."],fill="#edf3f6")
     return c
 
 
@@ -326,7 +326,7 @@ def collaborative_study():
     c.box(1825,915,470,135,"Open-Meteo API",["Fixed campus coordinates and weather fields.", "No student identity, location or schedule."],color=AMBER,fill=WARM,size=18)
     c.line([(2060,780),(2060,915)],end="arrow")
     c.label(2060,856,"Java HTTP client + timeout",17)
-    c.note(45,1210,2290,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler / ForestAssembler return DTOs.", "PomodoroTimer is an immutable server-time value; FocusCredit measures focus time from it and TreeGrowth maps minutes to a TreeSpecies. SessionAvailability reuses WeeklyAvailability.", "SessionEvents writes recipient notifications transactionally. Detailed E2 transaction and ER diagrams are in TEAM_C.md; E1 match explanations are in E1.md."],fill="#edf3f6")
+    c.note(45,1210,2290,["RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler / ForestAssembler return DTOs.", "PomodoroTimer is an immutable server-time value; FocusCredit measures focus time from it and TreeGrowth maps minutes to a TreeSpecies. SessionAvailability reuses WeeklyAvailability.", "SessionEvents writes recipient notifications transactionally. E2 transaction and ER diagrams: CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md. E1: MATCH_EXPLANATION_DIAGRAMS.md."],fill="#edf3f6")
     return c
 
 

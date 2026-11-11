@@ -1,4 +1,4 @@
-# Platform and whole-system diagrams
+# System overview diagrams (whole team)
 
 These diagrams connect the Team B authentication/profile/data foundation with Team A
 matching and Team C requests, privacy, groups, notifications and administration, plus the
@@ -6,8 +6,8 @@ E2 collaborative-study features and the external services the application uses.
 Presentation panels: [architecture](exports/architecture.svg),
 [use cases](exports/use-cases.svg) and [identity/profile classes](exports/identity-profile.svg).
 
-Detailed OO and transaction diagrams are in [TEAM_A.md](TEAM_A.md), [TEAM_C.md](TEAM_C.md)
-and [E1.md](E1.md). The [API contract](../API_CONTRACT.md) and
+Detailed OO and transaction diagrams are in the [matching engine](MATCHING_ENGINE_DIAGRAMS.md), [connections, groups and rooms](CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md)
+and [match explanation](MATCH_EXPLANATION_DIAGRAMS.md) diagrams. The [API contract](../API_CONTRACT.md) and
 [design decisions](../DESIGN_DECISIONS.md) explain fields and validation choices;
 [database](../DATABASE.md) covers migrations and access. The [diagram index](README.md)
 lists every export, the notation and how to rebuild them.

@@ -113,7 +113,7 @@ real services; [DATABASE.md](DATABASE.md#demo-seed) lists what it creates.
 | Setup and schema | Development packaging skips tests; the test harness provisions and migrates PostgreSQL. Ordered SQL migrations are required on runtime databases | Hibernate `update` cannot replace the migration, adoption and RLS work |
 | Windows and fonts | Decorative title bars and conventional routes; shared retro components; Tahoma/Verdana/system body fonts; original CSS pixel art; narrow layouts wrap | A movable window manager or pixel font adds no object-oriented value |
 
-The whole-system boundary and platform use cases are in [diagrams/PLATFORM.md](diagrams/PLATFORM.md).
+The whole-system boundary and platform use cases are in the [system overview diagrams](diagrams/SYSTEM_OVERVIEW_DIAGRAMS.md).
 
 ## Interface behaviour
 

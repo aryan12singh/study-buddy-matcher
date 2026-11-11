@@ -1,9 +1,9 @@
-# Team A diagrams
+# Matching engine diagrams (Team A)
 
 Matching algorithm, discovery API and page, and admin configuration.
 These diagrams describe the implemented matching boundary. Team B's profile/security/data
 and Team C's request/privacy collaborators are dependencies, not duplicated matching logic.
-Use [TEAM_C.md](TEAM_C.md) for the request/contact-disclosure and account-lifecycle diagrams.
+Use the [connections, groups and rooms diagrams](CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md) for the request/contact-disclosure and account-lifecycle diagrams.
 Presentation panels: [matching design](exports/matching-design.svg),
 [values and privacy](exports/values-and-privacy.svg) and
 [matching sequence](exports/matching-sequence.svg); notation is in the [diagram index](README.md).
@@ -342,5 +342,5 @@ sequenceDiagram
 
 A failure rolls back the whole config mutation. Concurrent first saves also meet the same
 singleton lock; stale edits cannot overwrite another administrator's changes. Stored
-settings/version survive restart. The E1 match explanation ([E1.md](E1.md)) adds wording after
+settings/version survive restart. The E1 match explanation ([match explanation diagrams](MATCH_EXPLANATION_DIAGRAMS.md)) adds wording after
 deterministic matching; it never supplies ranks or compatibility numbers.

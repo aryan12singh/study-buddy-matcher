@@ -182,5 +182,5 @@
 <text x="2060" y="856" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">Java HTTP client + timeout</text>
 <text x="62" y="1238" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">RoomAccess / SessionAccess check current account and parent authority; RoomAssembler / SessionAssembler / WeatherAssembler / ForestAssembler return DTOs.</text>
 <text x="62" y="1263" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">PomodoroTimer is an immutable server-time value; FocusCredit measures focus time from it and TreeGrowth maps minutes to a TreeSpecies. SessionAvailability reuses WeeklyAvailability.</text>
-<text x="62" y="1288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">SessionEvents writes recipient notifications transactionally. Detailed E2 transaction and ER diagrams are in TEAM_C.md; E1 match explanations are in E1.md.</text>
+<text x="62" y="1288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">SessionEvents writes recipient notifications transactionally. E2 transaction and ER diagrams: CONNECTIONS_GROUPS_AND_ROOMS_DIAGRAMS.md. E1: MATCH_EXPLANATION_DIAGRAMS.md.</text>
 </g></svg>

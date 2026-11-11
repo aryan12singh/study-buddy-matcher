@@ -1,11 +1,11 @@
-# Team B: platform and AI study tools
+# AI study tools diagrams (Team B)
 
 This companion covers Team B's two areas. The platform foundation — identity, authentication and
-own-profile — already has its boundary and use cases in [PLATFORM.md](PLATFORM.md) and its
+own-profile — already has its boundary and use cases in the [system overview diagrams](SYSTEM_OVERVIEW_DIAGRAMS.md) and its
 decisions in [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md#platform-and-own-profile-team-b), so it
 is not repeated here. This document instead covers the AI study tools: Quiz Buddy, study plans and
 the Pixel assistant. All three share one Gemini integration with match explanations (E1, Team C's
-[E1.md](E1.md)), but each holds its own API key, model and daily allowance so one feature can never
+[match explanation diagrams](MATCH_EXPLANATION_DIAGRAMS.md)), but each holds its own API key, model and daily allowance so one feature can never
 spend another's. Presentation panel: [AI study tools](exports/ai-study-tools.svg); the
 [API contract](../API_CONTRACT.md#quizzes-ai-study-assistant) defines the endpoints, and
 [testing](../TESTING.md#e1-quizzes-study-plans-and-the-assistant) covers how they are tested.
