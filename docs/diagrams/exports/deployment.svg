@@ -84,7 +84,7 @@
 <text x="1795.0" y="411" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">Supabase for the team</text>
 <text x="1795.0" y="435" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">Docker container for the local demo</text>
 <text x="1795.0" y="459" font-size="16" fill="#506474" font-weight="400" text-anchor="middle">34 tables created by SQL migrations</text>
-<text x="1795" y="700" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Google Gemini API</text>
+<text x="1795" y="700" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Google Gemini API (optional: Anthropic API)</text>
 <text x="1795" y="744" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Spotify Accounts and Web API</text>
 <text x="1795" y="788" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Freesound API</text>
 <text x="1795" y="832" font-size="18" fill="#172d3b" font-weight="400" text-anchor="middle">Open-Meteo API</text>

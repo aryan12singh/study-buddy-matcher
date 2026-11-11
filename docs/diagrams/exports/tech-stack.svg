@@ -235,6 +235,7 @@
 <text x="1549" y="563.0" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Campus weather, cached with a fallback</text>
 <text x="1469" y="628" font-size="16" fill="#506474" font-weight="400" text-anchor="start">Keys and client secrets stay on the backend;</text>
 <text x="1469" y="652" font-size="16" fill="#506474" font-weight="400" text-anchor="start">the app still works when a service is down.</text>
+<text x="1469" y="676" font-size="16" fill="#506474" font-weight="400" text-anchor="start">Anthropic Claude is an optional second AI provider.</text>
 <path transform="translate(80,869.0) scale(1.6666666666666667)" fill="#CB3837" d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/>
 <text x="149" y="883.0" font-size="19" fill="#172d3b" font-weight="700" text-anchor="start">npm on Node.js 22</text>
 <text x="149" y="907.0" font-size="15" fill="#506474" font-weight="400" text-anchor="start">Locked installs (npm ci) and scripts</text>

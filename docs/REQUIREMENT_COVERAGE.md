@@ -216,6 +216,7 @@ and deletion) are recorded in the
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
 | One Gemini client class, an instance and quota per feature | `AiClient`, `GeminiClient`, `GeminiSettings`, `AiQuota`, `AiAttachment`, `AiAssistantConfiguration`, `AiAssistantProperties` | `GeminiClientTest`, `AiQuotaTest`, `AiAttachmentTest`, `AiAssistantPropertiesTest`, `GeminiClientLiveTest` (opt-in) |
+| Optional second provider (Claude), asked first or as backup by configuration | `ClaudeClient`, `ClaudeProperties`, `FallbackAiClient`, `AiProviders`, `AiProvider`, `AiProviderProperties` | `ClaudeClientTest`, `FallbackAiClientTest`, `AiProviderPropertiesTest` |
 | Versioned prompt templates filled in one pass | `PromptTemplate`, `StudyMaterial` | `PromptTemplateTest` |
 
 ## E2 collaborative study experience

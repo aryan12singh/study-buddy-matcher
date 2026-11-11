@@ -56,7 +56,7 @@ def tech_stack():
         ("*wave", "Freesound API", "CC0 ambient sounds for the study room"),
         ("*weather", "Open-Meteo", "Campus weather, cached with a fallback"),
     ])
-    c.lines(columns[2]+24, 628, ["Keys and client secrets stay on the backend;", "the app still works when a service is down."], 16, MUTED, gap=24)
+    c.lines(columns[2]+24, 628, ["Keys and client secrets stay on the backend;", "the app still works when a service is down.", "Anthropic Claude is an optional second AI provider."], 16, MUTED, gap=24)
 
     _window(c, columns[0], 790, 550, 438, "FRONTEND TOOLING", TEAL)
     _tiles(c, columns[0]+20, 850, [
@@ -187,7 +187,7 @@ def deployment():
     c.node(1560, 250, 470, 270, "device", "Database host")
     c.artifact(1585, 335, 420, "PostgreSQL database", ["Supabase for the team", "Docker container for the local demo", "34 tables created by SQL migrations"], stereotype="database", color=TEAL)
     c.node(1560, 610, 470, 300, "external system", "External services", AMBER, WARM)
-    c.lines(1795, 700, ["Google Gemini API", "Spotify Accounts and Web API", "Freesound API", "Open-Meteo API"], 18, gap=44, anchor="middle")
+    c.lines(1795, 700, ["Google Gemini API (optional: Anthropic API)", "Spotify Accounts and Web API", "Freesound API", "Open-Meteo API"], 18, gap=44, anchor="middle")
     c.node(60, 830, 410, 190, "device", "GitHub Actions runner", MUTED)
     c.lines(265, 915, ["backend: ./mvnw test with postgres:17", "frontend: test, lint, build", "runs on every pull request"], 17, gap=30, anchor="middle")
     c.line([(440, 420), (765, 420)], color=INK, width=2.5)

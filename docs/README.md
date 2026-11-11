@@ -10,7 +10,7 @@ project [README](../README.md) for the overview and setup.
 | --- | --- |
 | [REQUIREMENT_COVERAGE.md](REQUIREMENT_COVERAGE.md) | Every requirement in the brief and both extras, mapped to the classes and tests that deliver it |
 | [LIMITATIONS_AND_FUTURE_WORK.md](LIMITATIONS_AND_FUTURE_WORK.md) | Deliberate boundaries of the build and how the design extends past them |
-| [AI_USAGE.md](AI_USAGE.md) | AI inside the app (what Gemini receives, safeguards) and AI tools used to build the project |
+| [AI_USAGE.md](AI_USAGE.md) | AI inside the app (what the AI provider receives, safeguards) and AI tools used to build the project |
 
 ## How is it designed?
 

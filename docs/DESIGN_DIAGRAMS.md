@@ -169,6 +169,7 @@ the [README](../README.md#libraries).
 | External service | Called by | Used for |
 | --- | --- | --- |
 | Google Gemini | Backend | E1 match explanations, quizzes, study plans and the Pixel assistant |
+| Anthropic Claude (optional, off by default) | Backend | The same four AI features, asked first or as the backup, as `app.ai.primary-provider` sets |
 | Spotify accounts service | Backend | Spotify sign-in and token refresh only; the student starts playback from their own Spotify app |
 | Spotify Web Playback SDK | Browser | Premium playback in the study room, using an access token issued by the backend; free mode uses Spotify's embedded playlist player instead |
 | Freesound | Backend (search); browser (preview audio) | CC0 ambient sounds: the backend searches with its key, the browser plays the returned preview files |
@@ -1340,7 +1341,9 @@ study plan and a session's plan are visible only to their owner or current parti
 returns fixed replies or fails on demand. `AiAssistantConfiguration` builds the one `GeminiClient`
 instance that quizzes and study plans share, holding its own `GeminiSettings` and
 `AiQuota` from `app.ai.assistant.*`. The chat assistant and match explanations build their own
-instances of the same `GeminiClient` class from their own settings.
+instances of the same `GeminiClient` class from their own settings. `AiProviders` wraps each of
+them, with the optional `ClaudeClient`, in a `FallbackAiClient` that asks the two in the order
+`app.ai.primary-provider` sets; with Claude off it behaves as the `GeminiClient` alone.
 
 ```mermaid
 classDiagram
@@ -1395,6 +1398,9 @@ classDiagram
     QuizWriter --> AiClient
     QuizWriter --> QuizOutputValidator
     GeminiClient ..|> AiClient
+    ClaudeClient ..|> AiClient : optional second provider
+    FallbackAiClient ..|> AiClient
+    FallbackAiClient --> AiClient : asks providers in configured order
     GeminiClient --> AiQuota : spends allowance, pauses after HTTP 429
 ```
 

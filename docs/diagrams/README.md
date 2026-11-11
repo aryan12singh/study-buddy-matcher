@@ -29,7 +29,7 @@ panel with the detailed, editable Mermaid views behind it.
 
 | Panel | What it shows |
 | --- | --- |
-| [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course` and `AvailabilitySlot`, with the `@MapsId` association and multiplicities |
+| [identity-profile.svg](exports/identity-profile.svg) | `User`, `Student`, `Role`, `Course` and `AvailabilitySlot`, with the `@MapsId` composition (the account owns the profile) and multiplicities |
 | [matching-design.svg](exports/matching-design.svg) | The five `CriterionScorer` implementations, `MatchingStrategy`, the abstract `PriorityTierStrategy` template method and its two subclasses, `MatchScore` and the coordinating services |
 | [values-and-privacy.svg](exports/values-and-privacy.svg) | `WeeklyAvailability` / `TimeSlot` value composition and the sealed `ProfileDto` response shapes chosen by `ProfileViewAssembler` |
 | [relationship-domain.svg](exports/relationship-domain.svg) | `MatchRequest`, `Connection`, `StudyGroup`, `GroupMembership`, `GroupJoinRequest`, their status enumerations and `GroupClosure`, with one association per field |

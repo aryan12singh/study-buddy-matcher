@@ -195,13 +195,15 @@ disclosed in [AI_USAGE.md](AI_USAGE.md).
 
 All four AI features (match explanations, Pixel, quizzes and study plans) share one Gemini
 integration in `com.studybuddy.ai`: one `GeminiClient` class, built once per client from its own
-`GeminiSettings` and given its own `AiQuota`, and one `PromptTemplate` for every prompt.
+`GeminiSettings` and given its own `AiQuota`, and one `PromptTemplate` for every prompt. Claude
+(Anthropic) is an optional second provider behind the same interface.
 
 | Decision | Choice and reason |
 | --- | --- |
 | One client class, three instances | `GeminiClient` is not a Spring component. `AiAssistantConfiguration` declares the `AiClient` bean that quizzes and study plans share; `AssistantConfiguration` builds the chat's own client; `AiExplanationConfiguration` builds E1's. Each takes a `GeminiSettings` record (switch, base URL, model, key, timeout, reply size, whether to turn thinking off) from its properties' `geminiSettings(...)` and a fresh `AiQuota` from `newQuota()` |
 | Separate projects and allowances | `app.ai.assistant.*` has its own API key (from a different Google project than match explanations), and each client counts its own `AiQuota`, so one feature never spends another's allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
 | Provider behind an interface | Features depend on `AiClient` (E1 on `ExplanationProvider`); `GeminiClient` is the implementation, so tests supply a fake |
+| Second provider, chosen by configuration | `ClaudeClient` is a second `AiClient`, built on Anthropic's official Java SDK. `AiProviders` puts each feature's `GeminiClient` and a `ClaudeClient` into a `FallbackAiClient` in the order `app.ai.primary-provider` (`AiProvider`: `GEMINI` or `CLAUDE`) sets; each enum constant returns its own order, so no code switches on the provider. The second is asked only when the first throws `AiUnavailableException`, and prompts and validators are shared, so the output shape does not depend on who answered. Chosen because Gemini's free tier allows about 20 requests a day per model, which a live demo can exhaust; off by default (`app.ai.claude.enabled`), and with Claude off the chain behaves exactly as Gemini alone. Claude calls share one key and one `AiQuota`, because they are paid |
 | Quota | One `AiQuota` class per client: per process, in memory, reset at Pacific midnight (when Google's free-tier day ends), with a shared daily limit and a per-student one (18 and 5 for the study tools). After a provider 429, that client pauses for `rate-limit-cooldown`. A switched-off feature is checked before the quota, so it never spends allowance |
 | JSON replies | Requests ask for `application/json`; a reply that did not finish with `STOP` (token limit, safety block) is rejected rather than parsed, and thought parts are skipped when reading the text |
 | Long requests | `timeout` 90 s and `max-output-tokens` 4000, because a quiz or roadmap from a lecture PDF can take Gemini well over 30 seconds |

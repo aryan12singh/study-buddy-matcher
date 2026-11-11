@@ -30,7 +30,7 @@ def architecture():
     c.box(825,905,330,140,"DTO assemblers",["sealed ProfileDto:", "Public = no contact", "Connected = has contact"],color=TEAL,size=17)
     # Right column: services outside the system
     c.box(1240,515,315,145,"Spotify Accounts",["Sign-in and token refresh", "Direct concrete client:", "SpotifyAccountsClient"],color=AMBER,fill=WARM,size=17)
-    c.box(1240,695,315,170,"External APIs",["Google Gemini (AI features)", "Freesound (ambient sounds)", "Open-Meteo (cached, fallback)"],color=AMBER,fill=WARM,size=17)
+    c.box(1240,695,315,170,"External APIs",["Gemini, optional Claude (AI)", "Freesound (ambient sounds)", "Open-Meteo (cached, fallback)"],color=AMBER,fill=WARM,size=17)
     # Calls (grey)
     c.line([(375,242),(455,242)],end="arrow")
     c.label(415,226,"JWT + JSON",15)
@@ -335,7 +335,7 @@ def collaborative_study():
 
 
 def ai_study_tools():
-    c=Canvas("ai-study-tools", "UML collaborators — quizzes, study plans and Pixel", "Three student features share one Gemini client; each checks the model's reply before anything is saved or shown.",width=1800,height=1560)
+    c=Canvas("ai-study-tools", "UML collaborators — quizzes, study plans and Pixel", "Three student features share one AI client interface; each checks the model's reply before anything is saved or shown.",width=1800,height=1560)
     c.panel(45,170,560,1010,"QUIZZES (GROUP / PERSONAL)",color=AMBER,fill=WARM)
     c.panel(625,170,560,1010,"STUDY PLANS (PERSONAL / SESSION)",color=AMBER,fill=WARM)
     c.panel(1205,170,550,1010,"PIXEL STUDY ASSISTANT",color=AMBER,fill=WARM)
@@ -363,7 +363,7 @@ def ai_study_tools():
     c.label(1700,520,["else","AI"],15)
     c.line([(1260,365),(1260,385),(1225,385),(1225,830),(1245,830)],end="arrow")
     c.label(1225,700,"answers",15)
-    c.note(1235,985,490,["Nine intents (find buddies, meet times,", "to-dos, plan a session, ...) answer from", "existing services; Gemini only classifies."],fill="white")
+    c.note(1235,985,490,["Nine intents (find buddies, meet times,", "to-dos, plan a session, ...) answer from", "existing services; the AI only classifies."],fill="white")
     c.note(75,1030,500,["QuizMarker scores; QuizLeaderboard ranks.", "Group answers stay on the server until", "the quiz closes."],fill="white")
     c.note(655,1030,500,["StudyMaterialReader checks file types.", "StudyPlanCalendar / SessionMeetingFrames", "build the frame the reply must fill."],fill="white")
     c.cls(85,1225,520,"AiClient",[],["+ generateJson(studentId, prompt,", "  attachments) : String"],stereotype="interface",color=BLUE,size=17)
@@ -374,7 +374,7 @@ def ai_study_tools():
     c.line([(325,1180),(325,1225)],end="arrow")
     c.line([(905,1180),(905,1205),(345,1205),(345,1225)],end="arrow")
     c.line([(1480,1180),(1480,1195),(365,1195),(365,1225)],end="arrow")
-    c.note(45,1400,1710,["QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.", "Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts."],fill="#edf3f6")
+    c.note(45,1400,1710,["QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.", "Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts.", "ClaudeClient is an optional second AiClient: FallbackAiClient asks it and GeminiClient in the order app.ai.primary-provider sets (AiProviders)."],fill="#edf3f6")
     return c
 
 
