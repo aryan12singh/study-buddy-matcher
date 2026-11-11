@@ -169,8 +169,9 @@ scripts/    Migration runner and disposable PostgreSQL test harness
 docs/       API contract, design decisions, coverage, testing, database, configuration, diagrams
 ```
 
-The [diagram index](docs/diagrams/README.md) holds the UML use cases, class diagrams, the
-matching sequence and the AI and collaborative-study views.
+The [diagram index](docs/diagrams/README.md) holds the UML use cases, class diagrams, package
+and deployment views, the sequence diagrams and state machines for the key flows, the database
+diagrams and the AI and collaborative-study views.
 
 ## Matching engine
 
@@ -368,7 +369,7 @@ step-by-step demo walkthroughs.
 | [Testing](docs/TESTING.md) | Test strategy, coverage by area and demo walkthroughs |
 | [Database](docs/DATABASE.md) | Access model, migrations, schema, seeding and the release runbook |
 | [Configuration](docs/CONFIGURATION.md) | Every configuration key, its default and purpose |
-| [Diagrams](docs/diagrams/README.md) | Architecture, UML use cases, classes and sequences, with editable sources |
+| [Diagrams](docs/diagrams/README.md) | Technology stack, architecture, UML use cases, classes, packages, deployment, sequences, state machines and the database, with editable sources |
 | [Known limitations and future work](docs/FUTURE_WORK.md) | Deliberate boundaries and how the design extends |
 | [AI usage](docs/AI_USAGE.md) | Development assistance and the application's own AI use |
 | [Repository conventions](AGENTS.md) | Ownership, layering rules and review process |
@@ -376,6 +377,8 @@ step-by-step demo walkthroughs.
 <a id="libraries"></a>
 
 ## Libraries and services
+
+[![Technology stack by tier](docs/diagrams/exports/tech-stack.svg)](docs/diagrams/exports/tech-stack.svg)
 
 Versions match the resolved Maven dependencies and the npm lockfile. No library outside this
 table may be added without team agreement.
@@ -405,12 +408,13 @@ table may be added without team agreement.
 
 <br />
 
-Everything visual is original work: the pixel-book logo, README icons (`docs/assets/icons/`),
+Everything visual in the application is original work: the pixel-book logo, README icons (`docs/assets/icons/`),
 interface icons and patterns (`PixelIcon.tsx`, `desktop.css`), achievement medallions, forest
 trees and study-room scenery. Timer chimes are synthesised with Web Audio, so no sound files are
 shipped. Text uses Tahoma, Verdana and system fonts. `frontend/src/index.css` carries a small
 CSS reset adapted from Tailwind CSS's preflight (MIT). Weather data is attributed to Open-Meteo
-on the room screen.
+on the room screen. The technology stack diagram alone uses brand marks, from Simple Icons
+(CC0 1.0); they are trademarks of their owners and only name the technologies.
 
 </details>
 

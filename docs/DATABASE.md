@@ -102,7 +102,9 @@ every row.
 
 ## Schema overview
 
-The migrations create 34 tables in `public`.
+The migrations create 34 tables in `public`. Two entity-relationship diagrams draw them:
+[compulsory schema](diagrams/exports/database-core.svg) and
+[tables added by the extras](diagrams/exports/database-extras.svg).
 
 | Area | Tables |
 | --- | --- |
