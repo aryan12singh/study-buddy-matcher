@@ -134,7 +134,7 @@ function SessionEditor({ context }: { context: EditorContext }) {
         </Field>
         <StatePanel loading={availability.loading && !availability.data} error={availability.error} onRetry={() => availability.reload()} />
         {availability.data && <><p>{availability.data.participantCount} participants · {availability.data.sharedMinutes} shared minutes each week</p>
-          <WeeklySchedule slots={availability.data.sharedSlots} />
+          {!!availability.data.sharedSlots.length && <WeeklySchedule slots={availability.data.sharedSlots} />}
           <div className="actions">{suggestions.map(({ slot, times }, index) => <Button key={index} disabled={pending} onClick={() => {
             const currentTimes = durationMinutes ? nextSuggestedTimes(slot, durationMinutes) : null
             if (!currentTimes) return
