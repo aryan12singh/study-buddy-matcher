@@ -38,6 +38,14 @@ project [README](../README.md) for the overview and setup.
 | [UI_GUIDE.md](UI_GUIDE.md) | Visual direction, Figma link and the shared React components to reuse |
 | [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) | Milestones, picking up work, pull requests and reviews |
 
+## Where is the code?
+
+| Folder | Contents |
+| --- | --- |
+| [../backend/README.md](../backend/README.md) | Map of the Spring Boot project: the 25 packages by area, resources and commands |
+| [../frontend/README.md](../frontend/README.md) | Map of the React project: features, shared code and commands |
+| [../scripts/README.md](../scripts/README.md) | What each migration and test script does and needs |
+
 ## Assets
 
 | Folder | Contents |

@@ -187,6 +187,9 @@ scripts/    Migration runner and disposable PostgreSQL test harness
 docs/       API contract, design decisions, coverage, testing, database, configuration, diagrams
 ```
 
+Each folder has its own short map: [backend](backend/README.md), [frontend](frontend/README.md),
+[scripts](scripts/README.md) and [docs](docs/README.md).
+
 ## Design in detail
 
 Open a section for its UML diagrams and the reasoning behind them. Every panel is an SVG in
@@ -651,7 +654,7 @@ pull request into `main`.
 | Migration tests | Fresh, legacy-upgrade, failed-preflight and repeated migrations |
 | Frontend interaction tests | Rendered screens with Vitest and Testing Library: empty, loading and error states, form validation, unsaved-draft guards, confirmation dialogs |
 
-External providers (Gemini, Open-Meteo, Spotify, Freesound) are never called by the default
+External providers (Gemini, Claude, Open-Meteo, Spotify, Freesound) are never called by the default
 suites; tests replace them through their interfaces. The brief's Appendix A example is a test
 (`AppendixAMatchingTest`). The [testing guide](docs/TESTING.md) lists what each area's tests
 check and gives step-by-step demo walkthroughs.
