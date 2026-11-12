@@ -86,11 +86,11 @@
 
 /* The timer's mini player sits at the panel's top left, in the flow so it never covers the heading. */
 .now-playing-mini {
-  position: relative; z-index: 3; align-self: flex-start; display: grid; width: min(205px, 100%); margin: -.4rem 0 .9rem -1rem; padding: .4rem .45rem;
+  position: relative; z-index: 3; align-self: flex-start; display: grid; width: min(240px, 100%); margin: -.4rem 0 .9rem -1rem; padding: .4rem .45rem;
   background: #fffef8; border: 2px solid #67705c; border-radius: 6px; box-shadow: 2px 3px 0 #89907840;
   text-align: left; color: #343e34;
 }
-.now-playing-mini-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; align-items: center; gap: .35rem; }
+.now-playing-mini-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto auto; align-items: center; gap: .35rem; }
 .now-playing-mini-cover { box-sizing: border-box; width: 32px; height: 32px; object-fit: cover; border: 2px solid #414a40; border-radius: 3px; box-shadow: 1px 1px 0 #34433440; }
 .now-playing-mini-cover.is-empty { display: grid; place-items: center; background: #edf1df; color: #53694a; }
 .now-playing-mini-cover .pixel-icon { width: 14px; height: 14px; flex-basis: 14px; }
