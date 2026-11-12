@@ -1,5 +1,6 @@
 package com.studybuddy.assistant;
 
+import com.studybuddy.course.Course;
 import com.studybuddy.student.GroupSizePreference;
 import com.studybuddy.student.StudyMode;
 import org.springframework.stereotype.Component;
@@ -27,8 +28,11 @@ public class QuickIntentReader {
             + "|anything (new|waiting|pending)|what'?s (new|next|waiting|pending)|catch me up)\\b");
     private static final Pattern QUIZ = Pattern.compile("\\b(quiz me|test me|practice questions|make (me )?a quiz)\\b");
     private static final Pattern QUIZ_TOPIC = Pattern.compile("\\b(?:on|about)\\s+(.+?)[?.!]*$", Pattern.CASE_INSENSITIVE);
-    /** A course code inside a quiz topic, with the "for" or "in" that leads to it. */
-    private static final Pattern TOPIC_COURSE = Pattern.compile("\\b(?:(?:for|in|from)\\s+)?[a-z]{2,4}\\s?\\d{3}[a-z]?\\b", Pattern.CASE_INSENSITIVE);
+    /**
+     * Words shaped like a course code inside a quiz topic, with the "for" or "in" that leads to them.
+     * "Java 101" has this shape too, so a match is taken out only when it is the catalogue course.
+     */
+    private static final Pattern TOPIC_COURSE = Pattern.compile("\\b(?:(?:for|in|from)\\s+)?([a-z]{2,4}\\s?\\d{3}[a-z]?)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern OWN_NOTES = Pattern.compile("(my|the|these|those) (notes|slides|lecture|lectures|readings)", Pattern.CASE_INSENSITIVE);
     private static final Pattern FIND = Pattern.compile("\\b(find|looking for|need|want|get)\\b.*\\b(buddy|buddies|partner|partners|study mate)\\b");
     private static final Pattern MEET = Pattern.compile("\\bwhen (can|could|should|do) (my|our|the|we)\\b.*\\bmeet\\b");
@@ -65,6 +69,12 @@ public class QuickIntentReader {
         PAGE_WORDS.put(Pattern.compile("\\b(home|dashboard)\\b"), AppPage.HOME);
     }
 
+    private final AssistantCourses courses;
+
+    public QuickIntentReader(AssistantCourses courses) {
+        this.courses = courses;
+    }
+
     /** The request, when the message is clear enough to read without the AI. */
     public Optional<AssistantRequest> read(String message) {
         String text = message.strip().toLowerCase(Locale.ROOT);
@@ -79,7 +89,8 @@ public class QuickIntentReader {
             return Optional.of(request(AssistantIntentType.MY_TO_DO).build());
         }
         if (QUIZ.matcher(text).find()) {
-            return Optional.of(request(AssistantIntentType.QUIZ_ME).courseCode(courseCodeIn(text)).topic(quizTopicIn(message.strip())).build());
+            String course = catalogueCourseIn(text);
+            return Optional.of(request(AssistantIntentType.QUIZ_ME).courseCode(course).topic(quizTopicIn(message.strip(), course)).build());
         }
         if (MEET.matcher(text).find()) {
             return Optional.of(request(AssistantIntentType.WHEN_TO_MEET).groupName(groupNameIn(text)).durationMinutes(minutesIn(text)).build());
@@ -112,14 +123,35 @@ public class QuickIntentReader {
     }
 
     /**
-     * "Quiz me on Polymorphism" gives "Polymorphism", as the student typed it; "quiz me on my notes"
-     * gives no topic. The course is carried separately, so "IS442 interfaces" gives "interfaces".
+     * The first course code in the message that the catalogue holds, as the catalogue writes it.
+     * A quiz topic such as "Java 101" or "SQL 201" has the shape of a code but names no course.
      */
-    private static String quizTopicIn(String message) {
+    private String catalogueCourseIn(String text) {
+        Matcher code = COURSE_CODE.matcher(text);
+        while (code.find()) {
+            Optional<Course> course = courses.byCode(code.group());
+            if (course.isPresent()) return course.get().getCode();
+        }
+        return null;
+    }
+
+    /**
+     * "Quiz me on Polymorphism" gives "Polymorphism", as the student typed it; "quiz me on my notes"
+     * gives no topic. The course is carried separately, so "IS442 interfaces" gives "interfaces",
+     * and only that course's code is taken out: "SQL 201 joins" stays whole.
+     */
+    private static String quizTopicIn(String message, String courseCode) {
         Matcher topic = QUIZ_TOPIC.matcher(message);
         if (!topic.find()) return null;
-        String words = TOPIC_COURSE.matcher(topic.group(1)).replaceAll(" ").strip().replaceAll("\\s+", " ");
+        String words = TOPIC_COURSE.matcher(topic.group(1))
+                .replaceAll(found -> isCourse(found.group(1), courseCode) ? " " : Matcher.quoteReplacement(found.group()))
+                .strip().replaceAll("\\s+", " ");
         return words.isEmpty() || OWN_NOTES.matcher(words).matches() ? null : words;
+    }
+
+    /** True when the typed words are the given course code, however they are spaced or cased. */
+    private static boolean isCourse(String typed, String courseCode) {
+        return typed.replaceAll("\\s+", "").equalsIgnoreCase(courseCode);
     }
 
     /** "my design patterns group" gives "design patterns"; "my group" gives no name. */
