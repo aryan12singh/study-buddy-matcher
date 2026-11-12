@@ -26,7 +26,8 @@ or the manual path.
 GPT models (through Codex) and Claude were used for planning, writing and reviewing code,
 fixing bugs, tests, documentation and diagrams, and UI polish. The larger AI-assisted pieces
 were the matching engine fixes, E1 match explanations, E2 rooms and sessions, the Study Room
-tab, reactions and the focus forest, and the submission-readiness pass.
+tab, reactions and the focus forest, the Study Room music fixes (music that keeps playing
+between pages and the corner player's pause button), and the submission-readiness pass.
 
 **Demo videos** (`docs/assets/video/`): Claude scripted, animated and edited both from screen
 captures of the real app on fictional seeded data.
