@@ -18,9 +18,9 @@ function readMode(): SpotifyMode {
 }
 
 /**
- * Holds the page's Spotify player and ambient mixer above the Music settings tab, so the timer's mini
- * player controls the same playback. The Premium player only starts in Premium mode for a
- * connected student; every sound stops when the page is left.
+ * Holds the student's Spotify player and ambient mixer above every student page, so music keeps
+ * playing between pages and the timer's mini player controls the same playback in any room. The
+ * Premium player only starts in Premium mode for a connected student; every sound stops on sign-out.
  */
 export default function MusicProvider({ children }: { children: ReactNode }) {
   const [search] = useSearchParams()
@@ -34,8 +34,8 @@ export default function MusicProvider({ children }: { children: ReactNode }) {
   const [returnedFromSpotify] = useState(() => search.has('spotify'))
   const markOpened = useCallback(() => setSettingsOpened(true), [])
 
-  // Spotify sign-in returns with ?spotify=, so open the music tab to show the outcome. The menu
-  // is a child, so it is already listening when this runs.
+  // Spotify sign-in returns with ?spotify=, so open the music tab to show the outcome. The room
+  // page may still be loading; the request then waits for its settings menu.
   useEffect(() => { if (returnedFromSpotify) openRoomSettings('music') }, [returnedFromSpotify])
 
   function chooseMode(next: SpotifyMode) {

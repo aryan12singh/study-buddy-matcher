@@ -8,7 +8,6 @@ import AtmosphereScene from './AtmosphereScene'
 import RoomWeatherPanel from './RoomWeatherPanel'
 import MusicPlayer from '../music/MusicPlayer'
 import NowPlayingMini from '../music/NowPlayingMini'
-import MusicProvider from '../music/MusicProvider'
 import QuizBotLauncher from '../quiz/QuizBotLauncher'
 import { DEFAULT_ATMOSPHERE } from './weatherTheme'
 import type { Atmosphere } from './weatherTheme'
@@ -35,19 +34,17 @@ export default function StudyRoomsPage() {
 
   return (
     <WindowPage title="Study Room" description="A quiet corner for a focused mind.">
-      <MusicProvider>
-        <div className={`study-room-workspace atmosphere-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
-          <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-          <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
-          <div className={`study-corner-layout${groupsCollapsed ? ' groups-collapsed' : ''}`}>
-            {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen} corner={<div className="room-corner-tools"><NowPlayingMini /><QuizBotLauncher home={{ scope: 'PERSONAL' }} canStart /></div>}
-              extraTabs={[{ id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
-                content: <RoomWeatherPanel liveEnabled store="personal-room" onChange={setAtmosphere} /> },
-              { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> }]} />}
-            <StudyRoomGroupsPanel collapsed={groupsCollapsed} onToggle={toggleGroups} />
-          </div>
+      <div className={`study-room-workspace atmosphere-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+        <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
+        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
+        <div className={`study-corner-layout${groupsCollapsed ? ' groups-collapsed' : ''}`}>
+          {account && <PersonalPomodoro key={account.id} accountId={account.id} panel={panel} fullscreen={fullscreen} corner={<div className="room-corner-tools"><NowPlayingMini /><QuizBotLauncher home={{ scope: 'PERSONAL' }} canStart /></div>}
+            extraTabs={[{ id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
+              content: <RoomWeatherPanel liveEnabled store="personal-room" onChange={setAtmosphere} /> },
+            { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> }]} />}
+          <StudyRoomGroupsPanel collapsed={groupsCollapsed} onToggle={toggleGroups} />
         </div>
-      </MusicProvider>
+      </div>
     </WindowPage>
   )
 }

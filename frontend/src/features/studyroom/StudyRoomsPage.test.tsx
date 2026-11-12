@@ -8,6 +8,7 @@ import type { Account } from '../../shared/auth/context'
 import { deferred, renderPage, response, studentAccount } from '../../test/renderApp'
 import type { GroupSummary } from '../groups/api'
 import StudyRoomsPage from './StudyRoomsPage'
+import MusicProvider from '../music/MusicProvider'
 
 const group: GroupSummary = {
   id: 5, name: 'Revision crew', courseId: 3, courseCode: 'IS442', courseName: 'Object Oriented Programming',
@@ -54,7 +55,7 @@ describe('Study Room navigation', () => {
     let groupRequests = 0
     vi.spyOn(api, 'get').mockImplementation(path => path === '/weather' ? Promise.resolve(response({ available: false }))
       : groupRequests++ === 0 ? pending.promise : Promise.resolve(response([])))
-    renderPage(<StudyRoomsPage />)
+    renderPage(<MusicProvider><StudyRoomsPage /></MusicProvider>)
     expect(within(screen.getByRole('complementary', { name: 'Your study groups' })).getByRole('status')).toHaveTextContent('Loading')
     await act(async () => { pending.reject(new Error('Unable to load your groups.')) })
     expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load your groups.')
@@ -66,7 +67,7 @@ describe('Study Room navigation', () => {
 
   it('hides the personal panel and expands to full screen with the timer alone', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([group]))
-    renderPage(<StudyRoomsPage />)
+    renderPage(<MusicProvider><StudyRoomsPage /></MusicProvider>)
     const workspace = document.querySelector('.study-room-workspace')
     fireEvent.click(await screen.findByRole('button', { name: 'Hide panel' }))
     expect(workspace).toHaveClass('is-minimal')
@@ -88,7 +89,7 @@ describe('Study Room navigation', () => {
 
   it('folds the study groups away behind an arrow and remembers the choice', async () => {
     vi.spyOn(api, 'get').mockResolvedValue(response([group]))
-    const view = renderPage(<StudyRoomsPage />)
+    const view = renderPage(<MusicProvider><StudyRoomsPage /></MusicProvider>)
     const hide = await screen.findByRole('button', { name: 'Hide study groups' })
     expect(hide).toHaveAttribute('aria-expanded', 'true')
     hide.focus()
@@ -97,7 +98,7 @@ describe('Study Room navigation', () => {
     expect(screen.getByRole('button', { name: 'Show study groups' })).toHaveFocus()
     expect(localStorage.getItem('study-room-groups-collapsed')).toBe('true')
     view.unmount()
-    renderPage(<StudyRoomsPage />)
+    renderPage(<MusicProvider><StudyRoomsPage /></MusicProvider>)
     fireEvent.click(await screen.findByRole('button', { name: 'Show study groups' }))
     expect(await screen.findByRole('link', { name: 'Browse study groups' })).toBeInTheDocument()
     localStorage.clear()
@@ -105,7 +106,7 @@ describe('Study Room navigation', () => {
 
   it('lets the personal room choose its own weather and time of day for the background', async () => {
     vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/weather' ? { available: false } : [group]))
-    renderPage(<StudyRoomsPage />)
+    renderPage(<MusicProvider><StudyRoomsPage /></MusicProvider>)
     fireEvent.click(await screen.findByRole('button', { name: 'Settings' }))
     fireEvent.click(screen.getByRole('tab', { name: 'Room atmosphere' }))
     fireEvent.change(screen.getByLabelText('Window view'), { target: { value: 'RAIN' } })
@@ -114,6 +115,40 @@ describe('Study Room navigation', () => {
     expect(backdrop).toHaveAttribute('data-weather', 'rain')
     expect(backdrop).toHaveAttribute('data-night', 'true')
     localStorage.clear()
+  })
+
+  it('keeps the Spotify player connected while the student visits another page and comes back', async () => {
+    const created = vi.fn(), disconnect = vi.fn()
+    class FakePlayer {
+      constructor() { created() }
+      addListener(event: string, callback: (device: { device_id: string }) => void) {
+        if (event === 'ready') queueMicrotask(() => callback({ device_id: 'device-1' }))
+        return true
+      }
+      connect = vi.fn(async () => true)
+      disconnect = disconnect
+    }
+    window.Spotify = { Player: FakePlayer } as never
+    localStorage.setItem('spotify-player-mode', 'premium')
+    vi.spyOn(api, 'get').mockImplementation(async path => response(
+      path === '/spotify/status' ? { configured: true, connected: true, embedPlaylistId: 'abc' }
+        : path === '/notifications/unread-count' ? { count: 0 } : path === '/weather' ? { available: false }
+          : path.startsWith('/groups') ? [group] : []))
+    try {
+      const router = openApplication('/study-room')
+      expect(await screen.findByRole('heading', { level: 1, name: 'Study Room' })).toBeInTheDocument()
+      await waitFor(() => expect(created).toHaveBeenCalledTimes(1))
+
+      await act(async () => { await router.navigate('/notifications') })
+      expect(await screen.findByRole('heading', { level: 1, name: 'Notifications' })).toBeInTheDocument()
+      await act(async () => { await router.navigate('/study-room') })
+      expect(await screen.findByRole('heading', { level: 1, name: 'Study Room' })).toBeInTheDocument()
+      expect(created).toHaveBeenCalledTimes(1)
+      expect(disconnect).not.toHaveBeenCalled()
+    } finally {
+      delete window.Spotify
+      localStorage.clear()
+    }
   })
 
   it('keeps Study Room selected when opening an existing group room route', async () => {
@@ -130,7 +165,7 @@ describe('Study Room navigation', () => {
   it('invites the student to pick music from the timer corner and opens the Music settings tab', async () => {
     vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/spotify/status'
       ? { configured: false, connected: false, embedPlaylistId: 'abc' } : path === '/ambient/categories' ? [] : [group]))
-    renderPage(<StudyRoomsPage />)
+    renderPage(<MusicProvider><StudyRoomsPage /></MusicProvider>)
     const settings = await screen.findByRole('button', { name: 'Settings' })
     expect(settings).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(await screen.findByRole('button', { name: 'Open music settings' }))

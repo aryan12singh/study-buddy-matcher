@@ -26,6 +26,7 @@ import StudyPlanPage from './features/studyplan/StudyPlanPage'
 import CreateStudyPlanPage from './features/studyplan/CreateStudyPlanPage'
 import StudyPlanDetailPage from './features/studyplan/StudyPlanDetailPage'
 import StatePanel from './shared/components/StatePanel'
+import MusicProvider from './features/music/MusicProvider'
 import RouteErrorPage from './shared/components/RouteErrorPage'
 import { AchievementsPage, ForestPage, SessionDetailPage, SessionFormPage, SessionsPage, StudyRoomPage, StudyRoomsPage } from './lazyPages'
 
@@ -40,33 +41,36 @@ export const appRoutes = createRoutesFromElements(
           <Route errorElement={<RouteErrorPage />}>
             <Route path="/app" element={<AccountHome />} />
             <Route element={<RequireRole role="STUDENT" />}>
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/find-buddies" element={<FindBuddiesPage />} />
-              <Route path="/connections" element={<ConnectionsPage />} />
-              <Route path="/students/:id" element={<StudentProfilePage />} />
-              <Route path="/students/:id/edit" element={<EditProfilePage />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/help" element={<HelpPage />} />
-              <Route path="/groups" element={<GroupsPage />} />
-              <Route path="/groups/new" element={<GroupFormPage />} />
-              <Route path="/groups/:id" element={<GroupDetailPage />} />
-              <Route path="/groups/:id/edit" element={<GroupFormPage />} />
-              <Route path="/groups/:id/manage" element={<GroupManagePage />} />
-              <Route path="/study-plan" element={<StudyPlanPage />} />
-              <Route path="/study-plan/new" element={<CreateStudyPlanPage />} />
-              <Route path="/study-plan/:id" element={<StudyPlanDetailPage />} />
-              <Route element={<Suspense fallback={<StatePanel loading />}><Outlet /></Suspense>}>
-                <Route path="/study-room" element={<StudyRoomsPage />} />
-                <Route path="/groups/:id/room" element={<StudyRoomPage />} />
-                <Route path="/sessions" element={<SessionsPage />} />
-                <Route path="/achievements" element={<AchievementsPage />} />
-                <Route path="/forest" element={<ForestPage />} />
-                <Route path="/sessions/:id" element={<SessionDetailPage />} />
-                <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
-                <Route path="/groups/:id/sessions" element={<SessionsPage kind="GROUP" />} />
-                <Route path="/groups/:id/sessions/new" element={<SessionFormPage kind="GROUP" />} />
-                <Route path="/connections/:id/sessions" element={<SessionsPage kind="BUDDY" />} />
-                <Route path="/connections/:id/sessions/new" element={<SessionFormPage kind="BUDDY" />} />
+              {/* One music player for every student page, so Spotify and ambient sounds keep playing between pages. */}
+              <Route element={<MusicProvider><Outlet /></MusicProvider>}>
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/find-buddies" element={<FindBuddiesPage />} />
+                <Route path="/connections" element={<ConnectionsPage />} />
+                <Route path="/students/:id" element={<StudentProfilePage />} />
+                <Route path="/students/:id/edit" element={<EditProfilePage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/groups" element={<GroupsPage />} />
+                <Route path="/groups/new" element={<GroupFormPage />} />
+                <Route path="/groups/:id" element={<GroupDetailPage />} />
+                <Route path="/groups/:id/edit" element={<GroupFormPage />} />
+                <Route path="/groups/:id/manage" element={<GroupManagePage />} />
+                <Route path="/study-plan" element={<StudyPlanPage />} />
+                <Route path="/study-plan/new" element={<CreateStudyPlanPage />} />
+                <Route path="/study-plan/:id" element={<StudyPlanDetailPage />} />
+                <Route element={<Suspense fallback={<StatePanel loading />}><Outlet /></Suspense>}>
+                  <Route path="/study-room" element={<StudyRoomsPage />} />
+                  <Route path="/groups/:id/room" element={<StudyRoomPage />} />
+                  <Route path="/sessions" element={<SessionsPage />} />
+                  <Route path="/achievements" element={<AchievementsPage />} />
+                  <Route path="/forest" element={<ForestPage />} />
+                  <Route path="/sessions/:id" element={<SessionDetailPage />} />
+                  <Route path="/sessions/:id/edit" element={<SessionFormPage />} />
+                  <Route path="/groups/:id/sessions" element={<SessionsPage kind="GROUP" />} />
+                  <Route path="/groups/:id/sessions/new" element={<SessionFormPage kind="GROUP" />} />
+                  <Route path="/connections/:id/sessions" element={<SessionsPage kind="BUDDY" />} />
+                  <Route path="/connections/:id/sessions/new" element={<SessionFormPage kind="BUDDY" />} />
+                </Route>
               </Route>
             </Route>
             <Route element={<RequireRole role="ADMIN" />}>

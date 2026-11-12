@@ -9,7 +9,7 @@ import MusicSlider from './MusicSlider'
 import './music.css'
 
 /**
- * The timer's corner player: the current Spotify track with next track and volume, and one volume
+ * The timer's corner player: the current Spotify track with play or pause, next track and volume, and one volume
  * for all ambient sounds. Only the Premium player can report a track; the free embedded playlist
  * keeps its controls to itself. With nothing playing it invites the student to pick some music.
  * In a group room, `personal` adds a note that only this student hears it, beside the shared timer.
@@ -64,6 +64,10 @@ export default function NowPlayingMini({ personal = false }: { personal?: boolea
           <strong title={track?.name}>{track ? track.name : 'Playing'}</strong>
         </div>
         {/* Plain icon buttons, styled like the panel's window controls opposite. */}
+        {/* One button that pauses a playing track and resumes a paused one. */}
+        {track && <button type="button" className="room-window-control now-playing-mini-control" onClick={player.togglePlay}
+          aria-label={playing ? 'Pause music' : 'Resume music'} title={playing ? 'Pause music' : 'Resume music'}>
+          <span aria-hidden="true">{playing ? '⏸' : '▶'}</span></button>}
         {track && <button type="button" className="room-window-control now-playing-mini-control" onClick={player.nextTrack}
           aria-label="Next track" title="Next track"><span aria-hidden="true">⏭</span></button>}
         <button type="button" className="room-window-control now-playing-mini-control" aria-expanded={volumesOpen} aria-controls={volumesId}

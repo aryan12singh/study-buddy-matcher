@@ -564,11 +564,19 @@ app:
       api-key: <Anthropic API key>
   ambient:
     api-key: <Freesound API key from https://freesound.org/apiv2/apply>
+  spotify:
+    client-id: <Spotify app client ID>
+    client-secret: <Spotify app client secret>
 ```
 
 Pixel's typed questions, Quiz Buddy and study plans need the `assistant` block (or `claude`);
 "Explain this match" needs `explanation` (or `claude`); rain and the other ambient sounds need
-`ambient`. The Spotify playlist needs no key.
+`ambient`. The free Spotify playlist needs no key; "My Spotify (Premium)" needs the `spotify`
+block, a Spotify Premium account, and your Spotify email added under **User Management** in the
+team's Spotify app (or your own app from the
+[Spotify developer dashboard](https://developer.spotify.com/dashboard), with the redirect URI
+`http://127.0.0.1:8080/api/spotify/callback`). See
+[configuration](docs/CONFIGURATION.md#study-room-music-spotify-and-freesound).
 
 ### Team setup (shared Supabase)
 

@@ -15,7 +15,6 @@ import RoomWeatherPanel from './RoomWeatherPanel'
 import RoomParticipants from './RoomParticipants'
 import MusicPlayer from '../music/MusicPlayer'
 import NowPlayingMini from '../music/NowPlayingMini'
-import MusicProvider from '../music/MusicProvider'
 import AtmosphereScene from './AtmosphereScene'
 import WindowControls from './WindowControls'
 import HiddenPanelTools from './HiddenPanelTools'
@@ -159,51 +158,49 @@ function RoomPage({ groupId }: { groupId: number }) {
       {resource.reconnecting && <p className="group-room-notices" role="status">
         <strong>Connection lost.</strong> Reconnecting to the room; the shared timer keeps running.
       </p>}
-      <MusicProvider>
-        <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
-          <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
-          <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
-          <ReactionLayer reactions={[...sentReactions, ...room.reactions ?? []]} serverTime={room.serverTime} />
-          <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
-            <header className="group-room-header">
-              <div className="room-corner-tools">
-                <NowPlayingMini personal />
-                <QuizBotLauncher home={{ scope: 'GROUP', groupId }}
-                  canStart={room.leader || (!!account && (room.hostId === account.id || room.coHostId === account.id))} />
-              </div>
-              <div className="group-room-title">
-                <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
-                <h2 id="group-room-heading">{room.groupName}</h2>
-              </div>
-              <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
-                // Kept after opening, so closing the menu or switching tabs keeps an unsaved draft.
-                { id: 'timer', label: 'Timer', icon: '◷', keepAfterOpen: true,
-                  content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-                { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
-                  content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
-                { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
-                { id: 'roles', label: 'Room roles', icon: '★', keepAfterOpen: true,
-                  content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
-              ]} />
-            </header>
-            <RoomParticipants room={room} accountId={account?.id} joinedHere={resource.joinedHere} />
-            <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
-              pending={action.pending} onControl={control} />
-            <div className="group-room-social">
-              <ReactionTray groupId={groupId} joined={resource.joinedHere}
-                onSent={reaction => setSentReactions(sent => [...sent.slice(-9), reaction])} />
-              {resource.joinedHere && <GrowingTree groupId={groupId} accountId={account?.id} />}
+      <div className={`study-room-workspace atmosphere-workspace group-room-workspace${fullscreen.expanded ? ' is-expanded' : ''}${panel.hidden ? ' is-minimal' : ''}`}>
+        <HiddenPanelTools panel={panel} fullscreen={fullscreen} />
+        <AtmosphereScene className="atmosphere-backdrop" {...atmosphere} />
+        <ReactionLayer reactions={[...sentReactions, ...room.reactions ?? []]} serverTime={room.serverTime} />
+        <section className="group-room study-corner-panel" aria-labelledby="group-room-heading">
+          <header className="group-room-header">
+            <div className="room-corner-tools">
+              <NowPlayingMini personal />
+              <QuizBotLauncher home={{ scope: 'GROUP', groupId }}
+                canStart={room.leader || (!!account && (room.hostId === account.id || room.coHostId === account.id))} />
             </div>
-            <footer className="group-room-footer">
-              {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
-              {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
-              {resource.joinedHere
-                ? <Button variant="danger" disabled={action.pending} onClick={() => setConfirmation('leave')}>Leave room</Button>
-                : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
-            </footer>
-          </section>
-        </div>
-      </MusicProvider>
+            <div className="group-room-title">
+              <span className={`group-room-tag${resource.joinedHere ? ' is-joined' : ''}`}>{resource.joinedHere ? 'In group' : 'Room preview'}</span>
+              <h2 id="group-room-heading">{room.groupName}</h2>
+            </div>
+            <WindowControls panel={panel} fullscreen={fullscreen} tabs={[
+              // Kept after opening, so closing the menu or switching tabs keeps an unsaved draft.
+              { id: 'timer', label: 'Timer', icon: '◷', keepAfterOpen: true,
+                content: <RoomTimerSettingsPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
+              { id: 'atmosphere', label: 'Room atmosphere', icon: '☼', persistent: true,
+                content: <RoomWeatherPanel liveEnabled onChange={setAtmosphere} /> },
+              { id: 'music', label: 'Music', icon: '♪', keepAfterOpen: true, content: <MusicPlayer /> },
+              { id: 'roles', label: 'Room roles', icon: '★', keepAfterOpen: true,
+                content: <RoomRolesPanel room={room} canEdit={canControl} pending={action.pending} onSave={settings} serverErrors={action.errors} /> },
+            ]} />
+          </header>
+          <RoomParticipants room={room} accountId={account?.id} joinedHere={resource.joinedHere} />
+          <RoomTimerPanel snapshot={resource.snapshot} canControl={canControl} joined={resource.joinedHere}
+            pending={action.pending} onControl={control} />
+          <div className="group-room-social">
+            <ReactionTray groupId={groupId} joined={resource.joinedHere}
+              onSent={reaction => setSentReactions(sent => [...sent.slice(-9), reaction])} />
+            {resource.joinedHere && <GrowingTree groupId={groupId} accountId={account?.id} />}
+          </div>
+          <footer className="group-room-footer">
+            {!resource.joinedHere && room.joined && <p className="group-room-quiet"><strong>You are in this room in another tab.</strong> Join here to study from this tab instead, or close the other tab.</p>}
+            {!room.participants.length && <p className="group-room-quiet"><strong>The room is quiet.</strong> Join when you are ready. Other group members can join from the group page.</p>}
+            {resource.joinedHere
+              ? <Button variant="danger" disabled={action.pending} onClick={() => setConfirmation('leave')}>Leave room</Button>
+              : <Button variant="primary" disabled={action.pending} onClick={() => void join()}>Join study room</Button>}
+          </footer>
+        </section>
+      </div>
       <div className="group-room-extras">
         <div className="actions"><Link className="retro-button" to={`/groups/${groupId}/sessions`}>View group sessions</Link></div>
       </div>

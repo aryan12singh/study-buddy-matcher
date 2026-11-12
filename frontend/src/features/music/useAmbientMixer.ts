@@ -22,8 +22,8 @@ const FADE_MS = 3000
 const FADE_STEPS = 30
 
 /**
- * One looping audio element per category, so sounds can be layered. Everything stops when the
- * page is left.
+ * One looping audio element per category, so sounds can be layered. Everything stops on
+ * sign-out.
  */
 export function useAmbientMixer() {
   const audios = useRef(new Map<string, HTMLAudioElement>())

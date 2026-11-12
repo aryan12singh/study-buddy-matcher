@@ -411,7 +411,7 @@ only that time is counted from server time while the shared timer runs a focus p
 ### Music: Spotify and Freesound
 
 **What it does.** Both study rooms have a personal Music tab (`MusicPlayer` in the room settings
-menu) and a corner mini player (`NowPlayingMini`: track, next, music and ambient volume).
+menu) and a corner mini player (`NowPlayingMini`: track, play or pause, next, music and ambient volume).
 
 - **Spotify.** Without an account link, a team-chosen playlist plays through Spotify's free embed.
   A student can connect their Spotify account; with Premium, the room becomes a Spotify Connect

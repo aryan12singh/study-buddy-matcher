@@ -258,7 +258,7 @@ and deletion) are recorded in the
 
 | Requirement | Main classes | Tests |
 | --- | --- | --- |
-| Personal Music tab and mini player in both rooms | `MusicPlayer`, `MusicProvider`, `NowPlayingMini` | `StudyRoomPage.test.tsx`, `StudyRoomsPage.test.tsx` |
+| Personal Music tab and mini player in both rooms | `MusicPlayer`, `MusicProvider`, `NowPlayingMini` | `StudyRoomPage.test.tsx`, `StudyRoomsPage.test.tsx`, `NowPlayingMini.test.tsx` |
 | Spotify sign-in, in-memory tokens and in-browser playback | `SpotifyController`, `SpotifyConnectionService`, `SpotifyAccountsClient`, `SpotifyAuthorizationStore`, `SpotifyTokenStore`; `SpotifyPanel`, `SpotifyEmbed`, `SpotifyPremiumPlayer` | `SpotifyConnectionServiceTest`, `SpotifyAuthorizationStoreTest`, `SpotifyResponseParsingTest` |
 | Freesound CC0 ambient sounds and remix | `AmbientController`, `AmbientSoundService`, `FreesoundClient`; `AmbientChannel`, `useAmbientMixer`, `remixPlan` | `AmbientSoundServiceTest`, `FreesoundClientTest`, `useAmbientMixer.test.ts`, `remixPlan.test.ts` |
 
