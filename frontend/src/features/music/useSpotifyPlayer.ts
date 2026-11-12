@@ -41,7 +41,8 @@ function nowPlayingFrom(state: SpotifyPlayerState | null): NowPlaying | undefine
 
 /**
  * A Spotify player that lives in this browser tab while the student is connected. Spotify sees it
- * as a device called "Study Buddy Matcher". It disconnects when the page is left.
+ * as a device called "Study Buddy Matcher". It disconnects on sign-out
+ * or when the student switches to the free playlist.
  */
 export function useSpotifyPlayer(connected: boolean) {
   const player = useRef<SpotifyPlayer | null>(null)

@@ -359,8 +359,9 @@ before a demo.
    once against capacity, and expired presence must rejoin explicitly. Remove a member, fill
    the place, readmit them: the old heartbeat fails and a fresh join respects the limit.
 3. Open the Music tab in a personal and a group room. Play the free Spotify playlist and layer
-   two ambient sounds; change volumes, remix, stop all. Only your browser hears it, and
-   leaving the page stops every sound.
+   two ambient sounds; change volumes, remix, stop all. Only your browser hears it. Go to
+   another page and back: the music keeps playing and Spotify stays connected. Signing out
+   stops every sound.
 4. Create, edit and cancel a dated weekly group session with time zone, agenda and location.
    Home and the agenda show the saved sessions and recipients are notified. Repeat for a
    connected buddy pair. Strangers and admins are denied.

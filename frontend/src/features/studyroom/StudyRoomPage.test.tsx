@@ -5,6 +5,7 @@ import { api } from '../../shared/api/client'
 import { deferred, renderPage, response } from '../../test/renderApp'
 import StudyRoomPage from './StudyRoomPage'
 import type { StudyRoom } from './api'
+import MusicProvider from '../music/MusicProvider'
 
 
 const weather = { available: false, condition: 'CLEAR', temperatureCelsius: null, isDay: true, observedAt: null, stale: false, location: 'SMU campus' }
@@ -22,7 +23,7 @@ function joinedRoom(overrides: Partial<StudyRoom> = {}): StudyRoom {
 }
 function open(overrides: Partial<StudyRoom> = {}) {
   vi.spyOn(api, 'get').mockImplementation(async path => response(path === '/weather' ? weather : { ...room, ...overrides }))
-  return renderPage(<StudyRoomPage />, '/groups/5/room', '/groups/:id/room')
+  return renderPage(<MusicProvider><StudyRoomPage /></MusicProvider>, '/groups/5/room', '/groups/:id/room')
 }
 async function joinStudyRoom() {
   const button = await screen.findByRole('button', { name: 'Join study room' })
@@ -299,8 +300,8 @@ describe('private room screen', () => {
   it('does not render a late response after navigating to another group', async () => {
     const delayed = deferred<never>()
     vi.spyOn(api, 'get').mockImplementation(path => path === '/groups/5/room' ? delayed.promise : Promise.resolve(response(path === '/weather' ? weather : { ...room, groupId: 6, groupName: 'New room' })))
-    const { router } = renderPage(<StudyRoomPage />, '/groups/5/room', '/groups/:id/room')
-    await waitFor(() => expect(api.get).toHaveBeenCalledTimes(1))
+    const { router } = renderPage(<MusicProvider><StudyRoomPage /></MusicProvider>, '/groups/5/room', '/groups/:id/room')
+    await waitFor(() => expect(vi.mocked(api.get).mock.calls.some(([path]) => path === '/groups/5/room')).toBe(true))
     await router.navigate('/groups/6/room')
     await screen.findByRole('heading', { name: 'New room · study room' })
     delayed.resolve(response(room))
@@ -365,7 +366,7 @@ describe('private room screen', () => {
       throw new AxiosError('Conflict', 'ERR_BAD_REQUEST', undefined, undefined, { config: { headers: new AxiosHeaders() }, status: 409,
         statusText: 'Conflict', headers: {}, data: { code: 'STATE_CONFLICT', message: 'This group is closed; its study room is unavailable' } })
     })
-    renderPage(<StudyRoomPage />, '/groups/5/room', '/groups/:id/room')
+    renderPage(<MusicProvider><StudyRoomPage /></MusicProvider>, '/groups/5/room', '/groups/:id/room')
     expect(await screen.findByRole('heading', { name: 'This group is closed' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Go to the group' })).toHaveAttribute('href', '/groups/5')
     expect(screen.queryByText('Unable to load this view')).not.toBeInTheDocument()
@@ -373,7 +374,7 @@ describe('private room screen', () => {
 
   it('does not call the API for an invalid group link', () => {
     const get = vi.spyOn(api, 'get')
-    renderPage(<StudyRoomPage />, '/groups/invalid/room', '/groups/:id/room')
+    renderPage(<MusicProvider><StudyRoomPage /></MusicProvider>, '/groups/invalid/room', '/groups/:id/room')
     expect(screen.getByText('This room link is invalid.')).toBeInTheDocument()
     expect(get).not.toHaveBeenCalled()
   })

@@ -5,7 +5,7 @@ import type { useSpotifyPlayer } from './useSpotifyPlayer'
 
 export type SpotifyMode = 'premium' | 'embed'
 
-/** One Spotify player per study room page, shared by the Music settings tab and the timer's mini player. */
+/** One Spotify player for the signed-in student, shared by the Music settings tab and the timer's mini player. */
 export type SpotifyController = {
   status: ReturnType<typeof useResource<SpotifyStatus>>
   mode: SpotifyMode
