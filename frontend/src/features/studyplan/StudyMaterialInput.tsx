@@ -56,6 +56,6 @@ export default function StudyMaterialInput({ kind, files, topicsText, onKindChan
       {errors.topicsText && <p className="field-error" id="plan-topics-error" role="alert">{errors.topicsText}</p>}
     </div>}
 
-    <p className="field-hint">Your material is sent to Google Gemini to draft the roadmap and is not saved. Only the file names are kept with the plan.</p>
+    <p className="field-hint">Your material is sent to the server’s AI provider (Google Gemini or Anthropic Claude) to draft the roadmap and is not saved. Only the file names are kept with the plan.</p>
   </fieldset>
 }

@@ -16,7 +16,7 @@
 <rect x="1520" y="28" width="26" height="26" rx="0" fill="#d1d2d0" stroke="#f4f5f4" stroke-width="1.5" />
 <text x="1533" y="47" font-size="17" fill="#172d3b" font-weight="700" text-anchor="middle">×</text>
 <polyline points="44,1076 1556,1076" fill="none" stroke="#c5d2da" stroke-width="2" stroke-linejoin="round"/>
-<polyline points="610,310 410,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="610,310 434,310" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="215,461 215,720" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
 <polyline points="1090,275 1260,275" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
 <polyline points="1090,391 1160,391 1160,346 1260,346" fill="none" stroke="#647b88" stroke-width="2" stroke-linejoin="round"/>
@@ -36,11 +36,12 @@
 <rect x="60" y="720" width="350" height="142" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="Role"/>
 <rect x="60" y="720" width="350" height="70" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
 <polyline points="60,790 410,790" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
-<rect x="1160" y="555" width="380" height="179" rx="6" fill="#fff5e5" stroke="#d6c7a8" stroke-width="1.5" />
+<polygon points="410,310 422,302 434,310 422,318" fill="#647b88" stroke="#647b88"/>
+<rect x="1160" y="555" width="380" height="204" rx="6" fill="#fff5e5" stroke="#d6c7a8" stroke-width="1.5" />
 <rect x="45" y="980" width="1510" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
 <text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML classes — identity and study profile</text>
-<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Concrete account and profile entities are associated through a shared identifier; there is no User inheritance tree.</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">The account owns its study profile: they share one identifier and the profile cannot exist without the account. There is no User inheritance tree.</text>
 <text x="1554" y="1103" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/identity-profile.svg</text>
 <text x="235.0" y="243" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">User</text>
 <text x="76" y="288" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">- id : Long</text>
@@ -73,11 +74,11 @@
 <text x="235.0" y="774" font-size="22" fill="#254e73" font-weight="700" text-anchor="middle">Role</text>
 <text x="76" y="819" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">STUDENT</text>
 <text x="76" y="845" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ADMIN</text>
-<rect x="414.78999999999996" y="253" width="190.42000000000002" height="49" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="510" y="270" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">user</text>
-<text x="510" y="292" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">@OneToOne / @MapsId</text>
-<rect x="429.14" y="318" width="25.72" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
-<text x="442" y="336" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">1</text>
+<rect x="435.05" y="255" width="169.9" height="45" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="520" y="270" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">user</text>
+<text x="520" y="290" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">@OneToOne / @MapsId</text>
+<rect x="437.14" y="318" width="25.72" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
+<text x="450" y="336" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">1</text>
 <rect x="549.56" y="318" width="54.88" height="28" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="577" y="336" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">0..1</text>
 <rect x="188.64" y="620" width="52.72" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
@@ -100,12 +101,13 @@
 <text x="883" y="694" font-size="18" fill="#506474" font-weight="400" text-anchor="middle">0..*</text>
 <rect x="809.87" y="615" width="80.26" height="27" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />
 <text x="850" y="632" font-size="17" fill="#506474" font-weight="400" text-anchor="middle">student</text>
-<text x="1177" y="583" font-size="19" fill="#8a5a1a" font-weight="700" text-anchor="start">Association, not inheritance</text>
-<text x="1177" y="613" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Student ID = account ID.</text>
-<text x="1177" y="638" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">An administrator need not have</text>
-<text x="1177" y="663" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">a Student profile.</text>
-<text x="1177" y="688" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Empty optional preferences are</text>
-<text x="1177" y="713" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">unknown to the matching engine.</text>
-<text x="62" y="1008" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Multiplicity is written at each endpoint. Plain associations do not imply cascade deletion; SQL migrations and lifecycle services define cleanup.</text>
+<text x="1177" y="583" font-size="19" fill="#8a5a1a" font-weight="700" text-anchor="start">Composition, not inheritance</text>
+<text x="1177" y="613" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Student ID = account ID; deleting the</text>
+<text x="1177" y="638" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">account deletes the profile.</text>
+<text x="1177" y="663" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">An administrator is a User with</text>
+<text x="1177" y="688" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">no Student profile.</text>
+<text x="1177" y="713" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Empty optional preferences are</text>
+<text x="1177" y="738" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">unknown to the matching engine.</text>
+<text x="62" y="1008" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Multiplicity is written at each endpoint. The filled diamond marks the owner of a part that cannot outlive it; plain associations do not imply cascade deletion.</text>
 <text x="62" y="1033" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Selected attributes are shown; ordinary constructors/getters/setters are omitted. Weekly slots are recurring Asia/Singapore civil times.</text>
 </g></svg>

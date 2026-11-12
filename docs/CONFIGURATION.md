@@ -50,7 +50,7 @@ provider keys) are set only there or in the process environment.
 
 | Key | Default | Purpose |
 | --- | --- | --- |
-| `app.ai.explanation.enabled` | `false` | Turns on Gemini match explanations; also needs `api-key`. Off means the standard explanation is always used |
+| `app.ai.explanation.enabled` | `false` | Turns on Gemini match explanations; also needs `api-key`. Off means the standard explanation is always used, unless [Claude](#ai-providers-gemini-and-claude) is enabled and answers instead |
 | `app.ai.explanation.api-key` | none; set only in `application-local.yml` | Gemini API key. Never committed, logged or sent to the browser |
 | `app.ai.explanation.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `app.ai.explanation.model` | `gemini-3.5-flash` | Gemini model ID; part of the explanation cache key. `gemini-2.5-flash` returns 404 for new projects |
@@ -93,7 +93,7 @@ may each call Gemini; unique insertion prevents duplicate rows, not duplicate pr
 
 | Key | Default | Purpose |
 | --- | --- | --- |
-| `app.ai.assistant.enabled` | `false` | Turns on the assistant's Gemini calls; also needs `api-key`. Off means quizzes, study plans and AI-read Pixel messages return 503 `AI_UNAVAILABLE` and the screen offers the manual path; Pixel's rule-answered questions still work |
+| `app.ai.assistant.enabled` | `false` | Turns on the assistant's Gemini calls; also needs `api-key`. Off (and [Claude](#ai-providers-gemini-and-claude) not enabled) means quizzes, study plans and AI-read Pixel messages return 503 `AI_UNAVAILABLE` and the screen offers the manual path; Pixel's rule-answered questions still work |
 | `app.ai.assistant.api-key` | none; set only in `application-local.yml` | Gemini API key from a different Google project than E1's, so the two features do not share a quota. Never committed, logged or sent to the browser |
 | `app.ai.assistant.base-url` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `app.ai.assistant.model` | `gemini-3.5-flash` | Gemini model ID, the same as E1 |
@@ -146,6 +146,61 @@ no entry falls outside the plan, a block's minutes fit its limit and every text 
 A reply that is the object wrapped in a one-item list is read as the object. Any other reply is
 rejected with `AI_UNAVAILABLE`, and the backend logs which check it failed. These checks bound the
 shape and size of a roadmap; they do not prove its advice is good.
+
+## AI providers (Gemini and Claude)
+
+Gemini is the default provider. Claude (Anthropic) is an optional second provider behind the same
+`AiClient` interface: it receives the same prompts and its replies pass the same validators, so the
+output has the same shape whichever provider answers. Each provider counts its own allowance.
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `app.ai.primary-provider` | `gemini` | The provider every AI feature asks first: `gemini` or `claude`. The other is asked only when the first cannot answer (switched off, no key, over its allowance, rate limited, timed out, erroring or refusing) and is itself enabled; after that the feature takes its non-AI path. Any other value stops startup with a binding error |
+| `app.ai.claude.enabled` | `false` | Turns Claude on; also needs `api-key`. Off means behaviour is exactly as with Gemini alone |
+| `app.ai.claude.api-key` | none; set only in `application-local.yml` | Anthropic API key. Never committed, logged or sent to the browser |
+| `app.ai.claude.base-url` | `https://api.anthropic.com` | Anthropic API base URL |
+| `app.ai.claude.model` | `claude-haiku-5-5` | Claude model ID. Haiku 5.5 is the cheapest ($0.10 input / $0.50 output per million tokens); `claude-sonnet-5-5` ($2 / $10) or `claude-opus-5-5` ($4 / $20) give higher quality at higher cost |
+| `app.ai.claude.effort` | `high` | How much reasoning a reply gets: `low`, `medium`, `high`, `xhigh` or `max`. `medium` and `low` are cheaper and faster. No thinking setting is sent; the model thinks adaptively |
+| `app.ai.claude.max-tokens` | `8000` | Reply size, reasoning included, for one match explanation or one Pixel message |
+| `app.ai.claude.study-tools-max-tokens` | `16000` | Reply size, reasoning included, for a whole quiz or study plan |
+| `app.ai.claude.timeout` | `90s` | Request timeout for every feature's Claude calls, which share one SDK client. A failed call is not retried; the next provider or the non-AI path takes over |
+| `app.ai.claude.daily-call-limit` / `daily-call-limit-per-student` | `100` / `20` | Claude calls per day for everyone and for one student, across all AI features. Claude is paid per call, so this caps the spend. Kept in memory; a restart resets it |
+| `app.ai.claude.quota-zone` | `Asia/Singapore` | Zone whose midnight resets the Claude allowance |
+| `app.ai.claude.rate-limit-cooldown` | `60s` | Pause after Anthropic answers 429 before Claude is asked again |
+
+A reply that Claude refuses (`stop_reason` `refusal`) or that is cut off at the token limit
+(`max_tokens`) counts as unavailable, like a Gemini reply that did not finish normally. Quiz Buddy
+and study-plan PDFs go to Claude as base64 document blocks, as they go to Gemini inline.
+
+### Switching AI provider
+
+Everything goes in your own git-ignored `backend/src/main/resources/application-local.yml`; restart
+the backend afterwards.
+
+Keep Gemini first with Claude as the backup (asked only when Gemini cannot answer):
+
+```yaml
+app:
+  ai:
+    claude:
+      enabled: true
+      api-key: <Anthropic API key>
+```
+
+Ask Claude first, with Gemini as the backup when it is enabled:
+
+```yaml
+app:
+  ai:
+    primary-provider: claude
+    claude:
+      enabled: true
+      api-key: <Anthropic API key>
+```
+
+To go back, set `primary-provider: gemini` or remove the line. To turn Claude off, set
+`enabled: false` or remove the `claude` block. The backend logs `Claude answered <feature>` each
+time Claude replies, so the log shows which provider served a request.
 
 ## Study rooms, sessions and weather
 

@@ -21,6 +21,7 @@ public enum AppPage {
     STUDY_ROOM("Study Room", "/study-room",
             "your focus timer and music, Quiz Buddy, and the way into your groups' shared study rooms"),
     ACHIEVEMENTS("Achievements", "/achievements", "your study streaks and badges"),
+    FOREST("My forest", "/forest", "one tree for every study room visit, which grows grander the longer you stay focused"),
     NOTIFICATIONS("Notifications", "/notifications", "everything that happened recently, such as accepted requests and new sessions"),
     MY_PROFILE("My study profile", "/students/{me}", "what other students see about you"),
     EDIT_PROFILE("Edit my profile", "/students/{me}/edit",

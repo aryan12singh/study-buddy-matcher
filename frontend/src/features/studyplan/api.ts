@@ -26,8 +26,8 @@ export type PersonalPlanInput = { courseId: number; hoursPerWeek: number; examDa
 /** `courseId` only for a buddy session; a group session always studies its group's course. */
 export type SessionPlanInput = { courseId: number | null; studyGoal: StudyGoal | null }
 
-/** Shown wherever Gemini's roadmap appears. */
-export const AI_PLAN_LABEL = 'Roadmap written by Gemini; it may be inaccurate.'
+/** Shown wherever an AI-written roadmap appears; the server asks Gemini or, when enabled, Claude. */
+export const AI_PLAN_LABEL = 'Roadmap written by AI (Gemini or Claude); it may be inaccurate.'
 /** Matches app.ai.assistant.study-plan.max-weeks and max-hours-per-week; the server checks them again. */
 export const MAX_WEEKS = 16
 export const MAX_HOURS_PER_WEEK = 40

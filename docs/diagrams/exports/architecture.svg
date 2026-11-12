@@ -130,7 +130,7 @@
 <text x="1258" y="611" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Direct concrete client:</text>
 <text x="1258" y="638" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">SpotifyAccountsClient</text>
 <text x="1258" y="730" font-size="23" fill="#8a5a1a" font-weight="700" text-anchor="start">External APIs</text>
-<text x="1258" y="764" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Google Gemini (AI features)</text>
+<text x="1258" y="764" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Gemini, optional Claude (AI)</text>
 <text x="1258" y="791" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Freesound (ambient sounds)</text>
 <text x="1258" y="818" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">Open-Meteo (cached, fallback)</text>
 <rect x="366.5" y="211" width="97.0" height="25" rx="3" fill="#f6f8f9" stroke="none" stroke-width="1.5" />

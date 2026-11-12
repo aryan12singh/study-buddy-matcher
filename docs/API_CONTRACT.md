@@ -1140,7 +1140,7 @@ days, which is each entry's `scheduledDate`.
 
 The material is one or more `files` (PDF, `.txt` or `.md`) or `topicsText`, never both. Files
 together must fit `max-upload-size` and `max-text-file-characters`, and each file's contents must
-match its extension. Files are sent to Google Gemini for this one request and never stored; only
+match its extension. Files are sent to the AI provider (Google Gemini, or Anthropic Claude when enabled) for this one request and never stored; only
 their names are kept. The roadmap Gemini returns must pass the checks in the
 [AI study assistant configuration](CONFIGURATION.md#ai-study-assistant); a student may keep several plans for one course.
 
@@ -1151,7 +1151,7 @@ Errors, in the order they are checked, so a bad request never spends the student
 | 400 | `INVALID_INPUT` | A missing or malformed field; an unknown `courseId`; `hoursPerWeek` out of range; an exam today, in the past or beyond `max-weeks`; no material, or both files and topics; too many files; an empty file; topics too long |
 | 413 | `FILE_TOO_LARGE` | Files together over `max-upload-size`, or text files over `max-text-file-characters` |
 | 415 | `UNSUPPORTED_FILE_TYPE` | A file other than PDF, `.txt` or `.md`, or whose contents do not match its extension |
-| 503 | `AI_UNAVAILABLE` | The assistant is switched off, over its daily allowance, rate limited or timed out, or Gemini's reply failed the checks. Nothing is saved |
+| 503 | `AI_UNAVAILABLE` | The assistant is switched off, over its daily allowance, rate limited or timed out, or Gemini's reply failed the checks (and the optional second provider, Claude, when enabled, could not answer either; see [AI providers](CONFIGURATION.md#ai-providers-gemini-and-claude), which applies wherever this document says Gemini). Nothing is saved |
 | 404 | `NOT_FOUND` | Reading, ticking or deleting a plan that does not exist or is not the student's own, or an entry not in that plan |
 
 The plan is created in three steps: a short read that checks the request, the Gemini call, and
@@ -1291,7 +1291,7 @@ AssistantReplyDto
 | `PLAN_SESSION` | The student's soonest upcoming session (`StudySessionService.mine`), narrowed to the group named or the course code stated, and to the meeting day (`meetingDate`) if one was given. Links to that session's page, whose roadmap panel plans it. Someone who may not manage it is told the group leader can |
 | `SESSION_TOPICS` | The same session lookup, then that meeting's entries from `StudyPlanService.getForSession` (the next meeting when no day was given), each as a `todos` item with its planned time, linking to the session. Says so when no session meets that day, the session has no roadmap yet, or the roadmap no longer covers that meeting |
 | `MY_TO_DO` | Pending incoming buddy requests, pending applications to groups the student leads, open quizzes they have not taken in their groups, sessions starting within 7 days and unread notifications, each as a `todos` item linking to the page that handles it |
-| `NAVIGATE` | One page from the assistant's fixed list (`AppPage`: home, find buddies, buddy requests, connections, study groups, create group, sessions, study room, achievements, notifications, profile, edit profile, help) with what it is for and a link. Gemini only picks the page name |
+| `NAVIGATE` | One page from the assistant's fixed list (`AppPage`: home, find buddies, buddy requests, connections, study groups, create group, sessions, study room, achievements, my forest, notifications, profile, edit profile, help) with what it is for and a link. Gemini only picks the page name |
 | `UNKNOWN` | A short message listing what the assistant can do |
 
 `text` is written from templates, never by Gemini. Matches are the same privacy-safe cards as Find

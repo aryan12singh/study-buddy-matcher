@@ -30,7 +30,7 @@ def architecture():
     c.box(825,905,330,140,"DTO assemblers",["sealed ProfileDto:", "Public = no contact", "Connected = has contact"],color=TEAL,size=17)
     # Right column: services outside the system
     c.box(1240,515,315,145,"Spotify Accounts",["Sign-in and token refresh", "Direct concrete client:", "SpotifyAccountsClient"],color=AMBER,fill=WARM,size=17)
-    c.box(1240,695,315,170,"External APIs",["Google Gemini (AI features)", "Freesound (ambient sounds)", "Open-Meteo (cached, fallback)"],color=AMBER,fill=WARM,size=17)
+    c.box(1240,695,315,170,"External APIs",["Gemini, optional Claude (AI)", "Freesound (ambient sounds)", "Open-Meteo (cached, fallback)"],color=AMBER,fill=WARM,size=17)
     # Calls (grey)
     c.line([(375,242),(455,242)],end="arrow")
     c.label(415,226,"JWT + JSON",15)
@@ -144,15 +144,17 @@ def e2_use_cases():
 
 
 def identity_profile():
-    c=Canvas("identity-profile", "UML classes — identity and study profile", "Concrete account and profile entities are associated through a shared identifier; there is no User inheritance tree.",height=1130)
+    c=Canvas("identity-profile", "UML classes — identity and study profile", "The account owns its study profile: they share one identifier and the profile cannot exist without the account. There is no User inheritance tree.",height=1130)
     c.cls(60,210,350,"User",["- id : Long", "- email : String", "- passwordHash : String", "- role : Role", "- active : boolean", "- tokenVersion : long", "- lastLoginAt : Instant"])
     c.cls(610,180,480,"Student",["- id : Long", "- user : User", "- name, school, programme : String", "- yearOfStudy : Integer", "- contactNumber : String", "- coursesTaken : Set<Course>", "- targetCourse : Course", "- preferredStudyMode : StudyMode", "- preferredGroupSizeMin/Max : Integer", "- studyGoals : Set<StudyGoal>"])
     c.cls(1260,210,280,"Course",["- id : Long", "- code : String", "- name : String"])
     c.cls(610,720,480,"AvailabilitySlot",["- student : Student", "- dayOfWeek : DayOfWeek", "- startTime, endTime : LocalTime"])
     c.cls(60,720,350,"Role",["STUDENT", "ADMIN"],stereotype="enumeration")
-    c.line([(610,310),(410,310)])
-    c.label(510,270,["user", "@OneToOne / @MapsId"],17)
-    c.label(442,336,"1",18)
+    # Filled diamond at the owner: Student.user is @OneToOne @MapsId, so a profile has no identity without its account.
+    c.nodes.append(f'<polygon points="410,310 422,302 434,310 422,318" fill="{LINE}" stroke="{LINE}"/>')
+    c.line([(610,310),(434,310)])
+    c.label(520,270,["user", "@OneToOne / @MapsId"],15)
+    c.label(450,336,"1",18)
     c.label(577,336,"0..1",18)
     c.line([(215,461),(215,720)],dashed=True,end="arrow")
     c.label(215,637,"role",17)
@@ -168,8 +170,8 @@ def identity_profile():
     c.label(873,565,"1",18)
     c.label(883,694,"0..*",18)
     c.label(850,632,"student",17)
-    c.note(1160,555,380,["Student ID = account ID.", "An administrator need not have", "a Student profile.", "Empty optional preferences are", "unknown to the matching engine."],title="Association, not inheritance")
-    c.note(45,980,1510,["Multiplicity is written at each endpoint. Plain associations do not imply cascade deletion; SQL migrations and lifecycle services define cleanup.", "Selected attributes are shown; ordinary constructors/getters/setters are omitted. Weekly slots are recurring Asia/Singapore civil times."],fill="#edf3f6")
+    c.note(1160,555,380,["Student ID = account ID; deleting the", "account deletes the profile.", "An administrator is a User with", "no Student profile.", "Empty optional preferences are", "unknown to the matching engine."],title="Composition, not inheritance")
+    c.note(45,980,1510,["Multiplicity is written at each endpoint. The filled diamond marks the owner of a part that cannot outlive it; plain associations do not imply cascade deletion.", "Selected attributes are shown; ordinary constructors/getters/setters are omitted. Weekly slots are recurring Asia/Singapore civil times."],fill="#edf3f6")
     return c
 
 
@@ -293,7 +295,9 @@ def collaborative_study():
     c.cls(85,795,480,"RoomPresence",["- studyRoom : StudyRoom [1]", "- student : Student [1]", "- clientId : UUID", "- expiresAt, observedAt : Instant"],["+ renew(presence, now, expiresAt) : void"],color=TEAL,size=17)
     c.line([(325,435),(325,505)],end="arrow")
     c.label(325,477,"coordinates",17)
-    c.line([(325,724),(325,795)])
+    # Filled diamond at the room: room_presences.study_room_id is ON DELETE CASCADE, so a lease cannot outlive its room.
+    c.nodes.append(f'<polygon points="325,724 317,736 325,748 333,736" fill="{LINE}" stroke="{LINE}"/>')
+    c.line([(325,748),(325,795)])
     c.label(349,748,"1",17)
     c.label(361,779,"0..*",17)
     c.note(75,1065,500,["Read / renew: membership check; no group lock.", "Join / control: account locks → group lock."],fill="white")
@@ -331,7 +335,7 @@ def collaborative_study():
 
 
 def ai_study_tools():
-    c=Canvas("ai-study-tools", "UML collaborators — quizzes, study plans and Pixel", "Three student features share one Gemini client; each checks the model's reply before anything is saved or shown.",width=1800,height=1560)
+    c=Canvas("ai-study-tools", "UML collaborators — quizzes, study plans and Pixel", "Three student features share one AI client interface; each checks the model's reply before anything is saved or shown.",width=1800,height=1560)
     c.panel(45,170,560,1010,"QUIZZES (GROUP / PERSONAL)",color=AMBER,fill=WARM)
     c.panel(625,170,560,1010,"STUDY PLANS (PERSONAL / SESSION)",color=AMBER,fill=WARM)
     c.panel(1205,170,550,1010,"PIXEL STUDY ASSISTANT",color=AMBER,fill=WARM)
@@ -359,7 +363,7 @@ def ai_study_tools():
     c.label(1700,520,["else","AI"],15)
     c.line([(1260,365),(1260,385),(1225,385),(1225,830),(1245,830)],end="arrow")
     c.label(1225,700,"answers",15)
-    c.note(1235,985,490,["Nine intents (find buddies, meet times,", "to-dos, plan a session, ...) answer from", "existing services; Gemini only classifies."],fill="white")
+    c.note(1235,985,490,["Nine intents (find buddies, meet times,", "to-dos, plan a session, ...) answer from", "existing services; the AI only classifies."],fill="white")
     c.note(75,1030,500,["QuizMarker scores; QuizLeaderboard ranks.", "Group answers stay on the server until", "the quiz closes."],fill="white")
     c.note(655,1030,500,["StudyMaterialReader checks file types.", "StudyPlanCalendar / SessionMeetingFrames", "build the frame the reply must fill."],fill="white")
     c.cls(85,1225,520,"AiClient",[],["+ generateJson(studentId, prompt,", "  attachments) : String"],stereotype="interface",color=BLUE,size=17)
@@ -370,7 +374,7 @@ def ai_study_tools():
     c.line([(325,1180),(325,1225)],end="arrow")
     c.line([(905,1180),(905,1205),(345,1205),(345,1225)],end="arrow")
     c.line([(1480,1180),(1480,1195),(365,1195),(365,1225)],end="arrow")
-    c.note(45,1400,1710,["QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.", "Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts."],fill="#edf3f6")
+    c.note(45,1400,1710,["QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.", "Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts.", "ClaudeClient is an optional second AiClient: FallbackAiClient asks it and GeminiClient in the order app.ai.primary-provider sets (AiProviders)."],fill="#edf3f6")
     return c
 
 

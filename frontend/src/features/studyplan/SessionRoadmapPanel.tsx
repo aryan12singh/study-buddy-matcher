@@ -51,7 +51,7 @@ export default function SessionRoadmapPanel({ session, onEditingChange }: {
 }
 
 function emptyMessage(session: StudySession, canPlan: boolean) {
-  if (canPlan) return 'Upload the slides or paste the topics, and Gemini plans what each upcoming meeting covers.'
+  if (canPlan) return 'Upload the slides or paste the topics, and the AI plans what each upcoming meeting covers.'
   if (session.status === 'CANCELLED' || session.nextOccurrence === null) return 'This session has no upcoming meetings to plan.'
   return session.scope === 'GROUP' ? 'The group leader can create one for everyone.' : 'Either of you can create one.'
 }

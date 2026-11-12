@@ -81,10 +81,10 @@
 <rect x="1145" y="1225" width="420" height="121" rx="0" fill="white" stroke="#254e73" stroke-width="1.5" data-class="AiQuota"/>
 <rect x="1145" y="1225" width="420" height="49" rx="0" fill="#eaf1f7" stroke="none" stroke-width="1.5" />
 <polyline points="1145,1274 1565,1274" fill="none" stroke="#254e73" stroke-width="2" stroke-linejoin="round"/>
-<rect x="45" y="1400" width="1710" height="74" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
+<rect x="45" y="1400" width="1710" height="99" rx="6" fill="#edf3f6" stroke="#c5d2da" stroke-width="1.5" />
 <text x="46" y="45" font-size="15" fill="#a8d4ca" font-weight="700" text-anchor="start">STUDY BUDDY MATCHER  /  DESIGN REFERENCE</text>
 <text x="46" y="85" font-size="31" fill="#ffffff" font-weight="700" text-anchor="start">UML collaborators — quizzes, study plans and Pixel</text>
-<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Three student features share one Gemini client; each checks the model&#x27;s reply before anything is saved or shown.</text>
+<text x="46" y="110" font-size="17" fill="#d9e5ea" font-weight="400" text-anchor="start">Three student features share one AI client interface; each checks the model&#x27;s reply before anything is saved or shown.</text>
 <text x="1754" y="1533" font-size="14" fill="#506474" font-weight="400" text-anchor="end">docs/diagrams/exports/ai-study-tools.svg</text>
 <text x="67" y="201" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="start">QUIZZES (GROUP / PERSONAL)</text>
 <text x="647" y="201" font-size="18" fill="#8a5a1a" font-weight="700" text-anchor="start">STUDY PLANS (PERSONAL / SESSION)</text>
@@ -148,7 +148,7 @@
 <text x="1225" y="700" font-size="15" fill="#506474" font-weight="400" text-anchor="middle">answers</text>
 <text x="1252" y="1013" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Nine intents (find buddies, meet times,</text>
 <text x="1252" y="1038" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">to-dos, plan a session, ...) answer from</text>
-<text x="1252" y="1063" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">existing services; Gemini only classifies.</text>
+<text x="1252" y="1063" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">existing services; the AI only classifies.</text>
 <text x="92" y="1058" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">QuizMarker scores; QuizLeaderboard ranks.</text>
 <text x="92" y="1083" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Group answers stay on the server until</text>
 <text x="92" y="1108" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">the quiz closes.</text>
@@ -166,4 +166,5 @@
 <text x="1161" y="1329" font-size="17" fill="#172d3b" font-weight="400" text-anchor="start">+ pauseAfterRateLimit() : void</text>
 <text x="62" y="1428" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">QuizWriter, RoadmapWriter and AssistantAi depend on the AiClient interface, so tests supply a fake. Pixel uses a lighter model with its own allowance.</text>
 <text x="62" y="1453" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">Failed, refused or over-quota calls return 503 AI_UNAVAILABLE and save nothing; prompts are versioned files under resources/prompts.</text>
+<text x="62" y="1478" font-size="18" fill="#172d3b" font-weight="400" text-anchor="start">ClaudeClient is an optional second AiClient: FallbackAiClient asks it and GeminiClient in the order app.ai.primary-provider sets (AiProviders).</text>
 </g></svg>

@@ -70,7 +70,7 @@ export default function SessionPlanForm({ session, replacing, onCreated, onCance
     return <StatePanel loading={courses.loading} error={courses.error} onRetry={() => courses.reload()} />
   }
   return <form className="stack-form session-plan-form" onSubmit={submit} noValidate aria-label="Plan this session">
-    <p className="muted">Gemini spreads your material over this session’s upcoming meetings, each as long as the session.</p>
+    <p className="muted">The AI spreads your material over this session’s upcoming meetings, each as long as the session.</p>
     <div className="form-grid">
       {needsCourse && <Field id="session-plan-course" label="Course" error={errors.courseId}>
         <select id="session-plan-course" value={form.courseId} disabled={pending} onChange={event => change({ courseId: event.target.value })}>

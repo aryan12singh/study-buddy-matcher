@@ -254,7 +254,7 @@ export default function QuizBotChat({ home, prefill, onStarted, onTake }: {
           placeholder={placeholderFor(stage)} onChange={event => setDraft(event.target.value)} onKeyDown={sendOnEnter} />
         <Button type="submit" variant="primary" disabled={writing || (!draft.trim() && !attached.length)}>Send</Button>
       </div>
-      <p className="field-hint">PDF, .txt or .md, up to {MAX_FILES} files and 10MB. Enter sends; Shift+Enter adds a line. Your notes go to Google Gemini to write the questions and are not saved.</p>
+      <p className="field-hint">PDF, .txt or .md, up to {MAX_FILES} files and 10MB. Enter sends; Shift+Enter adds a line. Your notes go to the server’s AI provider (Google Gemini or Anthropic Claude) to write the questions and are not saved.</p>
     </form>
   </div>
 }

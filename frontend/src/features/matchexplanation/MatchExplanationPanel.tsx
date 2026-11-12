@@ -10,7 +10,7 @@ type PanelState = { status: 'idle' } | { status: 'loading' } | { status: 'error'
   | { status: 'done'; explanation: MatchExplanation }
 type PanelProps = { candidateId: number; evaluationId: string; search: MatchSearch; onRefreshMatches: () => void }
 
-const AI_LABEL = 'Written by Gemini; may be inaccurate. Scores unchanged.'
+const AI_LABEL = 'Written by AI (Gemini or Claude); may be inaccurate. Scores unchanged.'
 const STANDARD_LABEL = "Standard explanation; AI wording wasn't available."
 
 /** A new evaluation starts with no completed answer and cancels the old evaluation's request. */

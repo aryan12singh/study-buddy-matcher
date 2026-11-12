@@ -25,8 +25,8 @@ export type QuizReview = {
 /** Where a quiz panel lives: a group's study room, or the student's own study corner. */
 export type QuizHome = { scope: 'GROUP'; groupId: number } | { scope: 'PERSONAL' }
 
-/** Shown wherever Gemini's questions or explanations appear. */
-export const AI_QUIZ_LABEL = 'Questions written by Gemini; they may be inaccurate.'
+/** Shown wherever AI-written questions or explanations appear; the server asks Gemini or, when enabled, Claude. */
+export const AI_QUIZ_LABEL = 'Questions written by AI (Gemini or Claude); they may be inaccurate.'
 
 /** Matches app.ai.assistant.quiz.max-focus-characters. */
 export const MAX_FOCUS_CHARACTERS = 200

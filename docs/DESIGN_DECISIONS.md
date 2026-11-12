@@ -101,7 +101,7 @@ real services; [DATABASE.md](DATABASE.md#demo-seed) lists what it creates.
 
 | Decision | Choice and reason | Alternative rejected |
 | --- | --- | --- |
-| Identity and profile model | `Student` composes `User` through a shared `@MapsId` identity; administrators have no student profile | User inheritance would mix account and security concerns with student-only preferences |
+| Identity and profile model | `Student` is a one-to-one extension of `User` that shares its identity (`@MapsId`); the account owns the profile (composition), and administrators have no student profile | User inheritance would mix account and security concerns with student-only preferences |
 | Authentication | Spring Security, JJWT and BCrypt; the server checks role, active account and token version on every request | Browser route guards alone cannot enforce authorisation |
 | Own profile boundary | `MyProfileAssembler` returns self-only profile and contact fields; other students' profiles go through the privacy assembler | Reusing the own-profile DTO for discovery would expose contact and email |
 | Saved buddy target | Independent of course enrolments; Home uses it for the matching preview. Find buddies still needs a current course or goal | Treating it as the finder's default would contradict the screen |
@@ -195,13 +195,15 @@ disclosed in [AI_USAGE.md](AI_USAGE.md).
 
 All four AI features (match explanations, Pixel, quizzes and study plans) share one Gemini
 integration in `com.studybuddy.ai`: one `GeminiClient` class, built once per client from its own
-`GeminiSettings` and given its own `AiQuota`, and one `PromptTemplate` for every prompt.
+`GeminiSettings` and given its own `AiQuota`, and one `PromptTemplate` for every prompt. Claude
+(Anthropic) is an optional second provider behind the same interface.
 
 | Decision | Choice and reason |
 | --- | --- |
 | One client class, three instances | `GeminiClient` is not a Spring component. `AiAssistantConfiguration` declares the `AiClient` bean that quizzes and study plans share; `AssistantConfiguration` builds the chat's own client; `AiExplanationConfiguration` builds E1's. Each takes a `GeminiSettings` record (switch, base URL, model, key, timeout, reply size, whether to turn thinking off) from its properties' `geminiSettings(...)` and a fresh `AiQuota` from `newQuota()` |
 | Separate projects and allowances | `app.ai.assistant.*` has its own API key (from a different Google project than match explanations), and each client counts its own `AiQuota`, so one feature never spends another's allowance. Off unless `application-local.yml` sets `enabled: true` and `api-key` |
 | Provider behind an interface | Features depend on `AiClient` (E1 on `ExplanationProvider`); `GeminiClient` is the implementation, so tests supply a fake |
+| Second provider, chosen by configuration | `ClaudeClient` is a second `AiClient`, built on Anthropic's official Java SDK. `AiProviders` puts each feature's `GeminiClient` and a `ClaudeClient` into a `FallbackAiClient` in the order `app.ai.primary-provider` (`AiProvider`: `GEMINI` or `CLAUDE`) sets; each enum constant returns its own order, so no code switches on the provider. The second is asked only when the first throws `AiUnavailableException`, and prompts and validators are shared, so the output shape does not depend on who answered. Chosen because Gemini's free tier allows about 20 requests a day per model, which a live demo can exhaust; off by default (`app.ai.claude.enabled`), and with Claude off the chain behaves exactly as Gemini alone. Claude calls share one key, one `AiQuota` (they are paid) and one SDK client: `ClaudeConfiguration` builds a single `AnthropicClient` bean only when Claude is on with a key, every feature's `ClaudeClient` is given it, and Spring closes it on shutdown, so there is one connection pool rather than one per feature |
 | Quota | One `AiQuota` class per client: per process, in memory, reset at Pacific midnight (when Google's free-tier day ends), with a shared daily limit and a per-student one (18 and 5 for the study tools). After a provider 429, that client pauses for `rate-limit-cooldown`. A switched-off feature is checked before the quota, so it never spends allowance |
 | JSON replies | Requests ask for `application/json`; a reply that did not finish with `STOP` (token limit, safety block) is rejected rather than parsed, and thought parts are skipped when reading the text |
 | Long requests | `timeout` 90 s and `max-output-tokens` 4000, because a quiz or roadmap from a lecture PDF can take Gemini well over 30 seconds |
@@ -232,7 +234,7 @@ matching `AssistantIntent` answers it:
 | Decision | Choice and reason |
 | --- | --- |
 | AI reads, the app answers | The only AI call classifies the message and extracts details (`IntentParser`); every fact in the reply comes from existing services, so the model cannot invent a buddy, time or task |
-| Deterministic fast path | `QuickIntentReader` answers the suggested questions, greetings, "what do I need to do?", navigation questions and simple buddy, meeting and quiz requests with rules and no AI call. It never guesses: a message with a time of day, date, goal or other detail only the AI can read goes to the AI |
+| Deterministic fast path | `QuickIntentReader` answers the suggested questions, greetings, "what do I need to do?", navigation questions and simple buddy, meeting and quiz requests with rules and no AI call. A quiz topic loses a course code only when the catalogue holds that course (`AssistantCourses`), so "Java 101" or "SQL 201 joins" stays whole. It never guesses: a message with a time of day, date, goal or other detail only the AI can read goes to the AI |
 | Lighter model, own allowance | `app.ai.assistant.chat.*` uses `gemini-3.5-flash-lite` with its own limits (200 shared, 30 per student, 20 s timeout), so chatting never spends the allowance needed for quizzes and plans. It shares the key, switch and cooldown length; its client keeps its own quota and rate-limit pause, and leaves the thinking setting out because lite models reject it |
 | Reply validation | `AssistantOutputValidator` requires a JSON object with a known intent; each detail is kept only if valid (known enum, whole number in range, readable date), otherwise dropped rather than guessed |
 | Intents as classes | Intents are looked up by type, not chosen in a `switch`; the service refuses to start if any type lacks a handler |

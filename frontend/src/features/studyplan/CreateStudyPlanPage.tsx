@@ -28,7 +28,7 @@ const DESCRIBE_FAILURE = describeAiFailure('No plan was saved. You can try again
 export default function CreateStudyPlanPage() {
   const courses = useResource('study-plan-courses', getCourses, true, false)
   return <WindowPage title="Create study plan"
-    description="Gemini reads your material and spreads its topics over the weeks up to your exam, within the hours you have."
+    description="The AI reads your material and spreads its topics over the weeks up to your exam, within the hours you have."
     actions={<Link className="retro-button" to="/study-plan">Back to study plans</Link>}>
     <StatePanel loading={courses.loading && !courses.data} error={courses.error} onRetry={() => courses.reload()} />
     {courses.data && <StudyPlanFormView courses={courses.data} />}

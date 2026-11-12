@@ -1,6 +1,10 @@
 package com.studybuddy.matchexplanation;
 
 import com.sun.net.httpserver.HttpServer;
+import com.studybuddy.ai.AiProvider;
+import com.studybuddy.ai.AiProviderProperties;
+import com.studybuddy.ai.AiProviders;
+import com.studybuddy.ai.ClaudeProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code app.ai.explanation.*}, against a stub server. Any failure gives an empty answer.
  */
 class GeminiExplanationProviderTest {
+    /** Claude switched off, as it is by default, so only the Gemini path is exercised. */
+    private static final AiProviders CLAUDE_OFF = new AiProviders(new AiProviderProperties(AiProvider.GEMINI), new ClaudeProperties(false, "https://api.anthropic.com", null,
+            "test-model", "high", 8000, 16000, Duration.ofSeconds(1), 10, 10, "UTC", Duration.ofSeconds(60)), Optional.empty());
     private static final Long STUDENT_ID = 7L;
     private static final String REPLY = "{\"candidates\":[{\"finishReason\":\"STOP\",\"content\":{\"parts\":[{\"text\":\"{\\\"explanation\\\":\\\"You both take IS442.\\\"}\"}]}}]}";
 
@@ -72,7 +79,7 @@ class GeminiExplanationProviderTest {
         AiExplanationProperties properties = new AiExplanationProperties(enabled,
                 "http://127.0.0.1:" + server.getAddress().getPort() + basePath, "test-model", "test-key",
                 Duration.ofMillis(500), 200, 600, dailyLimit, dailyLimit, "UTC", Duration.ofSeconds(60));
-        return new AiExplanationConfiguration().explanationProvider(properties, ExplanationFixtures.JSON);
+        return new AiExplanationConfiguration().explanationProvider(properties, ExplanationFixtures.JSON, CLAUDE_OFF);
     }
 
     @Test

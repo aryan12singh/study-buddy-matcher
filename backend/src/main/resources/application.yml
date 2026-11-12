@@ -157,6 +157,9 @@ app:
       # Shortest shared block that counts as time to meet; shorter overlaps are ignored.
       min-session-minutes: 60
   ai:
+    # The provider every AI feature asks first: gemini or claude. The other one is asked only when
+    # the first cannot answer and is itself switched on with a key.
+    primary-provider: gemini
     explanation:
       # Off unless application-local.yml sets enabled: true and api-key. Never put the key here.
       enabled: false
@@ -233,6 +236,27 @@ app:
         timeout: 20s
         daily-call-limit: 200
         daily-call-limit-per-student: 30
+    claude:
+      # Optional second provider. Asked when a Gemini call above fails (switched off, over quota,
+      # rate limited, timed out or erroring), or first when primary-provider is claude. Off unless
+      # application-local.yml sets enabled: true and api-key. Never put the key here.
+      enabled: false
+      base-url: https://api.anthropic.com
+      api-key:
+      # Haiku is the cheapest current model; claude-sonnet-5-5 or claude-opus-5-5 cost more.
+      model: claude-haiku-5-5
+      # How much reasoning a reply gets: low, medium, high, xhigh or max. Lower is cheaper and faster.
+      effort: high
+      # Reply size, which includes the model's reasoning: one explanation or Pixel message, and a
+      # whole quiz or study plan.
+      max-tokens: 8000
+      study-tools-max-tokens: 16000
+      timeout: 90s
+      # Claude is paid per call, so it has its own allowance, shared by every AI feature.
+      daily-call-limit: 100
+      daily-call-limit-per-student: 20
+      quota-zone: Asia/Singapore
+      rate-limit-cooldown: 60s
   ambient:
     # Sounds are unavailable until application-local.yml sets api-key. Never put the key here.
     base-url: https://freesound.org/apiv2

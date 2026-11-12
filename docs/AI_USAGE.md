@@ -3,6 +3,8 @@
 ## AI inside the app (E1)
 
 The backend calls Google Gemini (free tier) from two Google projects, so quotas stay separate.
+When the optional Anthropic Claude provider is enabled (`app.ai.claude`, off by default), the
+same minimal data listed below may be sent to Anthropic instead, as the primary or backup provider.
 With AI off, over its daily allowance or failing, each screen falls back to a standard answer
 or the manual path.
 
