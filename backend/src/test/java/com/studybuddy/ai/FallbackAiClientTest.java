@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -100,7 +101,7 @@ class FallbackAiClientTest {
     void behavesLikeGeminiAloneWhenClaudeIsSwitchedOffOrHasNoKey() {
         for (ClaudeProperties claude : List.of(claude(false, "unused-key"), claude(true, " "))) {
             for (AiProvider primary : AiProvider.values()) {
-                AiProviders providers = new AiProviders(new AiProviderProperties(primary), claude);
+                AiProviders providers = new AiProviders(new AiProviderProperties(primary), claude, Optional.empty());
 
                 assertEquals("{\"from\":\"gemini\"}", providers.forShortReplies(answering("gemini"), "test").generateJson(STUDENT_ID, "PROMPT"));
                 assertEquals("{\"from\":\"gemini\"}", providers.forStudyTools(answering("gemini"), "test").generateJson(STUDENT_ID, "PROMPT"));

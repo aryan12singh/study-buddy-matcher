@@ -163,7 +163,7 @@ output has the same shape whichever provider answers. Each provider counts its o
 | `app.ai.claude.effort` | `high` | How much reasoning a reply gets: `low`, `medium`, `high`, `xhigh` or `max`. `medium` and `low` are cheaper and faster. No thinking setting is sent; the model thinks adaptively |
 | `app.ai.claude.max-tokens` | `8000` | Reply size, reasoning included, for one match explanation or one Pixel message |
 | `app.ai.claude.study-tools-max-tokens` | `16000` | Reply size, reasoning included, for a whole quiz or study plan |
-| `app.ai.claude.timeout` | `90s` | Request timeout. A failed call is not retried; the next provider or the non-AI path takes over |
+| `app.ai.claude.timeout` | `90s` | Request timeout for every feature's Claude calls, which share one SDK client. A failed call is not retried; the next provider or the non-AI path takes over |
 | `app.ai.claude.daily-call-limit` / `daily-call-limit-per-student` | `100` / `20` | Claude calls per day for everyone and for one student, across all AI features. Claude is paid per call, so this caps the spend. Kept in memory; a restart resets it |
 | `app.ai.claude.quota-zone` | `Asia/Singapore` | Zone whose midnight resets the Claude allowance |
 | `app.ai.claude.rate-limit-cooldown` | `60s` | Pause after Anthropic answers 429 before Claude is asked again |

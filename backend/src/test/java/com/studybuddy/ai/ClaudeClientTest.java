@@ -1,5 +1,6 @@
 package com.studybuddy.ai;
 
+import com.anthropic.client.AnthropicClient;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,6 +29,7 @@ class ClaudeClientTest {
 
     private HttpServer server;
     private AiQuota quota;
+    private AnthropicClient connection;
     private final AtomicInteger calls = new AtomicInteger();
     private final AtomicReference<String> requestBody = new AtomicReference<>();
     private final AtomicReference<String> requestKey = new AtomicReference<>();
@@ -62,6 +65,9 @@ class ClaudeClientTest {
 
     @AfterEach
     void stopStub() {
+        if (connection != null) {
+            connection.close();
+        }
         server.stop(0);
     }
 
@@ -73,7 +79,9 @@ class ClaudeClientTest {
         ClaudeProperties properties = new ClaudeProperties(enabled, "http://127.0.0.1:" + server.getAddress().getPort(), key,
                 "test-model", "high", 8000, 16000, Duration.ofSeconds(2), dailyLimit, dailyLimit, "UTC", Duration.ofSeconds(60));
         quota = new AiQuota(dailyLimit, dailyLimit, Duration.ofSeconds(60), ZoneId.of("UTC"));
-        return new ClaudeClient(properties, "test", properties.maxTokens(), quota);
+        // As the application does: a connection only when Claude is switched on with a key.
+        connection = properties.ready() ? new ClaudeConfiguration().anthropicClient(properties) : null;
+        return new ClaudeClient(properties, "test", properties.maxTokens(), quota, Optional.ofNullable(connection));
     }
 
     @Test

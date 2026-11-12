@@ -1,9 +1,12 @@
 package com.studybuddy.ai;
 
+import com.anthropic.client.AnthropicClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tools.jackson.databind.json.JsonMapper;
+
+import java.util.Optional;
 
 /**
  * Binds {@code app.ai.assistant.*}, the same way the E1 explanation settings are bound, and builds
@@ -22,9 +25,12 @@ public class AiAssistantConfiguration {
                 new GeminiClient(properties.geminiSettings("assistant", true), json, properties.newQuota()), "assistant");
     }
 
-    /** Orders each feature's Gemini client and the shared Claude client by the configured primary provider. */
+    /**
+     * Orders each feature's Gemini client and the shared Claude connection by the configured primary
+     * provider. The connection is absent when Claude is off or has no key.
+     */
     @Bean
-    AiProviders aiProviders(AiProviderProperties providers, ClaudeProperties claude) {
-        return new AiProviders(providers, claude);
+    AiProviders aiProviders(AiProviderProperties providers, ClaudeProperties claude, Optional<AnthropicClient> claudeConnection) {
+        return new AiProviders(providers, claude, claudeConnection);
     }
 }

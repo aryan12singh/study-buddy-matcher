@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GeminiExplanationProviderTest {
     /** Claude switched off, as it is by default, so only the Gemini path is exercised. */
     private static final AiProviders CLAUDE_OFF = new AiProviders(new AiProviderProperties(AiProvider.GEMINI), new ClaudeProperties(false, "https://api.anthropic.com", null,
-            "test-model", "high", 8000, 16000, Duration.ofSeconds(1), 10, 10, "UTC", Duration.ofSeconds(60)));
+            "test-model", "high", 8000, 16000, Duration.ofSeconds(1), 10, 10, "UTC", Duration.ofSeconds(60)), Optional.empty());
     private static final Long STUDENT_ID = 7L;
     private static final String REPLY = "{\"candidates\":[{\"finishReason\":\"STOP\",\"content\":{\"parts\":[{\"text\":\"{\\\"explanation\\\":\\\"You both take IS442.\\\"}\"}]}}]}";
 

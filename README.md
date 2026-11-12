@@ -354,7 +354,9 @@ failure becomes `AiUnavailableException` (`503`) and the screen offers the manua
 failed explanation returns the standard wording instead. `ClaudeClient` is a second `AiClient`
 implementation: `AiProviders` puts it and the feature's `GeminiClient` into a
 `FallbackAiClient` in the order `app.ai.primary-provider` sets, so the second provider is asked
-only when the first cannot answer, and prompts and validators are the same for both.
+only when the first cannot answer, and prompts and validators are the same for both. Every
+feature's `ClaudeClient` shares one SDK client, built by `ClaudeConfiguration` only when Claude
+is on and closed by Spring on shutdown.
 
 [![UML collaborators: quizzes, study plans and Pixel](docs/diagrams/exports/ai-study-tools.svg)](docs/diagrams/exports/ai-study-tools.svg)
 

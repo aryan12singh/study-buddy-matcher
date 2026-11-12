@@ -1,7 +1,6 @@
 package com.studybuddy.ai;
 
 import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.errors.AnthropicException;
 import com.anthropic.errors.RateLimitException;
 import com.anthropic.models.messages.Base64PdfSource;
@@ -23,15 +22,15 @@ import java.util.regex.Pattern;
 
 /**
  * Calls Anthropic's Claude through its official Java SDK. It is the second provider beside
- * {@link GeminiClient}, asked before or after it (see {@link AiProviders}). It answers the same
+ * {@link GeminiClient}, asked before or after it (see {@link AiProviders}). Each feature has its
+ * own instance for its reply size and log name; all of them send through the one SDK client built
+ * by {@link ClaudeConfiguration}. It answers the same
  * prompts with the same JSON, so the features' own checks on the reply are unchanged. Any failure is logged without the
  * prompt, file or key and thrown as {@link AiUnavailableException}, exactly as Gemini's are.
  */
 public class ClaudeClient implements AiClient {
     private static final Logger LOG = LoggerFactory.getLogger(ClaudeClient.class);
     private static final String PDF = "application/pdf";
-    /** A failed call moves on to the next provider or the non-AI path rather than being repeated. */
-    private static final int NO_RETRIES = 0;
     /** Claude sometimes wraps JSON in a Markdown code fence; the features expect the JSON alone. */
     private static final Pattern CODE_FENCE = Pattern.compile("^```(?:json)?\\s*(.*?)\\s*```$", Pattern.DOTALL);
 
@@ -44,17 +43,15 @@ public class ClaudeClient implements AiClient {
     /**
      * @param purpose names the feature in log lines, such as "explanation"; never sent to Claude
      * @param maxTokens the reply size for this feature, which includes Claude's reasoning
+     * @param client the shared connection to Claude; empty when Claude is off or has no key
      */
-    public ClaudeClient(ClaudeProperties properties, String purpose, long maxTokens, AiQuota quota) {
+    public ClaudeClient(ClaudeProperties properties, String purpose, long maxTokens, AiQuota quota,
+            Optional<AnthropicClient> client) {
         this.properties = properties;
         this.purpose = purpose;
         this.maxTokens = maxTokens;
         this.quota = quota;
-        // Built only with a key, so the application starts the same way when Claude is off.
-        this.client = properties.ready()
-                ? AnthropicOkHttpClient.builder().apiKey(properties.apiKey()).baseUrl(properties.baseUrl())
-                        .timeout(properties.timeout()).maxRetries(NO_RETRIES).build()
-                : null;
+        this.client = client.orElse(null);
     }
 
     @Override

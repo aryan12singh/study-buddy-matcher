@@ -1343,7 +1343,9 @@ instance that quizzes and study plans share, holding its own `GeminiSettings` an
 `AiQuota` from `app.ai.assistant.*`. The chat assistant and match explanations build their own
 instances of the same `GeminiClient` class from their own settings. `AiProviders` wraps each of
 them, with the optional `ClaudeClient`, in a `FallbackAiClient` that asks the two in the order
-`app.ai.primary-provider` sets; with Claude off it behaves as the `GeminiClient` alone.
+`app.ai.primary-provider` sets; with Claude off it behaves as the `GeminiClient` alone. Every
+`ClaudeClient` sends through one `AnthropicClient` bean (`ClaudeConfiguration`), which Spring
+closes on shutdown.
 
 ```mermaid
 classDiagram
