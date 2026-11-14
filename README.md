@@ -632,6 +632,7 @@ Contacts use the fictional +1 202-555-01xx range. Seeding and demo reset are in 
 | --- | --- |
 | Java compiler or release error | Select JDK 21 and confirm `java -version` in the same terminal |
 | Backend cannot connect, or a mapped column is missing | Check the datasource and that the database has every migration |
+| `FATAL: role "postgres" does not exist` or a password error on first start | Another PostgreSQL (for example one installed with Homebrew) already uses port 5432. Stop it, or start the Docker database with `-p 5433:5432` and use `localhost:5433` in the datasource URL |
 | Tests cannot connect after `./mvnw clean install` | Local YAML does not provision tests; use `scripts/test-backend.sh` |
 | Browser requests fail | Check `VITE_API_BASE_URL`, backend startup and CORS; restart Vite after editing `.env` |
 | AI screens or Pixel say the helper is unavailable | Expected without AI keys in your own `application-local.yml`; see [configuration](docs/CONFIGURATION.md#ai-study-assistant). Pixel's suggested questions still work |
