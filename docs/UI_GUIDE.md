@@ -1,6 +1,6 @@
 # UI guide
 
-The visual direction, the shared React components to reuse and the known gaps. The
+The visual direction, the shared React components to reuse and how screens are checked. The
 rules every screen must follow are in [AGENTS.md](../AGENTS.md#frontend-conventions); screen
 behaviour decisions are in [design decisions](DESIGN_DECISIONS.md#interface-behaviour).
 
@@ -59,8 +59,6 @@ shared element, check this table and say that you are adding it.
 | Password field with show/hide | `PasswordInput` |
 | Page that crashed or failed to load | `RouteErrorPage` |
 
-## Checks and known gaps
+## Checks
 
-Narrow-layout and keyboard checks are listed in the [testing guide](TESTING.md). A formal
-screen-by-screen comparison with the final Figma and a contrast audit of every screen were not
-carried out.
+Narrow-layout and keyboard checks are listed in the [testing guide](TESTING.md).

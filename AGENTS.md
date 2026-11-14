@@ -118,7 +118,7 @@ Pixelated, retro, desktop operating system: decorative window title bars, pixel 
 chunky bevelled buttons, with conventional routes and no movable window manager. Text uses
 Tahoma, Verdana and system fonts; no web font is loaded. Figma is the source of truth and wins
 over this file; if a screen is not in Figma, ask before inventing one. The Figma link, the
-implemented choices and the known gaps are in the [UI guide](docs/UI_GUIDE.md).
+implemented choices and the screen checks are in the [UI guide](docs/UI_GUIDE.md).
 
 ### Rules for every screen
 

@@ -164,6 +164,7 @@ app:
       # Off unless application-local.yml sets enabled: true and api-key. Never put the key here.
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
+      api-key:
       model: gemini-3.5-flash
       timeout: 5s
       max-output-tokens: 200
@@ -180,6 +181,7 @@ app:
       # Use a key from a different Google project than E1's, so the two do not share a quota.
       enabled: false
       base-url: https://generativelanguage.googleapis.com/v1beta
+      api-key:
       model: gemini-3.5-flash
       # Reading a PDF and writing a whole roadmap or a ten-question quiz takes far longer than E1's
       # one sentence: a quiz from a lecture PDF can take Gemini well over 30 seconds.
