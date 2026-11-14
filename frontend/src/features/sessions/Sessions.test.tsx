@@ -152,6 +152,12 @@ describe('dated study session workflows', () => {
     expect(screen.queryByText('No weekly availability saved.')).not.toBeInTheDocument()
   })
 
+  it('says participant in the singular when only one participant has availability', async () => {
+    serve({ '/groups/5/sessions/availability': { ...availability, participantCount: 1 } })
+    renderPage(<SessionFormPage kind="GROUP" />, '/groups/5/sessions/new', '/groups/:id/sessions/new')
+    expect(await screen.findByText('1 participant · 60 shared minutes each week')).toBeInTheDocument()
+  })
+
   it('keeps manual saving available when a suggestion duration is invalid or no shared window fits', async () => {
     serve()
     const post = vi.spyOn(api, 'post').mockResolvedValue(response(session))

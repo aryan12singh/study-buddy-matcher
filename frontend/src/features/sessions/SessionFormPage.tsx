@@ -133,7 +133,7 @@ function SessionEditor({ context }: { context: EditorContext }) {
           <input id="session-suggestion-duration" type="number" min="1" step="1" value={suggestionDuration} disabled={pending} onChange={event => setSuggestionDuration(event.target.value)} />
         </Field>
         <StatePanel loading={availability.loading && !availability.data} error={availability.error} onRetry={() => availability.reload()} />
-        {availability.data && <><p>{availability.data.participantCount} participants · {availability.data.sharedMinutes} shared minutes each week</p>
+        {availability.data && <><p>{availability.data.participantCount} participant{availability.data.participantCount === 1 ? '' : 's'} · {availability.data.sharedMinutes} shared minutes each week</p>
           {!!availability.data.sharedSlots.length && <WeeklySchedule slots={availability.data.sharedSlots} />}
           <div className="actions">{suggestions.map(({ slot, times }, index) => <Button key={index} disabled={pending} onClick={() => {
             const currentTimes = durationMinutes ? nextSuggestedTimes(slot, durationMinutes) : null
