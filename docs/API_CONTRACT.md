@@ -9,7 +9,7 @@ Base path `/api`; JSON requests/responses. Protected requests use
 the verified principal. Client-supplied acting-user fields do not confer authority.
 Controllers validate input and call services; entities never become response bodies.
 
-All event timestamps are UTC instants, serialized with `Z`. Weekly schedules are recurring
+All event timestamps are UTC instants, serialised with `Z`. Weekly schedules are recurring
 campus-local times in `Asia/Singapore`, with weekdays `MONDAY` through `SUNDAY` and whole-minute
 `HH:mm`/`HH:mm:ss` times. Slots require `startTime < endTime`; empty schedules are allowed.
 Own student availability rejects same-day overlaps; group schedules permit overlaps. The
@@ -24,13 +24,13 @@ their separately generated UTC occurrence fields carry timezone resolution.
 
 ## Identity, permissions and errors
 
-Login, registration and admin edits share trimmed, lowercase email identity. Its normalized
+Login, registration and admin edits share trimmed, lowercase email identity. Its normalised
 value is unique in PostgreSQL, including inactive accounts. New passwords require at least
 eight characters and at most 72 UTF-8 bytes. Login retains annotated request validation;
 otherwise-valid input exceeding the UTF-8 byte limit gets the same 401 `INVALID_CREDENTIALS`
 as a wrong password before BCrypt comparison. Malformed/over-character-limit fields still
 return 400. After `app.auth.login-throttle.max-failures` wrong passwords in a row for one
-normalized email, known or unknown, login for it returns 429 `TOO_MANY_LOGIN_ATTEMPTS` for
+normalised email, known or unknown, login for it returns 429 `TOO_MANY_LOGIN_ATTEMPTS` for
 `app.auth.login-throttle.lockout` after the last attempt; a successful login clears the count.
 The 429 carries a `Retry-After` header with the seconds left, rounded up, and CORS exposes that
 header to the frontend; the message gives the same wait in whole minutes.
@@ -130,7 +130,7 @@ student only. Account role selection belongs to the administrator creation endpo
 SMU students, so `school` is one of SMU's school codes (`SOA`, `LKCSB`, `SOE`, `SCIS`, `YPHSL`, `SOSS`, `CIS`;
 any case, stored upper case); anything else returns 400 with a `school` field error. The same school
 and year rules apply to own-profile updates and admin creation/edits. Identity/profile strings are at most 255 characters.
-Contact numbers are required at creation and follow the accepted format/normalization contract above.
+Contact numbers are required at creation and follow the accepted format/normalisation contract above.
 Registration saves the identity and `@MapsId` student profile atomically and signs in the account.
 
 ```json
@@ -368,7 +368,7 @@ pendingApplications`; `pendingApplications` is the number of applications awaiti
 for the leader and `null` for every other caller.
 Member shape is `{studentId,name,leader,joinedAt}` in joining order. No group response carries
 contact data. The agenda UI uses saved goals/weekly availability from detail and
-separately loads authorized dated E2 sessions.
+separately loads authorised dated E2 sessions.
 
 `GroupJoinRequestDto`: `{id,groupId,groupName,studentId,studentName,message,status,createdAt,
 respondedAt,groupActive}`. Status is `PENDING`, `ACCEPTED`, `REJECTED` or `WITHDRAWN`. Message rules match
@@ -410,7 +410,7 @@ Assigned IDs must be active accepted members and distinct after that fallback.
 Durations are positive whole minutes, bounded by the configured maxima. Changing
 durations requires IDLE (reset first); roles/capacity can change while running.
 Capacity is positive, at most the current group capacity and at least current
-distinct present students. Concurrent joins for the last place serialize; one
+distinct present students. Concurrent joins for the last place serialise; one
 gets 409. Multiple tabs from one student count once. The client UUID is scoped
 to the authenticated actor, not an authorization credential.
 
@@ -420,7 +420,7 @@ renewing. Polled state reads use `RoomAccess.readMember` without a group-row loc
 Heartbeats use the same authorization check and update only an existing, unexpired
 tab lease; a concurrently deleted lease fails renewal. Join, leave, timer
 control and configuration use `lockMember`, taking account locks before the group
-lock. This serializes admission and shared-state transitions without queuing every
+lock. This serialises admission and shared-state transitions without queuing every
 poll or lease renewal on the group row. Inactive/removed members are excluded; closed groups return
 409. The timer continues across disconnects and repeating focus/break phases.
 A removed/deactivated member loses all tab leases and assigned roles within the
@@ -522,7 +522,7 @@ visible to every student.
 | POST | `/api/connections/{connectionId}/sessions` | `SessionInput`; participant creates, 201 `SessionDto` |
 | GET | `/api/groups/{groupId}/sessions/availability` | Mutual weekly availability; 200 `SessionAvailabilityDto` |
 | GET | `/api/connections/{connectionId}/sessions/availability` | Both buddies' mutual weekly availability; 200 `SessionAvailabilityDto` |
-| GET | `/api/sessions/{id}` | Current authorized `SessionDto`, 200 |
+| GET | `/api/sessions/{id}` | Current authorised `SessionDto`, 200 |
 | PUT | `/api/sessions/{id}` | Whole `SessionInput` plus `expectedVersion`; 200 `SessionDto` |
 | POST | `/api/sessions/{id}/cancel` | `{expectedVersion}`; 200 cancelled `SessionDto` |
 | GET | `/api/sessions/{id}/calendar` | Authorized `.ics` attachment, `text/calendar; charset=UTF-8`, 200 |
@@ -562,7 +562,7 @@ The API does not fetch these URLs. Invalid values return 400 with field errors.
 
 PUT edits the whole saved series. Its non-negative `expectedVersion`, and the
 version in cancellation requests, must match the current value; stale writes are
-409. A cancelled series cannot be edited. Parent-row locking serializes changes
+409. A cancelled series cannot be edited. Parent-row locking serialises changes
 with connection/group lifecycle operations. Removal immediately revokes group
 session access. Ending a connection, closing a group or deactivating an account
 revokes the affected access and cancels affected scheduled sessions; reactivation
@@ -571,9 +571,9 @@ deletion removes dependent records through the documented database relations.
 
 `/sessions/mine` returns scheduled sessions with a current/upcoming occurrence,
 ordered by that occurrence's start; cancelled/completed series are absent from Home.
-The parent agendas retain authorized session history, including cancelled records.
+The parent agendas retain authorised session history, including cancelled records.
 
-Frontend presentation selects the current/next occurrence from the authorized
+Frontend presentation selects the current/next occurrence from the authorised
 occurrence list using the browser clock. A plan is Ongoing from its start (inclusive)
 until its end (exclusive); an ended weekly occurrence advances to the next date.
 Current/upcoming group cards can expose the same safe saved room link as details.
@@ -701,8 +701,8 @@ Notification DTO: `{id,type,message,read,createdAt,resourceType,resourceId,event
 for safe generic deletion notices and older notices without metadata. `eventKey` is a nullable
 stable event identity, never an authentication token. MATCH_REQUEST links to requests/
 connections; GROUP links to the group; STUDENT links to its public/connected profile;
-SESSION links to its authorized session detail. Opening
-a target still uses its authorized endpoint. A now unavailable target returns a safe 404;
+SESSION links to its authorised session detail. Opening
+a target still uses its authorised endpoint. A now unavailable target returns a safe 404;
 notification metadata does not confer permissions.
 
 E2 adds `GROUP_SESSION_CREATED/UPDATED/CANCELLED` and
@@ -809,7 +809,7 @@ Notifications linked to deleted student/request/group records are removed; repla
 notices contain no broken target. The email becomes available again after permanent deletion.
 
 Self-deactivation/deletion is blocked. Because the acting admin must be active, at least one
-active administrator always remains. Account removals/status changes serialize in PostgreSQL
+active administrator always remains. Account removals/status changes serialise in PostgreSQL
 and lock administrators in fixed ID order, then recheck the acting admin. An actor concurrently
 revoked cannot finish a privileged mutation. All cleanup, notifications and identity changes form one transaction.
 
@@ -825,7 +825,7 @@ renewals deliberately do not take that lock; they recheck access, and renewal ca
 create a deleted or expired lease. The protocol does not claim that every read or minor
 update takes every lock. No JVM-only lock replaces the cross-instance transition protocol.
 
-Login locks the normalized email lookup before loading the account. If an administrator's
+Login locks the normalised email lookup before loading the account. If an administrator's
 email edit commits while that lookup waits, the old email is rejected and cannot overwrite the
 edited identity when recording a successful login.
 
@@ -884,7 +884,7 @@ overrides and version survive application restart; restart does not silently res
 
 Configuration GET and match search read a repeatable database snapshot. A concurrent save
 may become visible on the next request; it cannot mix a new strategy, enabled set or threshold
-with previous weights/version inside one response. Configuration mutation is serialized in
+with previous weights/version inside one response. Configuration mutation is serialised in
 PostgreSQL, including the first save when no prior override rows exist.
 
 Balanced ranks by the total. Availability-first ranks by bands of unique shared hours first
@@ -1036,7 +1036,7 @@ labels AI as potentially inaccurate and keeps numeric scores independent of word
 
 Search and direct evaluation compute the same deterministic fingerprint from explicit,
 ordered inputs: both students' IDs, catalogue courses/target, goals, study mode, group-size
-ranges and normalized weekly availability; the six search fields above; strategy, saved
+ranges and normalised weekly availability; the six search fields above; strategy, saved
 configuration revision, minimum score and ordered criterion weights/enabled flags; scoring
 rules; and exact total, quality, criterion scores/known flags and shared hours. Only the
 opaque digest goes to the browser; the fingerprint input is never provider evidence.
@@ -1094,7 +1094,7 @@ Disabled/unconfigured AI, exhausted quota, provider failure/timeout, unusable ou
 cache-read `DataAccessException` return standard wording. A cache-write `DataAccessException`
 returns the already validated AI answer. Optional cache logs contain only operation and
 exception class. Authentication, matching, unavailable-candidate and core database failures
-retain their normal error behavior. The provider wait holds no matching database transaction.
+retain their normal error behaviour. The provider wait holds no matching database transaction.
 
 E1's quota is its own `AiQuota`, held by E1's Gemini client and spent only on a cache miss; it
 is separate from the study tools' and the assistant chat's allowances. It is a per-process daily
@@ -1348,7 +1348,7 @@ fields.
 
 E2 student routes are `/study-room`, `/groups/{id}/room`, `/sessions`, `/sessions/{id}`,
 `/sessions/{id}/edit`, `/groups/{id}/sessions` and `/connections/{id}/sessions`;
-each parent list has a `/new` editor for its authorized managers. The Study Room tab
+each parent list has a `/new` editor for its authorised managers. The Study Room tab
 combines a personal browser timer with one sidebar populated by `/api/groups/mine`.
 Open groups link to their existing private rooms and closed groups to their history;
 opening the tab does not join a room. The personal timer uses no additional API and

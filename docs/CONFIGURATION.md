@@ -9,6 +9,7 @@ provider keys) are set only there or in the process environment.
 
 | Key | Default | Purpose |
 | --- | --- | --- |
+| `server.port` | `8080` | Backend port; the frontend `.env.example` and the Spotify redirect URI assume it |
 | `SPRING_PROFILES_ACTIVE` | `local` | Loads `application-local.yml` in development |
 | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | Required unless set locally | Backend database connection |
 | `DB_MAX_POOL_SIZE` / `spring.datasource.hikari.maximum-pool-size` | `5` | Most database connections one backend keeps open. Spring's default of 10 would let one developer fill most of the shared Supabase Session pooler's 15 clients |

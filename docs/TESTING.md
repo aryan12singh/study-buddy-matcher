@@ -18,7 +18,7 @@ Each kind of rule is tested at the boundary where it can actually break.
 | Migration tests | Fresh, legacy-upgrade, failed-preflight rollback and populated repeat migrations; demo-reset preservation | `scripts/test-migrations.sh` with fixtures in `scripts/sql/` |
 | Frontend interaction tests | Rendered components with Vitest and Testing Library: empty/loading/error states, form validation, dirty-draft guards, stale responses after navigation, confirmation dialogs | `frontend/src/**/*.test.tsx` and `*.test.ts` |
 
-External providers (Gemini, Open-Meteo weather, Spotify, Freesound) are never called by the
+External providers (Gemini, Claude, Open-Meteo weather, Spotify, Freesound) are never called by the
 default suites. HTTP tests replace the AI client with a fake, the test profile disables
 weather, and provider clients are unit-tested against recorded or synthetic replies. Two
 opt-in tests, `GeminiClientLiveTest` and `StudyPlanPromptLiveTest`, run only when
@@ -28,7 +28,7 @@ opt-in tests, `GeminiClientLiveTest` and `StudyPlanPromptLiveTest`, run only whe
 
 ### Prerequisites
 
-Java 21, Node 22.22 or later with npm, Docker, the PostgreSQL client (`psql`) and OpenSSL.
+Java 21, Node 22.22.2+ or 24.15+ with npm, Docker, the PostgreSQL client (`psql`) and OpenSSL.
 
 ### Full backend suite
 
@@ -200,8 +200,8 @@ this chain.
 ## 6. Demo walkthroughs
 
 Use synthetic seeded accounts on a local or disposable database. The seeder takes its
-passwords from `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` (or `app.demo-seed.*` in
-`application-local.yml`). The presenter,
+passwords from `DEMO_STUDENT_PASSWORD` and `DEMO_ADMIN_PASSWORD` as environment variables (a value in `application-local.yml` would
+override them; see [configuration](CONFIGURATION.md)). The presenter,
 `priya@demo.example.test`, already has requests, groups, sessions, quizzes, plans, badges and a
 focus forest, so only the steps that create something new need Gemini. Reset and reseed before
 each rehearsal ([DATABASE.md](DATABASE.md#demo-reset)), since the seed dates everything from the
