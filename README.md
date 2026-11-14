@@ -43,7 +43,7 @@
 ## Walkthrough
 
 Every feature in order, following Priya, a third-year student, through one week. Recorded from
-the real app with the seeded demo data.
+the real app with the seeded demo data, plus a few more fictional records made through the app.
 
 <table>
   <tr>
@@ -193,7 +193,7 @@ Each folder has its own short map: [backend](backend/README.md), [frontend](fron
 ## Design in detail
 
 Open a section for its UML diagrams and the reasoning behind them. Every panel is an SVG in
-[`docs/diagrams/exports/`](docs/diagrams/exports/); click one to open it full size. Notation,
+[`docs/diagrams/exports/`](docs/diagrams/exports/); click one to open it full size. Notation and
 editable sources are in the [diagram index](docs/diagrams/README.md); the full set of views,
 in one document, is in the [design diagrams](docs/DESIGN_DIAGRAMS.md).
 
@@ -485,7 +485,7 @@ data. It works on macOS, Linux and Windows.
 | Install | Check it with |
 | --- | --- |
 | JDK 21 | `java -version` shows 21 |
-| Node.js 22.22 or later (includes npm) | `node -v` shows v22.22 or higher |
+| Node.js 22.22.2 or later on 22, or 24.15 or later (includes npm) | `node -v` shows v22.22.2+ or v24.15+ |
 | Docker Desktop, running | `docker info` succeeds |
 
 1. **Get the code:** `git clone https://github.com/aryan12singh/study-buddy-matcher.git`, then
@@ -493,7 +493,7 @@ data. It works on macOS, Linux and Windows.
 2. **Start a database and create the tables** (run from the project folder):
 
    ```bash
-   docker run -d --name studybuddy-db -e POSTGRES_PASSWORD=studybuddy -p 5432:5432 postgres:16
+   docker run -d --name studybuddy-db -e POSTGRES_PASSWORD=studybuddy -p 5432:5432 postgres:17
    docker exec studybuddy-db sh -c 'until pg_isready -h 127.0.0.1 -q; do sleep 1; done'
    cat backend/src/main/resources/db/migrations/*.sql | docker exec -i studybuddy-db psql -U postgres -q -v ON_ERROR_STOP=1 --single-transaction
    ```
@@ -523,6 +523,7 @@ data. It works on macOS, Linux and Windows.
 
    On Windows PowerShell:
    `$env:DEMO_SEED_ENABLED="true"; $env:DEMO_STUDENT_PASSWORD="demo-pass-123"; $env:DEMO_ADMIN_PASSWORD="admin-pass-123"; .\mvnw.cmd spring-boot:run`
+   (or run `scripts\run-local-backend.ps1`, which starts its own Docker database and seeds it in one step).
 
    Wait for `Started StudyBuddyApplication`. The first run downloads dependencies and takes a few minutes.
 
@@ -573,7 +574,9 @@ app:
 ```
 
 Pixel's typed questions, Quiz Buddy and study plans need the `assistant` block (or `claude`);
-"Explain this match" needs `explanation` (or `claude`); rain and the other ambient sounds need
+"Explain this match" needs `explanation` (or `claude`). With both Gemini and Claude keys, add
+`primary-provider: claude` under `app.ai` to ask Claude first
+([switching AI provider](docs/CONFIGURATION.md#switching-ai-provider)); rain and the other ambient sounds need
 `ambient`. The free Spotify playlist needs no key; "My Spotify (Premium)" needs the `spotify`
 block, a Spotify Premium account, and your Spotify email added under **User Management** in the
 team's Spotify app (or your own app from the

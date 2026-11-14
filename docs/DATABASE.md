@@ -142,8 +142,8 @@ only when `app.demo-seed.enabled` is `true`.
 | `app.demo-seed.student-password` | `DEMO_STUDENT_PASSWORD` | empty |
 | `app.demo-seed.admin-password` | `DEMO_ADMIN_PASSWORD` | empty |
 
-To seed, set these in the environment or in the git-ignored
-`backend/src/main/resources/application-local.yml`, start the backend once, wait for the
+To seed, set these as environment variables (keep them out of `application-local.yml`; see
+[configuration](CONFIGURATION.md#demo-seed-and-frontend)), start the backend once, wait for the
 seed to finish, then set `enabled` back to `false`. Both passwords must satisfy the normal
 password rules or the seed stops. Choose them yourself. The README's example values are only for a throwaway local Docker
 database; never use them, or record real ones, for the shared database.

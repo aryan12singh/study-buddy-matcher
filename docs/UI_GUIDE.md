@@ -1,6 +1,6 @@
 # UI guide
 
-The visual direction, the shared React components to reuse and what is still to check. The
+The visual direction, the shared React components to reuse and the known gaps. The
 rules every screen must follow are in [AGENTS.md](../AGENTS.md#frontend-conventions); screen
 behaviour decisions are in [design decisions](DESIGN_DECISIONS.md#interface-behaviour).
 
@@ -51,9 +51,16 @@ shared element, check this table and say that you are adding it.
 | Toast / notification | `ActionNotice`, `RouteNotice`; unread badge in `AppShell` |
 | Score breakdown bar | `features/matching/ScoreBreakdown` |
 | Shared-hours heatmap | `features/matching/SharedHoursHeatmap` |
+| Student initials and status badges | `Avatar`, `Badge` |
+| One student in a list, with actions | `PersonCard` |
+| Group capacity | `CapacityMeter` |
+| Copy a value (meeting link, contact) | `CopyButton` |
+| Active search filters with "Clear" | `FilterSummary` |
+| Password field with show/hide | `PasswordInput` |
+| Page that crashed or failed to load | `RouteErrorPage` |
 
-## Still to check
+## Checks and known gaps
 
-Narrow-layout and keyboard checks are listed in the [testing guide](TESTING.md). Comparing
-screens with the latest Figma, contrast on every screen and readability on the projector are
-still for the team to check.
+Narrow-layout and keyboard checks are listed in the [testing guide](TESTING.md). A formal
+screen-by-screen comparison with the final Figma and a contrast audit of every screen were not
+carried out.

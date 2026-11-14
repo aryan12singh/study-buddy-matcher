@@ -6,7 +6,7 @@ The React application (TypeScript, Vite). Setup and screenshots are in the proje
 ```text
 package.json, package-lock.json   Dependencies and the commands below
 vite.config.ts, tsconfig*.json    Build, test and type-check settings
-.env.example                      Copy to .env; holds only the public API address, never a secret
+.env.example                      Copy to .env; holds the public API address and refresh interval, never a secret
 index.html, public/               The page shell and favicon
 src/
   main.tsx, App.tsx               Entry point; the router is created once in main.tsx
@@ -14,6 +14,7 @@ src/
   features/<feature>/             One folder per feature: its screens, API calls, form helpers and tests
   shared/api/                     The one API client (reads VITE_API_BASE_URL) and data hooks
   shared/auth/                    Sign-in state and role guards
+  shared/navigation/              Safe "return to" links after sign-in
   shared/components/              Reusable retro UI: RetroWindow, Button, Field, Dialog, StatePanel and more
   shared/desktop.css              The shared palette and styles
   test/                           Helpers that render the whole app for interaction tests

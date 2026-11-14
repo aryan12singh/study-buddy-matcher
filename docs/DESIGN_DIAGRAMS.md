@@ -381,7 +381,7 @@ sequenceDiagram
     end
 ```
 
-Concurrent replacements serialize on the same student's write boundary. Each completed
+Concurrent replacements serialise on the same student's write boundary. Each completed
 response represents one valid whole week; it must not contain a mixture of concurrent inputs.
 Own profile course/goal collection replacements use that boundary too. Group schedules reuse
 the complete time-slot shape and draft protection but allow same-day overlap.
@@ -604,7 +604,7 @@ state. Strategy implementations encapsulate ranking; the two priority strategies
 banded ranking through the `PriorityTierStrategy` template method and only name their criterion
 and banded value. `MatchExplainer` keeps wording out of scoring and sees only the score, never a
 profile. Each `MatchSort` value supplies its own comparator. The search service coordinates
-authorization, candidate filtering and repositories inside its transaction. Assemblers
+authorisation, candidate filtering and repositories inside its transaction. Assemblers
 construct DTOs, and the controller only converts query inputs/delegates/returns DTOs.
 
 `WeeklyAvailability` / `TimeSlot` value composition, and the sealed `ProfileDto` response
@@ -1118,7 +1118,7 @@ Mermaid below.
 | Identity | Built from | Used for |
 | --- | --- | --- |
 | Card `evaluationId` | SHA-256 of ordered scoring profiles and availability, scoring search context, strategy/configuration version, weights/enabled criteria, rules and exact score data | Confirms the requested card still represents the current evaluation before optional cache/quota/provider work. Only the opaque digest reaches the browser; its source inputs remain on the server |
-| Semantic evidence hash | SHA-256 of serialized allowlisted evidence, prompt version `v5` and configured model | Reuses explanation text for equivalent anonymous evidence. Scores are rounded to two decimal places and shared hours to the nearest half hour; this hash deliberately omits account and exact card identity |
+| Semantic evidence hash | SHA-256 of serialised allowlisted evidence, prompt version `v5` and configured model | Reuses explanation text for equivalent anonymous evidence. Scores are rounded to two decimal places and shared hours to the nearest half hour; this hash deliberately omits account and exact card identity |
 
 `MatchService` asks `MatchResultAssembler` to assemble the card; the assembler delegates
 its exact identity to `MatchEvaluationFingerprint`. Sort and limit affect discovery order,
